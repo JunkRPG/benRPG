@@ -1,0 +1,15 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Rusted Chainmail Scrap",
+    "Description": "A fragment of ancient chainmail, corroded by time but still hinting at its former strength.",
+    "Raw Material Value": "5",
+    "Refined Material Value": "10",
+    "Metal Value": "15",
+    "Wood Value": "0",
+    "Background Image": "path/to/rusted_chainmail_bg.png",
+    "Junk Image": "path/to/rusted_chainmail.png"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Plague Archer",
+    "Health": "25",
+    "Movement": "6",
+    "Melee Damage": "5",
+    "Projectile Damage": "10",
+    "Projectile Range": "25",
+    "Background Image File Path": "path/to/plague_village_bg.png",
+    "Enemy Image File Path": "path/to/plague_archer.png"
+  }
+}

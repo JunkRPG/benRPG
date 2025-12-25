@@ -1,0 +1,22 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Diseased Bowman",
+    "Health": "20",
+    "Movement": "4",
+    "Melee Damage": "5",
+    "Projectile Damage": "10",
+    "Projectile Range": "20",
+    "Background Image File Path": "path/to/plague_village_bg.png",
+    "Enemy Image File Path": "path/to/diseased_bowman.png",
+    "2nd_State_Name": "Plague Sniper",
+    "2nd_State_Health": "15",
+    "2nd_State_Movement": "5",
+    "2nd_State_Melee Damage": "8",
+    "2nd_State_Projectile Damage": "15",
+    "2nd_State_Projectile Range": "30",
+    "2nd_State_Enemy Image File Path": "path/to/plague_sniper.png"
+  }
+}

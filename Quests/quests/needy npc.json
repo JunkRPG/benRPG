@@ -1,0 +1,22 @@
+{
+    "text": "{npc} needs {consumable item}. If you find some, bring it to him/her.",
+    "placeholders": {
+        "": ""
+    },
+    "rewards": {
+        "initial": 5,
+        "completion": 5
+    },
+    "costs": {
+        "start_cost": 0
+    },
+    "mechanics": [
+        "{npc} dies in 10 turns"
+    ],
+    "success": [
+        "player_brings_item_to_npc"
+    ],
+    "failure": [
+        "npc_dies"
+    ]
+}

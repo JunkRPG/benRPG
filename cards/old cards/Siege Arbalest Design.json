@@ -1,0 +1,21 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Siege Arbalest Design",
+    "Requirements: Raw Materials": "20",
+    "Requirements: Refined Materials": "15",
+    "Requirements: Wood": "25",
+    "Requirements: Metal": "20",
+    "Requirements: Specific Cards": "Warped Crossbow Frame",
+    "Background Image": "path/to/arbalest_design_bg.png",
+    "2nd_state_Name": "Heavy Arbalest",
+    "2nd_state_Type": "Projectile",
+    "2nd_state_Melee Damage": "10",
+    "2nd_state_Projectile Damage": "25",
+    "2nd_state_Projectile Range": "50",
+    "2nd_state_Weapon Image": "path/to/heavy_arbalest.png"
+  }
+}

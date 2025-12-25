@@ -1,0 +1,21 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Knight’s Lance Schematic",
+    "Requirements: Raw Materials": "12",
+    "Requirements: Refined Materials": "8",
+    "Requirements: Wood": "20",
+    "Requirements: Metal": "10",
+    "Requirements: Specific Cards": "",
+    "Background Image": "path/to/lance_schematic_bg.png",
+    "2nd_state_Name": "Iron Lance",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "20",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "0",
+    "2nd_state_Weapon Image": "path/to/iron_lance.png"
+  }
+}

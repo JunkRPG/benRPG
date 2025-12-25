@@ -1,0 +1,26 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Fading Archer",
+    "Health": "20",
+    "Movement": "5",
+    "Melee Damage": "5",
+    "Projectile Damage": "8",
+    "Projectile Range": "20",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "Crafts 3 arrows using 3 Wood",
+    "Background Image File Path": "path/to/ashen_wastes_bg.png",
+    "NPC Image File Path": "path/to/fading_archer.png",
+    "2nd_State_Name": "Dame Lysara the Stormshot",
+    "2nd_State_Health": "35",
+    "2nd_State_Movement": "6",
+    "2nd_State_Melee Damage": "8",
+    "2nd_State_Projectile Damage": "15",
+    "2nd_State_Projectile Range": "30",
+    "2nd_State_Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "2nd_State_Special Skill": "Deals 20 Projectile Damage to one enemy",
+    "2nd_State_NPC Image File Path": "path/to/dame_lysara.png"
+  }
+}

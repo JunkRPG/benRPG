@@ -1,0 +1,15 @@
+{
+  "card_type": "Boss Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "The Ashen Titan",
+    "Health": "120",
+    "Movement": "2",
+    "Melee Damage": "35",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Background Image File Path": "path/to/ashen_wastes_bg.png",
+    "Boss Image File Path": "path/to/ashen_titan.png"
+  }
+}

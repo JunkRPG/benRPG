@@ -1,0 +1,19 @@
+{
+  "deck_name": "Scavenger’s Hoard",
+  "back_image": "path/to/scavenger_deck_back.png",
+  "cards": [
+    "550e8400-e29b-41d4-a716-446655440000", // Rusted Chainmail Scrap
+    "550e8400-e29b-41d4-a716-446655440001", // Broken Longsword Hilt
+    "550e8400-e29b-41d4-a716-446655440002", // Cracked Wooden Shield
+    "550e8400-e29b-41d4-a716-446655440003", // Bent Crossbow Bolt
+    "550e8400-e29b-41d4-a716-446655440004", // Tattered Leather Pouch
+    "550e8400-e29b-41d4-a716-446655440005", // Scavenger Scout
+    "550e8400-e29b-41d4-a716-446655440006", // Herbalist Survivor
+    "550e8400-e29b-41d4-a716-446655440007", // Relic Hunter
+    "550e8400-e29b-41d4-a716-446655440008", // Weary Pathfinder (to Lady Elara)
+    "550e8400-e29b-41d4-a716-446655440009", // Wasteland Brigand (enemy)
+    "550e8400-e29b-41d4-a716-446655440010", // Bent Iron Bar (to Iron Mace)
+    "550e8400-e29b-41d4-a716-446655440011", // Blacksmith’s Hammer Plans (to Forge Hammer)
+    "550e8400-e29b-41d4-a716-446655440012"  // Wasteland Blacksmith
+  ]
+}

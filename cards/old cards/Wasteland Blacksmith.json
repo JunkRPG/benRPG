@@ -1,0 +1,17 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Wasteland Blacksmith",
+    "Health": "40",
+    "Movement": "4",
+    "Melee Damage": "15",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "Can repair weapons using 10 Metal",
+    "Background Image File Path": "path/to/forge_ruins_bg.png",
+    "NPC Image File Path": "path/to/wasteland_blacksmith.png"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Corroded Helmet Visor",
+    "Description": "The faceplate of a knight’s helm, pitted and rusted but still imposing.",
+    "Raw Material Value": "5",
+    "Refined Material Value": "10",
+    "Metal Value": "15",
+    "Wood Value": "0",
+    "Background Image": "path/to/visor_bg.png",
+    "Junk Image": "path/to/corroded_visor.png"
+  }
+}

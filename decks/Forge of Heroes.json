@@ -1,0 +1,17 @@
+{
+  "deck_name": "Forge of Heroes",
+  "back_image": "path/to/forge_deck_back.png",
+  "cards": [
+    "550e8400-e29b-41d4-a716-446655440034", // Bent Iron Bar (to Iron Mace)
+    "550e8400-e29b-41d4-a716-446655440035", // Rusted Blade Shard (to Dagger)
+    "550e8400-e29b-41d4-a716-446655440036", // Fractured Axe Head (to Battle Axe)
+    "550e8400-e29b-41d4-a716-446655440037", // Blacksmith’s Hammer Plans (to Forge Hammer)
+    "550e8400-e29b-41d4-a716-446655440038", // Wasteland Blacksmith
+    "550e8400-e29b-41d4-a716-446655440039", // Forge Apprentice
+    "550e8400-e29b-41d4-a716-446655440040", // Tarnished Blade (to Sir Gideon)
+    "550e8400-e29b-41d4-a716-446655440041", // Feral Smith (enemy)
+    "550e8400-e29b-41d4-a716-446655440042", // The Ashen Titan (boss)
+    "550e8400-e29b-41d4-a716-446655440043", // Corroded Helmet Visor
+    "550e8400-e29b-41d4-a716-446655440044"  // Shattered Vanguard (to Lord Valric)
+  ]
+}

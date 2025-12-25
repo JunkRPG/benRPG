@@ -1,0 +1,22 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Starving Wolf",
+    "Health": "20",
+    "Movement": "7",
+    "Melee Damage": "8",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Background Image File Path": "path/to/dark_forest_bg.png",
+    "Enemy Image File Path": "path/to/starving_wolf.png",
+    "2nd_State_Name": "Rabid Beast",
+    "2nd_State_Health": "25",
+    "2nd_State_Movement": "9",
+    "2nd_State_Melee Damage": "14",
+    "2nd_State_Projectile Damage": "0",
+    "2nd_State_Projectile Range": "0",
+    "2nd_State_Enemy Image File Path": "path/to/rabid_beast.png"
+  }
+}

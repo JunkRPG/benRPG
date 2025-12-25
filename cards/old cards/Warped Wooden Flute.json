@@ -1,0 +1,15 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Warped Wooden Flute",
+    "Description": "A cracked flute, its mournful notes silenced by time and ruin.",
+    "Raw Material Value": "3",
+    "Refined Material Value": "5",
+    "Metal Value": "0",
+    "Wood Value": "8",
+    "Background Image": "path/to/flute_bg.png",
+    "Junk Image": "path/to/warped_flute.png"
+  }
+}

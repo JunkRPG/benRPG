@@ -1,0 +1,26 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "pile of pennies",
+    "Requirements: Raw Materials": "1",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "1",
+    "Requirements: Metal": "1",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "super chunker",
+    "2nd_state_Melee Damage": "0",
+    "2nd_state_Projectile Damage": "100",
+    "2nd_state_Projectile Range": "",
+    "Background Image": "",
+    "2nd_state_Weapon Image": "",
+    "2nd_state_Type": [
+      "Melee"
+    ],
+    "2nd_state_range_id": [
+      "range_35a6dc0e-eeac-4b14-a587-45c61c6a36af"
+    ]
+  }
+}

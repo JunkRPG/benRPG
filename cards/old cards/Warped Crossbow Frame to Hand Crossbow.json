@@ -1,0 +1,26 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Warped Crossbow Frame",
+    "Description": "The skeletal remains of a crossbow, bent but repairable.",
+    "Raw Material Value": "6",
+    "Refined Material Value": "12",
+    "Metal Value": "8",
+    "Wood Value": "10",
+    "Background Image": "path/to/crossbow_frame_bg.png",
+    "Junk Image": "path/to/warped_frame.png",
+    "Requirements: Raw Materials": "10",
+    "Requirements: Refined Materials": "6",
+    "Requirements: Wood": "8",
+    "Requirements: Metal": "10",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Hand Crossbow",
+    "2nd_state_Type": "Projectile",
+    "2nd_state_Melee Damage": "5",
+    "2nd_state_Projectile Damage": "15",
+    "2nd_state_Projectile Range": "30",
+    "2nd_state_Weapon Image": "path/to/hand_crossbow.png"
+  }
+}

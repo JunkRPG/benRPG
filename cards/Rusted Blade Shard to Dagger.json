@@ -1,0 +1,26 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Rusted Blade Shard",
+    "Description": "A jagged piece of a broken sword, still sharp enough to cut.",
+    "Raw Material Value": "3",
+    "Refined Material Value": "8",
+    "Metal Value": "12",
+    "Wood Value": "0",
+    "Background Image": "path/to/blade_shard_bg.png",
+    "Junk Image": "path/to/rusted_shard.png",
+    "Requirements: Raw Materials": "5",
+    "Requirements: Refined Materials": "3",
+    "Requirements: Wood": "2",
+    "Requirements: Metal": "5",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Dagger",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "15",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "0",
+    "2nd_state_Weapon Image": "path/to/dagger.png"
+  }
+}

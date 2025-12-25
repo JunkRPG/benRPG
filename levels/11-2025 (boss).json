@@ -1,0 +1,198 @@
+{
+  "grid": {
+    "rows": 10,
+    "columns": 10
+  },
+  "player_start": {
+    "row": 8,
+    "column": 5
+  },
+  "terrain": [
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "mountain",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ]
+  ],
+  "inaccessible_hexes": [
+    {
+      "row": 5,
+      "column": 2
+    },
+    {
+      "row": 5,
+      "column": 3
+    },
+    {
+      "row": 5,
+      "column": 4
+    },
+    {
+      "row": 5,
+      "column": 5
+    },
+    {
+      "row": 5,
+      "column": 6
+    },
+    {
+      "row": 7,
+      "column": 8
+    },
+    {
+      "row": 8,
+      "column": 8
+    },
+    {
+      "row": 9,
+      "column": 8
+    }
+  ],
+  "units": [
+    {
+      "card_id": "Feral Smith",
+      "position": {
+        "row": 2,
+        "column": 5
+      }
+    },
+    {
+      "card_id": "Caravan Guard",
+      "position": {
+        "row": 8,
+        "column": 6
+      }
+    },
+    {
+      "card_id": "The Iron Warlord",
+      "position": {
+        "row": 2,
+        "column": 4
+      }
+    }
+  ],
+  "card_drawing_hexes": [
+    {
+      "row": 8,
+      "column": 4,
+      "deck_file": "healing_1e0e001f-75f4-42b8-9eb2-0d9f5eb3e4b3.json",
+      "card_id": "90ef74ce-cea2-4aba-9dc4-d485eb9b06fa",
+      "linked_level": null
+    }
+  ]
+}

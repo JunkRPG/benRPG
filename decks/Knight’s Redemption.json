@@ -1,0 +1,17 @@
+{
+  "deck_name": "Knight’s Redemption",
+  "back_image": "path/to/knight_deck_back.png",
+  "cards": [
+    "550e8400-e29b-41d4-a716-446655440013", // Corroded Helmet Visor
+    "550e8400-e29b-41d4-a716-446655440014", // Fractured Axe Head (to Battle Axe)
+    "550e8400-e29b-41d4-a716-446655440015", // Knight’s Lance Schematic (to Iron Lance)
+    "550e8400-e29b-41d4-a716-446655440016", // Rusted Knight (enemy)
+    "550e8400-e29b-41d4-a716-446655440017", // Crippled Knight (to Spectral Knight, enemy)
+    "550e8400-e29b-41d4-a716-446655440018", // Armored Squire
+    "550e8400-e29b-41d4-a716-446655440019", // Ruined Knight
+    "550e8400-e29b-41d4-a716-446655440020", // Shattered Vanguard (to Lord Valric)
+    "550e8400-e29b-41d4-a716-446655440021", // Tarnished Blade (to Sir Gideon)
+    "550e8400-e29b-41d4-a716-446655440022", // The Iron Warlord (boss)
+    "550e8400-e29b-41d4-a716-446655440023"  // Rusted Blade Shard (to Dagger)
+  ]
+}

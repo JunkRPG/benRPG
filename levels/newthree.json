@@ -1,0 +1,2123 @@
+{
+  "grid": {
+    "rows": 24,
+    "columns": 48
+  },
+  "player_start": {
+    "row": 22,
+    "column": 1
+  },
+  "terrain": [
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ]
+  ],
+  "inaccessible_hexes": [
+    {
+      "row": 0,
+      "column": 27
+    },
+    {
+      "row": 0,
+      "column": 36
+    },
+    {
+      "row": 1,
+      "column": 27
+    },
+    {
+      "row": 1,
+      "column": 36
+    },
+    {
+      "row": 2,
+      "column": 27
+    },
+    {
+      "row": 2,
+      "column": 36
+    },
+    {
+      "row": 3,
+      "column": 27
+    },
+    {
+      "row": 3,
+      "column": 36
+    },
+    {
+      "row": 4,
+      "column": 11
+    },
+    {
+      "row": 4,
+      "column": 13
+    },
+    {
+      "row": 4,
+      "column": 15
+    },
+    {
+      "row": 4,
+      "column": 27
+    },
+    {
+      "row": 4,
+      "column": 36
+    },
+    {
+      "row": 5,
+      "column": 9
+    },
+    {
+      "row": 5,
+      "column": 10
+    },
+    {
+      "row": 5,
+      "column": 12
+    },
+    {
+      "row": 5,
+      "column": 14
+    },
+    {
+      "row": 5,
+      "column": 16
+    },
+    {
+      "row": 5,
+      "column": 17
+    },
+    {
+      "row": 5,
+      "column": 27
+    },
+    {
+      "row": 5,
+      "column": 36
+    },
+    {
+      "row": 5,
+      "column": 41
+    },
+    {
+      "row": 5,
+      "column": 43
+    },
+    {
+      "row": 5,
+      "column": 45
+    },
+    {
+      "row": 5,
+      "column": 47
+    },
+    {
+      "row": 6,
+      "column": 7
+    },
+    {
+      "row": 6,
+      "column": 8
+    },
+    {
+      "row": 6,
+      "column": 18
+    },
+    {
+      "row": 6,
+      "column": 19
+    },
+    {
+      "row": 6,
+      "column": 27
+    },
+    {
+      "row": 6,
+      "column": 36
+    },
+    {
+      "row": 6,
+      "column": 42
+    },
+    {
+      "row": 6,
+      "column": 44
+    },
+    {
+      "row": 6,
+      "column": 46
+    },
+    {
+      "row": 7,
+      "column": 5
+    },
+    {
+      "row": 7,
+      "column": 6
+    },
+    {
+      "row": 7,
+      "column": 20
+    },
+    {
+      "row": 7,
+      "column": 27
+    },
+    {
+      "row": 7,
+      "column": 36
+    },
+    {
+      "row": 8,
+      "column": 3
+    },
+    {
+      "row": 8,
+      "column": 4
+    },
+    {
+      "row": 8,
+      "column": 20
+    },
+    {
+      "row": 8,
+      "column": 27
+    },
+    {
+      "row": 8,
+      "column": 29
+    },
+    {
+      "row": 8,
+      "column": 31
+    },
+    {
+      "row": 8,
+      "column": 36
+    },
+    {
+      "row": 9,
+      "column": 1
+    },
+    {
+      "row": 9,
+      "column": 2
+    },
+    {
+      "row": 9,
+      "column": 20
+    },
+    {
+      "row": 9,
+      "column": 27
+    },
+    {
+      "row": 9,
+      "column": 28
+    },
+    {
+      "row": 9,
+      "column": 30
+    },
+    {
+      "row": 9,
+      "column": 32
+    },
+    {
+      "row": 9,
+      "column": 36
+    },
+    {
+      "row": 9,
+      "column": 37
+    },
+    {
+      "row": 10,
+      "column": 0
+    },
+    {
+      "row": 10,
+      "column": 20
+    },
+    {
+      "row": 10,
+      "column": 32
+    },
+    {
+      "row": 10,
+      "column": 38
+    },
+    {
+      "row": 10,
+      "column": 39
+    },
+    {
+      "row": 11,
+      "column": 11
+    },
+    {
+      "row": 11,
+      "column": 20
+    },
+    {
+      "row": 11,
+      "column": 32
+    },
+    {
+      "row": 11,
+      "column": 40
+    },
+    {
+      "row": 11,
+      "column": 41
+    },
+    {
+      "row": 11,
+      "column": 42
+    },
+    {
+      "row": 11,
+      "column": 43
+    },
+    {
+      "row": 11,
+      "column": 44
+    },
+    {
+      "row": 12,
+      "column": 9
+    },
+    {
+      "row": 12,
+      "column": 10
+    },
+    {
+      "row": 12,
+      "column": 20
+    },
+    {
+      "row": 12,
+      "column": 25
+    },
+    {
+      "row": 12,
+      "column": 32
+    },
+    {
+      "row": 12,
+      "column": 33
+    },
+    {
+      "row": 12,
+      "column": 43
+    },
+    {
+      "row": 13,
+      "column": 7
+    },
+    {
+      "row": 13,
+      "column": 8
+    },
+    {
+      "row": 13,
+      "column": 19
+    },
+    {
+      "row": 13,
+      "column": 20
+    },
+    {
+      "row": 13,
+      "column": 25
+    },
+    {
+      "row": 13,
+      "column": 34
+    },
+    {
+      "row": 13,
+      "column": 35
+    },
+    {
+      "row": 13,
+      "column": 43
+    },
+    {
+      "row": 14,
+      "column": 5
+    },
+    {
+      "row": 14,
+      "column": 6
+    },
+    {
+      "row": 14,
+      "column": 17
+    },
+    {
+      "row": 14,
+      "column": 18
+    },
+    {
+      "row": 14,
+      "column": 20
+    },
+    {
+      "row": 14,
+      "column": 26
+    },
+    {
+      "row": 14,
+      "column": 27
+    },
+    {
+      "row": 14,
+      "column": 35
+    },
+    {
+      "row": 14,
+      "column": 39
+    },
+    {
+      "row": 14,
+      "column": 43
+    },
+    {
+      "row": 15,
+      "column": 5
+    },
+    {
+      "row": 15,
+      "column": 15
+    },
+    {
+      "row": 15,
+      "column": 16
+    },
+    {
+      "row": 15,
+      "column": 20
+    },
+    {
+      "row": 15,
+      "column": 27
+    },
+    {
+      "row": 15,
+      "column": 35
+    },
+    {
+      "row": 15,
+      "column": 39
+    },
+    {
+      "row": 15,
+      "column": 43
+    },
+    {
+      "row": 16,
+      "column": 5
+    },
+    {
+      "row": 16,
+      "column": 13
+    },
+    {
+      "row": 16,
+      "column": 14
+    },
+    {
+      "row": 16,
+      "column": 20
+    },
+    {
+      "row": 16,
+      "column": 27
+    },
+    {
+      "row": 16,
+      "column": 35
+    },
+    {
+      "row": 16,
+      "column": 39
+    },
+    {
+      "row": 16,
+      "column": 43
+    },
+    {
+      "row": 17,
+      "column": 5
+    },
+    {
+      "row": 17,
+      "column": 12
+    },
+    {
+      "row": 17,
+      "column": 27
+    },
+    {
+      "row": 17,
+      "column": 35
+    },
+    {
+      "row": 17,
+      "column": 39
+    },
+    {
+      "row": 17,
+      "column": 43
+    },
+    {
+      "row": 18,
+      "column": 5
+    },
+    {
+      "row": 18,
+      "column": 12
+    },
+    {
+      "row": 18,
+      "column": 27
+    },
+    {
+      "row": 18,
+      "column": 35
+    },
+    {
+      "row": 18,
+      "column": 39
+    },
+    {
+      "row": 18,
+      "column": 43
+    },
+    {
+      "row": 19,
+      "column": 5
+    },
+    {
+      "row": 19,
+      "column": 12
+    },
+    {
+      "row": 19,
+      "column": 27
+    },
+    {
+      "row": 19,
+      "column": 35
+    },
+    {
+      "row": 19,
+      "column": 39
+    },
+    {
+      "row": 20,
+      "column": 5
+    },
+    {
+      "row": 20,
+      "column": 12
+    },
+    {
+      "row": 20,
+      "column": 20
+    },
+    {
+      "row": 20,
+      "column": 27
+    },
+    {
+      "row": 20,
+      "column": 39
+    },
+    {
+      "row": 21,
+      "column": 5
+    },
+    {
+      "row": 21,
+      "column": 20
+    },
+    {
+      "row": 21,
+      "column": 27
+    },
+    {
+      "row": 21,
+      "column": 39
+    },
+    {
+      "row": 22,
+      "column": 5
+    },
+    {
+      "row": 22,
+      "column": 20
+    },
+    {
+      "row": 22,
+      "column": 27
+    },
+    {
+      "row": 22,
+      "column": 39
+    },
+    {
+      "row": 23,
+      "column": 5
+    },
+    {
+      "row": 23,
+      "column": 12
+    },
+    {
+      "row": 23,
+      "column": 20
+    },
+    {
+      "row": 23,
+      "column": 27
+    },
+    {
+      "row": 23,
+      "column": 39
+    }
+  ],
+  "units": [
+    {
+      "card_id": "Ashen Crossbowman",
+      "position": {
+        "row": 7,
+        "column": 13
+      }
+    },
+    {
+      "card_id": "Bone Spearman",
+      "position": {
+        "row": 15,
+        "column": 19
+      }
+    },
+    {
+      "card_id": "Corrupted Squire",
+      "position": {
+        "row": 20,
+        "column": 19
+      }
+    },
+    {
+      "card_id": "Crippled Knight to Spectral Knight",
+      "position": {
+        "row": 5,
+        "column": 3
+      }
+    },
+    {
+      "card_id": "Diseased Bowman to Plague Sniper",
+      "position": {
+        "row": 10,
+        "column": 12
+      }
+    },
+    {
+      "card_id": "Feral Smith",
+      "position": {
+        "row": 2,
+        "column": 24
+      }
+    },
+    {
+      "card_id": "Mire Marauder",
+      "position": {
+        "row": 3,
+        "column": 20
+      }
+    },
+    {
+      "card_id": "Plague Archer",
+      "position": {
+        "row": 4,
+        "column": 23
+      }
+    },
+    {
+      "card_id": "Rusted Knight",
+      "position": {
+        "row": 12,
+        "column": 27
+      }
+    },
+    {
+      "card_id": "Rusting Sentinel to Awakened Guardian",
+      "position": {
+        "row": 14,
+        "column": 29
+      }
+    },
+    {
+      "card_id": "Scavenger Hound",
+      "position": {
+        "row": 20,
+        "column": 8
+      }
+    },
+    {
+      "card_id": "Starving Wolf to Rabid Beast",
+      "position": {
+        "row": 17,
+        "column": 37
+      }
+    },
+    {
+      "card_id": "Tattered Flagbearer",
+      "position": {
+        "row": 3,
+        "column": 31
+      }
+    },
+    {
+      "card_id": "Wasteland Brigand",
+      "position": {
+        "row": 19,
+        "column": 24
+      }
+    },
+    {
+      "card_id": "Wounded Outlaw to Enraged Outlaw",
+      "position": {
+        "row": 22,
+        "column": 32
+      }
+    },
+    {
+      "card_id": "Bone King",
+      "position": {
+        "row": 2,
+        "column": 3
+      }
+    },
+    {
+      "card_id": "Plague Sovereign",
+      "position": {
+        "row": 18,
+        "column": 32
+      }
+    },
+    {
+      "card_id": "The Ashen Titan",
+      "position": {
+        "row": 3,
+        "column": 33
+      }
+    },
+    {
+      "card_id": "The Forgotten Arbalest",
+      "position": {
+        "row": 2,
+        "column": 43
+      }
+    },
+    {
+      "card_id": "The Iron Warlord",
+      "position": {
+        "row": 21,
+        "column": 45
+      }
+    },
+    {
+      "card_id": "Armored Squire",
+      "position": {
+        "row": 20,
+        "column": 1
+      }
+    },
+    {
+      "card_id": "Ashen Fletcher",
+      "position": {
+        "row": 20,
+        "column": 2
+      }
+    },
+    {
+      "card_id": "Broken Healer to Brother Torin the Lightbringer",
+      "position": {
+        "row": 21,
+        "column": 2
+      }
+    },
+    {
+      "card_id": "Caravan Guard",
+      "position": {
+        "row": 20,
+        "column": 3
+      }
+    },
+    {
+      "card_id": "Fading Archer to Dame Lysara the Stormshot",
+      "position": {
+        "row": 16,
+        "column": 3
+      }
+    },
+    {
+      "card_id": "Forge Apprentice",
+      "position": {
+        "row": 21,
+        "column": 0
+      }
+    },
+    {
+      "card_id": "Herbalist Survivor",
+      "position": {
+        "row": 21,
+        "column": 3
+      }
+    },
+    {
+      "card_id": "Relic Hunter",
+      "position": {
+        "row": 22,
+        "column": 3
+      }
+    },
+    {
+      "card_id": "Ruined Knight",
+      "position": {
+        "row": 20,
+        "column": 0
+      }
+    },
+    {
+      "card_id": "Scavenger Scout",
+      "position": {
+        "row": 19,
+        "column": 1
+      }
+    },
+    {
+      "card_id": "Shattered Vanguard to Lord Valric the Unbroken",
+      "position": {
+        "row": 19,
+        "column": 3
+      }
+    },
+    {
+      "card_id": "Tarnished Blade to Sir Gideon the Resolute",
+      "position": {
+        "row": 20,
+        "column": 4
+      }
+    },
+    {
+      "card_id": "Wandering Bard",
+      "position": {
+        "row": 22,
+        "column": 0
+      }
+    },
+    {
+      "card_id": "Wasteland Blacksmith",
+      "position": {
+        "row": 21,
+        "column": 1
+      }
+    },
+    {
+      "card_id": "Weary Pathfinder to Lady Elara the Far-Seer",
+      "position": {
+        "row": 19,
+        "column": 2
+      }
+    }
+  ],
+  "card_drawing_hexes": [
+    {
+      "row": 1,
+      "column": 45,
+      "deck_file": null,
+      "card_id": null,
+      "linked_level": "tony's world.json"
+    },
+    {
+      "row": 22,
+      "column": 2,
+      "deck_file": "Junk_and_Documents_9eacae36-81db-4aea-af74-b22f32bd1b6a.json",
+      "card_id": null,
+      "linked_level": null
+    },
+    {
+      "row": 18,
+      "column": 10,
+      "deck_file": "Junk_and_Documents_9eacae36-81db-4aea-af74-b22f32bd1b6a.json",
+      "card_id": null,
+      "linked_level": null
+    },
+    {
+      "row": 7,
+      "column": 16,
+      "deck_file": "Junk_and_Documents_9eacae36-81db-4aea-af74-b22f32bd1b6a.json",
+      "card_id": null,
+      "linked_level": null
+    },
+    {
+      "row": 18,
+      "column": 17,
+      "deck_file": "Junk_and_Documents_9eacae36-81db-4aea-af74-b22f32bd1b6a.json",
+      "card_id": null,
+      "linked_level": null
+    },
+    {
+      "row": 10,
+      "column": 23,
+      "deck_file": "Junk_and_Documents_9eacae36-81db-4aea-af74-b22f32bd1b6a.json",
+      "card_id": null,
+      "linked_level": null
+    },
+    {
+      "row": 19,
+      "column": 31,
+      "deck_file": "Junk_and_Documents_9eacae36-81db-4aea-af74-b22f32bd1b6a.json",
+      "card_id": null,
+      "linked_level": null
+    },
+    {
+      "row": 21,
+      "column": 37,
+      "deck_file": "Junk_and_Documents_9eacae36-81db-4aea-af74-b22f32bd1b6a.json",
+      "card_id": null,
+      "linked_level": null
+    },
+    {
+      "row": 6,
+      "column": 32,
+      "deck_file": "Junk_and_Documents_9eacae36-81db-4aea-af74-b22f32bd1b6a.json",
+      "card_id": null,
+      "linked_level": null
+    },
+    {
+      "row": 15,
+      "column": 46,
+      "deck_file": "Junk_and_Documents_9eacae36-81db-4aea-af74-b22f32bd1b6a.json",
+      "card_id": null,
+      "linked_level": null
+    },
+    {
+      "row": 18,
+      "column": 1,
+      "deck_file": "test_with_healing_be90cfc8-9324-4d99-a928-53c9f6cc6874.json",
+      "card_id": null,
+      "linked_level": null
+    },
+    {
+      "row": 18,
+      "column": 2,
+      "deck_file": "healing_1e0e001f-75f4-42b8-9eb2-0d9f5eb3e4b3.json",
+      "card_id": null,
+      "linked_level": null
+    }
+  ]
+}

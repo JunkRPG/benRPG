@@ -1,0 +1,464 @@
+{
+  "373ce071-3e3f-423d-a14e-34e67052b891": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "snake"
+  },
+  "510fb728-3164-463f-8d30-83982b6eef1a": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "susan"
+  },
+  "5830444c-0e42-44e7-98a2-f40ee5bea1cc": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "random tube"
+  },
+  "64cddb3f-7377-43fd-ac4c-1a6b5c018966": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "butter"
+  },
+  "73da9e36-e339-4b9d-9d97-77431afe4e40": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "cracker jacks"
+  },
+  "7486fbd2-d361-459e-84a4-e640b1e14cb8": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "pile of pennies"
+  },
+  "7b2a9809-8c7d-4661-83dd-1a4b18b9839e": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "stupen"
+  },
+  "90ef74ce-cea2-4aba-9dc4-d485eb9b06fa": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Old bottle of neosporin"
+  },
+  "addb5a45-c9be-46c7-b21a-cd6a25eebb3e": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "1"
+  },
+  "Archer\u2019s Bow Blueprint": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Blacksmith\u00e2\u20ac\u2122s Hammer Plans"
+  },
+  "Armored Squire": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Armored Squire"
+  },
+  "Ashen Crossbowman": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Ashen Crossbowman"
+  },
+  "Ashen Fletcher": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Ashen Fletcher"
+  },
+  "Bent Crossbow Bolt": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Bent Crossbow Bolt"
+  },
+  "Bent Iron Bar to Iron Mace": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Bent Iron Bar"
+  },
+  "Blacksmith\u2019s Hammer Plans": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Blacksmith\u00e2\u20ac\u2122s Hammer Plans"
+  },
+  "Bone King": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Bone King"
+  },
+  "Bone Spearman": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Bone Spearman"
+  },
+  "Broken Healer to Brother Torin the Lightbringer": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Broken Healer"
+  },
+  "Broken Longsword Hilt": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Broken Longsword Hilt"
+  },
+  "c7b25a32-9924-4e09-9c3b-e042e4271ac3": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "cup"
+  },
+  "Caravan Guard": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Caravan Guard"
+  },
+  "Corroded Helmet Visor": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Corroded Helmet Visor"
+  },
+  "Corrupted Squire": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Corrupted Squire"
+  },
+  "Cracked Spearhead to Short Spear": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Cracked Spearhead"
+  },
+  "Cracked Wooden Shield": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Cracked Wooden Shield"
+  },
+  "Crippled Knight to Spectral Knight": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Crippled Knight"
+  },
+  "Diseased Bowman to Plague Sniper": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Diseased Bowman"
+  },
+  "Fading Archer to Dame Lysara the Stormshot": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Fading Archer"
+  },
+  "Feral Smith": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Feral Smith"
+  },
+  "Forge Apprentice": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Forge Apprentice"
+  },
+  "Fractured Axe Head to Battle Axe": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Fractured Axe Head"
+  },
+  "Frayed Rope Coil": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Frayed Rope Coil"
+  },
+  "Herbalist Survivor": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Herbalist Survivor"
+  },
+  "Knight\u2019s Lance Schematic": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Knight\u00e2\u20ac\u2122s Lance Schematic"
+  },
+  "Mire Marauder": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Mire Marauder"
+  },
+  "Plague Archer": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Plague Archer"
+  },
+  "Plague Sovereign": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Plague Sovereign"
+  },
+  "Relic Hunter": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Relic Hunter"
+  },
+  "Ruined Knight": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Ruined Knight"
+  },
+  "Rusted Blade Shard to Dagger": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rusted Blade Shard"
+  },
+  "Rusted Chainmail Scrap": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Rusted Chainmail Scrap"
+  },
+  "Rusted Knight": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Rusted Knight"
+  },
+  "Rusting Sentinel to Awakened Guardian": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rusting Sentinel"
+  },
+  "Scavenger Hound": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Scavenger Hound"
+  },
+  "Scavenger Scout": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Scavenger Scout"
+  },
+  "Scorched Iron Horseshoe": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Scorched Iron Horseshoe"
+  },
+  "Shattered Lantern Glass": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Shattered Lantern Glass"
+  },
+  "Shattered Vanguard to Lord Valric the Unbroken": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Shattered Vanguard"
+  },
+  "Siege Arbalest Design": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Siege Arbalest Design"
+  },
+  "Starving Wolf to Rabid Beast": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Starving Wolf"
+  },
+  "Tarnished Blade to Sir Gideon the Resolute": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Tarnished Blade"
+  },
+  "Tattered Flagbearer": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Tattered Flagbearer"
+  },
+  "Tattered Leather Pouch": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Tattered Leather Pouch"
+  },
+  "The Ashen Titan": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Ashen Titan"
+  },
+  "The Forgotten Arbalest": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Forgotten Arbalest"
+  },
+  "The Iron Warlord": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Iron Warlord"
+  },
+  "Wandering Bard": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wandering Bard"
+  },
+  "Warlord\u2019s Flail Instructions": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Warlord\u00e2\u20ac\u2122s Flail Instructions"
+  },
+  "Warped Crossbow Frame to Hand Crossbow": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Warped Crossbow Frame"
+  },
+  "Warped Wooden Flute": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Warped Wooden Flute"
+  },
+  "Wasteland Blacksmith": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wasteland Blacksmith"
+  },
+  "Wasteland Brigand": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wasteland Brigand"
+  },
+  "Weary Pathfinder to Lady Elara the Far-Seer": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Weary Pathfinder"
+  },
+  "Wounded Outlaw to Enraged Outlaw": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Wounded Outlaw"
+  },
+  "e61ff317-70df-49d2-a2e7-9e101751c1c9": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "1"
+  }
+}

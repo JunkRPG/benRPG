@@ -1,0 +1,26 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Shattered Vanguard",
+    "Health": "40",
+    "Movement": "3",
+    "Melee Damage": "12",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "Blocks 5 damage for an ally",
+    "Background Image File Path": "path/to/battlefield_bg.png",
+    "NPC Image File Path": "path/to/shattered_vanguard.png",
+    "2nd_State_Name": "Lord Valric the Unbroken",
+    "2nd_State_Health": "60",
+    "2nd_State_Movement": "4",
+    "2nd_State_Melee Damage": "25",
+    "2nd_State_Projectile Damage": "0",
+    "2nd_State_Projectile Range": "0",
+    "2nd_State_Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "2nd_State_Special Skill": "Negates all damage to one ally for one turn",
+    "2nd_State_NPC Image File Path": "path/to/lord_valric.png"
+  }
+}

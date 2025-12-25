@@ -1,0 +1,26 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Weary Pathfinder",
+    "Health": "20",
+    "Movement": "6",
+    "Melee Damage": "5",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "Reveals nearby enemies",
+    "Background Image File Path": "path/to/wasteland_bg.png",
+    "NPC Image File Path": "path/to/weary_pathfinder.png",
+    "2nd_State_Name": "Lady Elara the Far-Seer",
+    "2nd_State_Health": "30",
+    "2nd_State_Movement": "8",
+    "2nd_State_Melee Damage": "8",
+    "2nd_State_Projectile Damage": "10",
+    "2nd_State_Projectile Range": "20",
+    "2nd_State_Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "2nd_State_Special Skill": "Increases ally Projectile Range by 10",
+    "2nd_State_NPC Image File Path": "path/to/lady_elara.png"
+  }
+}

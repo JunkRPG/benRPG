@@ -1,0 +1,616 @@
+{
+  "grid": {
+    "rows": 14,
+    "columns": 24
+  },
+  "player_start": {
+    "row": 12,
+    "column": 1
+  },
+  "terrain": [
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ]
+  ],
+  "inaccessible_hexes": [
+    {
+      "row": 0,
+      "column": 4
+    },
+    {
+      "row": 0,
+      "column": 9
+    },
+    {
+      "row": 1,
+      "column": 9
+    },
+    {
+      "row": 2,
+      "column": 9
+    },
+    {
+      "row": 3,
+      "column": 4
+    },
+    {
+      "row": 3,
+      "column": 9
+    },
+    {
+      "row": 3,
+      "column": 16
+    },
+    {
+      "row": 4,
+      "column": 4
+    },
+    {
+      "row": 4,
+      "column": 9
+    },
+    {
+      "row": 4,
+      "column": 16
+    },
+    {
+      "row": 5,
+      "column": 4
+    },
+    {
+      "row": 5,
+      "column": 9
+    },
+    {
+      "row": 5,
+      "column": 16
+    },
+    {
+      "row": 6,
+      "column": 9
+    },
+    {
+      "row": 6,
+      "column": 16
+    },
+    {
+      "row": 7,
+      "column": 9
+    },
+    {
+      "row": 7,
+      "column": 16
+    },
+    {
+      "row": 8,
+      "column": 4
+    },
+    {
+      "row": 8,
+      "column": 9
+    },
+    {
+      "row": 8,
+      "column": 13
+    },
+    {
+      "row": 8,
+      "column": 16
+    },
+    {
+      "row": 9,
+      "column": 4
+    },
+    {
+      "row": 9,
+      "column": 14
+    },
+    {
+      "row": 9,
+      "column": 15
+    },
+    {
+      "row": 9,
+      "column": 16
+    },
+    {
+      "row": 9,
+      "column": 17
+    },
+    {
+      "row": 9,
+      "column": 18
+    },
+    {
+      "row": 9,
+      "column": 19
+    },
+    {
+      "row": 10,
+      "column": 4
+    },
+    {
+      "row": 10,
+      "column": 19
+    },
+    {
+      "row": 11,
+      "column": 4
+    },
+    {
+      "row": 11,
+      "column": 19
+    },
+    {
+      "row": 12,
+      "column": 4
+    },
+    {
+      "row": 12,
+      "column": 19
+    },
+    {
+      "row": 13,
+      "column": 4
+    },
+    {
+      "row": 13,
+      "column": 19
+    }
+  ],
+  "units": [
+    {
+      "card_id": "Ashen Crossbowman",
+      "position": {
+        "row": 9,
+        "column": 10
+      }
+    },
+    {
+      "card_id": "Bone Spearman",
+      "position": {
+        "row": 8,
+        "column": 8
+      }
+    },
+    {
+      "card_id": "Crippled Knight to Spectral Knight",
+      "position": {
+        "row": 5,
+        "column": 14
+      }
+    },
+    {
+      "card_id": "Diseased Bowman to Plague Sniper",
+      "position": {
+        "row": 1,
+        "column": 10
+      }
+    },
+    {
+      "card_id": "Plague Archer",
+      "position": {
+        "row": 1,
+        "column": 4
+      }
+    },
+    {
+      "card_id": "Mire Marauder",
+      "position": {
+        "row": 3,
+        "column": 2
+      }
+    },
+    {
+      "card_id": "Bone King",
+      "position": {
+        "row": 12,
+        "column": 22
+      }
+    },
+    {
+      "card_id": "The Forgotten Arbalest",
+      "position": {
+        "row": 1,
+        "column": 21
+      }
+    },
+    {
+      "card_id": "Armored Squire",
+      "position": {
+        "row": 11,
+        "column": 0
+      }
+    },
+    {
+      "card_id": "Broken Healer to Brother Torin the Lightbringer",
+      "position": {
+        "row": 10,
+        "column": 1
+      }
+    },
+    {
+      "card_id": "Caravan Guard",
+      "position": {
+        "row": 10,
+        "column": 2
+      }
+    },
+    {
+      "card_id": "Fading Archer to Dame Lysara the Stormshot",
+      "position": {
+        "row": 11,
+        "column": 2
+      }
+    },
+    {
+      "card_id": "Forge Apprentice",
+      "position": {
+        "row": 10,
+        "column": 3
+      }
+    }
+  ],
+  "card_drawing_hexes": []
+}
