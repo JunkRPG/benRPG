@@ -1,0 +1,4 @@
+pygame==2.6.1
+pygame-gui==0.6.13
+pygame-ce==2.5.3
+pillow
