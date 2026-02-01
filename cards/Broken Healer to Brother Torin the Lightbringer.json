@@ -1,0 +1,26 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Broken Healer",
+    "Health": "15",
+    "Movement": "5",
+    "Melee Damage": "3",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "Heals 5 Health using 3 Raw Materials",
+    "Background Image File Path": "path/to/dark_forest_bg.png",
+    "NPC Image File Path": "path/to/broken_healer.png",
+    "2nd_State_Name": "Brother Torin the Lightbringer",
+    "2nd_State_Health": "25",
+    "2nd_State_Movement": "6",
+    "2nd_State_Melee Damage": "5",
+    "2nd_State_Projectile Damage": "0",
+    "2nd_State_Projectile Range": "0",
+    "2nd_State_Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "2nd_State_Special Skill": "Heals all allies 15 Health once per encounter",
+    "2nd_State_NPC Image File Path": "path/to/brother_torin.png"
+  }
+}

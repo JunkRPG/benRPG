@@ -1,0 +1,74 @@
+{
+  "grid": {
+    "rows": 10,
+    "columns": 10
+  },
+  "player_start": {
+    "row": 9,
+    "column": 9
+  },
+  "terrain": [
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "water", "water", "water", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "water", "water", "water", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "mountain", "mountain", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "mountain", "mountain", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"]
+  ],
+  "units": [
+    {
+      "card_id": "550e8400-e29b-41d4-a716-446655440027", // Plague Archer
+      "position": {"row": 2, "column": 2}
+    },
+    {
+      "card_id": "550e8400-e29b-41d4-a716-446655440028", // Diseased Bowman (to Plague Sniper)
+      "position": {"row": 4, "column": 6}
+    },
+    {
+      "card_id": "550e8400-e29b-41d4-a716-446655440031", // Plague Sovereign (boss)
+      "position": {"row": 0, "column": 0}
+    },
+    {
+      "card_id": "550e8400-e29b-41d4-a716-446655440029", // Ashen Fletcher
+      "position": {"row": 8, "column": 8}
+    },
+    {
+      "card_id": "550e8400-e29b-41d4-a716-446655440030", // Fading Archer (to Dame Lysara)
+      "position": {"row": 7, "column": 7}
+    },
+    {
+      "card_id": "550e8400-e29b-41d4-a716-446655440038", // Wasteland Blacksmith
+      "position": {"row": 9, "column": 7}
+    }
+  ],
+  "card_drawing_hexes": [
+    {
+      "row": 5,
+      "column": 5,
+      "deck_file": "Plague_Resistance_550e8400-e29b-41d4-a716-446655440102.json",
+      "card_id": "550e8400-e29b-41d4-a716-446655440024" // Warped Crossbow Frame (to Hand Crossbow)
+    },
+    {
+      "row": 8,
+      "column": 9,
+      "deck_file": "Plague_Resistance_550e8400-e29b-41d4-a716-446655440102.json",
+      "card_id": "550e8400-e29b-41d4-a716-446655440026" // Siege Arbalest Design (to Heavy Arbalest)
+    },
+    {
+      "row": 1,
+      "column": 8,
+      "deck_file": "Forge_of_Heroes_550e8400-e29b-41d4-a716-446655440103.json",
+      "card_id": "550e8400-e29b-41d4-a716-446655440036" // Fractured Axe Head (to Battle Axe)
+    },
+    {
+      "row": 6,
+      "column": 3,
+      "deck_file": "Plague_Resistance_550e8400-e29b-41d4-a716-446655440102.json",
+      "card_id": null
+    }
+  ]
+}

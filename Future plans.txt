@@ -1,0 +1,48 @@
+Create a range maker app
+Integration with Game
+Update HexGrid to load range JSONs and translate relative coordinates to absolute positions based on the character’s position.
+For dual-state ranges, apply the primary range to find a target hex, then offset the secondary range from that hex.
+
+
+fix range to highlight the hex that an enemy is in.
+
+make it show the final moment before death so that we know why we died. make it slow motion.
+
+add more animations.
+
+
+Add healing, maybe a weapon that does healing? or maybe a tool? or maybe a separate equip method that equips a special, which could be a shield, a healing tool kit, or other equipable special items.
+
+Consider splitting it furtherâ€”perhaps moving screen classes (MainMenu, GameScreen, etc.) into a separate module like screens.py.
+
+Special Attacks: The Player class defines special attacks (e.g., "Multi-target Projectile") but doesn’t implement them. Add logic in Player.attack() to handle these, perhaps with a separate method
+
+
+Save/Load Game State: Beyond loading campaigns, allow saving mid-game progress (player position, inventory, unit states) to a JSON file.
+
+Tooltips: For inventory and crafting items, add hover tooltips using Pygame-GUI’s UITextBox with a delay, showing detailed card info without selection.
+
+Visual Feedback: Highlight the selected attack button in GameScreen (e.g., change its color) to clarify the current mode.
+
+Sprite Caching: Pre-scale and cache unit images in Player and Unit constructors instead of scaling every frame in HexGrid.draw().
+
+Dirty Rectangles: Use Pygame’s dirty rectangle rendering (pygame.display.update(rects)) to redraw only changed areas, especially during animations.
+
+Unit Collision: The move_unit method checks for None units but doesn’t handle cases where a unit might teleport or be displaced unexpectedly (e.g., via a special skill). Add a check to update self.units consistently.
+
+This is what Grok had said: Animation Overlap: If multiple units move simultaneously (e.g., during AI turns), ensure update_animation doesn’t interfere by adding a queue system. But instead, AI turns should be actual individual turns and each unit's turn should be shown one by one.
+
+Multiplayer: Extend the turn system to support networked players, using a simple client-server model with sockets or a library like asyncio.
+
+Audio: Add sound effects (e.g., for attacks, movement, card draws) using pygame.mixer to enhance immersion.
+
+Grok said: Crafting Requirements: The CraftingScreen.check_requirements() method assumes all values are integers. Add support for non-numeric requirements (e.g., "Requires: 1 Key") by parsing strings more flexibly. But I'm not sure because it seems that the single card requirement already works.
+
+Grok said: Campaign Progression: The GameScreen.check_level_completion() method handles basic transitions well. Consider adding more conditions (e.g., "Reach Hex (5, 5)") using a dictionary of transition types. Though, I think that this should be tied to Quests, and because Quests don't exist yet, Quests should be created first.
+
+Validation for card maker: There’s no input validation (e.g., ensuring numeric fields like "Health" or "Melee Damage" are integers). Adding this would prevent errors in the main game.
+
+Card Selection in the card maker: The "Requirements: Specific Cards" field uses a text entry with a "Browse" button that’s unimplemented. Consider a multi-select list of existing card names from the index.
+
+
+I'd like to make this rangeviewer app a bit better. Because this is only a viewer of a range, I want to eliminate descriptions like "healing", "lightning", "hitting all adjacent", "poison", "bounces to nearby targets". So, the apps only purpose is to display a range. So, Instead of having 1 drop down menu with lots of different ranges, I'd like it to have 1 drop down menu with a "range type" (which are melee, line of sight, echo,  and 1 field that has a range distance. The combination of these 2 fields will be displayed on the hex-grid. So, the field types might be melee, line of sight, echo,

@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Feral Smith",
+    "Health": "40",
+    "Movement": "4",
+    "Melee Damage": "20",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Background Image File Path": "path/to/forge_ruins_bg.png",
+    "Enemy Image File Path": "path/to/feral_smith.png"
+  }
+}

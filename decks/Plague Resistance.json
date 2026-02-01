@@ -1,0 +1,16 @@
+{
+  "deck_name": "Plague Resistance",
+  "back_image": "path/to/plague_deck_back.png",
+  "cards": [
+    "550e8400-e29b-41d4-a716-446655440024", // Warped Crossbow Frame (to Hand Crossbow)
+    "550e8400-e29b-41d4-a716-446655440025", // Archer’s Bow Blueprint (should be "Archer’s Bow Blueprint" but index has it as "Blacksmith’s Hammer Plans"; assuming typo in index key)
+    "550e8400-e29b-41d4-a716-446655440026", // Siege Arbalest Design (to Heavy Arbalest)
+    "550e8400-e29b-41d4-a716-446655440027", // Plague Archer (enemy)
+    "550e8400-e29b-41d4-a716-446655440028", // Diseased Bowman (to Plague Sniper, enemy)
+    "550e8400-e29b-41d4-a716-446655440029", // Ashen Fletcher
+    "550e8400-e29b-41d4-a716-446655440030", // Fading Archer (to Dame Lysara)
+    "550e8400-e29b-41d4-a716-446655440031", // Plague Sovereign (boss)
+    "550e8400-e29b-41d4-a716-446655440032", // Herbalist Survivor
+    "550e8400-e29b-41d4-a716-446655440033"  // Weary Pathfinder (to Lady Elara)
+  ]
+}

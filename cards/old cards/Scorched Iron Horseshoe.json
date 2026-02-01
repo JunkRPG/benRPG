@@ -1,0 +1,15 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Scorched Iron Horseshoe",
+    "Description": "A blackened horseshoe, evidence of a steed lost to the fires of the past.",
+    "Raw Material Value": "4",
+    "Refined Material Value": "9",
+    "Metal Value": "12",
+    "Wood Value": "0",
+    "Background Image": "path/to/horseshoe_bg.png",
+    "Junk Image": "path/to/scorched_horseshoe.png"
+  }
+}

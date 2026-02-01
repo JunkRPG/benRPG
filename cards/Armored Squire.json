@@ -1,0 +1,17 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Armored Squire",
+    "Health": "35",
+    "Movement": "6",
+    "Melee Damage": "12",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "Blocks 10 damage for an ally once per encounter",
+    "Background Image File Path": "path/to/ruined_castle_bg.png",
+    "NPC Image File Path": "path/to/armored_squire.png"
+  }
+}

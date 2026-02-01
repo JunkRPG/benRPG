@@ -1,0 +1,56 @@
+{
+  "grid": {
+    "rows": 10,
+    "columns": 10
+  },
+  "player_start": {
+    "row": 5,
+    "column": 5
+  },
+  "terrain": [
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "water", "water", "grass", "grass", "grass", "mountain", "grass", "grass"],
+    ["grass", "grass", "water", "water", "grass", "grass", "grass", "mountain", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "mountain", "mountain", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "mountain", "mountain", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"]
+  ],
+  "units": [
+    {
+      "card_id": "550e8400-e29b-41d4-a716-446655440009", // Wasteland Brigand
+      "position": {"row": 2, "column": 7}
+    },
+    {
+      "card_id": "550e8400-e29b-41d4-a716-446655440012", // Wasteland Blacksmith
+      "position": {"row": 5, "column": 6}
+    },
+    {
+      "card_id": "550e8400-e29b-41d4-a716-446655440005", // Scavenger Scout
+      "position": {"row": 4, "column": 4}
+    }
+  ],
+  "card_drawing_hexes": [
+    {
+      "row": 3,
+      "column": 3,
+      "deck_file": "Scavengers_Hoard_550e8400-e29b-41d4-a716-446655440100.json",
+      "card_id": "550e8400-e29b-41d4-a716-446655440000" // Rusted Chainmail Scrap
+    },
+    {
+      "row": 6,
+      "column": 6,
+      "deck_file": "Scavengers_Hoard_550e8400-e29b-41d4-a716-446655440100.json",
+      "card_id": null
+    },
+    {
+      "row": 8,
+      "column": 2,
+      "deck_file": "Scavengers_Hoard_550e8400-e29b-41d4-a716-446655440100.json",
+      "card_id": "550e8400-e29b-41d4-a716-446655440010" // Bent Iron Bar (to Iron Mace)
+    }
+  ]
+}

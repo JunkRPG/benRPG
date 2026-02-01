@@ -1,0 +1,15 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Broken Longsword Hilt",
+    "Description": "The handle of a once-mighty longsword, its blade lost to the wastes.",
+    "Raw Material Value": "3",
+    "Refined Material Value": "8",
+    "Metal Value": "10",
+    "Wood Value": "2",
+    "Background Image": "path/to/sword_hilt_bg.png",
+    "Junk Image": "path/to/broken_hilt.png"
+  }
+}

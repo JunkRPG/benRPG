@@ -1,0 +1,187 @@
+{
+  "grid": {
+    "rows": 10,
+    "columns": 10
+  },
+  "player_start": {
+    "row": 8,
+    "column": 1
+  },
+  "terrain": [
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ]
+  ],
+  "inaccessible_hexes": [
+    {
+      "row": 5,
+      "column": 3
+    },
+    {
+      "row": 6,
+      "column": 4
+    },
+    {
+      "row": 6,
+      "column": 5
+    },
+    {
+      "row": 7,
+      "column": 6
+    },
+    {
+      "row": 7,
+      "column": 7
+    },
+    {
+      "row": 8,
+      "column": 8
+    },
+    {
+      "row": 8,
+      "column": 9
+    }
+  ],
+  "units": [
+    {
+      "card_id": "Ashen Crossbowman",
+      "position": {
+        "row": 2,
+        "column": 7
+      }
+    },
+    {
+      "card_id": "Caravan Guard",
+      "position": {
+        "row": 6,
+        "column": 1
+      }
+    }
+  ],
+  "card_drawing_hexes": [
+    {
+      "row": 8,
+      "column": 2,
+      "deck_file": "test_with_healing_be90cfc8-9324-4d99-a928-53c9f6cc6874.json",
+      "card_id": null,
+      "linked_level": null
+    }
+  ]
+}

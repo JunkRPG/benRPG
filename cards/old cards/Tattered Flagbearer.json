@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Tattered Flagbearer",
+    "Health": "25",
+    "Movement": "5",
+    "Melee Damage": "12",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Background Image File Path": "path/to/battlefield_bg.png",
+    "Enemy Image File Path": "path/to/tattered_flagbearer.png"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Warlord’s Flail Instructions",
+    "Requirements: Raw Materials": "15",
+    "Requirements: Refined Materials": "10",
+    "Requirements: Wood": "5",
+    "Requirements: Metal": "25",
+    "Requirements: Specific Cards": "Scorched Iron Horseshoe",
+    "Background Image": "path/to/flail_instructions_bg.png",
+    "2nd_state_Name": "Spiked Flail",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "28",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "0",
+    "2nd_state_Weapon Image": "path/to/spiked_flail.png"
+  }
+}

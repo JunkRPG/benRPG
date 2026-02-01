@@ -1,0 +1,15 @@
+{
+  "card_type": "Boss Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Plague Sovereign",
+    "Health": "80",
+    "Movement": "3",
+    "Melee Damage": "15",
+    "Projectile Damage": "20",
+    "Projectile Range": "40",
+    "Background Image File Path": "path/to/plague_palace_bg.png",
+    "Boss Image File Path": "path/to/plague_sovereign.png"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "card_type": "Boss Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Bone King",
+    "Health": "90",
+    "Movement": "5",
+    "Melee Damage": "25",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Background Image File Path": "path/to/bone_throne_bg.png",
+    "Boss Image File Path": "path/to/bone_king.png"
+  }
+}

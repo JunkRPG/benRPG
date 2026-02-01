@@ -1,0 +1,64 @@
+{
+  "grid": {
+    "rows": 10,
+    "columns": 10
+  },
+  "player_start": {
+    "row": 8,
+    "column": 1
+  },
+  "terrain": [
+    ["mountain", "mountain", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["mountain", "mountain", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "water", "water", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "water", "water", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "mountain", "mountain"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "mountain", "mountain"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"]
+  ],
+  "units": [
+    {
+      "card_id": "550e8400-e29b-41d4-a716-446655440016", // Rusted Knight
+      "position": {"row": 2, "column": 6}
+    },
+    {
+      "card_id": "550e8400-e29b-41d4-a716-446655440017", // Crippled Knight (to Spectral Knight)
+      "position": {"row": 4, "column": 4}
+    },
+    {
+      "card_id": "550e8400-e29b-41d4-a716-446655440022", // The Iron Warlord (boss)
+      "position": {"row": 0, "column": 4}
+    },
+    {
+      "card_id": "550e8400-e29b-41d4-a716-446655440019", // Ruined Knight
+      "position": {"row": 7, "column": 2}
+    },
+    {
+      "card_id": "550e8400-e29b-41d4-a716-446655440021", // Tarnished Blade (to Sir Gideon)
+      "position": {"row": 8, "column": 3}
+    }
+  ],
+  "card_drawing_hexes": [
+    {
+      "row": 6,
+      "column": 5,
+      "deck_file": "Knights_Redemption_550e8400-e29b-41d4-a716-446655440101.json",
+      "card_id": "550e8400-e29b-41d4-a716-446655440014" // Fractured Axe Head (to Battle Axe)
+    },
+    {
+      "row": 9,
+      "column": 1,
+      "deck_file": "Knights_Redemption_550e8400-e29b-41d4-a716-446655440101.json",
+      "card_id": "550e8400-e29b-41d4-a716-446655440015" // Knight’s Lance Schematic (to Iron Lance)
+    },
+    {
+      "row": 3,
+      "column": 8,
+      "deck_file": "Knights_Redemption_550e8400-e29b-41d4-a716-446655440101.json",
+      "card_id": null
+    }
+  ]
+}

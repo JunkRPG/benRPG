@@ -1,0 +1,17 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Ashen Fletcher",
+    "Health": "20",
+    "Movement": "5",
+    "Melee Damage": "5",
+    "Projectile Damage": "10",
+    "Projectile Range": "25",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "Crafts 5 arrows using 5 Wood",
+    "Background Image File Path": "path/to/ashen_wastes_bg.png",
+    "NPC Image File Path": "path/to/ashen_fletcher.png"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Cracked Wooden Shield",
+    "Description": "A splintered shield, barely held together by rusted iron bands.",
+    "Raw Material Value": "4",
+    "Refined Material Value": "6",
+    "Metal Value": "5",
+    "Wood Value": "10",
+    "Background Image": "path/to/shield_bg.png",
+    "Junk Image": "path/to/cracked_shield.png"
+  }
+}

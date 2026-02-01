@@ -1,0 +1,21 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Blacksmith’s Hammer Plans",
+    "Requirements: Raw Materials": "15",
+    "Requirements: Refined Materials": "10",
+    "Requirements: Wood": "0",
+    "Requirements: Metal": "20",
+    "Requirements: Specific Cards": "Rusted Chainmail Scrap",
+    "Background Image": "path/to/hammer_plans_bg.png",
+    "2nd_state_Name": "Forge Hammer",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "22",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "0",
+    "2nd_state_Weapon Image": "path/to/forge_hammer.png"
+  }
+}

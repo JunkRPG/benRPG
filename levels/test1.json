@@ -1,0 +1,235 @@
+{
+  "grid": {
+    "rows": 10,
+    "columns": 10
+  },
+  "player_start": {
+    "row": 9,
+    "column": 0
+  },
+  "terrain": [
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ],
+    [
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
+    ]
+  ],
+  "inaccessible_hexes": [
+    {
+      "row": 4,
+      "column": 9
+    },
+    {
+      "row": 5,
+      "column": 3
+    },
+    {
+      "row": 5,
+      "column": 4
+    },
+    {
+      "row": 5,
+      "column": 5
+    },
+    {
+      "row": 5,
+      "column": 6
+    },
+    {
+      "row": 5,
+      "column": 7
+    },
+    {
+      "row": 5,
+      "column": 8
+    }
+  ],
+  "units": [
+    {
+      "card_id": "Corrupted Squire",
+      "position": {
+        "row": 1,
+        "column": 7
+      }
+    },
+    {
+      "card_id": "Bone Spearman",
+      "position": {
+        "row": 0,
+        "column": 6
+      }
+    },
+    {
+      "card_id": "Diseased Bowman to Plague Sniper",
+      "position": {
+        "row": 8,
+        "column": 8
+      }
+    },
+    {
+      "card_id": "The Ashen Titan",
+      "position": {
+        "row": 0,
+        "column": 9
+      }
+    },
+    {
+      "card_id": "Armored Squire",
+      "position": {
+        "row": 8,
+        "column": 0
+      }
+    },
+    {
+      "card_id": "Caravan Guard",
+      "position": {
+        "row": 7,
+        "column": 1
+      }
+    },
+    {
+      "card_id": "Forge Apprentice",
+      "position": {
+        "row": 6,
+        "column": 1
+      }
+    },
+    {
+      "card_id": "Herbalist Survivor",
+      "position": {
+        "row": 9,
+        "column": 2
+      }
+    },
+    {
+      "card_id": "Tarnished Blade to Sir Gideon the Resolute",
+      "position": {
+        "row": 8,
+        "column": 3
+      }
+    },
+    {
+      "card_id": "Weary Pathfinder to Lady Elara the Far-Seer",
+      "position": {
+        "row": 7,
+        "column": 0
+      }
+    }
+  ],
+  "card_drawing_hexes": []
+}

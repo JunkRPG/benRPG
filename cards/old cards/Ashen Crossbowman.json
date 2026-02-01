@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Ashen Crossbowman",
+    "Health": "30",
+    "Movement": "4",
+    "Melee Damage": "8",
+    "Projectile Damage": "15",
+    "Projectile Range": "35",
+    "Background Image File Path": "path/to/ashen_wastes_bg.png",
+    "Enemy Image File Path": "path/to/ashen_crossbowman.png"
+  }
+}

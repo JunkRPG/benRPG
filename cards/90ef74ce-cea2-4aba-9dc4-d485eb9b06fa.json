@@ -1,0 +1,29 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Consumable_Item",
+  "blueprint_subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Old bottle of neosporin",
+    "Description": "mostly ruined, but there is some good stuff left",
+    "Raw Material Value": "0",
+    "Refined Material Value": "0",
+    "Metal Value": "1",
+    "Wood Value": "0",
+    "Requirements: Raw Materials": "1",
+    "Requirements: Refined Materials": "",
+    "Requirements: Wood": "",
+    "Requirements: Metal": "",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "healing bandaid",
+    "2nd_state_Type": "Consumable",
+    "Background Image": "",
+    "Junk Image": "",
+    "2nd_state_Item Image": "",
+    "2nd_state_Use_HP": "+15HP",
+    "2nd_state_Use_Placeholder": [
+      "TBD",
+      "TBD"
+    ]
+  }
+}

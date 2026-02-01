@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Bone Spearman",
+    "Health": "35",
+    "Movement": "5",
+    "Melee Damage": "15",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Background Image File Path": "path/to/bone_pit_bg.png",
+    "Enemy Image File Path": "path/to/bone_spearman.png"
+  }
+}

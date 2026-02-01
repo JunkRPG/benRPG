@@ -1,0 +1,15 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Bent Crossbow Bolt",
+    "Description": "A warped bolt from a long-forgotten crossbow, still sharp at the tip.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "5",
+    "Metal Value": "8",
+    "Wood Value": "3",
+    "Background Image": "path/to/bolt_bg.png",
+    "Junk Image": "path/to/bent_bolt.png"
+  }
+}

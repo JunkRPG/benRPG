@@ -1,0 +1,26 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Fractured Axe Head",
+    "Description": "A heavy, cracked axe head, rusted but with potential.",
+    "Raw Material Value": "7",
+    "Refined Material Value": "15",
+    "Metal Value": "20",
+    "Wood Value": "0",
+    "Background Image": "path/to/axe_head_bg.png",
+    "Junk Image": "path/to/fractured_axe_head.png",
+    "Requirements: Raw Materials": "12",
+    "Requirements: Refined Materials": "8",
+    "Requirements: Wood": "10",
+    "Requirements: Metal": "15",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Battle Axe",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "25",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "0",
+    "2nd_state_Weapon Image": "path/to/battle_axe.png"
+  }
+}

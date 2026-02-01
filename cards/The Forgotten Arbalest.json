@@ -1,0 +1,15 @@
+{
+  "card_type": "Boss Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "The Forgotten Arbalest",
+    "Health": "85",
+    "Movement": "3",
+    "Melee Damage": "10",
+    "Projectile Damage": "30",
+    "Projectile Range": "50",
+    "Background Image File Path": "path/to/siege_tower_bg.png",
+    "Boss Image File Path": "path/to/forgotten_arbalest.png"
+  }
+}

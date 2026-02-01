@@ -1,0 +1,26 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Tarnished Blade",
+    "Health": "30",
+    "Movement": "4",
+    "Melee Damage": "10",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "Repairs ally armor for 5 Metal",
+    "Background Image File Path": "path/to/ruined_castle_bg.png",
+    "NPC Image File Path": "path/to/tarnished_blade.png",
+    "2nd_State_Name": "Sir Gideon the Resolute",
+    "2nd_State_Health": "50",
+    "2nd_State_Movement": "5",
+    "2nd_State_Melee Damage": "20",
+    "2nd_State_Projectile Damage": "0",
+    "2nd_State_Projectile Range": "0",
+    "2nd_State_Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "2nd_State_Special Skill": "Grants allies +10 Health for one encounter",
+    "2nd_State_NPC Image File Path": "path/to/sir_gideon.png"
+  }
+}

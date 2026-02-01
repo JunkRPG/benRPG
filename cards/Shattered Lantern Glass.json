@@ -1,0 +1,15 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Shattered Lantern Glass",
+    "Description": "Fragments of a lantern’s glass, reflecting the dim light of a lost era.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "6",
+    "Metal Value": "0",
+    "Wood Value": "0",
+    "Background Image": "path/to/lantern_bg.png",
+    "Junk Image": "path/to/shattered_glass.png"
+  }
+}

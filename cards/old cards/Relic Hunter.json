@@ -1,0 +1,17 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Relic Hunter",
+    "Health": "25",
+    "Movement": "6",
+    "Melee Damage": "8",
+    "Projectile Damage": "5",
+    "Projectile Range": "15",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "Finds 5 Refined Materials in ruins",
+    "Background Image File Path": "path/to/ashen_wastes_bg.png",
+    "NPC Image File Path": "path/to/relic_hunter.png"
+  }
+}

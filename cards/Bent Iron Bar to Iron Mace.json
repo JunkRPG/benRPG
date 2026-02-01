@@ -1,0 +1,26 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Bent Iron Bar",
+    "Description": "A twisted bar of iron, salvaged from a ruined gate.",
+    "Raw Material Value": "5",
+    "Refined Material Value": "10",
+    "Metal Value": "15",
+    "Wood Value": "0",
+    "Background Image": "path/to/iron_bar_bg.png",
+    "Junk Image": "path/to/bent_iron_bar.png",
+    "Requirements: Raw Materials": "10",
+    "Requirements: Refined Materials": "5",
+    "Requirements: Wood": "5",
+    "Requirements: Metal": "10",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Iron Mace",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "20",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "0",
+    "2nd_state_Weapon Image": "path/to/iron_mace.png"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Scavenger Hound",
+    "Health": "20",
+    "Movement": "8",
+    "Melee Damage": "10",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Background Image File Path": "path/to/wasteland_bg.png",
+    "Enemy Image File Path": "path/to/scavenger_hound.png"
+  }
+}

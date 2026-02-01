@@ -1,0 +1,17 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Wandering Bard",
+    "Health": "15",
+    "Movement": "7",
+    "Melee Damage": "3",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "Boosts ally Movement by 2 for one turn",
+    "Background Image File Path": "path/to/battlefield_bg.png",
+    "NPC Image File Path": "path/to/wandering_bard.png"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Tattered Leather Pouch",
+    "Description": "A worn pouch, once used to carry coins or herbs, now barely intact.",
+    "Raw Material Value": "3",
+    "Refined Material Value": "7",
+    "Metal Value": "0",
+    "Wood Value": "0",
+    "Background Image": "path/to/pouch_bg.png",
+    "Junk Image": "path/to/tattered_pouch.png"
+  }
+}

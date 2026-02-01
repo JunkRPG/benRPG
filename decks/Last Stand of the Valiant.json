@@ -1,0 +1,18 @@
+{
+  "deck_name": "Last Stand of the Valiant",
+  "back_image": "path/to/valiant_deck_back.png",
+  "cards": [
+    "550e8400-e29b-41d4-a716-446655440045", // Warlord’s Flail Instructions (to Spiked Flail)
+    "550e8400-e29b-41d4-a716-446655440046", // Warped Crossbow Frame (to Hand Crossbow)
+    "550e8400-e29b-41d4-a716-446655440047", // Tarnished Blade (to Sir Gideon)
+    "550e8400-e29b-41d4-a716-446655440048", // Ruined Knight
+    "550e8400-e29b-41d4-a716-446655440049", // Shattered Vanguard (to Lord Valric)
+    "550e8400-e29b-41d4-a716-446655440050", // Weary Pathfinder (to Lady Elara)
+    "550e8400-e29b-41d4-a716-446655440051", // Fading Archer (to Dame Lysara)
+    "550e8400-e29b-41d4-a716-446655440052", // Bone Spearman (enemy)
+    "550e8400-e29b-41d4-a716-446655440053", // Starving Wolf (to Rabid Beast, enemy)
+    "550e8400-e29b-41d4-a716-446655440054", // Bone King (boss)
+    "550e8400-e29b-41d4-a716-446655440055", // Caravan Guard
+    "550e8400-e29b-41d4-a716-446655440056"  // Cracked Spearhead (to Short Spear)
+  ]
+}

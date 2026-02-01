@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Rusted Knight",
+    "Health": "50",
+    "Movement": "3",
+    "Melee Damage": "18",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Background Image File Path": "path/to/ruined_castle_bg.png",
+    "Enemy Image File Path": "path/to/rusted_knight.png"
+  }
+}
