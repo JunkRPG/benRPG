@@ -1,0 +1,8 @@
+{
+  "deck_name": "Test Quest Deck",
+  "back_image": null,
+  "cards": [
+    "test_escort_quest",
+    "test_hunt_quest"
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "deck_name": "Test Shop Items",
+  "back_image": null,
+  "cards": ["test_shop_item_1", "test_shop_item_2", "test_shop_item_3"]
+}

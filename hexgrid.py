@@ -15,18 +15,52 @@ DIRECTIONS = [
     (-1, 0, 1), (-1, 1, 0), (0, 1, -1)
 ]
 
+# Terrain types configuration
+# Each terrain has: color, accessible (can units walk on it), blocks_los (does it block line of sight)
+TERRAIN_CONFIG = {
+    "grass": {"color": (76, 153, 0), "accessible": True, "blocks_los": False},
+    "dirt": {"color": (139, 90, 43), "accessible": True, "blocks_los": False},
+    "sand": {"color": (238, 214, 175), "accessible": True, "blocks_los": False},
+    "stone": {"color": (128, 128, 128), "accessible": True, "blocks_los": False},
+    "wood": {"color": (139, 69, 19), "accessible": True, "blocks_los": False},
+    "water": {"color": (30, 144, 255), "accessible": False, "blocks_los": False},
+    "deep_water": {"color": (0, 0, 139), "accessible": False, "blocks_los": False},
+    "lava": {"color": (255, 69, 0), "accessible": False, "blocks_los": False},
+    "mountain": {"color": (105, 105, 105), "accessible": False, "blocks_los": True},
+    "cliff": {"color": (70, 70, 70), "accessible": False, "blocks_los": True},
+    "forest": {"color": (34, 100, 34), "accessible": True, "blocks_los": True},
+    "swamp": {"color": (85, 107, 47), "accessible": True, "blocks_los": False},
+    "ice": {"color": (173, 216, 230), "accessible": True, "blocks_los": False},
+    "void": {"color": (20, 20, 30), "accessible": False, "blocks_los": True},
+}
+
+def get_terrain_color(terrain_type):
+    """Get the color for a terrain type."""
+    return TERRAIN_CONFIG.get(terrain_type, TERRAIN_CONFIG["grass"])["color"]
+
+def is_terrain_accessible(terrain_type):
+    """Check if a terrain type is walkable."""
+    return TERRAIN_CONFIG.get(terrain_type, TERRAIN_CONFIG["grass"])["accessible"]
+
+def does_terrain_block_los(terrain_type):
+    """Check if a terrain type blocks line of sight."""
+    return TERRAIN_CONFIG.get(terrain_type, TERRAIN_CONFIG["grass"])["blocks_los"]
+
 class HexGrid:
     def __init__(self, rows, cols, hex_size, window_width, window_height):
         self.rows = rows
         self.cols = cols
         self.hex_size = hex_size
-        # Grid stores a dict with "unit" and "accessible" keys
-        self.grid = [[{"unit": None, "accessible": True} for _ in range(cols)] for _ in range(rows)]
+        # Grid stores a dict with "unit", "accessible", and "terrain" keys
+        self.grid = [[{"unit": None, "accessible": True, "terrain": "grass"} for _ in range(cols)] for _ in range(rows)]
         self.player = None
         self.units = []
         self.selected_hex = None
         self.card_drawing_hexes = []
         self.deck_data = {}
+        # Location hex system
+        self.location_hexes = []
+        self.location_data = {}  # {(row,col): {"card": InventoryCard, "shop": [], "turns": 0, "visited": False}}
         # Calculate initial offsets based on provided dimensions
         grid_width = self.cols * self.hex_size * 1.5
         grid_height = self.rows * self.hex_size * 1.732
@@ -45,10 +79,21 @@ class HexGrid:
             self.cols = level_data["grid"]["columns"]
             self.hex_size = level_data.get("hex_size", 30)  # Default to 30 if not specified
             # Rebuild the grid with the new dimensions
-            self.grid = [[{"unit": None, "accessible": True} for _ in range(self.cols)] for _ in range(self.rows)]
+            self.grid = [[{"unit": None, "accessible": True, "terrain": "grass"} for _ in range(self.cols)] for _ in range(self.rows)]
             self.card_drawing_hexes = level_data.get("card_drawing_hexes", [])
-            
-            # Mark inaccessible hexes
+
+            # Load terrain data if present
+            terrain_data = level_data.get("terrain", [])
+            for row in range(self.rows):
+                for col in range(self.cols):
+                    if row < len(terrain_data) and col < len(terrain_data[row]):
+                        terrain_type = terrain_data[row][col]
+                        self.grid[row][col]["terrain"] = terrain_type
+                        # Set accessibility based on terrain type
+                        if not is_terrain_accessible(terrain_type):
+                            self.grid[row][col]["accessible"] = False
+
+            # Mark additional inaccessible hexes (from level editor toggle)
             for hex in level_data.get("inaccessible_hexes", []):
                 row, col = hex["row"], hex["column"]
                 if 0 <= row < self.rows and 0 <= col < self.cols:
@@ -87,6 +132,45 @@ class HexGrid:
                             print(f"Loaded deck: {deck_file}, contents: {self.deck_data[deck_file]}")
                         except Exception as e:
                             print(f"Error loading deck {deck_file}: {e}")
+
+            # Load location hexes
+            self.location_hexes = level_data.get("location_hexes", [])
+            self.location_data = {}
+            for loc_hex in self.location_hexes:
+                row, col = loc_hex["row"], loc_hex["column"]
+                self.location_data[(row, col)] = {
+                    "card": None,
+                    "shop": loc_hex.get("shop_inventory", []),
+                    "turns": loc_hex.get("turns_since_cycle", 0),
+                    "visited": loc_hex.get("visited_this_turn", False),
+                    "deck_file": loc_hex.get("location_deck_file"),
+                    "assigned_card_id": loc_hex.get("assigned_location_card_id"),
+                    "assigned_npc_id": loc_hex.get("assigned_npc_card_id"),
+                    "state": loc_hex.get("location_state", 1),
+                    "available_npcs": []  # NPCs waiting to be recruited at this location
+                }
+                # Load pre-assigned location card if specified
+                if loc_hex.get("assigned_location_card_id"):
+                    try:
+                        card_file = os.path.join("cards", f"{loc_hex['assigned_location_card_id']}.json")
+                        with open(card_file, 'r') as cf:
+                            card_data = json.load(cf)
+                        card_data["id"] = loc_hex["assigned_location_card_id"]
+                        self.location_data[(row, col)]["card"] = InventoryCard(card_data)
+                        # Set the card state if specified
+                        if loc_hex.get("location_state", 1) == 2:
+                            self.location_data[(row, col)]["card"].current_state = 2
+                    except Exception as e:
+                        print(f"Error loading location card: {e}")
+                # Preload location deck
+                if loc_hex.get("location_deck_file"):
+                    deck_file = os.path.join("decks", loc_hex["location_deck_file"])
+                    if deck_file not in self.deck_data:
+                        try:
+                            with open(deck_file, 'r') as df:
+                                self.deck_data[deck_file] = json.load(df)
+                        except Exception as e:
+                            print(f"Error loading location deck {deck_file}: {e}")
             
             # Recalculate view offsets based on new grid size
             grid_width = self.cols * self.hex_size * 1.5
@@ -98,7 +182,7 @@ class HexGrid:
             print(f"Error loading level: {e}")
             # Fallback to default setup only on error
             self.rows, self.cols, self.hex_size = 16, 24, 30
-            self.grid = [[{"unit": None, "accessible": True} for _ in range(self.cols)] for _ in range(self.rows)]
+            self.grid = [[{"unit": None, "accessible": True, "terrain": "grass"} for _ in range(self.cols)] for _ in range(self.rows)]
             if player:
                 self.place_unit(player, self.rows // 2, self.cols // 2)
 
@@ -170,6 +254,539 @@ class HexGrid:
                     except Exception as e:
                         return None, f"Error drawing card: {e}"
         return None, "No deck or linked level at this hex"
+
+    # ========== LOCATION SYSTEM METHODS ==========
+
+    def is_location_hex(self, row, col):
+        """Check if a hex is designated as a location hex."""
+        return (row, col) in self.location_data
+
+    def get_location_card(self, row, col):
+        """Get the assigned location card for a hex."""
+        loc_data = self.location_data.get((row, col))
+        if loc_data:
+            return loc_data.get("card")
+        return None
+
+    def draw_location_card(self, row, col, card_manager):
+        """Draw a random location card from the hex's location deck and assign it."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data:
+            return None, "Not a location hex"
+
+        if loc_data.get("card"):
+            return loc_data["card"], "Location already assigned"
+
+        deck_file = loc_data.get("deck_file")
+        if not deck_file:
+            return None, "No location deck assigned"
+
+        deck_path = os.path.join("decks", deck_file)
+        deck = self.deck_data.get(deck_path)
+        if not deck or not deck.get("cards"):
+            return None, "Location deck is empty"
+
+        card_id = random.choice(deck["cards"])
+        # Remove the drawn card from the deck so it can't be drawn again
+        deck["cards"].remove(card_id)
+
+        card_file = os.path.join("cards", f"{card_id}.json")
+        try:
+            with open(card_file, 'r') as f:
+                card_data = json.load(f)
+            card_data["id"] = card_id
+            location_card = InventoryCard(card_data)
+            loc_data["card"] = location_card
+            loc_data["assigned_card_id"] = card_id
+
+            # Initialize shop inventory
+            self._initialize_shop(row, col)
+
+            card_manager.track_card_usage(card_id, {
+                "action": "location_assigned",
+                "screen": "game",
+                "position": (row, col)
+            })
+            return location_card, f"Discovered {card_data['data'].get('Name', 'Unknown Location')}"
+        except Exception as e:
+            return None, f"Error drawing location card: {e}"
+
+    def _initialize_shop(self, row, col):
+        """Initialize or refresh the shop inventory for a location."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data or not loc_data.get("card"):
+            return
+
+        card = loc_data["card"]
+        card_data = card.get_current_data()
+
+        shop_deck_file = card_data.get("Shop_Deck")
+        shop_size = int(card_data.get("Shop_Size", 3) or 3)
+
+        if not shop_deck_file:
+            loc_data["shop"] = []
+            return
+
+        deck_path = os.path.join("decks", shop_deck_file)
+        if deck_path not in self.deck_data:
+            try:
+                with open(deck_path, 'r') as df:
+                    self.deck_data[deck_path] = json.load(df)
+            except Exception as e:
+                print(f"Error loading shop deck {shop_deck_file}: {e}")
+                loc_data["shop"] = []
+                return
+
+        deck = self.deck_data.get(deck_path)
+        if not deck or not deck.get("cards"):
+            loc_data["shop"] = []
+            return
+
+        # Draw cards for shop inventory
+        shop_items = []
+        available_cards = deck["cards"].copy()
+        for _ in range(min(shop_size, len(available_cards))):
+            if not available_cards:
+                break
+            card_id = random.choice(available_cards)
+            available_cards.remove(card_id)
+
+            try:
+                card_file = os.path.join("cards", f"{card_id}.json")
+                with open(card_file, 'r') as f:
+                    item_data = json.load(f)
+                item_data["id"] = card_id
+                item_card = InventoryCard(item_data)
+
+                # Calculate price
+                price = self._calculate_item_price(item_card, card_data)
+                shop_items.append({"card": item_card, "price": price})
+            except Exception as e:
+                print(f"Error loading shop item {card_id}: {e}")
+
+        loc_data["shop"] = shop_items
+
+    def _calculate_item_price(self, item_card, location_data):
+        """Calculate the price for a shop item."""
+        item_data = item_card.get_current_data()
+        currency_type = location_data.get("Shop_Currency", "metal")
+
+        # Try to get price from item data
+        if "Price" in item_data:
+            try:
+                amount = int(item_data["Price"])
+                return {"type": currency_type, "amount": amount}
+            except (ValueError, TypeError):
+                pass
+
+        # Calculate from material values
+        total_value = 0
+        value_fields = ["Raw Material Value", "Refined Material Value", "Metal Value", "Wood Value"]
+        for field in value_fields:
+            try:
+                total_value += int(item_data.get(field, 0) or 0)
+            except (ValueError, TypeError):
+                pass
+
+        # Apply markup
+        total_value = max(1, int(total_value * 1.5))
+        return {"type": currency_type, "amount": total_value}
+
+    def trigger_location_outcome(self, row, col):
+        """Trigger a weighted random outcome for the location (if not visited this turn)."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data or not loc_data.get("card"):
+            return None, "No location at this hex"
+
+        if loc_data.get("visited"):
+            return None, "Already triggered outcome this turn"
+
+        card = loc_data["card"]
+        card_data = card.get_current_data()
+
+        outcomes_str = card_data.get("Outcomes", "[]")
+        try:
+            outcomes = json.loads(outcomes_str) if isinstance(outcomes_str, str) else outcomes_str
+        except json.JSONDecodeError:
+            outcomes = []
+
+        if not outcomes:
+            return None, "No outcomes defined for this location"
+
+        # Weighted random selection
+        total_prob = sum(o.get("probability", 0) for o in outcomes)
+        if total_prob <= 0:
+            return None, "Invalid outcome probabilities"
+
+        roll = random.random() * total_prob
+        cumulative = 0
+        selected_outcome = None
+        for outcome in outcomes:
+            cumulative += outcome.get("probability", 0)
+            if roll <= cumulative:
+                selected_outcome = outcome
+                break
+
+        if not selected_outcome:
+            return None, "No outcome selected"
+
+        card_type = selected_outcome.get("card_type")
+        if card_type == "None" or not card_type:
+            return None, "Nothing found"
+
+        deck_file = selected_outcome.get("deck_file")
+        if not deck_file:
+            return None, f"No deck specified for {card_type}"
+
+        deck_path = os.path.join("decks", deck_file)
+        if deck_path not in self.deck_data:
+            try:
+                with open(deck_path, 'r') as df:
+                    self.deck_data[deck_path] = json.load(df)
+            except Exception as e:
+                return None, f"Error loading outcome deck: {e}"
+
+        deck = self.deck_data.get(deck_path)
+        if not deck or not deck.get("cards"):
+            return None, "Outcome deck is empty"
+
+        card_id = random.choice(deck["cards"])
+        card_file = os.path.join("cards", f"{card_id}.json")
+        try:
+            with open(card_file, 'r') as f:
+                outcome_card_data = json.load(f)
+            outcome_card_data["id"] = card_id
+            outcome_card = InventoryCard(outcome_card_data)
+            return outcome_card, f"Found {outcome_card_data['data'].get('Name', 'Unknown Item')}"
+        except Exception as e:
+            return None, f"Error drawing outcome card: {e}"
+
+    def upgrade_location(self, row, col, npc_card=None, doc_card=None):
+        """Upgrade a location to its second state (requires NPC or document conditions)."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data or not loc_data.get("card"):
+            return False, "No location at this hex"
+
+        card = loc_data["card"]
+        if card.states != 2:
+            return False, "This location cannot be upgraded"
+
+        if card.current_state == 2:
+            return False, "Location already upgraded"
+
+        card_data = card.get_current_data()
+
+        # Check NPC requirement
+        required_npc_type = card_data.get("Upgrade_NPC_Type")
+        if required_npc_type and npc_card:
+            npc_data = npc_card.get_current_data() if hasattr(npc_card, 'get_current_data') else npc_card
+            npc_allegiance = npc_data.get("Allegiance (Hostile, Neutral, Allied)", "")
+            if required_npc_type not in npc_allegiance:
+                return False, f"Requires {required_npc_type} NPC"
+
+        # Check material cost
+        material_cost_str = card_data.get("Upgrade_Material_Cost", "{}")
+        try:
+            material_cost = json.loads(material_cost_str) if isinstance(material_cost_str, str) else material_cost_str
+        except json.JSONDecodeError:
+            material_cost = {}
+
+        # Flip the card to state 2
+        card.toggle_state()
+        loc_data["state"] = 2
+        loc_data["assigned_npc_id"] = npc_card.card_data.get("id") if npc_card and hasattr(npc_card, 'card_data') else None
+
+        # Refresh shop with new state's shop deck
+        self._initialize_shop(row, col)
+
+        new_name = card.get_current_data().get("Name", "Upgraded Location")
+        return True, f"Location upgraded to {new_name}"
+
+    def add_npc_to_location(self, unit, location_pos):
+        """
+        Remove an NPC unit from the map and add them to a location's available NPCs.
+        Used when a quest NPC reaches their destination.
+
+        Args:
+            unit: The Unit object to move to the location
+            location_pos: (row, col) tuple of the target location
+
+        Returns: (success, message)
+        """
+        loc_data = self.location_data.get(location_pos)
+        if not loc_data:
+            return False, "No location at that position"
+
+        # Stop any animations on the unit to prevent game freeze
+        unit.animating = False
+        unit.target_pos = None
+
+        # Remove unit from map
+        if unit.position:
+            self.grid[unit.position[0]][unit.position[1]]["unit"] = None
+        if unit in self.units:
+            self.units.remove(unit)
+
+        # Create NPC card data from unit
+        npc_data = {
+            "id": unit.card_id,
+            "name": unit.name,
+            "card_type": unit.card_type,
+            "hp": unit.hp,
+            "max_hp": unit.max_hp,
+            "movement": unit.movement,
+            "melee_damage": unit.melee_damage,
+            "projectile_damage": unit.projectile_damage,
+            "projectile_range": unit.projectile_range,
+            "allegiance": unit.allegiance
+        }
+
+        # Add to location's available NPCs
+        loc_data["available_npcs"].append(npc_data)
+
+        return True, f"{unit.name} arrived at the location"
+
+    def get_available_npcs(self, row, col):
+        """Get NPCs available for recruitment at a location."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data:
+            return []
+        return loc_data.get("available_npcs", [])
+
+    def recruit_npc_from_location(self, row, col, npc_index):
+        """Remove an NPC from location's available list and return their data."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data:
+            return None, "No location at this position"
+
+        available = loc_data.get("available_npcs", [])
+        if npc_index < 0 or npc_index >= len(available):
+            return None, "Invalid NPC selection"
+
+        npc_data = available.pop(npc_index)
+        return npc_data, f"{npc_data['name']} joined your party"
+
+    def get_shop_inventory(self, row, col):
+        """Get the current shop inventory for a location."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data:
+            return []
+        return loc_data.get("shop", [])
+
+    def purchase_from_shop(self, row, col, item_index, player_inventory, materials_offered=None):
+        """Purchase an item from a location's shop."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data or not loc_data.get("card"):
+            return None, "No shop at this location"
+
+        shop = loc_data.get("shop", [])
+        if item_index < 0 or item_index >= len(shop):
+            return None, "Invalid item selection"
+
+        shop_item = shop[item_index]
+        price = shop_item.get("price", {})
+
+        # Validate payment
+        if price.get("type") == "cards":
+            # Card-based trading
+            required_type = price.get("card_type")
+            required_count = price.get("count", 1)
+            matching_cards = [c for c in (materials_offered or [])
+                           if c.card_data.get("card_type") == required_type]
+            if len(matching_cards) < required_count:
+                return None, f"Need {required_count} {required_type} cards"
+        else:
+            # Material-based payment
+            currency = price.get("type", "metal")
+            amount = price.get("amount", 0)
+
+            # Calculate total material value from offered cards
+            offered_value = 0
+            currency_to_field = {
+                "metal": "Metal Value",
+                "wood": "Wood Value",
+                "raw_materials": "Raw Material Value",
+                "refined_materials": "Refined Material Value"
+            }
+            field = currency_to_field.get(currency, "Metal Value")
+
+            for card in (materials_offered or []):
+                card_data = card.get_current_data()
+                try:
+                    offered_value += int(card_data.get(field, 0) or 0)
+                except (ValueError, TypeError):
+                    pass
+
+            if offered_value < amount:
+                return None, f"Need {amount} {currency}, offered {offered_value}"
+
+        # Complete purchase
+        purchased_card = shop_item["card"]
+        shop.pop(item_index)
+
+        # Replenish shop slot
+        self._replenish_shop_slot(row, col)
+
+        return purchased_card, f"Purchased {purchased_card.get_current_data().get('Name', 'Item')}"
+
+    def _replenish_shop_slot(self, row, col):
+        """Replenish a single shop slot after a purchase."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data or not loc_data.get("card"):
+            return
+
+        card = loc_data["card"]
+        card_data = card.get_current_data()
+        shop_deck_file = card_data.get("Shop_Deck")
+        shop_size = int(card_data.get("Shop_Size", 3) or 3)
+
+        if not shop_deck_file:
+            return
+
+        deck_path = os.path.join("decks", shop_deck_file)
+        deck = self.deck_data.get(deck_path)
+        if not deck or not deck.get("cards"):
+            return
+
+        shop = loc_data.get("shop", [])
+        if len(shop) >= shop_size:
+            return
+
+        # Get card IDs already in shop
+        shop_card_ids = [item["card"].card_data.get("id") for item in shop if item.get("card")]
+        available_cards = [cid for cid in deck["cards"] if cid not in shop_card_ids]
+
+        if not available_cards:
+            available_cards = deck["cards"].copy()
+
+        card_id = random.choice(available_cards)
+        try:
+            card_file = os.path.join("cards", f"{card_id}.json")
+            with open(card_file, 'r') as f:
+                item_data = json.load(f)
+            item_data["id"] = card_id
+            item_card = InventoryCard(item_data)
+            price = self._calculate_item_price(item_card, card_data)
+            shop.append({"card": item_card, "price": price})
+        except Exception as e:
+            print(f"Error replenishing shop slot: {e}")
+
+    def cycle_shop_inventory(self, row, col):
+        """Refresh all shop items for a location."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data:
+            return
+
+        loc_data["shop"] = []
+        loc_data["turns"] = 0
+        self._initialize_shop(row, col)
+
+    def on_turn_end(self):
+        """Called at end of turn cycle. Increments turn counters and checks for shop cycles."""
+        for pos, loc_data in self.location_data.items():
+            if not loc_data.get("card"):
+                continue
+
+            card = loc_data["card"]
+            card_data = card.get_current_data()
+
+            # Increment turn counter
+            loc_data["turns"] = loc_data.get("turns", 0) + 1
+
+            # Check for shop cycle
+            cycle_turns = int(card_data.get("Shop_Cycle_Turns", 0) or 0)
+            if cycle_turns > 0 and loc_data["turns"] >= cycle_turns:
+                self.cycle_shop_inventory(pos[0], pos[1])
+
+    def mark_location_visited(self, row, col):
+        """Mark a location as visited this turn (prevents multiple outcomes)."""
+        loc_data = self.location_data.get((row, col))
+        if loc_data:
+            loc_data["visited"] = True
+
+    def reset_location_visits(self):
+        """Reset all location visited flags at turn start."""
+        for loc_data in self.location_data.values():
+            loc_data["visited"] = False
+
+    def get_location_choices(self, row, col):
+        """Get the available choices for a location."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data or not loc_data.get("card"):
+            return []
+
+        card = loc_data["card"]
+        card_data = card.get_current_data()
+
+        choices_str = card_data.get("Choices", "[]")
+        try:
+            choices = json.loads(choices_str) if isinstance(choices_str, str) else choices_str
+        except json.JSONDecodeError:
+            choices = []
+
+        return choices
+
+    # ========== END LOCATION SYSTEM METHODS ==========
+
+    # ========== EDGE SPAWNING METHODS ==========
+
+    def get_edge_spawn_position(self, edge="random"):
+        """
+        Get a random empty spawn position on a map edge.
+        edge: "north", "south", "east", "west", or "random"
+        Returns (row, col) tuple or None if no valid position found.
+        """
+        if edge == "random":
+            edge = random.choice(["north", "south", "east", "west"])
+
+        candidates = []
+
+        if edge == "north":
+            # Top row (row 0)
+            for col in range(self.cols):
+                if self._is_valid_spawn(0, col):
+                    candidates.append((0, col))
+        elif edge == "south":
+            # Bottom row
+            for col in range(self.cols):
+                if self._is_valid_spawn(self.rows - 1, col):
+                    candidates.append((self.rows - 1, col))
+        elif edge == "west":
+            # Left column (col 0)
+            for row in range(self.rows):
+                if self._is_valid_spawn(row, 0):
+                    candidates.append((row, 0))
+        elif edge == "east":
+            # Right column
+            for row in range(self.rows):
+                if self._is_valid_spawn(row, self.cols - 1):
+                    candidates.append((row, self.cols - 1))
+
+        if candidates:
+            return random.choice(candidates)
+        return None
+
+    def _is_valid_spawn(self, row, col):
+        """Check if a position is valid for spawning (empty and accessible)."""
+        if not (0 <= row < self.rows and 0 <= col < self.cols):
+            return False
+        cell = self.grid[row][col]
+        return cell.get("unit") is None and cell.get("accessible", True)
+
+    def get_edge_positions(self, edge):
+        """Get all positions on a specific edge of the map."""
+        positions = []
+        if edge == "north":
+            positions = [(0, col) for col in range(self.cols)]
+        elif edge == "south":
+            positions = [(self.rows - 1, col) for col in range(self.cols)]
+        elif edge == "west":
+            positions = [(row, 0) for row in range(self.rows)]
+        elif edge == "east":
+            positions = [(row, self.cols - 1) for row in range(self.rows)]
+        return positions
+
+    # ========== END EDGE SPAWNING METHODS ==========
 
     def offset_to_cube(self, col, row):
         x = col
@@ -283,6 +900,56 @@ class HexGrid:
         reachable = self.get_movement_range(start, movement)
         return [pos for pos in reachable if pos != start and self.grid[pos[0]][pos[1]]["unit"] is None]
 
+    def get_hexes_at_distance(self, position, distance):
+        """Return list of hex positions exactly 'distance' away from position."""
+        if distance == 0:
+            return [position]
+
+        result = []
+        row, col = position
+        center_x, center_y, center_z = self.offset_to_cube(col, row)
+
+        # Use hex ring algorithm - walk around the ring at given distance
+        # Start at one corner and walk in each of 6 directions
+        for direction_idx in range(6):
+            # Starting position for this edge of the ring
+            dir_x, dir_y, dir_z = DIRECTIONS[direction_idx]
+            # Move to the starting corner
+            start_dir = DIRECTIONS[(direction_idx + 2) % 6]
+            x = center_x + distance * start_dir[0]
+            y = center_y + distance * start_dir[1]
+            z = center_z + distance * start_dir[2]
+
+            # Walk along this edge of the ring
+            for step in range(distance):
+                hex_row, hex_col = self.cube_to_offset(x, z)
+                if 0 <= hex_row < self.rows and 0 <= hex_col < self.cols:
+                    if (hex_row, hex_col) not in result:
+                        result.append((hex_row, hex_col))
+                x += dir_x
+                y += dir_y
+                z += dir_z
+
+        return result
+
+    def get_adjacent_hexes(self, row, col):
+        """Return list of all adjacent hex positions (distance 1), including occupied ones."""
+        return self.get_hexes_at_distance((row, col), 1)
+
+    def find_empty_hex_near(self, position, max_distance):
+        """Find an accessible empty hex within max_distance of position."""
+        for dist in range(1, max_distance + 1):
+            candidates = self.get_hexes_at_distance(position, dist)
+            # Shuffle to add randomness
+            random.shuffle(candidates)
+            for pos in candidates:
+                r, c = pos
+                if (0 <= r < self.rows and 0 <= c < self.cols and
+                    self.grid[r][c]["accessible"] and
+                    self.grid[r][c]["unit"] is None):
+                    return pos
+        return None
+
     def get_attack_range(self, start, range_limit, is_projectile=False):
         if is_projectile:
             attack_hexes = set()
@@ -309,21 +976,46 @@ class HexGrid:
                 'RED': (255, 0, 0),
                 'GRAY': (128, 128, 128),
                 'WHITE': (255, 255, 255),
-                'PURPLE': (128, 0, 128)
+                'PURPLE': (128, 0, 128),
+                'ORANGE': (255, 165, 0)
             }
         hex_surface = pygame.Surface((surface.get_width(), surface.get_height()), pygame.SRCALPHA)
         for row in range(self.rows):
             for col in range(self.cols):
                 x, y = self.get_hex_center(row, col)
-                points = [(x + self.hex_size * math.cos(math.radians(60 * i)), 
+                points = [(x + self.hex_size * math.cos(math.radians(60 * i)),
                            y + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
-                # Draw hex background
+
+                # Draw terrain color as base
+                terrain_type = self.grid[row][col].get("terrain", "grass")
+                terrain_color = get_terrain_color(terrain_type)
+                pygame.draw.polygon(hex_surface, terrain_color, points, 0)
+
+                # Draw overlay for inaccessible hexes (darker tint)
                 if not self.grid[row][col]["accessible"]:
-                    pygame.draw.polygon(hex_surface, colors['GRAY'], points, 0)  # Gray for inaccessible
-                elif movement_range and (row, col) in movement_range:
-                    pygame.draw.polygon(hex_surface, colors['BLUE'], points, 0)
-                elif attack_range and (row, col) in attack_range:
-                    pygame.draw.polygon(hex_surface, colors['DARK_RED_ALPHA'], points, 0)
+                    # Darken the terrain color for manually marked inaccessible
+                    if is_terrain_accessible(terrain_type):
+                        dark_overlay = pygame.Surface((self.hex_size * 2, self.hex_size * 2), pygame.SRCALPHA)
+                        dark_points = [(self.hex_size + self.hex_size * math.cos(math.radians(60 * i)),
+                                       self.hex_size + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                        pygame.draw.polygon(dark_overlay, (0, 0, 0, 80), dark_points, 0)
+                        hex_surface.blit(dark_overlay, (x - self.hex_size, y - self.hex_size))
+
+                # Draw movement range overlay
+                if movement_range and (row, col) in movement_range:
+                    move_overlay = pygame.Surface((self.hex_size * 2, self.hex_size * 2), pygame.SRCALPHA)
+                    move_points = [(self.hex_size + self.hex_size * math.cos(math.radians(60 * i)),
+                                   self.hex_size + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                    pygame.draw.polygon(move_overlay, (0, 100, 255, 100), move_points, 0)
+                    hex_surface.blit(move_overlay, (x - self.hex_size, y - self.hex_size))
+
+                # Draw attack range overlay
+                if attack_range and (row, col) in attack_range:
+                    attack_overlay = pygame.Surface((self.hex_size * 2, self.hex_size * 2), pygame.SRCALPHA)
+                    attack_points = [(self.hex_size + self.hex_size * math.cos(math.radians(60 * i)),
+                                     self.hex_size + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                    pygame.draw.polygon(attack_overlay, (255, 0, 0, 80), attack_points, 0)
+                    hex_surface.blit(attack_overlay, (x - self.hex_size, y - self.hex_size))
                 # Draw special hex indicators
                 for hex_data in self.card_drawing_hexes:
                     if hex_data["row"] == row and hex_data["column"] == col:
@@ -332,38 +1024,85 @@ class HexGrid:
                         elif "deck_file" in hex_data and hex_data["deck_file"] or "card_id" in hex_data and hex_data["card_id"]:
                             pygame.draw.polygon(hex_surface, colors['LIGHT_GREEN'], points, 3)  # Green for card-drawing
                         break
+                # Draw location hex indicators
+                if (row, col) in self.location_data:
+                    loc_data = self.location_data[(row, col)]
+                    pygame.draw.polygon(hex_surface, colors['ORANGE'], points, 3)  # Orange border for locations
+                    # Draw house icon if location is assigned
+                    if loc_data.get("card"):
+                        is_upgraded = loc_data.get("state", 1) == 2
+                        icon_color = colors['GREEN'] if is_upgraded else colors['ORANGE']
+                        # Simple house shape (triangle roof + rectangle base)
+                        house_size = self.hex_size * 0.3
+                        house_x, house_y = x, y
+                        roof_points = [
+                            (house_x, house_y - house_size * 0.8),  # Top
+                            (house_x - house_size * 0.6, house_y - house_size * 0.2),  # Bottom left
+                            (house_x + house_size * 0.6, house_y - house_size * 0.2)   # Bottom right
+                        ]
+                        base_rect = pygame.Rect(
+                            house_x - house_size * 0.4,
+                            house_y - house_size * 0.2,
+                            house_size * 0.8,
+                            house_size * 0.6
+                        )
+                        pygame.draw.polygon(hex_surface, icon_color, roof_points)
+                        pygame.draw.rect(hex_surface, icon_color, base_rect)
                 if self.selected_hex == (row, col):
                     pygame.draw.polygon(hex_surface, colors['YELLOW'], points, 0)
                 pygame.draw.polygon(hex_surface, colors['GOLDEN_YELLOW'], points, 1)
-                # Draw unit if present
-                if unit := self.grid[row][col]["unit"]:
-                    pos = unit.render_pos if unit.animating and unit.render_pos else (x, y)
-                    if isinstance(unit, Player) and unit.image:
-                        scale_factor = (self.hex_size * 1.5 * unit.image_scale_factor) / unit.image.get_height()
-                        scaled_image = pygame.transform.scale(unit.image, 
-                                                             (int(unit.image.get_width() * scale_factor), 
-                                                              int(unit.image.get_height() * scale_factor)))
-                        image_rect = scaled_image.get_rect(center=(int(pos[0]), int(pos[1])))
-                        hex_surface.blit(scaled_image, image_rect)
-                        health_bar_y = image_rect.top - 5
-                    else:
-                        color = (colors['GREEN'] if isinstance(unit, Player) else 
-                                 colors['RED'] if unit.allegiance == "Hostile" else 
-                                 colors['BLUE'] if unit.allegiance == "Allied" else 
-                                 colors['GRAY'])
-                        radius = max(10, int(self.hex_size / 3))  # Same as old version
-                        pygame.draw.circle(hex_surface, colors['WHITE'] if unit.attack_flash else color, 
-                                           (int(pos[0]), int(pos[1])), radius)
-                        health_bar_y = pos[1] - 15
-                        # Draw unit name above health bar
-                        name = unit.class_name if isinstance(unit, Player) else unit.name
-                        text_surface = self.font.render(name, True, colors['WHITE'])
-                        text_rect = text_surface.get_rect(centerx=pos[0], bottom=health_bar_y - 5)
-                        hex_surface.blit(text_surface, text_rect)
-                        # Draw damage text if present
-                        if unit.damage_text:
-                            damage_surface = self.font.render(unit.damage_text, True, colors['RED'])
-                            damage_rect = damage_surface.get_rect(center=(pos[0], health_bar_y - 25))
-                            hex_surface.blit(damage_surface, damage_rect)
-                    unit.draw_health_bar(hex_surface, (pos[0], health_bar_y))
+
+        # Second pass: Draw location names on top of hexes
+        for (row, col), loc_data in self.location_data.items():
+            if loc_data.get("card"):
+                loc_card = loc_data["card"]
+                loc_name = loc_card.get_current_data().get("Name", "")
+                if loc_name:
+                    x, y = self.get_hex_center(row, col)
+                    house_size = self.hex_size * 0.3
+                    name_surface = self.font.render(loc_name, True, colors['WHITE'])
+                    name_rect = name_surface.get_rect(centerx=x, top=y + house_size * 0.5)
+                    hex_surface.blit(name_surface, name_rect)
+
+        # Third pass: Draw all units on top of hexes (for proper z-ordering)
+        # This ensures animating units are visible and don't go under hexes
+        all_units = list(self.units) + ([self.player] if self.player else [])
+        for unit in all_units:
+            if unit and unit.position:
+                # Use render_pos for animating units, otherwise use hex center
+                if unit.animating and unit.render_pos:
+                    pos = unit.render_pos
+                else:
+                    pos = self.get_hex_center(*unit.position)
+
+                if isinstance(unit, Player) and unit.image:
+                    scale_factor = (self.hex_size * 1.5 * unit.image_scale_factor) / unit.image.get_height()
+                    scaled_image = pygame.transform.scale(unit.image,
+                                                         (int(unit.image.get_width() * scale_factor),
+                                                          int(unit.image.get_height() * scale_factor)))
+                    image_rect = scaled_image.get_rect(center=(int(pos[0]), int(pos[1])))
+                    hex_surface.blit(scaled_image, image_rect)
+                    health_bar_y = image_rect.top - 5
+                else:
+                    color = (colors['GREEN'] if isinstance(unit, Player) else
+                             colors['RED'] if unit.allegiance == "Hostile" else
+                             colors['BLUE'] if unit.allegiance == "Allied" else
+                             colors['GRAY'])
+                    radius = max(10, int(self.hex_size / 3))
+                    pygame.draw.circle(hex_surface, colors['WHITE'] if unit.attack_flash else color,
+                                       (int(pos[0]), int(pos[1])), radius)
+                    health_bar_y = pos[1] - radius - 5  # Position health bar just above the circle
+                    # Draw unit name above health bar (with proper spacing)
+                    name = unit.class_name if isinstance(unit, Player) else unit.name
+                    text_surface = self.font.render(name, True, colors['WHITE'])
+                    name_y = health_bar_y - 12  # Name above health bar with gap
+                    text_rect = text_surface.get_rect(centerx=pos[0], bottom=name_y)
+                    hex_surface.blit(text_surface, text_rect)
+                    # Draw damage text if present (above the name)
+                    if unit.damage_text:
+                        damage_surface = self.font.render(unit.damage_text, True, colors['RED'])
+                        damage_rect = damage_surface.get_rect(centerx=pos[0], bottom=text_rect.top - 2)
+                        hex_surface.blit(damage_surface, damage_rect)
+                unit.draw_health_bar(hex_surface, (pos[0], health_bar_y))
+
         surface.blit(hex_surface, (0, 0))

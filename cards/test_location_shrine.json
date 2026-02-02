@@ -1,0 +1,15 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Forest Shrine",
+    "Description": "An ancient shrine hidden in the woods. The air feels peaceful here.",
+    "Outcomes": "[{\"probability\":0.5,\"card_type\":\"Junk Card\",\"deck_file\":\"test_loot_deck.json\"},{\"probability\":0.5,\"card_type\":\"None\",\"deck_file\":\"\"}]",
+    "Choices": "[{\"name\":\"Pray\",\"action\":\"heal\",\"costs_action\":true,\"params\":{\"amount\":15}},{\"name\":\"Search Offerings\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Meditate\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":5}}]",
+    "Shop_Deck": "",
+    "Shop_Size": "0",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "0"
+  }
+}

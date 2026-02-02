@@ -29,6 +29,10 @@ class Player:
         self.special_attack = stats["special_attack"]
         self.movement_used = False
         self.action_used = False
+        # Double Attack mode (Warrior special) - allows both melee and projectile in one turn
+        self.double_attack_active = False
+        self.double_attack_melee_used = False
+        self.double_attack_projectile_used = False
         self.position = (0, 0)
         self.animating = False
         self.render_pos = None
@@ -39,6 +43,9 @@ class Player:
         self.projectile_weapon = None
         self.damage_text = None
         self.damage_time = 0
+        # Path-based animation
+        self.animation_path = []  # List of hex positions to animate through
+        self.animation_path_index = 0  # Current target in the path
         # Skill system attributes
         self.skills = []                # Learned skill cards (in state 2)
         self.active_skill_slots = 3     # Max equipped active skills
@@ -52,31 +59,211 @@ class Player:
         self.image_scale_factor = 1.2
 
     def attack(self, enemy, attack_name, grid):
-        if not self.action_used:
-            if attack_name == self.attacks["projectile"]["name"]:
-                damage = self.attacks["projectile"]["damage"]
-                max_range = self.projectile_range
-                distance = grid.hex_distance(self.position, enemy.position)
-                if (1 < distance <= max_range and 
-                    grid.is_aligned(self.position, enemy.position, max_range) and 
-                    grid.has_clear_line_of_sight(self.position, enemy.position)):
-                    enemy.hp -= damage
-                    enemy.set_damage_text(damage)  # Set damage feedback for enemy
-                    self.action_used = True
-                    self.attack_flash = True
-                    self.flash_start = pygame.time.get_ticks()
-                    return f"{self.class_name} used {attack_name} on {enemy.name} for {damage} damage", enemy.hp <= 0
-            elif attack_name == self.attacks["melee"]["name"]:
-                damage = self.attacks["melee"]["damage"]
-                distance = grid.hex_distance(self.position, enemy.position)
-                if distance == 1:
-                    enemy.hp -= damage
-                    enemy.set_damage_text(damage)
-                    self.action_used = True
-                    self.attack_flash = True
-                    self.flash_start = pygame.time.get_ticks()
-                    return f"{self.class_name} used {attack_name} on {enemy.name} for {damage} damage", enemy.hp <= 0
+        is_projectile = attack_name == self.attacks["projectile"]["name"]
+        is_melee = attack_name == self.attacks["melee"]["name"]
+
+        # Check if this attack type can be used
+        if self.double_attack_active:
+            # In Double Attack mode, check type-specific flags
+            if is_projectile and self.double_attack_projectile_used:
+                return "", False
+            if is_melee and self.double_attack_melee_used:
+                return "", False
+        else:
+            # Normal mode - check action_used
+            if self.action_used:
+                return "", False
+
+        if is_projectile:
+            damage = self.attacks["projectile"]["damage"]
+            max_range = self.projectile_range
+            distance = grid.hex_distance(self.position, enemy.position)
+            if (1 < distance <= max_range and
+                grid.is_aligned(self.position, enemy.position, max_range) and
+                grid.has_clear_line_of_sight(self.position, enemy.position)):
+                enemy.hp -= damage
+                enemy.set_damage_text(damage)
+                self._mark_attack_used(is_projectile=True)
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks()
+                return f"{self.class_name} used {attack_name} on {enemy.name} for {damage} damage", enemy.hp <= 0
+        elif is_melee:
+            damage = self.attacks["melee"]["damage"]
+            distance = grid.hex_distance(self.position, enemy.position)
+            if distance == 1:
+                enemy.hp -= damage
+                enemy.set_damage_text(damage)
+                self._mark_attack_used(is_projectile=False)
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks()
+                return f"{self.class_name} used {attack_name} on {enemy.name} for {damage} damage", enemy.hp <= 0
         return "", False
+
+    def _mark_attack_used(self, is_projectile):
+        """Mark an attack as used, handling Double Attack mode."""
+        if self.double_attack_active:
+            if is_projectile:
+                self.double_attack_projectile_used = True
+            else:
+                self.double_attack_melee_used = True
+            # If both attacks used, mark action as fully used
+            if self.double_attack_melee_used and self.double_attack_projectile_used:
+                self.action_used = True
+        else:
+            self.action_used = True
+
+    def reset_double_attack(self):
+        """Reset Double Attack mode at end of turn."""
+        self.double_attack_active = False
+        self.double_attack_melee_used = False
+        self.double_attack_projectile_used = False
+
+    def use_special_attack(self, target, grid):
+        """
+        Execute the player's class-specific special attack.
+
+        Args:
+            target: Target unit for targeted specials (can be None for AoE)
+            grid: The HexGrid instance
+
+        Returns:
+            tuple: (message, list of defeated units)
+        """
+        if self.special_attack == "Multi-target Projectile":
+            if self.action_used:
+                return "Action already used this turn", []
+            return self._multi_target_projectile(target, grid)
+        elif self.special_attack == "Double Attack":
+            # Double Attack is a mode activation, not a direct attack
+            return self._activate_double_attack()
+        elif self.special_attack == "Spin Punch":
+            if self.action_used:
+                return "Action already used this turn", []
+            return self._spin_punch(grid)
+        else:
+            return f"Unknown special attack: {self.special_attack}", []
+
+    def _multi_target_projectile(self, primary_target, grid):
+        """
+        Ranger special: Piercing shot that hits all enemies along a line
+        in the direction of the target (up to 3 enemies total).
+        """
+        if not primary_target:
+            return "Select a target for Multi-target Projectile", []
+
+        # Check if primary target is in range and aligned (on a hex line)
+        distance = grid.hex_distance(self.position, primary_target.position)
+        if distance < 1 or distance > self.projectile_range:
+            return "Target out of range", []
+        if not grid.is_aligned(self.position, primary_target.position, self.projectile_range):
+            return "Target must be in a straight line", []
+
+        # Get the full line in the direction of the target
+        player_row, player_col = self.position
+        target_row, target_col = primary_target.position
+
+        # Find which direction the target is in and get the full line
+        from hexgrid import DIRECTIONS
+        attack_line = []
+        for direction in DIRECTIONS:
+            line = grid.get_line(player_row, player_col, direction, self.projectile_range)
+            if (target_row, target_col) in line:
+                attack_line = line
+                break
+
+        if not attack_line:
+            return "Cannot determine attack line", []
+
+        damage = self.attacks["projectile"]["damage"]
+        messages = []
+        defeated = []
+        hits = 0
+        max_hits = 3
+
+        # Hit all enemies along the line (up to 3)
+        for hex_pos in attack_line:
+            if hits >= max_hits:
+                break
+            row, col = hex_pos
+            if 0 <= row < grid.rows and 0 <= col < grid.cols:
+                unit = grid.grid[row][col].get("unit")
+                if unit and hasattr(unit, 'allegiance') and unit.allegiance == "Hostile" and unit.hp > 0:
+                    unit.hp -= damage
+                    unit.set_damage_text(damage)
+                    unit.attack_flash = True
+                    unit.flash_start = pygame.time.get_ticks()
+                    messages.append(f"{unit.name} ({damage} dmg)")
+                    hits += 1
+                    if unit.hp <= 0:
+                        defeated.append(unit)
+
+        if hits == 0:
+            return "No enemies hit", []
+
+        self.action_used = True
+        self.attack_flash = True
+        self.flash_start = pygame.time.get_ticks()
+
+        result = f"{self.class_name} used Multi-target Projectile! Pierced through: {', '.join(messages)}"
+        return result, defeated
+
+    def _activate_double_attack(self):
+        """
+        Warrior special: Activates Double Attack mode, allowing both a melee
+        attack AND a projectile attack this turn.
+        """
+        if self.double_attack_active:
+            return "Double Attack already active", []
+
+        if self.action_used:
+            return "Action already used this turn", []
+
+        self.double_attack_active = True
+        self.double_attack_melee_used = False
+        self.double_attack_projectile_used = False
+
+        return f"{self.class_name} activated Double Attack! Can use both melee and projectile this turn.", []
+
+    def _double_attack(self, target, grid):
+        """Legacy method - use _activate_double_attack instead."""
+        return self._activate_double_attack()
+
+    def _spin_punch(self, grid):
+        """
+        Tank special: Hit all adjacent enemies with melee damage.
+        No target selection needed - automatically hits all adjacent hostiles.
+        """
+        damage = self.attacks["melee"]["damage"]
+        messages = []
+        defeated = []
+
+        # Get all adjacent hexes (distance 1)
+        adjacent_hexes = grid.get_hexes_at_distance(self.position, 1)
+
+        targets_hit = 0
+        for hex_pos in adjacent_hexes:
+            row, col = hex_pos
+            if 0 <= row < grid.rows and 0 <= col < grid.cols:
+                unit = grid.grid[row][col].get("unit")
+                if unit and hasattr(unit, 'allegiance') and unit.allegiance == "Hostile" and unit.hp > 0:
+                    unit.hp -= damage
+                    unit.set_damage_text(damage)
+                    unit.attack_flash = True
+                    unit.flash_start = pygame.time.get_ticks()
+                    targets_hit += 1
+                    messages.append(f"{unit.name} ({damage} dmg)")
+                    if unit.hp <= 0:
+                        defeated.append(unit)
+
+        if targets_hit == 0:
+            return "No adjacent enemies to hit with Spin Punch", []
+
+        self.action_used = True
+        self.attack_flash = True
+        self.flash_start = pygame.time.get_ticks()
+
+        result = f"{self.class_name} used Spin Punch! Hit: {', '.join(messages)}"
+        return result, defeated
 
     def equip_weapon(self, weapon_card):
         weapon_data = weapon_card.get_current_data()
@@ -109,27 +296,60 @@ class Player:
         self.damage_time = pygame.time.get_ticks()
 
     def animate_move(self, grid, new_row, new_col):
+        """Start path-based movement animation from current position to new position."""
         if not self.animating:
-            self.animating = True
-            old_x, old_y = grid.get_hex_center(*self.position)
+            old_pos = self.position
+
+            # Find path from old position to new position
+            path = grid.find_path(old_pos, (new_row, new_col))
+
+            if path and len(path) > 1:
+                # Store the path (excluding starting position)
+                self.animation_path = path[1:]  # Skip the starting hex
+                self.animation_path_index = 0
+            else:
+                # Fallback: direct path if pathfinding fails
+                self.animation_path = [(new_row, new_col)]
+                self.animation_path_index = 0
+
+            # Set initial render position at old location
+            old_x, old_y = grid.get_hex_center(*old_pos)
             self.render_pos = (old_x, old_y)
-            grid.grid[self.position[0]][self.position[1]]["unit"] = None
+            self.animating = True
+
+            # Update grid to show unit at final position (for collision detection)
+            grid.grid[old_pos[0]][old_pos[1]]["unit"] = None
             grid.grid[new_row][new_col]["unit"] = self
             self.position = (new_row, new_col)
 
     def update_animation(self, grid):
-        if self.animating and self.render_pos:
-            target_x, target_y = grid.get_hex_center(*self.position)
+        """Update path-based movement animation, moving hex by hex."""
+        if self.animating and self.render_pos and self.animation_path:
+            # Get current target hex in the path
+            target_hex = self.animation_path[self.animation_path_index]
+            target_x, target_y = grid.get_hex_center(*target_hex)
+
             dx = target_x - self.render_pos[0]
             dy = target_y - self.render_pos[1]
             dist = math.sqrt(dx**2 + dy**2)
+
             if dist <= MOVE_SPEED:
-                self.render_pos = None
-                self.animating = False
+                # Reached current target hex
+                self.render_pos = (target_x, target_y)
+                self.animation_path_index += 1
+
+                # Check if we've completed the path
+                if self.animation_path_index >= len(self.animation_path):
+                    self.render_pos = None
+                    self.animating = False
+                    self.animation_path = []
+                    self.animation_path_index = 0
             else:
+                # Move toward current target hex
                 move_x = dx / dist * MOVE_SPEED
                 move_y = dy / dist * MOVE_SPEED
                 self.render_pos = (self.render_pos[0] + move_x, self.render_pos[1] + move_y)
+
         if self.attack_flash and pygame.time.get_ticks() - self.flash_start > ATTACK_FLASH_DURATION:
             self.attack_flash = False
         if self.damage_text and pygame.time.get_ticks() - self.damage_time > DAMAGE_TEXT_DURATION:

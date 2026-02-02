@@ -1,0 +1,25 @@
+{
+  "card_type": "Location/Location",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Abandoned Tavern",
+    "Description": "A run-down tavern on the outskirts of town. Looks like it could be restored.",
+    "Outcomes": "[{\"probability\":0.4,\"card_type\":\"Junk Card\",\"deck_file\":\"test_loot_deck.json\"},{\"probability\":0.3,\"card_type\":\"None\",\"deck_file\":\"\"},{\"probability\":0.3,\"card_type\":\"Junk Card\",\"deck_file\":\"test_loot_deck.json\"}]",
+    "Choices": "[{\"name\":\"View Available Quests\",\"action\":\"view_quests\",\"costs_action\":false,\"params\":{\"deck\":\"decks/test_quest_deck.json\"}},{\"name\":\"Search\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Rest\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":10}},{\"name\":\"Browse Shop\",\"action\":\"shop\",\"costs_action\":false}]",
+    "Shop_Deck": "test_shop_deck.json",
+    "Shop_Size": "3",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "5",
+    "Upgrade_NPC_Type": "Allied",
+    "Upgrade_Material_Cost": "{\"Metal\":5}",
+    "2nd_state_Name": "The Rusty Tankard",
+    "2nd_state_Description": "A lively tavern run by your allied NPC. Better goods and services available!",
+    "2nd_state_Outcomes": "[{\"probability\":0.5,\"card_type\":\"Junk Card\",\"deck_file\":\"test_shop_deck.json\"},{\"probability\":0.3,\"card_type\":\"Junk Card\",\"deck_file\":\"test_loot_deck.json\"},{\"probability\":0.2,\"card_type\":\"None\",\"deck_file\":\"\"}]",
+    "2nd_state_Choices": "[{\"name\":\"View Available Quests\",\"action\":\"view_quests\",\"costs_action\":false,\"params\":{\"deck\":\"decks/test_quest_deck.json\"}},{\"name\":\"Search Cellar\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Rest & Heal\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":20}},{\"name\":\"Premium Shop\",\"action\":\"shop\",\"costs_action\":false}]",
+    "2nd_state_Shop_Deck": "test_shop_deck.json",
+    "2nd_state_Shop_Size": "5",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "3"
+  }
+}

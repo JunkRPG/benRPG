@@ -1,0 +1,14 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Iron Ingot",
+    "Description": "A refined iron ingot, useful for crafting.",
+    "Raw Material Value": "0",
+    "Refined Material Value": "5",
+    "Metal Value": "10",
+    "Wood Value": "0",
+    "Price": "8"
+  }
+}

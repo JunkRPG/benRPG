@@ -1,0 +1,5 @@
+{
+  "deck_name": "Test Locations",
+  "back_image": null,
+  "cards": ["test_location_tavern", "test_location_shrine", "test_location_blacksmith"]
+}

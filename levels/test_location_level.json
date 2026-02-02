@@ -1,0 +1,116 @@
+{
+  "grid": {
+    "rows": 12,
+    "columns": 16
+  },
+  "player_start": {
+    "row": 6,
+    "column": 2
+  },
+  "terrain": [
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"],
+    ["grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass", "grass"]
+  ],
+  "inaccessible_hexes": [
+    {"row": 0, "column": 0},
+    {"row": 0, "column": 15},
+    {"row": 11, "column": 0},
+    {"row": 11, "column": 15},
+    {"row": 5, "column": 7},
+    {"row": 5, "column": 8},
+    {"row": 6, "column": 7},
+    {"row": 6, "column": 8}
+  ],
+  "units": [
+    {
+      "card_id": "Wasteland Brigand",
+      "position": {"row": 4, "column": 10}
+    },
+    {
+      "card_id": "Scavenger Hound",
+      "position": {"row": 8, "column": 12}
+    }
+  ],
+  "card_drawing_hexes": [
+    {
+      "row": 3,
+      "column": 5,
+      "deck_file": "test_loot_deck.json",
+      "card_id": null,
+      "linked_level": null
+    },
+    {
+      "row": 9,
+      "column": 4,
+      "deck_file": "test_loot_deck.json",
+      "card_id": null,
+      "linked_level": null
+    },
+    {
+      "row": 5,
+      "column": 3,
+      "deck_file": "test_shop_deck.json",
+      "card_id": null,
+      "linked_level": null
+    },
+    {
+      "row": 7,
+      "column": 3,
+      "deck_file": "test_loot_deck.json",
+      "card_id": null,
+      "linked_level": null
+    },
+    {
+      "row": 4,
+      "column": 4,
+      "deck_file": "test_npc_deck.json",
+      "card_id": "test_allied_npc",
+      "linked_level": null
+    }
+  ],
+  "location_hexes": [
+    {
+      "row": 2,
+      "column": 6,
+      "location_deck_file": "test_locations_deck.json",
+      "assigned_location_card_id": null,
+      "assigned_npc_card_id": null,
+      "location_state": 1,
+      "shop_inventory": [],
+      "turns_since_cycle": 0,
+      "visited_this_turn": false
+    },
+    {
+      "row": 6,
+      "column": 12,
+      "location_deck_file": "test_locations_deck.json",
+      "assigned_location_card_id": null,
+      "assigned_npc_card_id": null,
+      "location_state": 1,
+      "shop_inventory": [],
+      "turns_since_cycle": 0,
+      "visited_this_turn": false
+    },
+    {
+      "row": 10,
+      "column": 8,
+      "location_deck_file": "test_locations_deck.json",
+      "assigned_location_card_id": null,
+      "assigned_npc_card_id": null,
+      "location_state": 1,
+      "shop_inventory": [],
+      "turns_since_cycle": 0,
+      "visited_this_turn": false
+    }
+  ]
+}

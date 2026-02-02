@@ -32,7 +32,12 @@ class Unit:
         # Damage feedback
         self.damage_text = None
         self.damage_time = 0
-        
+        # Quest-related: target position for escort quests
+        self.quest_target_position = None
+        # Path-based animation
+        self.animation_path = []  # List of hex positions to animate through
+        self.animation_path_index = 0  # Current target in the path
+
         if self.states == 2 and "2nd_State_Name" in card_data["data"]:
             self.second_state = {
                 "name": card_data["data"]["2nd_State_Name"],
@@ -194,7 +199,22 @@ class Unit:
                                     self.flash_start = pygame.time.get_ticks()
                                     log.append(f"{self.name} attacked {target.name} with projectile for {damage} damage")
                             break
-        
+            else:
+                # No hostile units - if we have a quest target, move toward it
+                if self.quest_target_position:
+                    distance_to_target = grid.hex_distance(self.position, self.quest_target_position)
+                    if distance_to_target > 0:
+                        path = grid.find_path(self.position, self.quest_target_position)
+                        if path and len(path) > 1:
+                            max_steps = min(self.movement, len(path) - 1)
+                            for steps in range(max_steps, 0, -1):
+                                new_pos = path[steps]
+                                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                                    success, msg = grid.move_unit(self, *new_pos)
+                                    if success:
+                                        log.append(f"{self.name} moves toward destination")
+                                    break
+
         elif self.allegiance == "Neutral":
             neighbors = grid.get_neighbors(*self.position)
             empty_neighbors = [pos for pos in neighbors if grid.grid[pos[0]][pos[1]]["unit"] is None]
@@ -239,24 +259,55 @@ class Unit:
         self.damage_time = pygame.time.get_ticks()
 
     def animate_move(self, grid, new_row, new_col):
-        self.animating = True
-        old_x, old_y = grid.get_hex_center(*self.position)
-        new_x, new_y = grid.get_hex_center(new_row, new_col)
+        """Start path-based movement animation from current position to new position."""
+        old_pos = self.position
+
+        # Find path from old position to new position
+        path = grid.find_path(old_pos, (new_row, new_col))
+
+        if path and len(path) > 1:
+            # Store the path (excluding starting position)
+            self.animation_path = path[1:]  # Skip the starting hex
+            self.animation_path_index = 0
+        else:
+            # Fallback: direct path if pathfinding fails
+            self.animation_path = [(new_row, new_col)]
+            self.animation_path_index = 0
+
+        # Set initial render position at old location
+        old_x, old_y = grid.get_hex_center(*old_pos)
         self.render_pos = (old_x, old_y)
-        grid.grid[self.position[0]][self.position[1]]["unit"] = None
+        self.animating = True
+
+        # Update grid to show unit at final position (for collision detection)
+        grid.grid[old_pos[0]][old_pos[1]]["unit"] = None
         grid.grid[new_row][new_col]["unit"] = self
         self.position = (new_row, new_col)
 
-    def update_animation(self, grid):  # Add grid parameter
-        if self.animating and self.render_pos:
-            target_x, target_y = grid.get_hex_center(*self.position)
+    def update_animation(self, grid):
+        """Update path-based movement animation, moving hex by hex."""
+        if self.animating and self.render_pos and self.animation_path:
+            # Get current target hex in the path
+            target_hex = self.animation_path[self.animation_path_index]
+            target_x, target_y = grid.get_hex_center(*target_hex)
+
             dx = target_x - self.render_pos[0]
             dy = target_y - self.render_pos[1]
             dist = math.sqrt(dx**2 + dy**2)
+
             if dist <= MOVE_SPEED:
-                self.render_pos = None
-                self.animating = False
+                # Reached current target hex
+                self.render_pos = (target_x, target_y)
+                self.animation_path_index += 1
+
+                # Check if we've completed the path
+                if self.animation_path_index >= len(self.animation_path):
+                    self.render_pos = None
+                    self.animating = False
+                    self.animation_path = []
+                    self.animation_path_index = 0
             else:
+                # Move toward current target hex
                 move_x = dx / dist * MOVE_SPEED
                 move_y = dy / dist * MOVE_SPEED
                 self.render_pos = (self.render_pos[0] + move_x, self.render_pos[1] + move_y)

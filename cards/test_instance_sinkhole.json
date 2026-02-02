@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "data": {
+    "Name": "Sinkhole Opens",
+    "Description": "The ground rumbles and a sinkhole suddenly opens beneath your feet!",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.15, \"type\": \"damage_player\", \"text\": \"You stumble and fall into the sinkhole!\", \"params\": {\"damage\": 15}}, {\"probability\": 0.15, \"type\": \"damage_enemy\", \"text\": \"An enemy loses their footing and falls in!\", \"params\": {\"damage\": 15, \"target\": \"random\"}}, {\"probability\": 0.20, \"type\": \"draw_card\", \"text\": \"You spot something glinting in the rubble!\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.10, \"type\": \"draw_card\", \"text\": \"Old documents are exposed in the earth!\", \"params\": {\"card_type\": \"Document Card\"}}, {\"probability\": 0.15, \"type\": \"none\", \"text\": \"The sinkhole opens harmlessly nearby.\", \"params\": {\"text\": \"You step back just in time.\"}}, {\"probability\": 0.25, \"type\": \"player_choice\", \"text\": \"Someone is trapped in the sinkhole!\", \"params\": {\"choices\": [{\"name\": \"Rescue them\", \"risk\": 0.3, \"success\": {\"type\": \"heal_player\", \"amount\": 10}, \"failure\": {\"type\": \"damage_player\", \"damage\": 10}}, {\"name\": \"Leave them\", \"effect\": {\"type\": \"none\", \"text\": \"You walk away, hearing their cries fade...\"}}]}}]"
+  }
+}

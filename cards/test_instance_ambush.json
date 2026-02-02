@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "states": 1,
+  "data": {
+    "Name": "Ambush!",
+    "Description": "You hear rustling in the shadows. Something is watching you...",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.30, \"type\": \"damage_player\", \"text\": \"An attacker strikes from the shadows!\", \"params\": {\"damage\": 10}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"It was just a small animal. False alarm.\", \"params\": {\"text\": \"You breathe a sigh of relief.\"}}, {\"probability\": 0.25, \"type\": \"draw_card\", \"text\": \"You find supplies left behind by previous travelers.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.25, \"type\": \"player_choice\", \"text\": \"You spot the attacker before they strike!\", \"params\": {\"choices\": [{\"name\": \"Strike first\", \"risk\": 0.2, \"success\": {\"type\": \"damage_enemy\", \"damage\": 20, \"target\": \"random\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 15}}, {\"name\": \"Hide and observe\", \"effect\": {\"type\": \"none\", \"text\": \"You wait silently as the threat passes.\"}}]}}]"
+  }
+}

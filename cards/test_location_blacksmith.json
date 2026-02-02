@@ -1,0 +1,15 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Ruined Blacksmith",
+    "Description": "The remains of an old blacksmith shop. Some tools and materials might still be salvageable.",
+    "Outcomes": "[{\"probability\":0.6,\"card_type\":\"Junk Card\",\"deck_file\":\"test_loot_deck.json\"},{\"probability\":0.4,\"card_type\":\"Junk Card\",\"deck_file\":\"test_shop_deck.json\"}]",
+    "Choices": "[{\"name\":\"Scavenge\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Trade Scrap\",\"action\":\"shop\",\"costs_action\":false}]",
+    "Shop_Deck": "test_shop_deck.json",
+    "Shop_Size": "2",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "4"
+  }
+}

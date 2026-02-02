@@ -1,0 +1,18 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Hunt",
+  "states": 2,
+  "data": {
+    "Name": "Hunt the Beast",
+    "Description": "A dangerous creature threatens the area",
+    "Template_Text": "[Enemy1] has been terrorizing the region. Hunt it down and receive [Junk1] as a reward.",
+    "Placeholders": "[{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"player\",\"spawn_distance\":5},{\"id\":\"Junk1\",\"type\":\"Junk Card\",\"count\":1,\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"enemy_defeated\",\"params\":{\"enemy\":\"Enemy1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}},{\"type\":\"turn_limit\",\"params\":{\"turns\":20}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "2nd_state_Name": "Beast Slain",
+    "2nd_state_Template_Text": "You successfully hunted down [Enemy1] and claimed your reward of [Junk1].",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

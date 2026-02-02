@@ -1,0 +1,13 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Rusty Nails",
+    "Description": "A handful of rusty nails found in the rubble.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "0",
+    "Metal Value": "3",
+    "Wood Value": "0"
+  }
+}

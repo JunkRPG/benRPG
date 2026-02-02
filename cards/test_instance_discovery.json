@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "states": 1,
+  "data": {
+    "Name": "Strange Discovery",
+    "Description": "You notice something unusual partially hidden from view...",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.30, \"type\": \"draw_card\", \"text\": \"You found valuable salvage!\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.20, \"type\": \"draw_card\", \"text\": \"Hidden documents reveal important information!\", \"params\": {\"card_type\": \"Document Card\"}}, {\"probability\": 0.15, \"type\": \"heal_player\", \"text\": \"You find a cache of medical supplies!\", \"params\": {\"amount\": 15}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"It was just debris. Nothing useful.\", \"params\": {\"text\": \"Better luck next time.\"}}, {\"probability\": 0.15, \"type\": \"damage_player\", \"text\": \"The discovery was booby-trapped!\", \"params\": {\"damage\": 8}}]"
+  }
+}
