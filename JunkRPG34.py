@@ -2295,10 +2295,9 @@ class GameScreen:
         game.transition_manager = TransitionManager(self.card_manager, game.instance_manager)
         game.transition_manager.load_transition_card("test_transition_forest")
 
-        # Reset player to initial state
-        if self.player_class:
-            game.player = Player(self.player_class)
-        if not self.player_class and game.player:
+        # Store the current player's class for future reference
+        # (CharacterCreationScreen already created the player with the correct class)
+        if game.player:
             self.player_class = game.player.class_name
         
         # Load campaign or level
