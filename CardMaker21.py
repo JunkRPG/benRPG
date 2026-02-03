@@ -114,6 +114,12 @@ SKILL_TRIGGERS = ["Turn_Start", "Turn_End", "Always"]
 SKILL_ATTACK_TYPES = ["Melee", "Projectile", "AOE"]
 SKILL_TARGETS = ["Self", "Ally", "Enemy", "All_Allies", "All_Enemies"]
 
+# Location system options
+LOCATION_OUTCOME_TYPES = ["Junk Card", "NPC Card", "Enemy Card", "Document Card", "None"]
+LOCATION_CHOICE_ACTIONS = ["draw_card", "heal", "trade", "shop", "sell", "exit"]
+CURRENCY_TYPES = ["metal", "wood", "raw_materials", "refined_materials", "cards"]
+ALLEGIANCE_TYPES = ["Hostile", "Neutral", "Allied"]
+
 # CardPreview class (unchanged)
 class CardPreview:
     def __init__(self, card_data, card_id, back_action, edit_action=None):
@@ -931,6 +937,13 @@ class CardCreationScreen:
                 self.initialize_junk_subclass_selection()
             elif self.current_screen == "input_form":
                 self.initialize_input_form()
+        elif self.card_type == "Quest Card":
+            # Quest cards are always 2-state, skip state selection
+            if self.current_screen == "state_selection":
+                self.state = 2
+                self.current_screen = "input_form"
+            if self.current_screen == "input_form":
+                self.initialize_input_form()
         else:
             if self.current_screen == "state_selection":
                 self.initialize_state_selection()
@@ -947,7 +960,7 @@ class CardCreationScreen:
         )
         self.ui_elements.append(self.title)
 
-        subclasses = ["Blueprint", "Skill_Tome", "Journal", "Map", "Note", "Book", "Pamphlet"]
+        subclasses = ["Blueprint", "Skill_Tome", "Location_Plan", "Journal", "Map", "Note", "Book", "Pamphlet"]
         for i, subclass in enumerate(subclasses):
             y_pos = 100 + i * 60
             button = UIButton(
@@ -1395,6 +1408,43 @@ class CardCreationScreen:
 
                 total_form_height = max(len(fields_state_1), len(fields_state_2)) * 80 + 140
                 self.max_scroll = max(0, total_form_height - WINDOW_HEIGHT)
+            elif self.card_type == "Document Card" and self.selected_subclass == "Location_Plan":
+                # Document/Location compound type: State 1 is Document (plan), State 2 is Location
+                fields_state_1 = [
+                    ("Name", "text"),
+                    ("Description", "text"),
+                    ("Requirements_NPC_Type", "dropdown", ALLEGIANCE_TYPES, "Allied"),
+                    ("Requirements_Gems", "text"),
+                    ("Requirements_Materials", "text"),  # JSON: {"Metal":10,"Wood":5}
+                    ("Background Image", "file"),
+                ]
+                # State 2 is the actual location
+                fields_state_2 = [
+                    ("2nd_state_Name", "text"),
+                    ("2nd_state_Description", "text"),
+                    ("2nd_state_Outcomes", "text"),
+                    ("2nd_state_Choices", "text"),
+                    ("2nd_state_Shop_Deck", "text"),
+                    ("2nd_state_Shop_Size", "text"),
+                    ("2nd_state_Shop_Currency", "dropdown", CURRENCY_TYPES, "metal"),
+                    ("2nd_state_Shop_Cycle_Turns", "text"),
+                    ("2nd_state_Location Image File Path", "file"),
+                ]
+
+                column_width = 300
+                left_column_x = (WINDOW_WIDTH - 2 * column_width - 100) // 2
+                right_column_x = left_column_x + column_width + 100
+
+                for i, field_info in enumerate(fields_state_1):
+                    y_pos = y_start + i * 80
+                    create_field_ui(left_column_x, y_pos, field_info, column_width)
+
+                for i, field_info in enumerate(fields_state_2):
+                    y_pos = y_start + i * 80
+                    create_field_ui(right_column_x, y_pos, field_info, column_width)
+
+                total_form_height = max(len(fields_state_1), len(fields_state_2)) * 80 + 140
+                self.max_scroll = max(0, total_form_height - WINDOW_HEIGHT)
             elif self.card_type == "Enemy Card":
                 fields_state_1 = [
                     ("Name", "text"),
@@ -1508,29 +1558,78 @@ class CardCreationScreen:
                 total_form_height = max(len(fields_state_1), len(fields_state_2)) * 80 + 140
                 self.max_scroll = max(0, total_form_height - WINDOW_HEIGHT)
             elif self.card_type == "Transition Card":
+                # Transition Cards - represent world events that happen each turn cycle
+                # Can have 1 or 2 states (e.g., Day/Night, Rain/Dry)
                 fields_state_1 = [
                     ("Name", "text"),
                     ("Description", "text"),
+                    ("Outcomes", "text"),  # JSON array of outcome objects
                     ("Background Image", "file"),
                 ]
                 fields_state_2 = [
-                    ("2nd_State_Name", "text"),
-                    ("2nd_State_Description", "text"),
-                    ("2nd_State_Background Image", "file"),
+                    ("2nd_state_Name", "text"),
+                    ("2nd_state_Description", "text"),
+                    ("2nd_state_Outcomes", "text"),  # JSON array for state 2
+                    ("2nd_state_Background Image", "file"),
                 ]
-                column_width = 300
+                column_width = 350
                 left_column_x = (WINDOW_WIDTH - 2 * column_width - 100) // 2
                 right_column_x = left_column_x + column_width + 100
 
                 for i, field_info in enumerate(fields_state_1):
-                    y_pos = y_start + i * 80
+                    y_pos = y_start + i * 90
                     create_field_ui(left_column_x, y_pos, field_info, column_width)
 
                 for i, field_info in enumerate(fields_state_2):
-                    y_pos = y_start + i * 80
+                    y_pos = y_start + i * 90
                     create_field_ui(right_column_x, y_pos, field_info, column_width)
 
-                total_form_height = max(len(fields_state_1), len(fields_state_2)) * 80 + 140
+                total_form_height = max(len(fields_state_1), len(fields_state_2)) * 90 + 140
+                self.max_scroll = max(0, total_form_height - WINDOW_HEIGHT)
+            elif self.card_type == "Quest Card":
+                # Quest cards are always 2-state (Active/Complete)
+                # Left column: State 1 fields (active quest)
+                left_fields = [
+                    ("Name", "text"),
+                    ("Description", "text"),
+                    ("Template_Text", "text"),
+                    ("Placeholders", "text"),  # JSON array
+                    ("Quest Image File Path", "file"),
+                ]
+                # Middle column: Conditions
+                middle_fields = [
+                    ("Success_Conditions", "text"),  # JSON array
+                    ("Failure_Conditions", "text"),  # JSON array
+                    ("Rewards", "text"),  # JSON object
+                ]
+                # Right column: State 2 fields (completed quest)
+                right_fields = [
+                    ("2nd_state_Name", "text"),
+                    ("2nd_state_Template_Text", "text"),
+                    ("2nd_state_Quest Image File Path", "file"),
+                ]
+
+                column_width = 300
+                spacing = 30
+                total_width = 3 * column_width + 2 * spacing
+                left_margin = (WINDOW_WIDTH - total_width) // 2
+                column1_x = left_margin
+                column2_x = column1_x + column_width + spacing
+                column3_x = column2_x + column_width + spacing
+
+                for i, field_info in enumerate(left_fields):
+                    y_pos = y_start + i * 80
+                    create_field_ui(column1_x, y_pos, field_info, column_width)
+
+                for i, field_info in enumerate(middle_fields):
+                    y_pos = y_start + i * 80
+                    create_field_ui(column2_x, y_pos, field_info, column_width)
+
+                for i, field_info in enumerate(right_fields):
+                    y_pos = y_start + i * 80
+                    create_field_ui(column3_x, y_pos, field_info, column_width)
+
+                total_form_height = max(len(left_fields), len(middle_fields), len(right_fields)) * 80 + 140
                 self.max_scroll = max(0, total_form_height - WINDOW_HEIGHT)
             else:
                 fields_state_1 = []
@@ -1666,54 +1765,119 @@ class CardCreationScreen:
                 total_form_height = len(fields) * 80 + 140
                 self.max_scroll = max(0, total_form_height - WINDOW_HEIGHT)
             elif self.card_type == "Location Card":
-                fields = [
-                    ("Name", "text"),
-                    ("Background Image File Path", "file"),
-                    ("Location Image File Path", "file")
-                ]
-                column_width = 300
-                column_x = (WINDOW_WIDTH - column_width) // 2
-                for i, field_info in enumerate(fields):
-                    y_pos = y_start + i * 80
-                    create_field_ui(column_x, y_pos, field_info, column_width)
-                total_form_height = len(fields) * 80 + 140
-                self.max_scroll = max(0, total_form_height - WINDOW_HEIGHT)
-            elif self.card_type == "Transition Card":
-                dropdown_options = [
-                    "1 junk", "1 document", "2 junk", "2 document",
-                    "1 location", "1 enemy", "1 NPC", "1 instance", "1 quest"
-                ]
+                # Location cards now support 1 or 2 states (Location/Location)
+                # State 1 fields (left column)
                 left_fields = [
                     ("Name", "text"),
                     ("Description", "text"),
-                    ("From Card", "card_selection"),
-                    ("To Card", "card_selection"),
+                    ("Outcomes", "text"),  # JSON: [{"probability":0.4,"card_type":"Junk Card","deck_file":"junk.json"}]
+                    ("Choices", "text"),   # JSON: [{"name":"Search","action":"draw_card","costs_action":true}]
+                    ("Shop_Deck", "text"),
+                    ("Shop_Size", "text"),
+                    ("Shop_Currency", "dropdown", CURRENCY_TYPES, "metal"),
+                    ("Shop_Cycle_Turns", "text"),
+                    ("Background Image File Path", "file"),
+                    ("Location Image File Path", "file")
+                ]
+
+                if self.state == 2:
+                    # 2-state Location/Location card
+                    # Middle column: upgrade requirements
+                    middle_fields = [
+                        ("Upgrade_NPC_Type", "dropdown", ALLEGIANCE_TYPES, "Allied"),
+                        ("Upgrade_Material_Cost", "text"),  # JSON: {"Raw Materials":10}
+                    ]
+                    # Right column: state 2 fields
+                    right_fields = [
+                        ("2nd_state_Name", "text"),
+                        ("2nd_state_Description", "text"),
+                        ("2nd_state_Outcomes", "text"),
+                        ("2nd_state_Choices", "text"),
+                        ("2nd_state_Shop_Deck", "text"),
+                        ("2nd_state_Shop_Size", "text"),
+                        ("2nd_state_Shop_Currency", "dropdown", CURRENCY_TYPES, "metal"),
+                        ("2nd_state_Shop_Cycle_Turns", "text"),
+                        ("2nd_state_Location Image File Path", "file")
+                    ]
+
+                    column_width = 280
+                    spacing = 30
+                    total_width = 3 * column_width + 2 * spacing
+                    left_margin = (WINDOW_WIDTH - total_width) // 2
+                    column1_x = left_margin
+                    column2_x = column1_x + column_width + spacing
+                    column3_x = column2_x + column_width + spacing
+
+                    for i, field_info in enumerate(left_fields):
+                        y_pos = y_start + i * 70
+                        create_field_ui(column1_x, y_pos, field_info, column_width)
+
+                    for i, field_info in enumerate(middle_fields):
+                        y_pos = y_start + i * 70
+                        create_field_ui(column2_x, y_pos, field_info, column_width)
+
+                    for i, field_info in enumerate(right_fields):
+                        y_pos = y_start + i * 70
+                        create_field_ui(column3_x, y_pos, field_info, column_width)
+
+                    total_form_height = max(len(left_fields), len(middle_fields), len(right_fields)) * 70 + 140
+                else:
+                    # Single-state Location card
+                    column_width = 300
+                    column_x = (WINDOW_WIDTH - column_width) // 2
+                    for i, field_info in enumerate(left_fields):
+                        y_pos = y_start + i * 80
+                        create_field_ui(column_x, y_pos, field_info, column_width)
+                    total_form_height = len(left_fields) * 80 + 140
+
+                self.max_scroll = max(0, total_form_height - WINDOW_HEIGHT)
+            elif self.card_type == "Transition Card":
+                # Transition Cards - world events that happen each turn cycle
+                # Outcomes JSON format: [{"probability": 0.2, "type": "spawn_enemy", "text": "...", "params": {...}}]
+                # Outcome types: draw_instance, spawn_enemy, spawn_npc, draw_junk, draw_document, weather, flip_state, none
+                left_fields = [
+                    ("Name", "text"),
+                    ("Description", "text"),
+                    ("Outcomes", "text"),  # JSON array of weighted outcomes
                     ("Background Image", "file"),
                 ]
                 right_fields = [
-                    ("Field 1", "dropdown", dropdown_options, "1 junk"),
-                    ("Field 2", "dropdown", dropdown_options, "1 junk"),
-                    ("Field 3", "dropdown", dropdown_options, "1 junk"),
-                    ("Field 4", "dropdown", dropdown_options, "1 junk"),
-                    ("Field 5", "dropdown", dropdown_options, "1 junk"),
-                    ("Field 6", "dropdown", dropdown_options, "1 junk"),
-                    ("Field 7", "dropdown", dropdown_options, "1 junk"),
-                    ("Field 8", "dropdown", dropdown_options, "1 junk"),
+                    ("2nd_state_Name", "text"),
+                    ("2nd_state_Description", "text"),
+                    ("2nd_state_Outcomes", "text"),  # JSON array for state 2
+                    ("2nd_state_Background Image", "file"),
                 ]
-                column_width = 300
-                spacing = 100
+                column_width = 400
+                spacing = 50
                 left_column_x = (WINDOW_WIDTH - 2 * column_width - spacing) // 2
                 right_column_x = left_column_x + column_width + spacing
 
                 for i, field_info in enumerate(left_fields):
-                    y_pos = y_start + i * 80
+                    y_pos = y_start + i * 100
                     create_field_ui(left_column_x, y_pos, field_info, column_width)
 
                 for i, field_info in enumerate(right_fields):
-                    y_pos = y_start + i * 80
+                    y_pos = y_start + i * 100
                     create_field_ui(right_column_x, y_pos, field_info, column_width)
 
-                total_form_height = max(len(left_fields), len(right_fields)) * 80 + 140
+                total_form_height = max(len(left_fields), len(right_fields)) * 100 + 140
+                self.max_scroll = max(0, total_form_height - WINDOW_HEIGHT)
+            elif self.card_type == "Instance Card":
+                # Instance Card - single state, defines random event outcomes
+                subclass_options = ["Environmental", "Combat", "Social", "Discovery", "Danger"]
+                fields = [
+                    ("Name", "text"),
+                    ("Description", "text"),
+                    ("Subclass", "dropdown", subclass_options, "Environmental"),
+                    ("Outcomes", "text"),  # JSON array of outcome objects
+                    ("Image_File_Path", "file"),
+                ]
+                column_width = 400
+                column_x = (WINDOW_WIDTH - column_width) // 2
+                for i, field_info in enumerate(fields):
+                    y_pos = y_start + i * 100
+                    create_field_ui(column_x, y_pos, field_info, column_width)
+                total_form_height = len(fields) * 100 + 140
                 self.max_scroll = max(0, total_form_height - WINDOW_HEIGHT)
             else:
                 fields = []
@@ -1745,6 +1909,14 @@ class CardCreationScreen:
                         self.current_screen = "blueprint_subclass_selection"
                     elif self.card_type == "Document Card" and self.selected_subclass == "Skill_Tome":
                         self.current_screen = "skill_subclass_selection"
+                    elif self.card_type == "Document Card" and self.selected_subclass == "Location_Plan":
+                        self.current_screen = "subclass_selection"
+                    elif self.card_type == "Location Card":
+                        self.current_screen = "state_selection"
+                    elif self.card_type == "Quest Card":
+                        # Quest Card goes back to card type selection (main menu)
+                        self.back_action()
+                        return
                     else:
                         self.current_screen = "subclass_selection" if self.card_type == "Document Card" else "state_selection"
                     self.state = None
@@ -1755,14 +1927,16 @@ class CardCreationScreen:
                     self.initialize_screen()
 
             elif self.current_screen == "subclass_selection" and self.card_type == "Document Card":
-                for subclass in ["Blueprint", "Skill_Tome", "Journal", "Map", "Note", "Book", "Pamphlet"]:
+                for subclass in ["Blueprint", "Skill_Tome", "Location_Plan", "Journal", "Map", "Note", "Book", "Pamphlet"]:
                     if event.ui_element.object_ids and event.ui_element.object_ids[0] == f"#subclass_{subclass}":
                         self.selected_subclass = subclass
-                        self.state = 2 if subclass in ["Blueprint", "Skill_Tome"] else 1
+                        self.state = 2 if subclass in ["Blueprint", "Skill_Tome", "Location_Plan"] else 1
                         if subclass == "Blueprint":
                             self.current_screen = "blueprint_subclass_selection"
                         elif subclass == "Skill_Tome":
                             self.current_screen = "skill_subclass_selection"
+                        elif subclass == "Location_Plan":
+                            self.current_screen = "input_form"  # Goes directly to form for Document/Location
                         else:
                             self.current_screen = "input_form"
                         self.initialize_screen()
@@ -1833,6 +2007,10 @@ class CardCreationScreen:
         card_type_value = self.card_type
         if self.state == 2 and self.selected_subclass == "Skill_Tome":
             card_type_value = "Document/Skill"
+        elif self.state == 2 and self.selected_subclass == "Location_Plan":
+            card_type_value = "Document/Location"
+        elif self.card_type == "Location Card" and self.state == 2:
+            card_type_value = "Location/Location"
 
         card_data = {
             "card_type": card_type_value,

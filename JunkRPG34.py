@@ -74,10 +74,10 @@ def add_card_to_player(card):
     if card_type == "NPC Card":
         allegiance = card.get_current_data().get("Allegiance (Hostile, Neutral, Allied)", "")
         if "Allied" in allegiance:
-            game.party.append(card)
+            game.current_party.append(card)
             name = card.get_current_data().get("Name", "Unknown")
             return f"{name} joined your party!"
-    game.player.inventory.append(card)
+    game.current_player.inventory.append(card)
     return None  # No special message
 
 
@@ -244,7 +244,7 @@ class InventoryScreen:
         UILabel(pygame.Rect(3 * column_width + 10, 35, column_width, 25), "Consumables / Tools", manager, container=self.window)
 
         # Junk cards (column 1)
-        junk_cards = [card for card in game.player.inventory if card.current_state == 1 and card.card_data["card_type"] == "Junk Card"]
+        junk_cards = [card for card in game.current_player.inventory if card.current_state == 1 and card.card_data["card_type"] == "Junk Card"]
         junk_names = []
         for card in junk_cards:
             name = card.get_current_data().get("Name", "Unnamed")
@@ -258,21 +258,21 @@ class InventoryScreen:
         self.use_junk_button = UIButton(pygame.Rect(10, 565, column_width, 35), "Use Item", manager, container=self.window)
 
         # Documents (column 2)
-        documents_cards = [card for card in game.player.inventory if card.current_state == 1 and card.card_data["card_type"] == "Document Card"]
+        documents_cards = [card for card in game.current_player.inventory if card.current_state == 1 and card.card_data["card_type"] == "Document Card"]
         self.documents_list = UISelectionList(pygame.Rect(column_width + 10, 60, column_width, column_height),
                                               [card.get_current_data().get("Name", "Unnamed") for card in documents_cards] or ["No documents"],
                                               manager, container=self.window)
 
         # Weapons (column 3)
-        weapons_cards = [card for card in game.player.inventory if card.current_state == 2 and card.get_current_data().get("Type") in ["Melee", "Projectile"]]
+        weapons_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") in ["Melee", "Projectile"]]
         self.weapons_list = UISelectionList(pygame.Rect(2 * column_width + 10, 60, column_width, column_height - 100),
                                             [card.get_current_data().get("Name", "Unnamed") for card in weapons_cards] or ["No weapons"],
                                             manager, container=self.window)
         self.equip_button = UIButton(pygame.Rect(2 * column_width + 10, column_height - 30, column_width, 35), "Equip Weapon", manager, container=self.window)
 
         # Consumables and Tools (column 4)
-        consumables_cards = [card for card in game.player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Consumable"]
-        tools_cards = [card for card in game.player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Tool"]
+        consumables_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Consumable"]
+        tools_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Tool"]
         combined_items = consumables_cards + tools_cards
         self.consumables_list = UISelectionList(pygame.Rect(3 * column_width + 10, 60, column_width, column_height - 150),
                                                 [card.get_current_data().get("Name", "Unnamed") for card in combined_items] or ["No consumables/tools"],
@@ -303,7 +303,7 @@ class InventoryScreen:
                 game.current_screen = "game"
                 game_screen.initialize_screen()
             elif event.ui_element == self.equip_button and self.selected_card and self.selected_from_list == "weapons":
-                game.player.equip_weapon(self.selected_card)
+                game.current_player.equip_weapon(self.selected_card)
                 game_screen.player_info_label.set_text(game_screen.get_player_info())
                 self.info_text.set_text("<font color='#00FF00'>Weapon equipped!</font>")
             elif event.ui_element == self.use_junk_button and self.selected_card and self.selected_from_list == "junk":
@@ -315,7 +315,7 @@ class InventoryScreen:
             elif event.ui_element == self.equip_tool_button and self.selected_card:
                 # Equip item as tool (works for junk with Use_HP or consumables/tools)
                 if self.selected_from_list in ["junk", "consumables"]:
-                    msg = game.player.equip_tool(self.selected_card)
+                    msg = game.current_player.equip_tool(self.selected_card)
                     self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
                 else:
                     self.info_text.set_text("<font color='#FF0000'>Select a consumable or tool item to equip</font>")
@@ -327,25 +327,25 @@ class InventoryScreen:
 
             if event.ui_element == self.junk_list:
                 self.selected_from_list = "junk"
-                self.selected_card = next((card for card in game.player.inventory
+                self.selected_card = next((card for card in game.current_player.inventory
                                           if card.current_state == 1
                                           and card.card_data["card_type"] == "Junk Card"
                                           and card.get_current_data().get("Name") == clean_name), None)
             elif event.ui_element == self.documents_list:
                 self.selected_from_list = "documents"
-                self.selected_card = next((card for card in game.player.inventory
+                self.selected_card = next((card for card in game.current_player.inventory
                                           if card.current_state == 1
                                           and card.card_data["card_type"] == "Document Card"
                                           and card.get_current_data().get("Name") == clean_name), None)
             elif event.ui_element == self.weapons_list:
                 self.selected_from_list = "weapons"
-                self.selected_card = next((card for card in game.player.inventory
+                self.selected_card = next((card for card in game.current_player.inventory
                                           if card.current_state == 2
                                           and card.get_current_data().get("Type") in ["Melee", "Projectile"]
                                           and card.get_current_data().get("Name") == clean_name), None)
             elif event.ui_element == self.consumables_list:
                 self.selected_from_list = "consumables"
-                self.selected_card = next((card for card in game.player.inventory
+                self.selected_card = next((card for card in game.current_player.inventory
                                           if card.current_state == 2
                                           and card.get_current_data().get("Type") in ["Consumable", "Tool"]
                                           and card.get_current_data().get("Name") == clean_name), None)
@@ -388,19 +388,19 @@ class InventoryScreen:
             hp_change = int(hp_str)
 
             if hp_change > 0:
-                old_hp = game.player.hp
-                game.player.hp = min(game.player.max_hp, game.player.hp + hp_change)
-                actual_heal = game.player.hp - old_hp
-                game_screen.add_to_log(f"Used {current_data.get('Name', 'Item')}: +{actual_heal} HP ({old_hp} -> {game.player.hp})")
-                game.player.inventory.remove(self.selected_card)
+                old_hp = game.current_player.hp
+                game.current_player.hp = min(game.current_player.max_hp, game.current_player.hp + hp_change)
+                actual_heal = game.current_player.hp - old_hp
+                game_screen.add_to_log(f"Used {current_data.get('Name', 'Item')}: +{actual_heal} HP ({old_hp} -> {game.current_player.hp})")
+                game.current_player.inventory.remove(self.selected_card)
                 self.selected_card = None
                 self.initialize_screen()
                 game_screen.player_info_label.set_text(game_screen.get_player_info())
             elif hp_change < 0:
                 # Negative HP effect (poison, damage item, etc.)
-                game.player.hp = max(0, game.player.hp + hp_change)
+                game.current_player.hp = max(0, game.current_player.hp + hp_change)
                 game_screen.add_to_log(f"Used {current_data.get('Name', 'Item')}: {hp_change} HP")
-                game.player.inventory.remove(self.selected_card)
+                game.current_player.inventory.remove(self.selected_card)
                 self.selected_card = None
                 self.initialize_screen()
                 game_screen.player_info_label.set_text(game_screen.get_player_info())
@@ -549,7 +549,7 @@ class LocationScreen:
                 pygame.Rect(400, 465, 380, 25), f"Materials for Payment ({shop_currency}):", manager, container=self.window
             )
 
-            material_cards = [card for card in game.player.inventory
+            material_cards = [card for card in game.current_player.inventory
                             if card.card_data.get("card_type") == "Junk Card" and card.current_state == 1]
 
             # Build material names with their values
@@ -587,7 +587,7 @@ class LocationScreen:
                 )
 
                 # Get allied NPCs from party
-                allied_npcs = [card for card in game.party
+                allied_npcs = [card for card in game.current_party
                               if "Allied" in card.get_current_data().get("Allegiance (Hostile, Neutral, Allied)", "")]
                 npc_names = [card.get_current_data().get("Name", "Unknown") for card in allied_npcs]
 
@@ -778,7 +778,7 @@ class LocationScreen:
         costs_action = choice.get("costs_action", False)
         params = choice.get("params", {})
 
-        if costs_action and game.player.action_used:
+        if costs_action and game.current_player.action_used:
             self.info_text.set_text("<font color='#FF0000'>Action already used this turn!</font>")
             return
 
@@ -793,16 +793,16 @@ class LocationScreen:
                     game_screen.add_to_log(party_msg)
             game_screen.add_to_log(msg)
             if costs_action:
-                game.player.action_used = True
+                game.current_player.action_used = True
             self.info_text.set_text(f"<font color='#FFFFFF'>{msg}</font>")
         elif action == "heal":
             hp_amount = int(params.get("amount", 10))
-            old_hp = game.player.hp
-            game.player.hp = min(game.player.max_hp, game.player.hp + hp_amount)
-            msg = f"Healed for {game.player.hp - old_hp} HP"
+            old_hp = game.current_player.hp
+            game.current_player.hp = min(game.current_player.max_hp, game.current_player.hp + hp_amount)
+            msg = f"Healed for {game.current_player.hp - old_hp} HP"
             game_screen.add_to_log(msg)
             if costs_action:
-                game.player.action_used = True
+                game.current_player.action_used = True
             self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
         elif action == "shop":
             self.info_text.set_text("<font color='#FFFFFF'>Select items from the shop above</font>")
@@ -813,7 +813,7 @@ class LocationScreen:
             deck_file = params.get("deck", "decks/test_quest_deck.json")
 
             # Check if player can accept more quests
-            if not game.quest_manager.can_accept_quest():
+            if not game.current_quest_manager.can_accept_quest():
                 self.info_text.set_text("<font color='#FF0000'>Quest log full! Complete or abandon a quest first.</font>")
                 return
 
@@ -825,17 +825,17 @@ class LocationScreen:
 
             # Check if player already has this quest active
             quest_name = quest_card.get_current_data().get("Name", "Unknown")
-            for active in game.quest_manager.active_quests:
+            for active in game.current_quest_manager.active_quests:
                 if active.quest_card.get_current_data().get("Name") == quest_name:
                     self.info_text.set_text(f"<font color='#FF0000'>Already have quest: {quest_name}</font>")
                     return
 
             # Activate the quest
-            success, msg = game.quest_manager.activate_quest(quest_card, self.hex_grid, game.player)
+            success, msg = game.current_quest_manager.activate_quest(quest_card, self.hex_grid, game.current_player)
 
             if success:
                 if costs_action:
-                    game.player.action_used = True
+                    game.current_player.action_used = True
                 game_screen.add_to_log(f"New quest accepted: {quest_name}")
                 self.info_text.set_text(f"<font color='#00FF00'>Quest accepted: {quest_name}</font>")
                 # Update quest button count
@@ -883,7 +883,7 @@ class LocationScreen:
             self.info_text.set_text("<font color='#FF0000'>Select a quest first!</font>")
             return
 
-        if not game.quest_manager.can_accept_quest():
+        if not game.current_quest_manager.can_accept_quest():
             self.info_text.set_text("<font color='#FF0000'>Quest log full! Complete or abandon a quest first.</font>")
             return
 
@@ -891,13 +891,13 @@ class LocationScreen:
         quest_name = quest_card.get_current_data().get("Name", "Unknown")
 
         # Check if player already has this quest active
-        for active in game.quest_manager.active_quests:
+        for active in game.current_quest_manager.active_quests:
             if active.quest_card.get_current_data().get("Name") == quest_name:
                 self.info_text.set_text(f"<font color='#FF0000'>Already have quest: {quest_name}</font>")
                 return
 
         # Activate the quest
-        success, msg = game.quest_manager.activate_quest(quest_card, self.hex_grid, game.player)
+        success, msg = game.current_quest_manager.activate_quest(quest_card, self.hex_grid, game.current_player)
 
         if success:
             game_screen.add_to_log(f"New quest accepted: {quest_name}")
@@ -921,14 +921,14 @@ class LocationScreen:
                          if name in self.material_name_to_card]
 
         purchased_card, msg = self.hex_grid.purchase_from_shop(
-            self.hex_pos[0], self.hex_pos[1], self.selected_shop_item, game.player.inventory, material_cards
+            self.hex_pos[0], self.hex_pos[1], self.selected_shop_item, game.current_player.inventory, material_cards
         )
 
         if purchased_card:
             # Remove used materials
             for mat in material_cards:
-                if mat in game.player.inventory:
-                    game.player.inventory.remove(mat)
+                if mat in game.current_player.inventory:
+                    game.current_player.inventory.remove(mat)
             # Add purchased card
             party_msg = add_card_to_player(purchased_card)
             if party_msg:
@@ -951,7 +951,7 @@ class LocationScreen:
 
         # Find the NPC card in party
         npc_card = None
-        for card in game.party:
+        for card in game.current_party:
             if card.get_current_data().get("Name") == selected_npc_name:
                 npc_card = card
                 break
@@ -963,7 +963,7 @@ class LocationScreen:
         success, msg = self.hex_grid.upgrade_location(self.hex_pos[0], self.hex_pos[1], npc_card)
         if success:
             # Remove NPC from party (they're now at the location)
-            game.party.remove(npc_card)
+            game.current_party.remove(npc_card)
             game_screen.add_to_log(msg)
             self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
             # Refresh with upgraded location
@@ -979,7 +979,7 @@ class LocationScreen:
             return
 
         # Check party size limit
-        if len(game.party) >= 5:
+        if len(game.current_party) >= 5:
             self.info_text.set_text("<font color='#FF0000'>Party is full (max 5 members)!</font>")
             return
 
@@ -1006,7 +1006,7 @@ class LocationScreen:
             }
             from inventory_card import InventoryCard
             npc_card = InventoryCard(card_data)
-            game.party.append(npc_card)
+            game.current_party.append(npc_card)
 
             game_screen.add_to_log(msg)
             self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
@@ -1077,7 +1077,7 @@ class RecruitmentScreen:
 
         # Build junk list with material values
         junk_items = []
-        for card in game.player.inventory:
+        for card in game.current_player.inventory:
             if card.card_data.get("card_type") == "Junk Card":
                 card_data = card.get_current_data()
                 name = card_data.get("Name", "Unnamed")
@@ -1214,14 +1214,14 @@ class RecruitmentScreen:
             return
 
         # Check party limit (max 5)
-        if len(game.party) >= 5:
+        if len(game.current_party) >= 5:
             self.info_text.set_text("<font color='#FF0000'>Party is full! (Max 5 members)</font>")
             return
 
         # Success! Remove junk from inventory
         for card in self.selected_junk:
-            if card in game.player.inventory:
-                game.player.inventory.remove(card)
+            if card in game.current_player.inventory:
+                game.current_player.inventory.remove(card)
 
         # Change NPC allegiance to Allied
         self.target_unit.allegiance = "Allied"
@@ -1241,7 +1241,7 @@ class RecruitmentScreen:
             }
         }
         npc_card = InventoryCard(npc_card_data)
-        game.party.append(npc_card)
+        game.current_party.append(npc_card)
 
         # Log the recruitment
         game_screen.add_to_log(f"{self.target_unit.name} joined your party!")
@@ -1285,7 +1285,7 @@ class PartyScreen:
         )
 
         party_names = []
-        for card in game.party:
+        for card in game.current_party:
             card_data = card.get_current_data()
             name = card_data.get("Name", "Unknown")
             # Check if deployed on map
@@ -1352,9 +1352,9 @@ class PartyScreen:
                 selection = self.party_list.get_single_selection()
                 if selection and selection != "No party members" and selection in self.party_member_names:
                     idx = self.party_member_names.index(selection)
-                    if idx < len(game.party):
+                    if idx < len(game.current_party):
                         self.selected_member = idx
-                        card = game.party[idx]
+                        card = game.current_party[idx]
                         card_data = card.get_current_data()
 
                         # Build info display
@@ -1380,7 +1380,7 @@ class PartyScreen:
             self.info_text.set_text("<font color='#FF0000'>Select a party member first!</font>")
             return
 
-        card = game.party[self.selected_member]
+        card = game.current_party[self.selected_member]
         card_data = card.get_current_data()
         name = card_data.get("Name", "Unknown")
 
@@ -1391,7 +1391,7 @@ class PartyScreen:
             return
 
         # Find a spot near the player to deploy
-        player_pos = game.player.position
+        player_pos = game.current_player.position
         neighbors = game_screen.hex_grid.get_neighbors(*player_pos)
         deploy_pos = None
         for n in neighbors:
@@ -1428,7 +1428,7 @@ class PartyScreen:
             self.info_text.set_text("<font color='#FF0000'>Select a party member first!</font>")
             return
 
-        card = game.party[self.selected_member]
+        card = game.current_party[self.selected_member]
         card_data = card.get_current_data()
         name = card_data.get("Name", "Unknown")
 
@@ -1444,7 +1444,7 @@ class PartyScreen:
             return
 
         # Check if adjacent to player
-        player_pos = game.player.position
+        player_pos = game.current_player.position
         unit_pos = deployed_unit.position
         distance = game_screen.hex_grid.hex_distance(player_pos, unit_pos)
         if distance > 1:
@@ -1464,7 +1464,7 @@ class PartyScreen:
             self.info_text.set_text("<font color='#FF0000'>Select a party member first!</font>")
             return
 
-        card = game.party[self.selected_member]
+        card = game.current_party[self.selected_member]
         card_data = card.get_current_data()
         name = card_data.get("Name", "Unknown")
 
@@ -1476,7 +1476,7 @@ class PartyScreen:
                 break
 
         # Remove from party
-        game.party.remove(card)
+        game.current_party.remove(card)
         game_screen.add_to_log(f"{name} dismissed from party.")
         self.selected_member = None
         self.initialize_screen()  # Refresh
@@ -1511,9 +1511,9 @@ class QuestScreen:
         tab_width = 150
         self.tab_buttons = []
 
-        active_count = len(game.quest_manager.active_quests)
-        completed_count = len(game.quest_manager.completed_quests)
-        failed_count = len(game.quest_manager.failed_quests)
+        active_count = len(game.current_quest_manager.active_quests)
+        completed_count = len(game.current_quest_manager.completed_quests)
+        failed_count = len(game.current_quest_manager.failed_quests)
 
         active_btn = pygame_gui.elements.UIButton(
             pygame.Rect(10, tab_y, tab_width, 30),
@@ -1575,21 +1575,21 @@ class QuestScreen:
     def _get_quest_names_for_tab(self):
         """Get quest names for the current tab."""
         if self.current_tab == "active":
-            return [q.get_display_name() for q in game.quest_manager.active_quests]
+            return [q.get_display_name() for q in game.current_quest_manager.active_quests]
         elif self.current_tab == "completed":
-            return [q.get_display_name() for q in game.quest_manager.completed_quests]
+            return [q.get_display_name() for q in game.current_quest_manager.completed_quests]
         elif self.current_tab == "failed":
-            return [q.get_display_name() for q in game.quest_manager.failed_quests]
+            return [q.get_display_name() for q in game.current_quest_manager.failed_quests]
         return []
 
     def _get_quests_for_tab(self):
         """Get quest list for the current tab."""
         if self.current_tab == "active":
-            return game.quest_manager.active_quests
+            return game.current_quest_manager.active_quests
         elif self.current_tab == "completed":
-            return game.quest_manager.completed_quests
+            return game.current_quest_manager.completed_quests
         elif self.current_tab == "failed":
-            return game.quest_manager.failed_quests
+            return game.current_quest_manager.failed_quests
         return []
 
     def handle_event(self, event):
@@ -1610,7 +1610,7 @@ class QuestScreen:
             # Abandon button
             if self.abandon_button and event.ui_element == self.abandon_button:
                 if self.selected_quest:
-                    success, msg = game.quest_manager.abandon_quest(self.selected_quest)
+                    success, msg = game.current_quest_manager.abandon_quest(self.selected_quest)
                     game_screen.add_to_log(msg)
                     self.selected_quest = None
                     self.initialize_screen()
@@ -1778,7 +1778,7 @@ class SkillsScreen:
         col3_x = col2_x + column_width + 20
         equipped_label = UILabel(
             pygame.Rect(col3_x, y_start, column_width, 30),
-            f"Equipped Skills ({len(game.player.equipped_skills)}/{game.player.active_skill_slots})",
+            f"Equipped Skills ({len(game.current_player.equipped_skills)}/{game.current_player.active_skill_slots})",
             manager
         )
         self.ui_elements.append(equipped_label)
@@ -1802,7 +1802,7 @@ class SkillsScreen:
     def _get_learnable_cards(self):
         """Get Document cards from inventory that can be transformed into skills."""
         learnable = []
-        for card in game.player.inventory:
+        for card in game.current_player.inventory:
             card_type = card.card_data.get("card_type", "")
             # Check for Document/Skill compound type or Skill_Tome subclass
             if "Document/Skill" in card_type or card.card_data.get("subclass") == "Skill_Tome":
@@ -1814,7 +1814,7 @@ class SkillsScreen:
     def _get_learned_skills(self):
         """Get all learned skills."""
         skills = []
-        for card in game.player.skills:
+        for card in game.current_player.skills:
             skill_data = card.get_current_data()
             name = skill_data.get("Name", "Unknown")
             skill_type = skill_data.get("Skill_Type", "Unknown")
@@ -1824,10 +1824,10 @@ class SkillsScreen:
     def _get_equipped_skills(self):
         """Get equipped active skills."""
         equipped = []
-        for card in game.player.equipped_skills:
+        for card in game.current_player.equipped_skills:
             skill_data = card.get_current_data()
             name = skill_data.get("Name", "Unknown")
-            cooldown = game.player.skill_cooldowns.get(name, 0)
+            cooldown = game.current_player.skill_cooldowns.get(name, 0)
             if cooldown > 0:
                 equipped.append(f"{name} (CD:{cooldown})")
             else:
@@ -1852,13 +1852,13 @@ class SkillsScreen:
                 selections = self.learnable_cards_list.get_single_selection()
                 if selections:
                     # Find the card in inventory
-                    for card in game.player.inventory:
+                    for card in game.current_player.inventory:
                         card_type = card.card_data.get("card_type", "")
                         if ("Document/Skill" in card_type or card.card_data.get("subclass") == "Skill_Tome"):
                             if card.current_state == 1:
                                 name = card.get_current_data().get("Name", "")
                                 if name == selections:
-                                    msg = game.player.learn_skill(card)
+                                    msg = game.current_player.learn_skill(card)
                                     print(msg)
                                     self.initialize_screen()  # Refresh lists
                                     break
@@ -1868,9 +1868,9 @@ class SkillsScreen:
                 if selections:
                     # Parse skill name from "Name (Type)" format
                     skill_name = selections.split(" (")[0]
-                    for card in game.player.skills:
+                    for card in game.current_player.skills:
                         if card.get_current_data().get("Name") == skill_name:
-                            msg = game.player.equip_skill(card)
+                            msg = game.current_player.equip_skill(card)
                             print(msg)
                             self.initialize_screen()
                             break
@@ -1880,9 +1880,9 @@ class SkillsScreen:
                 if selections:
                     # Parse skill name (may have cooldown suffix)
                     skill_name = selections.split(" (")[0]
-                    for card in game.player.equipped_skills:
+                    for card in game.current_player.equipped_skills:
                         if card.get_current_data().get("Name") == skill_name:
-                            msg = game.player.unequip_skill(card)
+                            msg = game.current_player.unequip_skill(card)
                             print(msg)
                             self.initialize_screen()
                             break
@@ -1925,11 +1925,11 @@ class CraftingScreen:
     def initialize_screen(self):
         manager.clear_and_reset()
         self.window = UIWindow(pygame.Rect((WINDOW_WIDTH - 1380) // 2, (WINDOW_HEIGHT - 900) // 2, 1380, 900), manager, "Crafting")
-        junk_cards = [card for card in game.player.inventory if card.card_data["card_type"] == "Junk Card" and card.is_two_state() and card.current_state == 1]
+        junk_cards = [card for card in game.current_player.inventory if card.card_data["card_type"] == "Junk Card" and card.is_two_state() and card.current_state == 1]
         self.junk_list = UISelectionList(pygame.Rect(15, 75, 330, 300), 
                                          [card.get_current_data().get("Name", "Unnamed") for card in junk_cards], 
                                          manager, container=self.window)
-        blueprint_cards = [card for card in game.player.inventory if card.card_data["card_type"] == "Document Card" and card.card_data.get("subclass", "") == "Blueprint" and card.is_two_state() and card.current_state == 1]
+        blueprint_cards = [card for card in game.current_player.inventory if card.card_data["card_type"] == "Document Card" and card.card_data.get("subclass", "") == "Blueprint" and card.is_two_state() and card.current_state == 1]
         self.blueprint_list = UISelectionList(pygame.Rect(15, 390, 330, 300), 
                                               [card.get_current_data().get("Name", "Unnamed") for card in blueprint_cards], 
                                               manager, container=self.window)
@@ -1946,7 +1946,7 @@ class CraftingScreen:
         self.update_requirements_display()
 
     def update_materials_list(self):
-        materials_cards = [card for card in game.player.inventory if card.card_data["card_type"] == "Junk Card" and card.current_state == 1]
+        materials_cards = [card for card in game.current_player.inventory if card.card_data["card_type"] == "Junk Card" and card.current_state == 1]
         if self.selected_to_craft and self.selected_to_craft.card_data["card_type"] == "Junk Card":
             materials_cards = [card for card in materials_cards if card != self.selected_to_craft]
         self.materials_list.set_item_list([card.get_current_data().get("Name", "Unnamed") for card in materials_cards])
@@ -2023,7 +2023,7 @@ class CraftingScreen:
             elif event.ui_element == self.craft_button:
                 if self.selected_to_craft and self.check_requirements():
                     for material in self.selected_materials:
-                        game.player.inventory.remove(material)
+                        game.current_player.inventory.remove(material)
                     self.selected_to_craft.toggle_state()
                     crafted_name = self.selected_to_craft.get_state_data(2).get("2nd_state_Name", "Unnamed Item")
                     self.success_label.set_text(f"Crafted {crafted_name}")
@@ -2036,9 +2036,9 @@ class CraftingScreen:
             if event.ui_element in [self.junk_list, self.blueprint_list]:
                 selected_name = event.text
                 cards = (
-                    [card for card in game.player.inventory if card.card_data["card_type"] == "Junk Card" and card.is_two_state() and card.current_state == 1]
+                    [card for card in game.current_player.inventory if card.card_data["card_type"] == "Junk Card" and card.is_two_state() and card.current_state == 1]
                     if event.ui_element == self.junk_list else
-                    [card for card in game.player.inventory if card.card_data["card_type"] == "Document Card" and card.card_data.get("subclass", "") == "Blueprint" and card.is_two_state() and card.current_state == 1]
+                    [card for card in game.current_player.inventory if card.card_data["card_type"] == "Document Card" and card.card_data.get("subclass", "") == "Blueprint" and card.is_two_state() and card.current_state == 1]
                 )
                 self.selected_to_craft = next((card for card in cards if card.get_state_data(1).get("Name") == selected_name), None)
                 self.update_materials_list()
@@ -2052,7 +2052,7 @@ class CraftingScreen:
                     self.update_requirements_display()
             elif event.ui_element == self.materials_list:
                 selected_names = self.materials_list.get_multi_selection()
-                materials_cards = [card for card in game.player.inventory if card.card_data["card_type"] == "Junk Card" and card.current_state == 1]
+                materials_cards = [card for card in game.current_player.inventory if card.card_data["card_type"] == "Junk Card" and card.current_state == 1]
                 if self.selected_to_craft and self.selected_to_craft.card_data["card_type"] == "Junk Card":
                     materials_cards = [card for card in materials_cards if card != self.selected_to_craft]
                 self.selected_materials = {card for card in materials_cards if card.get_current_data().get("Name") in selected_names}
@@ -2098,8 +2098,9 @@ class MainMenu:
             UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 200, 200, 50), "New Campaign", manager),
             UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 270, 200, 50), "Load Campaign", manager),
             UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 340, 200, 50), "Load Level", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 410, 200, 50), "Settings", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 480, 200, 50), "Quit", manager)
+            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 410, 200, 50), "2-Player Local", manager),
+            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 480, 200, 50), "Settings", manager),
+            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 550, 200, 50), "Quit", manager)
         ]
 
     def handle_event(self, event):
@@ -2127,10 +2128,13 @@ class MainMenu:
                     character_creation_screen.initialize_screen(level_file=file_path)
                 else:
                     print("No level file selected")
-            elif event.ui_element == self.ui_elements[4]:  # Settings
+            elif event.ui_element == self.ui_elements[4]:  # 2-Player Local
+                game.current_screen = "multiplayer_character_creation"
+                multiplayer_character_creation_screen.initialize_screen()
+            elif event.ui_element == self.ui_elements[5]:  # Settings
                 game.current_screen = "settings"
                 settings_screen.initialize_screen()
-            elif event.ui_element == self.ui_elements[5]:  # Quit
+            elif event.ui_element == self.ui_elements[6]:  # Quit
                 pygame.quit()
                 sys.exit()
 
@@ -2181,6 +2185,103 @@ class CharacterCreationScreen:
     def draw(self):
         screen.fill(DARK_INDIGO)
         manager.draw_ui(screen)
+
+
+# Multiplayer Character Creation Screen (2-player local)
+class MultiplayerCharacterCreationScreen:
+    def __init__(self):
+        self.ui_elements = []
+        self.class_buttons = []
+        self.current_player_selecting = 1  # 1 or 2
+        self.player1_class = None
+        self.level_file = None
+
+    def initialize_screen(self, level_file=None):
+        self.level_file = level_file
+        self.current_player_selecting = 1
+        self.player1_class = None
+        manager.clear_and_reset()
+        self._build_selection_ui()
+
+    def _build_selection_ui(self):
+        """Build the class selection UI for the current player."""
+        manager.clear_and_reset()
+        player_label = f"Player {self.current_player_selecting}: Choose Your Class"
+        color_hint = "(Green)" if self.current_player_selecting == 1 else "(Blue)"
+        self.ui_elements = [
+            UILabel(pygame.Rect(0, 50, WINDOW_WIDTH, 50), player_label, manager, anchors={'centerx': 'centerx'}),
+            UILabel(pygame.Rect(0, 100, WINDOW_WIDTH, 30), color_hint, manager, anchors={'centerx': 'centerx'}),
+            UIButton(pygame.Rect(20, 20, 100, 50), "Back", manager)
+        ]
+        self.class_buttons = []
+        for i, (class_name, stats) in enumerate(CHARACTER_CLASSES.items()):
+            y_pos = 170 + i * 100
+            button = UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, y_pos, 200, 50), class_name, manager)
+            self.class_buttons.append((button, class_name))
+            self.ui_elements.append(button)
+            desc = f"{stats['hp']} HP, {stats['movement']} Movement, {stats['projectile_range']} Range, " \
+                   f"{list(stats['attacks'].keys())[0]} ({list(stats['attacks'].values())[0]} dmg), " \
+                   f"{list(stats['attacks'].keys())[1]} ({list(stats['attacks'].values())[1]} dmg), {stats['special_attack']}"
+            self.ui_elements.append(UILabel(pygame.Rect((WINDOW_WIDTH - 600) // 2, y_pos + 60, 600, 30), desc, manager))
+
+    def handle_event(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.ui_elements[2]:  # Back button
+                if self.current_player_selecting == 2:
+                    # Go back to player 1 selection
+                    self.current_player_selecting = 1
+                    self.player1_class = None
+                    self._build_selection_ui()
+                else:
+                    game.current_screen = "main_menu"
+                    main_menu.initialize_buttons()
+            else:
+                for button, class_name in self.class_buttons:
+                    if event.ui_element == button:
+                        if self.current_player_selecting == 1:
+                            # Store Player 1's class and move to Player 2 selection
+                            self.player1_class = class_name
+                            self.current_player_selecting = 2
+                            self._build_selection_ui()
+                        else:
+                            # Both players selected - start the game
+                            self._start_multiplayer_game(self.player1_class, class_name)
+                        break
+
+    def _start_multiplayer_game(self, player1_class, player2_class):
+        """Create both players and start the multiplayer game."""
+        # Create Player 1
+        player1 = Player(player1_class)
+        player1.player_number = 1
+        player1.player_color = (0, 200, 0)  # Green
+        player1.party = []
+
+        # Create Player 2
+        player2 = Player(player2_class)
+        player2.player_number = 2
+        player2.player_color = (100, 150, 255)  # Blue
+        player2.party = []
+
+        # Set up multiplayer mode
+        game.multiplayer_mode = True
+        game.players = [player1, player2]
+        game.current_player_index = 0
+        game.player = player1  # For backwards compatibility
+
+        # Create per-player quest managers
+        game.quest_managers = [
+            QuestManager(game.card_manager),
+            QuestManager(game.card_manager)
+        ]
+
+        # Start the game
+        game.current_screen = "game"
+        game_screen.start_new_game_multiplayer(level_file=self.level_file)
+
+    def draw(self):
+        screen.fill(DARK_INDIGO)
+        manager.draw_ui(screen)
+
 
 # Settings screen
 class SettingsScreen:
@@ -2352,6 +2453,86 @@ class GameScreen:
         self.game_started = True
         self.initialize_screen()
 
+    def start_new_game_multiplayer(self, level_file=None):
+        """Start a new multiplayer game with two players."""
+        # Reset game state
+        self.hex_grid = HexGrid(16, 24, 30, WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.hex_grid.players = game.players  # Set players list on hex_grid
+        self.current_level_file = level_file
+        self.campaign_file = None
+        self.log.clear()
+        self.turn_phase = "player1"  # Start with player 1's turn
+        self.is_player_turn = True
+        self.hex_grid.game_over = False
+        # Reset turn queue
+        self.turn_queue = []
+        self.current_acting_unit = None
+        self.waiting_for_animation = False
+        self.pending_location = None
+        self.pending_defeat = False
+        self.location_button = None
+        self.current_location_hex = None
+
+        # Reset instance manager and try to load test deck
+        game.instance_manager = InstanceManager(self.card_manager, self.hex_grid)
+        game.instance_manager.load_instance_deck("test_instance_deck.json")
+        # Reset transition manager and try to load test transition card
+        game.transition_manager = TransitionManager(self.card_manager, game.instance_manager)
+        game.transition_manager.load_transition_card("test_transition_forest")
+
+        # Load level or use default placement
+        player1 = game.players[0]
+        player2 = game.players[1]
+
+        if level_file:
+            try:
+                # Load level with player 1 first
+                self.hex_grid.load_level(level_file, self.card_manager, player1)
+                self.log.append(f"Loaded level: {level_file}")
+                # Find adjacent position for player 2
+                p1_pos = player1.position
+                neighbors = self.hex_grid.get_neighbors(p1_pos[0], p1_pos[1])
+                p2_placed = False
+                for n_row, n_col in neighbors:
+                    if (0 <= n_row < self.hex_grid.rows and 0 <= n_col < self.hex_grid.cols and
+                        self.hex_grid.grid[n_row][n_col]["unit"] is None and
+                        self.hex_grid.grid[n_row][n_col]["accessible"]):
+                        self.hex_grid.place_unit(player2, n_row, n_col)
+                        p2_placed = True
+                        break
+                if not p2_placed:
+                    # Fallback: place near center
+                    self.hex_grid.place_unit(player2, self.hex_grid.rows // 2 + 1, self.hex_grid.cols // 2)
+            except Exception as e:
+                print(f"Error loading level '{level_file}': {e}")
+                # Place both players in default positions
+                self.hex_grid.place_unit(player1, self.hex_grid.rows // 2, self.hex_grid.cols // 2)
+                self.hex_grid.place_unit(player2, self.hex_grid.rows // 2 + 1, self.hex_grid.cols // 2)
+                self.log.append("Failed to load level. Starting default level.")
+        else:
+            # Default placement
+            self.hex_grid.place_unit(player1, self.hex_grid.rows // 2, self.hex_grid.cols // 2)
+            self.hex_grid.place_unit(player2, self.hex_grid.rows // 2 + 1, self.hex_grid.cols // 2)
+            self.log.append("Started default level (2-Player).")
+
+        # Reset both players
+        for player in game.players:
+            player.hp = player.max_hp
+            player.melee_weapon = None
+            player.projectile_weapon = None
+            player.movement_used = False
+            player.action_used = False
+            player.reset_double_attack()
+            player.party = []  # Clear each player's party
+
+        # Ensure all units are reset and active
+        for unit in self.hex_grid.units:
+            unit.hp = unit.max_hp
+            unit.current_state = 1
+
+        self.game_started = True
+        self.initialize_screen()
+
     def load_campaign_level(self):
         if self.campaign and self.current_level_idx < len(self.campaign["levels"]):
             level_data = self.campaign["levels"][self.current_level_idx]
@@ -2377,17 +2558,44 @@ class GameScreen:
         elif "Collect" in transition:
             item_name = transition.split("'")[1] if "'" in transition else None
             if item_name:
-                return any(card.get_current_data().get("Name") == item_name for card in game.player.inventory)
+                return any(card.get_current_data().get("Name") == item_name for card in game.current_player.inventory)
         return len([u for u in self.hex_grid.units if u.allegiance == "Hostile"]) == 0
 
     def advance_turn(self):
         if self.turn_phase == "player":
-            # Apply Turn_End passives before ending player turn
+            # Single-player mode: Apply Turn_End passives before ending player turn
             for msg in game.player.apply_passive_skills(self.hex_grid, "Turn_End"):
                 self.add_to_log(msg)
             game.player.tick_cooldowns()
             game.player.movement_used = game.player.action_used = False
             game.player.reset_double_attack()
+            self.turn_phase = "allied"
+            self.execute_turn("Allied")
+        elif self.turn_phase == "player1":
+            # Multiplayer: End Player 1's turn
+            player1 = game.players[0]
+            for msg in player1.apply_passive_skills(self.hex_grid, "Turn_End"):
+                self.add_to_log(msg)
+            player1.tick_cooldowns()
+            player1.movement_used = player1.action_used = False
+            player1.reset_double_attack()
+            # Switch to Player 2's turn
+            game.current_player_index = 1
+            self.turn_phase = "player2"
+            self.is_player_turn = True
+            self.rebuild_left_panel()
+            # Apply Turn_Start passives for player 2
+            for msg in game.players[1].apply_passive_skills(self.hex_grid, "Turn_Start"):
+                self.add_to_log(msg)
+        elif self.turn_phase == "player2":
+            # Multiplayer: End Player 2's turn
+            player2 = game.players[1]
+            for msg in player2.apply_passive_skills(self.hex_grid, "Turn_End"):
+                self.add_to_log(msg)
+            player2.tick_cooldowns()
+            player2.movement_used = player2.action_used = False
+            player2.reset_double_attack()
+            # Move to allied phase
             self.turn_phase = "allied"
             self.execute_turn("Allied")
         elif self.turn_phase == "allied":
@@ -2405,7 +2613,7 @@ class GameScreen:
             # End of turn cycle - process location shop cycles
             self.hex_grid.on_turn_end()
             # Notify quest system of turn end
-            quest_results = game.quest_manager.update("turn_end", {}, self.hex_grid, game.player)
+            quest_results = game.current_quest_manager.update("turn_end", {}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
                 self.add_to_log(msg)
 
@@ -2413,14 +2621,25 @@ class GameScreen:
                 self.current_level_idx += 1
                 if self.campaign and self.current_level_idx < len(self.campaign["levels"]):
                     self.load_campaign_level()
-                    self.turn_phase = "player"
+                    if game.multiplayer_mode:
+                        self.turn_phase = "player1"
+                        game.current_player_index = 0
+                        self.rebuild_left_panel()
+                    else:
+                        self.turn_phase = "player"
                     self.is_player_turn = True
                 else:
                     self.add_to_log("Campaign Completed!")
                     game.current_screen = "main_menu"
                     main_menu.initialize_buttons()
             else:
-                self.turn_phase = "player"
+                # Start new turn cycle
+                if game.multiplayer_mode:
+                    self.turn_phase = "player1"
+                    game.current_player_index = 0
+                    self.rebuild_left_panel()
+                else:
+                    self.turn_phase = "player"
                 self.is_player_turn = True
                 # Reset location visits for new turn
                 self.hex_grid.reset_location_visits()
@@ -2430,7 +2649,8 @@ class GameScreen:
                 # The check_trigger() method is only for future use by those systems.
 
                 # Apply Turn_Start passives at start of player turn
-                for msg in game.player.apply_passive_skills(self.hex_grid, "Turn_Start"):
+                current_player = game.current_player
+                for msg in current_player.apply_passive_skills(self.hex_grid, "Turn_Start"):
                     self.add_to_log(msg)
         self.update_turn_label()
         self.animating = self.check_animations()
@@ -2483,24 +2703,40 @@ class GameScreen:
             self.add_to_log(f"{dead_unit.name} defeated")
             self.card_manager.track_card_usage(dead_unit.card_id, {"action": "defeated", "screen": "game"})
             # Notify quest system of unit death
-            quest_results = game.quest_manager.update("unit_death", {"unit": dead_unit}, self.hex_grid, game.player)
+            quest_results = game.current_quest_manager.update("unit_death", {"unit": dead_unit}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
                 self.add_to_log(msg)
 
         # Notify quest system if unit moved
         if unit.position != position_before:
-            quest_results = game.quest_manager.update(
+            quest_results = game.current_quest_manager.update(
                 "unit_moved", {"unit": unit, "position": unit.position},
-                self.hex_grid, game.player
+                self.hex_grid, game.current_player
             )
             for quest, result, qmsg in quest_results:
                 self.add_to_log(qmsg)
 
         # Check for game over - delay showing defeat screen until animation completes
-        if isinstance(self.hex_grid.player, Player) and self.hex_grid.player.hp <= 0:
+        # In multiplayer, only game over when ALL players are dead
+        if game.multiplayer_mode:
+            all_dead = all(p.hp <= 0 for p in game.players)
+            any_dead = any(p.hp <= 0 for p in game.players)
+            if any_dead:
+                for i, p in enumerate(game.players):
+                    if p.hp <= 0:
+                        self.add_to_log(f"Player {i+1} ({p.class_name}) defeated!")
+            if all_dead:
+                # Notify quest system of player death
+                quest_results = game.current_quest_manager.update("player_death", {}, self.hex_grid, game.current_player)
+                for quest, result, msg in quest_results:
+                    self.add_to_log(msg)
+                self.turn_queue.clear()  # Clear remaining actions
+                self.pending_defeat = True  # Will show defeat screen after animation
+                return
+        elif isinstance(self.hex_grid.player, Player) and self.hex_grid.player.hp <= 0:
             self.add_to_log("Player defeated!")
             # Notify quest system of player death
-            quest_results = game.quest_manager.update("player_death", {}, self.hex_grid, game.player)
+            quest_results = game.current_quest_manager.update("player_death", {}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
                 self.add_to_log(msg)
             self.turn_queue.clear()  # Clear remaining actions
@@ -2565,7 +2801,7 @@ class GameScreen:
         self.ui_elements.append(self.player_info_label)
         
         y_pos = 200
-        attacks_list = list(game.player.attacks.values())
+        attacks_list = list(game.current_player.attacks.values())
         self.left_panel_buttons = [
             UIButton(pygame.Rect(10, y_pos + 40 * i, button_width, 30),
                      f"{attack['name']} ({attack['damage']} dmg)", manager)
@@ -2575,7 +2811,7 @@ class GameScreen:
         # Add special attack button
         self.special_attack_button = UIButton(
             pygame.Rect(10, y_pos, button_width, 30),
-            f"[Special] {game.player.special_attack}",
+            f"[Special] {game.current_player.special_attack}",
             manager
         )
         self.left_panel_buttons.append(self.special_attack_button)
@@ -2595,7 +2831,7 @@ class GameScreen:
         self.party_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Party", manager)
         self.left_panel_buttons.append(self.party_button)
         y_pos += 40
-        quest_count = len(game.quest_manager.active_quests)
+        quest_count = len(game.current_quest_manager.active_quests)
         self.quest_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), f"Quests ({quest_count}/5)", manager)
         self.left_panel_buttons.append(self.quest_button)
         y_pos += 40
@@ -2605,10 +2841,10 @@ class GameScreen:
         # Add equipped skill buttons
         self.skill_buttons = []
         y_pos += 40
-        for skill_card in game.player.equipped_skills:
+        for skill_card in game.current_player.equipped_skills:
             skill_data = skill_card.get_current_data()
             skill_name = skill_data.get("Name", "Unknown")
-            cooldown = game.player.skill_cooldowns.get(skill_name, 0)
+            cooldown = game.current_player.skill_cooldowns.get(skill_name, 0)
             text = f"{skill_name} (CD:{cooldown})" if cooldown else skill_name
             btn = UIButton(pygame.Rect(10, y_pos, button_width, 30), text, manager)
             self.skill_buttons.append((btn, skill_card))
@@ -2617,10 +2853,10 @@ class GameScreen:
 
         # Add equipped tool button if tool is equipped
         self.tool_button = None
-        if game.player.equipped_tool:
-            tool_data = game.player.equipped_tool.get_current_data()
+        if game.current_player.equipped_tool:
+            tool_data = game.current_player.equipped_tool.get_current_data()
             tool_name = tool_data.get("Name", "Tool")
-            effect_text = game.player.get_tool_effect_text()
+            effect_text = game.current_player.get_tool_effect_text()
             btn_text = f"Use {tool_name} {effect_text}".strip()
             self.tool_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), btn_text, manager)
             self.left_panel_buttons.append(self.tool_button)
@@ -2637,8 +2873,8 @@ class GameScreen:
         # Check if player is on a location hex and add location button
         self.location_button = None
         self.current_location_hex = None
-        if game.player and game.player.position:
-            player_row, player_col = game.player.position
+        if game.current_player and game.current_player.position:
+            player_row, player_col = game.current_player.position
             if self.hex_grid.is_location_hex(player_row, player_col):
                 loc_data = self.hex_grid.location_data.get((player_row, player_col))
                 if loc_data and loc_data.get("card"):
@@ -2671,11 +2907,15 @@ class GameScreen:
         self.show_stats(None)
 
     def get_player_info(self):
-        p = game.player
+        p = game.current_player
         pos = p.position
         melee = p.melee_weapon.get_current_data().get("Name", "None") if p.melee_weapon else "None"
         proj = p.projectile_weapon.get_current_data().get("Name", "None") if p.projectile_weapon else "None"
-        info = f"Class: {p.class_name}\nHP: {p.hp}/{p.max_hp}\nMovement: {p.movement}\nRange: {p.projectile_range}\nPosition: ({pos[0]}, {pos[1]})\nMelee: {melee}\nProj: {proj}"
+        # Add player label in multiplayer mode
+        player_label = ""
+        if game.multiplayer_mode:
+            player_label = f"Player {p.player_number}\n"
+        info = f"{player_label}Class: {p.class_name}\nHP: {p.hp}/{p.max_hp}\nMovement: {p.movement}\nRange: {p.projectile_range}\nPosition: ({pos[0]}, {pos[1]})\nMelee: {melee}\nProj: {proj}"
         # Show Double Attack status for Warrior
         if p.double_attack_active:
             melee_status = "USED" if p.double_attack_melee_used else "Ready"
@@ -2698,12 +2938,133 @@ class GameScreen:
             self.ui_elements[1].hide()
 
     def update_turn_label(self):
-        phases = {"player": "Player's Turn", "allied": "Allied Turn", "neutral": "Neutral Turn", "hostile": "Enemies' Turn", "transition": "World Events"}
-        self.ui_elements[2].set_text(f"<font color='#FFFFFF' size=4>{phases[self.turn_phase]}</font>")
+        phases = {
+            "player": "Player's Turn",
+            "player1": "Player 1's Turn",
+            "player2": "Player 2's Turn",
+            "allied": "Allied Turn",
+            "neutral": "Neutral Turn",
+            "hostile": "Enemies' Turn",
+            "transition": "World Events"
+        }
+        self.ui_elements[2].set_text(f"<font color='#FFFFFF' size=4>{phases.get(self.turn_phase, 'Unknown')}</font>")
+
+    def rebuild_left_panel(self):
+        """Rebuild the left panel UI for the current player (used in multiplayer when turn changes)."""
+        # Kill all existing left panel buttons and remove from ui_elements
+        for btn in self.left_panel_buttons:
+            btn.kill()
+            if btn in self.ui_elements:
+                self.ui_elements.remove(btn)
+        self.left_panel_buttons.clear()
+
+        # Get current player's data
+        current_player = game.current_player
+        left_panel_width = WINDOW_WIDTH // 4
+        button_width = (left_panel_width - 20) // 2
+
+        # Update player info label
+        self.player_info_label.set_text(
+            f"<font color='#FFFFFF'>{self.get_player_info().replace(chr(10), '<br>')}</font>"
+        )
+
+        y_pos = 200
+        attacks_list = list(current_player.attacks.values())
+        self.left_panel_buttons = [
+            UIButton(pygame.Rect(10, y_pos + 40 * i, button_width, 30),
+                     f"{attack['name']} ({attack['damage']} dmg)", manager)
+            for i, attack in enumerate(attacks_list)
+        ]
+        y_pos += 40 * len(self.left_panel_buttons)
+
+        # Add special attack button
+        self.special_attack_button = UIButton(
+            pygame.Rect(10, y_pos, button_width, 30),
+            f"[Special] {current_player.special_attack}",
+            manager
+        )
+        self.left_panel_buttons.append(self.special_attack_button)
+        y_pos += 40
+
+        self.movement_toggle_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Movement", manager)
+        self.left_panel_buttons.append(self.movement_toggle_button)
+        y_pos += 40
+        self.crafting_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Crafting", manager)
+        self.left_panel_buttons.append(self.crafting_button)
+        y_pos += 40
+        self.inventory_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Inventory", manager)
+        self.left_panel_buttons.append(self.inventory_button)
+        y_pos += 40
+        self.skills_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Skills", manager)
+        self.left_panel_buttons.append(self.skills_button)
+        y_pos += 40
+        self.party_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Party", manager)
+        self.left_panel_buttons.append(self.party_button)
+        y_pos += 40
+        quest_count = len(game.current_quest_manager.active_quests)
+        self.quest_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), f"Quests ({quest_count}/5)", manager)
+        self.left_panel_buttons.append(self.quest_button)
+        y_pos += 40
+        self.recruit_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Recruit NPC", manager)
+        self.left_panel_buttons.append(self.recruit_button)
+
+        # Add equipped skill buttons
+        self.skill_buttons = []
+        y_pos += 40
+        for skill_card in current_player.equipped_skills:
+            skill_data = skill_card.get_current_data()
+            skill_name = skill_data.get("Name", "Unknown")
+            cooldown = current_player.skill_cooldowns.get(skill_name, 0)
+            text = f"{skill_name} (CD:{cooldown})" if cooldown else skill_name
+            btn = UIButton(pygame.Rect(10, y_pos, button_width, 30), text, manager)
+            self.skill_buttons.append((btn, skill_card))
+            self.left_panel_buttons.append(btn)
+            y_pos += 40
+
+        # Add equipped tool button if tool is equipped
+        self.tool_button = None
+        if current_player.equipped_tool:
+            tool_data = current_player.equipped_tool.get_current_data()
+            tool_name = tool_data.get("Name", "Tool")
+            effect_text = current_player.get_tool_effect_text()
+            btn_text = f"Use {tool_name} {effect_text}".strip()
+            self.tool_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), btn_text, manager)
+            self.left_panel_buttons.append(self.tool_button)
+            y_pos += 40
+
+        # Draw Card and End Turn buttons
+        y_pos += 20
+        self.draw_card_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Draw Card", manager)
+        self.left_panel_buttons.append(self.draw_card_button)
+        y_pos += 40
+        self.end_turn_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "End Turn", manager)
+        self.left_panel_buttons.append(self.end_turn_button)
+
+        # Check if player is on a location hex
+        self.location_button = None
+        self.current_location_hex = None
+        if current_player and current_player.position:
+            player_row, player_col = current_player.position
+            if self.hex_grid.is_location_hex(player_row, player_col):
+                loc_data = self.hex_grid.location_data.get((player_row, player_col))
+                if loc_data and loc_data.get("card"):
+                    loc_card = loc_data["card"]
+                    loc_name = loc_card.get_current_data().get("Name", "Location")
+                    self.current_location_hex = (player_row, player_col)
+                    y_pos += 50
+                    self.location_button = UIButton(
+                        pygame.Rect(10, y_pos, button_width, 35),
+                        f"[{loc_name}]",
+                        manager
+                    )
+                    self.left_panel_buttons.append(self.location_button)
+
+        self.ui_elements.extend(self.left_panel_buttons)
+        self.update_turn_label()
 
     def _execute_special_attack(self, target):
         """Execute the player's special attack and handle results."""
-        message, defeated_units = game.player.use_special_attack(target, self.hex_grid)
+        message, defeated_units = game.current_player.use_special_attack(target, self.hex_grid)
         self.add_to_log(message)
 
         # Handle defeated units
@@ -2716,7 +3077,7 @@ class GameScreen:
             self.add_to_log(f"{defeated_unit.name} defeated")
             self.card_manager.track_card_usage(defeated_unit.card_id, {"action": "defeated", "screen": "game"})
             # Notify quest system of unit death
-            quest_results = game.quest_manager.update("unit_death", {"unit": defeated_unit}, self.hex_grid, game.player)
+            quest_results = game.current_quest_manager.update("unit_death", {"unit": defeated_unit}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
                 self.add_to_log(msg)
 
@@ -2740,8 +3101,8 @@ class GameScreen:
             self.current_location_hex = None
 
         # Check if player is now on a location hex
-        if game.player and game.player.position:
-            player_row, player_col = game.player.position
+        if game.current_player and game.current_player.position:
+            player_row, player_col = game.current_player.position
             if self.hex_grid.is_location_hex(player_row, player_col):
                 loc_data = self.hex_grid.location_data.get((player_row, player_col))
                 if loc_data and loc_data.get("card"):
@@ -2762,15 +3123,15 @@ class GameScreen:
     def update_quest_button(self):
         """Update the quest button text to reflect current quest count."""
         if hasattr(self, 'quest_button') and self.quest_button:
-            quest_count = len(game.quest_manager.active_quests)
+            quest_count = len(game.current_quest_manager.active_quests)
             self.quest_button.set_text(f"Quests ({quest_count}/5)")
 
     def _get_adjacent_neutral_npcs(self):
         """Get list of neutral NPCs adjacent to the player."""
-        if not game.player or not game.player.position:
+        if not game.current_player or not game.current_player.position:
             return []
 
-        adjacent_hexes = self.hex_grid.get_adjacent_hexes(*game.player.position)
+        adjacent_hexes = self.hex_grid.get_adjacent_hexes(*game.current_player.position)
         neutral_npcs = []
 
         for row, col in adjacent_hexes:
@@ -2836,7 +3197,7 @@ class GameScreen:
             print("[DEBUG] In transition phase, completing transition...")
             # Complete transition phase processing
             self.hex_grid.on_turn_end()
-            quest_results = game.quest_manager.update("turn_end", {}, self.hex_grid, game.player)
+            quest_results = game.current_quest_manager.update("turn_end", {}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
                 self.add_to_log(msg)
 
@@ -2848,6 +3209,10 @@ class GameScreen:
                 print(f"[DEBUG] Incremented level_idx to {self.current_level_idx}, campaign levels={len(self.campaign['levels']) if self.campaign else 'N/A'}")
                 if self.campaign and self.current_level_idx < len(self.campaign["levels"]):
                     self.load_campaign_level()
+                    if game.multiplayer_mode:
+                        self.turn_phase = "player1"
+                        game.current_player_index = 0
+                        self.rebuild_left_panel()
                 else:
                     self.add_to_log("Campaign Completed!")
                     print("[DEBUG] Campaign completed - going to main_menu!")
@@ -2855,14 +3220,19 @@ class GameScreen:
                     main_menu.initialize_buttons()
                     return
 
-            # Move to player phase
-            self.turn_phase = "player"
+            # Move to player phase (or player1 in multiplayer)
+            if game.multiplayer_mode:
+                self.turn_phase = "player1"
+                game.current_player_index = 0
+                self.rebuild_left_panel()
+            else:
+                self.turn_phase = "player"
             self.is_player_turn = True
             self.hex_grid.reset_location_visits()
             print("[DEBUG] Moved to player phase")
 
         # Apply Turn_Start passives
-        for msg in game.player.apply_passive_skills(self.hex_grid, "Turn_Start"):
+        for msg in game.current_player.apply_passive_skills(self.hex_grid, "Turn_Start"):
             self.add_to_log(msg)
         self.update_turn_label()
         self.animating = self.check_animations()
@@ -2880,7 +3250,7 @@ class GameScreen:
         self.hex_grid.on_turn_end()
 
         # Notify quest system of turn end
-        quest_results = game.quest_manager.update("turn_end", {}, self.hex_grid, game.player)
+        quest_results = game.current_quest_manager.update("turn_end", {}, self.hex_grid, game.current_player)
         for quest, result, msg in quest_results:
             self.add_to_log(msg)
 
@@ -2889,7 +3259,12 @@ class GameScreen:
             self.current_level_idx += 1
             if self.campaign and self.current_level_idx < len(self.campaign["levels"]):
                 self.load_campaign_level()
-                self.turn_phase = "player"
+                if game.multiplayer_mode:
+                    self.turn_phase = "player1"
+                    game.current_player_index = 0
+                    self.rebuild_left_panel()
+                else:
+                    self.turn_phase = "player"
                 self.is_player_turn = True
             else:
                 self.add_to_log("Campaign Completed!")
@@ -2897,13 +3272,18 @@ class GameScreen:
                 main_menu.initialize_buttons()
                 return
 
-        # Advance to player phase
-        self.turn_phase = "player"
+        # Advance to player phase (or player1 in multiplayer)
+        if game.multiplayer_mode:
+            self.turn_phase = "player1"
+            game.current_player_index = 0
+            self.rebuild_left_panel()
+        else:
+            self.turn_phase = "player"
         self.is_player_turn = True
         self.hex_grid.reset_location_visits()
 
         # Apply Turn_Start passives at start of player turn
-        for msg in game.player.apply_passive_skills(self.hex_grid, "Turn_Start"):
+        for msg in game.current_player.apply_passive_skills(self.hex_grid, "Turn_Start"):
             self.add_to_log(msg)
 
         self.update_turn_label()
@@ -2923,7 +3303,7 @@ class GameScreen:
 
             # Process transition card outcomes and get selected index
             selected_index, result_text, log_messages = game.transition_manager.process_transition_turn_with_index(
-                self.hex_grid, game.player
+                self.hex_grid, game.current_player
             )
 
             # Log the transition events
@@ -2947,15 +3327,23 @@ class GameScreen:
             print(f"Full traceback:\n{tb_str}")
             self.add_to_log(f"[Transition Error]")
             # Skip to player phase on error (don't call advance_turn which would re-process transition)
-            self.turn_phase = "player"
+            if game.multiplayer_mode:
+                self.turn_phase = "player1"
+                game.current_player_index = 0
+                self.rebuild_left_panel()
+            else:
+                self.turn_phase = "player"
             self.is_player_turn = True
             self.update_turn_label()
 
     def check_animations(self):
         animating = False
-        if self.hex_grid.player and self.hex_grid.player.animating:
-            self.hex_grid.player.update_animation(self.hex_grid)  # Pass grid
-            animating = True
+        # Update animations for all players (multiplayer or single player)
+        all_players = self.hex_grid.players if self.hex_grid.players else ([self.hex_grid.player] if self.hex_grid.player else [])
+        for player in all_players:
+            if player and player.animating:
+                player.update_animation(self.hex_grid)
+                animating = True
         for unit in self.hex_grid.units:
             if unit.animating:
                 unit.update_animation(self.hex_grid)  # Pass grid
@@ -2963,8 +3351,8 @@ class GameScreen:
             unit.update_animation(self.hex_grid)  # Pass grid for damage text
 
         # Check for pending NPC arrivals (quest NPCs moving to locations)
-        if game.quest_manager.has_pending_arrivals():
-            messages = game.quest_manager.update_pending_arrivals()
+        if game.current_quest_manager.has_pending_arrivals():
+            messages = game.current_quest_manager.update_pending_arrivals()
             for msg in messages:
                 self.add_to_log(msg)
             animating = True  # Keep animating while there are pending arrivals
@@ -2977,12 +3365,15 @@ class GameScreen:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             pos = event.pos
             hex_pos = self.hex_grid.get_hex_at_pixel(pos[0], pos[1])
-            if event.button == 1 and hex_pos and self.turn_phase == "player":
+            # Check if it's the current player's turn (single-player: "player", multiplayer: "player1" or "player2")
+            is_player_turn = self.turn_phase in ("player", "player1", "player2")
+            if event.button == 1 and hex_pos and is_player_turn:
                 self.hex_grid.selected_hex = hex_pos
                 unit = self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"]
                 self.show_stats(unit)
+                current_player = game.current_player
                 if self.player_mode == "attack" and self.selected_attack and unit and isinstance(unit, Unit):
-                    message, defeated = game.player.attack(unit, self.selected_attack, self.hex_grid)
+                    message, defeated = current_player.attack(unit, self.selected_attack, self.hex_grid)
                     self.add_to_log(message)
                     if message:
                         unit.attack_flash = True
@@ -2993,7 +3384,7 @@ class GameScreen:
                             self.add_to_log(f"{unit.name} defeated")
                             self.card_manager.track_card_usage(unit.card_id, {"action": "defeated", "screen": "game"})
                             # Notify quest system of unit death
-                            quest_results = game.quest_manager.update("unit_death", {"unit": unit}, self.hex_grid, game.player)
+                            quest_results = game.current_quest_manager.update("unit_death", {"unit": unit}, self.hex_grid, current_player)
                             for quest, result, msg in quest_results:
                                 self.add_to_log(msg)
                             self.update_quest_button()
@@ -3002,8 +3393,8 @@ class GameScreen:
                         self.selected_attack = None
                 elif self.player_mode == "skill" and self.selected_skill:
                     # Use skill on target
-                    target = unit if unit and isinstance(unit, Unit) else game.player
-                    message, defeated = game.player.use_skill(self.selected_skill, target, self.hex_grid)
+                    target = unit if unit and isinstance(unit, Unit) else current_player
+                    message, defeated = current_player.use_skill(self.selected_skill, target, self.hex_grid)
                     self.add_to_log(message)
                     if message and unit and isinstance(unit, Unit):
                         unit.attack_flash = True
@@ -3014,7 +3405,7 @@ class GameScreen:
                             self.add_to_log(f"{unit.name} defeated")
                             self.card_manager.track_card_usage(unit.card_id, {"action": "defeated", "screen": "game"})
                             # Notify quest system of unit death
-                            quest_results = game.quest_manager.update("unit_death", {"unit": unit}, self.hex_grid, game.player)
+                            quest_results = game.current_quest_manager.update("unit_death", {"unit": unit}, self.hex_grid, current_player)
                             for quest, result, msg in quest_results:
                                 self.add_to_log(msg)
                             self.update_quest_button()
@@ -3025,7 +3416,7 @@ class GameScreen:
                     self.initialize_screen()  # Refresh to update cooldown display
                 elif self.player_mode == "recruit" and unit and isinstance(unit, Unit):
                     # Check if clicked unit is adjacent and neutral
-                    distance = self.hex_grid.hex_distance(game.player.position, hex_pos)
+                    distance = self.hex_grid.hex_distance(current_player.position, hex_pos)
                     if distance == 1 and unit.allegiance == "Neutral":
                         # Open recruitment screen
                         game.current_screen = "recruitment"
@@ -3037,23 +3428,23 @@ class GameScreen:
                 elif self.player_mode == "special_attack" and unit and isinstance(unit, Unit):
                     # Execute special attack on target
                     self._execute_special_attack(unit)
-                elif hex_pos == game.player.position and self.hex_grid.is_location_hex(hex_pos[0], hex_pos[1]):
+                elif hex_pos == current_player.position and self.hex_grid.is_location_hex(hex_pos[0], hex_pos[1]):
                     # Clicked on current position which is a location - reopen location screen
                     loc_data = self.hex_grid.location_data.get(hex_pos)
                     if loc_data and loc_data.get("card"):
                         game.current_screen = "location"
                         location_screen.initialize_screen(loc_data["card"], hex_pos, self.hex_grid)
-                elif self.player_mode == "movement" and not game.player.movement_used and not unit:
-                    path = self.hex_grid.find_path(game.player.position, hex_pos)
-                    if path and len(path) - 1 <= game.player.movement:
-                        success, msg = self.hex_grid.move_unit(game.player, *hex_pos)
+                elif self.player_mode == "movement" and not current_player.movement_used and not unit:
+                    path = self.hex_grid.find_path(current_player.position, hex_pos)
+                    if path and len(path) - 1 <= current_player.movement:
+                        success, msg = self.hex_grid.move_unit(current_player, *hex_pos)
                         if success:
                             self.add_to_log(msg)
-                            game.player.movement_used = True
+                            current_player.movement_used = True
                             # Notify quest system of player movement
-                            quest_results = game.quest_manager.update(
-                                "unit_moved", {"unit": game.player, "position": hex_pos},
-                                self.hex_grid, game.player
+                            quest_results = game.current_quest_manager.update(
+                                "unit_moved", {"unit": current_player, "position": hex_pos},
+                                self.hex_grid, current_player
                             )
                             for quest, result, qmsg in quest_results:
                                 self.add_to_log(qmsg)
@@ -3071,10 +3462,10 @@ class GameScreen:
                                         linked_level_file = os.path.join("levels", hex_data["linked_level"])
                                         if os.path.exists(linked_level_file):
                                             self.add_to_log(f"Entering {hex_data['linked_level']}")
-                                            self.hex_grid.load_level(linked_level_file, self.card_manager, game.player)
+                                            self.hex_grid.load_level(linked_level_file, self.card_manager, current_player)
                                             # Teleport player to new start position
                                             player_start = self.hex_grid.player.position
-                                            game.player.teleport(self.hex_grid, *player_start)
+                                            current_player.teleport(self.hex_grid, *player_start)
                                             # Teleport allied NPCs
                                             allied_units = [u for u in self.hex_grid.units if u.allegiance == "Allied"]
                                             for i, ally in enumerate(allied_units):
@@ -3082,9 +3473,9 @@ class GameScreen:
                                                 if i < len(neighbors):
                                                     ally.teleport(self.hex_grid, *neighbors[i])
                                             self.initialize_screen()
-                                            game.player.movement_used = False
-                                            game.player.action_used = False
-                                            game.player.reset_double_attack()
+                                            current_player.movement_used = False
+                                            current_player.action_used = False
+                                            current_player.reset_double_attack()
                                             break
                                         else:
                                             self.add_to_log(f"Linked level file not found: {hex_data['linked_level']}")
@@ -3175,24 +3566,25 @@ class GameScreen:
                 self.hex_grid.view_offset_x = max(min(self.hex_grid.view_offset_x, max_offset_x), min_offset_x)
                 self.hex_grid.view_offset_y = max(min(self.hex_grid.view_offset_y, max_offset_y), min_offset_y)
         elif event.type == pygame_gui.UI_BUTTON_PRESSED:
+            is_player_turn = self.turn_phase in ("player", "player1", "player2")
             if event.ui_element in self.left_panel_buttons:
                 text = event.ui_element.text
-                if text == "Crafting" and self.turn_phase == "player":
+                if text == "Crafting" and is_player_turn:
                     game.current_screen = "crafting"
                     crafting_screen.initialize_screen()
-                elif text == "Inventory" and self.turn_phase == "player":
+                elif text == "Inventory" and is_player_turn:
                     game.current_screen = "inventory"
                     inventory_screen.initialize_screen()
-                elif text == "Skills" and self.turn_phase == "player":
+                elif text == "Skills" and is_player_turn:
                     game.current_screen = "skills"
                     skills_screen.initialize_screen()
-                elif text == "Party" and self.turn_phase == "player":
+                elif text == "Party" and is_player_turn:
                     game.current_screen = "party"
                     party_screen.initialize_screen()
-                elif text.startswith("Quests") and self.turn_phase == "player":
+                elif text.startswith("Quests") and is_player_turn:
                     game.current_screen = "quest"
                     quest_screen.initialize_screen()
-                elif text == "Recruit NPC" and self.turn_phase == "player":
+                elif text == "Recruit NPC" and is_player_turn:
                     # Toggle recruit mode
                     if self.player_mode == "recruit":
                         self.player_mode = "movement"
@@ -3209,33 +3601,33 @@ class GameScreen:
                             self.add_to_log("Click on an adjacent neutral NPC to recruit")
                         else:
                             self.add_to_log("No adjacent neutral NPCs to recruit")
-                elif self.location_button and event.ui_element == self.location_button and self.turn_phase == "player":
+                elif self.location_button and event.ui_element == self.location_button and is_player_turn:
                     # Reopen location screen
                     if self.current_location_hex:
                         loc_data = self.hex_grid.location_data.get(self.current_location_hex)
                         if loc_data and loc_data.get("card"):
                             game.current_screen = "location"
                             location_screen.initialize_screen(loc_data["card"], self.current_location_hex, self.hex_grid)
-                elif text == "Movement" and self.turn_phase == "player":
+                elif text == "Movement" and is_player_turn:
                     self.player_mode = "movement"
                     self.selected_attack = None
                     self.add_to_log("Switched to movement mode")
-                elif text == "Draw Card" and self.turn_phase == "player" and self.hex_grid.selected_hex:
+                elif text == "Draw Card" and is_player_turn and self.hex_grid.selected_hex:
                     card, msg = self.hex_grid.draw_card(*self.hex_grid.selected_hex, self.card_manager)
                     if card:
                         party_msg = add_card_to_player(card)
                         if party_msg:
                             self.add_to_log(party_msg)
                     self.add_to_log(msg)
-                elif text == "End Turn" and self.turn_phase == "player":
+                elif text == "End Turn" and is_player_turn:
                     self.advance_turn()
-                elif self.turn_phase == "player":
+                elif is_player_turn:
                     # Check if it's a skill button
                     skill_button_clicked = False
                     for btn, skill_card in self.skill_buttons:
                         if event.ui_element == btn:
                             skill_name = skill_card.get_current_data().get("Name", "Unknown")
-                            cooldown = game.player.skill_cooldowns.get(skill_name, 0)
+                            cooldown = game.current_player.skill_cooldowns.get(skill_name, 0)
                             if cooldown > 0:
                                 self.add_to_log(f"{skill_name} is on cooldown ({cooldown} turns)")
                             else:
@@ -3248,26 +3640,27 @@ class GameScreen:
 
                     # Check if tool button was clicked
                     if not skill_button_clicked and self.tool_button and event.ui_element == self.tool_button:
-                        success, message = game.player.use_tool()
+                        success, message = game.current_player.use_tool()
                         self.add_to_log(message)
                         if success:
                             self.player_info_label.set_text(self.get_player_info())
                         skill_button_clicked = True  # Prevent further processing
 
                     if not skill_button_clicked:
+                        current_player = game.current_player
                         # Check if special attack button was clicked
                         if event.ui_element == self.special_attack_button:
-                            if game.player.special_attack == "Double Attack":
+                            if current_player.special_attack == "Double Attack":
                                 # Warrior's Double Attack - activates a mode, doesn't need targeting
-                                if game.player.double_attack_active:
+                                if current_player.double_attack_active:
                                     self.add_to_log("Double Attack already active")
-                                elif game.player.action_used:
+                                elif current_player.action_used:
                                     self.add_to_log("Action already used this turn")
                                 else:
-                                    message, _ = game.player.use_special_attack(None, self.hex_grid)
+                                    message, _ = current_player.use_special_attack(None, self.hex_grid)
                                     self.add_to_log(message)
                                     self.player_mode = "movement"  # Stay in movement mode, use regular attacks
-                            elif game.player.action_used:
+                            elif current_player.action_used:
                                 self.add_to_log("Action already used this turn")
                             else:
                                 self.player_mode = "special_attack"
@@ -3275,13 +3668,13 @@ class GameScreen:
                                 self.selected_skill = None
                                 self.hex_grid.selected_hex = None
                                 # For Spin Punch, execute immediately (no target needed)
-                                if game.player.special_attack == "Spin Punch":
+                                if current_player.special_attack == "Spin Punch":
                                     self._execute_special_attack(None)
                                 else:
-                                    self.add_to_log(f"Select target for {game.player.special_attack}")
+                                    self.add_to_log(f"Select target for {current_player.special_attack}")
                         else:
                             attack_text = text.split(' (')[0]
-                            if attack_text in [game.player.attacks["projectile"]["name"], game.player.attacks["melee"]["name"]]:
+                            if attack_text in [current_player.attacks["projectile"]["name"], current_player.attacks["melee"]["name"]]:
                                 self.selected_attack = attack_text
                                 self.player_mode = "attack"
                                 self.selected_skill = None
@@ -3304,23 +3697,25 @@ class GameScreen:
 
     def draw(self):
         screen.fill(DARK_INDIGO)
-        movement_range = self.hex_grid.get_valid_moves(game.player.position, game.player.movement) if self.turn_phase == "player" and self.player_mode == "movement" and not game.player.movement_used else None
+        current_player = game.current_player
+        is_player_turn = self.turn_phase in ("player", "player1", "player2")
+        movement_range = self.hex_grid.get_valid_moves(current_player.position, current_player.movement) if is_player_turn and self.player_mode == "movement" and not current_player.movement_used else None
 
         # Determine attack range based on mode
         attack_range = None
-        if self.turn_phase == "player" and not game.player.action_used:
-            if self.selected_attack == game.player.attacks["projectile"]["name"]:
-                attack_range = self.hex_grid.get_attack_range(game.player.position, game.player.projectile_range, is_projectile=True)
-            elif self.selected_attack == game.player.attacks["melee"]["name"]:
-                attack_range = self.hex_grid.get_attack_range(game.player.position, 1, is_projectile=False)
+        if is_player_turn and not current_player.action_used:
+            if self.selected_attack == current_player.attacks["projectile"]["name"]:
+                attack_range = self.hex_grid.get_attack_range(current_player.position, current_player.projectile_range, is_projectile=True)
+            elif self.selected_attack == current_player.attacks["melee"]["name"]:
+                attack_range = self.hex_grid.get_attack_range(current_player.position, 1, is_projectile=False)
             elif self.player_mode == "special_attack":
                 # Show range for special attacks
-                if game.player.special_attack == "Multi-target Projectile":
-                    attack_range = self.hex_grid.get_attack_range(game.player.position, game.player.projectile_range, is_projectile=True)
-                elif game.player.special_attack == "Double Attack":
-                    attack_range = self.hex_grid.get_attack_range(game.player.position, 1, is_projectile=False)
-                elif game.player.special_attack == "Spin Punch":
-                    attack_range = self.hex_grid.get_attack_range(game.player.position, 1, is_projectile=False)
+                if current_player.special_attack == "Multi-target Projectile":
+                    attack_range = self.hex_grid.get_attack_range(current_player.position, current_player.projectile_range, is_projectile=True)
+                elif current_player.special_attack == "Double Attack":
+                    attack_range = self.hex_grid.get_attack_range(current_player.position, 1, is_projectile=False)
+                elif current_player.special_attack == "Spin Punch":
+                    attack_range = self.hex_grid.get_attack_range(current_player.position, 1, is_projectile=False)
 
         # Get targetable units for visual highlighting
         targetable_units = None
@@ -3347,7 +3742,7 @@ class GameScreen:
             defeat_screen.initialize_screen()
             return
         # Process turn queue for consecutive unit animations
-        if self.turn_phase != "player":
+        if self.turn_phase not in ("player", "player1", "player2"):
             self.update_turn_queue()
 
 # Game Settings screen
@@ -3489,7 +3884,7 @@ class InstanceEventScreen:
             # Check for choice buttons
             for i, btn in enumerate(self.choice_buttons):
                 if event.ui_element == btn:
-                    result = game.instance_manager.resolve_player_choice(i, game_screen.hex_grid, game.player)
+                    result = game.instance_manager.resolve_player_choice(i, game_screen.hex_grid, game.current_player)
                     self.show_result(result)
                     return
 
@@ -3708,14 +4103,20 @@ class Game:
         self._current_screen = "main_menu"
         self._screen_changed_this_frame = False  # Prevents stray events after screen change
         self.player = None
-        self.party = []  # List of allied NPC cards in the player's party
+        self.party = []  # List of allied NPC cards in the player's party (single-player mode)
         self.card_manager = CardManager()
         self.quest_manager = QuestManager(self.card_manager)
         self.instance_manager = InstanceManager(self.card_manager)
         self.transition_manager = TransitionManager(self.card_manager, self.instance_manager)
+        # Multiplayer support
+        self.players = []  # List of players for multiplayer [player1, player2]
+        self.current_player_index = 0  # Whose turn it is (0 or 1)
+        self.multiplayer_mode = False  # True when in 2-player mode
+        self.quest_managers = []  # Per-player quest managers in multiplayer
         self.screens = {
             "main_menu": main_menu,
             "character_creation": character_creation_screen,
+            "multiplayer_character_creation": multiplayer_character_creation_screen,
             "settings": settings_screen,
             "game": game_screen,
             "game_settings": game_settings_screen,
@@ -3758,6 +4159,27 @@ class Game:
         """Called at start of each frame to reset per-frame state."""
         self._screen_changed_this_frame = False
 
+    @property
+    def current_player(self):
+        """Get the player whose turn it is (multiplayer) or the single player."""
+        if self.multiplayer_mode and self.players:
+            return self.players[self.current_player_index]
+        return self.player
+
+    @property
+    def current_party(self):
+        """Get current player's party (multiplayer uses player.party, single-player uses game.party)."""
+        if self.multiplayer_mode:
+            return self.current_player.party
+        return self.party
+
+    @property
+    def current_quest_manager(self):
+        """Get current player's quest manager."""
+        if self.multiplayer_mode and self.quest_managers:
+            return self.quest_managers[self.current_player_index]
+        return self.quest_manager
+
     def handle_event(self, event):
         # Skip event processing if screen changed this frame (prevents stray events)
         if self._screen_changed_this_frame:
@@ -3770,6 +4192,7 @@ class Game:
 # Instantiate screens and game
 main_menu = MainMenu()
 character_creation_screen = CharacterCreationScreen()
+multiplayer_character_creation_screen = MultiplayerCharacterCreationScreen()
 settings_screen = SettingsScreen()
 game_screen = GameScreen()
 game_settings_screen = GameSettingsScreen()

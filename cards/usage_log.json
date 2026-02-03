@@ -289,6 +289,97 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-01T20:19:05.415102",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:53:23.001948",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:08:46.453756",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:51.725844",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:45:26.711314",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:24:37.352002",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:41:32.607152",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:42:58.340066",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:45:12.438631",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:45:12.624316",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:47:54.820986",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:50:23.245248",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:59:44.956318",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "Bone Spearman": [
@@ -1885,6 +1976,101 @@
           8
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-01T16:24:51.661952",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:42:22.085660",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:05:30.136157",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T07:01:50.849922",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:45:04.848529",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:24:51.642986",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:42:23.925975",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:43:26.898847",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:46:09.725170",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:53:27.776007",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:58:48.699614",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:59:16.127347",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T22:40:41.984194",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "Diseased Bowman to Plague Sniper": [
@@ -3131,6 +3317,24 @@
           1,
           10
         ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:24:51.936302",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          1,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:47:24.055037",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
       }
     }
   ],
@@ -4644,6 +4848,24 @@
           0
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-01T16:24:52.667158",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          11,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:20:23.586563",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "Caravan Guard": [
@@ -6123,6 +6345,17 @@
           2
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-01T16:24:52.923820",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          2
+        ]
+      }
     }
   ],
   "Forge Apprentice": [
@@ -7419,6 +7652,17 @@
           3
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-01T16:24:53.194687",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          3
+        ]
+      }
     }
   ],
   "Herbalist Survivor": [
@@ -7624,6 +7868,20 @@
     },
     {
       "timestamp": "2025-03-22T01:41:46.658239",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:43:53.358984",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:48:58.630354",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -8373,6 +8631,13 @@
           10,
           11
         ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:09:14.359710",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
       }
     }
   ],
@@ -9999,6 +10264,31 @@
           10
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-01T16:24:51.529789",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          9,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:03:48.123533",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:52:50.383076",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "Crippled Knight to Spectral Knight": [
@@ -11458,6 +11748,31 @@
           14
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-01T16:24:51.800502",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:49:54.877024",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:10.154093",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "Plague Archer": [
@@ -12791,6 +13106,17 @@
           4
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-01T16:24:52.076187",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          1,
+          4
+        ]
+      }
     }
   ],
   "Mire Marauder": [
@@ -14110,6 +14436,31 @@
           2
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-01T16:24:52.242799",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:00:25.865343",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:45:43.950112",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "Bone King": [
@@ -15282,6 +15633,17 @@
           22
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-01T16:24:52.381596",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          22
+        ]
+      }
     }
   ],
   "The Forgotten Arbalest": [
@@ -16418,6 +16780,17 @@
     },
     {
       "timestamp": "2026-02-01T14:09:26.681255",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          1,
+          21
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:24:52.515009",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -17687,6 +18060,31 @@
           1
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-01T16:24:52.776646",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:41:36.478851",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T07:02:51.602304",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "Fading Archer to Dame Lysara the Stormshot": [
@@ -18838,6 +19236,31 @@
           11,
           2
         ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:24:53.053176",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          11,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:55:07.240035",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T20:00:25.568700",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
       }
     }
   ],
@@ -30976,6 +31399,17 @@
           3
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-01T16:24:53.336344",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          9,
+          3
+        ]
+      }
     }
   ],
   "Rusted Blade Shard to Dagger": [
@@ -33658,6 +34092,83 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-01T20:01:02.958578",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:55:35.751090",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:41:19.807128",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T07:04:03.719027",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:47:20.015630",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:24:07.567947",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:42:45.981576",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:44:38.475403",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:50:23.405724",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:53:19.069381",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T20:01:11.938693",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "Rusting Sentinel to Awakened Guardian": [
@@ -33816,6 +34327,13 @@
     },
     {
       "timestamp": "2025-03-22T01:42:09.493387",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:48:11.125818",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -34003,6 +34521,1053 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-01T16:36:21.576323",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:40:42.570897",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:45:42.821603",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:47:43.457667",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:57:17.720609",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:59:18.551336",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:10:57.462494",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:15:02.382297",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:18:54.271665",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:24:22.493141",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:27:10.209209",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:35:21.891294",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:41:51.170274",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:44:27.257508",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:57:57.761968",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T18:47:07.846834",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:09:00.302907",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:12:01.254857",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:13:30.533369",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:14:39.234801",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:16:49.188293",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:23:11.270873",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:36:37.543794",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:39:25.835472",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:40:04.835175",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:43:34.232680",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:45:00.301956",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:50:07.726652",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:51:10.450459",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:56:40.056977",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:57:57.462899",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:10:45.415897",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:13:12.903539",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:16:14.236410",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:22:38.711822",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:29:51.236772",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:34:18.232577",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:37:24.108627",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:45:34.775441",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:46:47.698308",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:58:50.614312",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:59:36.750306",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:34:52.283469",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:37:35.786152",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:37:50.641394",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:39:22.503007",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:01:16.157860",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:23:56.191805",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:24:11.670551",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:25:24.016780",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:27:54.725501",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:34:50.296369",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:49:39.936889",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:50:04.139214",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:52:10.680584",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:57:49.158355",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:02:47.629552",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:04:02.794583",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:10:39.515133",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:12:56.587682",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:14:43.491084",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:19:35.074138",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T06:49:38.904493",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T06:51:11.582653",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T06:51:49.590748",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T06:53:07.780124",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T06:59:13.966513",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T07:00:09.938978",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T07:01:59.121407",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T07:03:03.116380",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T07:03:48.768258",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:07:39.065164",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:09:31.844768",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:39:23.812518",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:40.818812",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:45.538029",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:53.194059",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:47:00.056386",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:56:19.016545",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:15:34.060698",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:17:17.785883",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:21:45.999529",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:23:13.008214",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:30:43.816063",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:36:05.542863",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:36:55.626792",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:40:11.570321",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:40:41.269236",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:48:15.760271",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:51:30.545092",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T20:00:21.010736",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T20:52:03.598144",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T20:54:12.247536",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:03:25.954376",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:11:52.392879",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:13:03.413060",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:14:16.780033",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:15:42.555523",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:15:56.158281",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:16:10.698874",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:16:16.401212",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:16:24.884081",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:16:57.196402",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:19:19.584975",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:27:50.818964",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:28:05.239976",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:28:22.156025",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:28:30.805262",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:49:29.029681",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          12
+        ]
+      }
     }
   ],
   "Starving Wolf to Rabid Beast": [
@@ -34186,6 +35751,20 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-02T19:55:51.552137",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T20:54:54.547254",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "Tattered Flagbearer": [
@@ -34344,6 +35923,13 @@
     },
     {
       "timestamp": "2025-03-22T01:42:01.319368",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:43:42.294716",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -34531,6 +36117,1053 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-01T16:36:21.411427",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:40:42.434428",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:45:42.691718",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:50:44.222891",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:57:17.576072",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:59:18.425128",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:10:57.288058",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:15:02.244762",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:18:54.134843",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:24:22.340920",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:27:10.059352",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:35:21.739299",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:41:50.997015",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:44:27.095586",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:57:57.588832",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T18:47:07.721811",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:09:00.055054",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:12:01.109013",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:13:30.379653",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:14:39.076210",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:23:11.149989",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:26:05.482366",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:36:37.405724",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:39:25.698510",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:41:00.398244",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:43:34.080249",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:45:11.030471",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:50:07.567273",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:52:02.331601",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:56:39.908903",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:58:36.512839",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:10:45.284021",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:12:57.056394",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:16:14.066118",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:22:38.562863",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:29:51.071553",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:34:18.053366",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:35:12.149604",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:45:34.625110",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:46:37.660030",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:58:50.442106",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:59:19.664212",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:34:52.126499",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:35:52.096710",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:37:50.494149",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:38:38.284350",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:01:16.014976",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:23:56.044319",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:24:11.537900",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:25:23.893954",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:27:54.542979",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:34:50.145083",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:37:26.322372",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:49:39.775761",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:50:03.963901",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:52:10.528703",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:57:49.009807",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:02:47.470033",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:07:10.964195",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:10:39.395232",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:12:56.406392",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:14:43.349247",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:17:10.741754",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:19:34.923006",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T06:49:38.698290",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T06:51:11.749003",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T06:52:31.045139",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T06:59:13.800528",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T07:00:10.115751",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:07:38.885446",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:09:32.066514",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:15:28.738006",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:39:23.639828",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:20.616383",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:46:40.152811",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:56:18.850118",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:15:33.906624",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:17:36.023526",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:35.217351",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:25:41.487843",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:30:43.666124",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:36:05.361917",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:36:55.420463",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:40:11.408551",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:41:12.428830",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:41:56.718122",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:45:44.118744",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:46:13.378426",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:55:15.654739",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:55:58.543094",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:59:28.786233",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T20:52:03.415893",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T20:54:29.050389",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:03:25.781908",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:11:52.221001",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:12:48.285667",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:14:16.605703",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:15:31.466731",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:15:50.205264",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:16:10.496722",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:16:16.225728",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:16:24.715228",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:16:57.019243",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:19:32.756244",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:27:50.643697",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:28:05.044282",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:28:21.969881",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:28:30.604414",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:49:28.856022",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          10
+        ]
+      }
     }
   ],
   "Wounded Outlaw to Enraged Outlaw": [
@@ -34703,6 +37336,20 @@
     },
     {
       "timestamp": "2025-03-22T01:40:37.760522",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:51:25.834683",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:57:40.109673",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -35045,6 +37692,13 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-01T20:51:46.542193",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "Relic Hunter": [
@@ -35210,6 +37864,13 @@
     },
     {
       "timestamp": "2025-03-22T01:42:00.766848",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T20:00:12.698420",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -36594,6 +39255,4112 @@
         "position": [
           12,
           2
+        ]
+      }
+    }
+  ],
+  "test_shop_item_3": [
+    {
+      "timestamp": "2026-02-01T16:36:37.684966",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T18:48:05.259089",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:15:31.460669",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:59.026501",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:59.438346",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:59.839923",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:00.028732",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:00.213723",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:02.492515",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:03.311626",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:15:40.880830",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:39.773177",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:39.985478",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:40.781311",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:40.990987",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:41.374728",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:41.551247",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:41.743032",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:42.479715",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:42.662983",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:43.642825",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:44.022661",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:44.588845",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:44.969375",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:45.556263",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:40:15.657512",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T20:52:30.938751",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    }
+  ],
+  "test_junk_loot_2": [
+    {
+      "timestamp": "2026-02-01T16:37:09.832719",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:37:15.616375",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:45:55.504068",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:18:02.690506",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:26:00.845504",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:41:59.814528",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T18:48:33.878937",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T18:48:45.339884",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:28:22.321979",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:01:42.852412",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:01:45.084770",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:14:55.721022",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:15:15.503868",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:11.423715",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:11.595260",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:11.782717",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:12.555232",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:12.755883",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:12.930454",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:13.482666",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:13.625755",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:15.345731",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:17.903879",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:18.100003",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:18.278243",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:18.441605",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:59.856855",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:00.280919",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:00.668046",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:01.415019",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:02.149484",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:03.412917",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:03.644537",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:04.246296",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:04.632008",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:04.824631",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:42.736680",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:43.151663",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:43.353224",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:43.567705",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:43.950689",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:44.137296",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:44.354634",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:44.683924",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:45.456853",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:46.007555",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:46.189869",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:46.587218",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:46.942019",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:18.651632",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:20.564577",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:20.764415",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:21.231122",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:21.441724",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:21.648019",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:22.236031",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:22.431095",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:22.625481",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:23.252438",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:23.633671",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:24.008418",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:24.188620",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:24.576227",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:24.778969",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:21:48.541201",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:36:18.015741",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:40:23.693631",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    }
+  ],
+  "test_location_tavern": [
+    {
+      "timestamp": "2026-02-01T16:37:27.096552",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:42:29.261234",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:46:56.576633",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:49:54.076749",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:24:35.091464",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:43:05.373812",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:09:15.527530",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:12:48.044727",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:14:00.417612",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:14:43.959291",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:24:26.969072",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:36:45.595993",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:41:10.869585",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:51:17.143341",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:58:58.445532",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:12:17.065133",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:17:27.449457",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:22:58.449093",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:29:59.689969",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:35:57.363081",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:46:15.838191",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:59:00.403503",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:35:54.064073",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:39:49.611042",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:35:48.172982",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:52:34.435837",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:58:09.773561",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:07:27.965801",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:13:41.472684",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:15:04.770347",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:20:06.637830",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T06:51:13.878871",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T07:01:03.139298",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:08:01.817878",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:40:49.244351",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:57:14.192083",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:16:09.900427",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:36:37.270966",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:40:59.731266",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T20:53:29.219181",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:12:39.604255",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:15:17.153503",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:18:14.533945",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    }
+  ],
+  "test_junk_loot_1": [
+    {
+      "timestamp": "2026-02-01T16:40:45.963509",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:45:47.553818",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:50:51.398405",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:17:44.549328",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:26:46.897148",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:37:35.083287",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:37:44.464502",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:42:46.897453",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:28:12.595066",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:28:15.718015",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:01:31.062173",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:04:08.380462",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:23:57.838257",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:16:58.295361",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:41:37.035231",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:11.243018",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:11.972827",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:12.166916",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:12.382875",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:13.125380",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:13.289980",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:14.504997",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:15.160380",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:15.549059",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:16.518790",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:16.698925",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:16.907257",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:17.108141",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:17.304740",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:17.511636",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:17.699320",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:57.038695",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:59.643995",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:00.082339",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:00.473222",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:00.849863",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:01.051666",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:01.238775",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:02.350093",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:02.541926",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:02.745220",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:02.962770",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:03.184253",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:03.841328",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:04.058378",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:04.426563",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:44:05.029174",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:15:58.244203",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:27.465562",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:42.943302",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:43.743537",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:44.520446",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:44.894223",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:45.076549",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:45.238715",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:45.638292",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:45.822832",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:46.383839",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:18:46.781049",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          9,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:20.346664",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:21.017051",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:21.841565",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:22.043478",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:22.814516",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:23.058032",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:23.447824",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:23.815274",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:24.376006",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          7,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:17:01.605547",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          3,
+          5
+        ]
+      }
+    }
+  ],
+  "test_location_shrine": [
+    {
+      "timestamp": "2026-02-01T16:41:14.812837",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:36:02.798240",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:47:21.236821",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:17:38.824797",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:23:55.924187",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:39:34.975554",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:44:35.866152",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:45:28.831370",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:56:47.097060",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:34:30.710724",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:00:36.486758",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:35:16.806420",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:39:10.019114",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:28:18.327379",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:50:29.774570",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:03:40.500651",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:10:50.327111",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:19:43.622610",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T06:59:29.035438",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:10:21.384529",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:39:44.113344",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:17:50.275492",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:30:56.702916",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:54:21.711991",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T20:56:05.386768",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:17:28.742016",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    }
+  ],
+  "test_location_blacksmith": [
+    {
+      "timestamp": "2026-02-01T16:48:19.790636",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:58:26.752255",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:15:58.569361",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:45:21.315180",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T18:48:59.799735",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:12:10.183224",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:13:36.000152",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:17:19.198931",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:23:29.139844",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:43:52.203422",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:50:19.893164",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:58:45.885855",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:11:19.880817",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:16:32.632805",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:35:14.669776",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:45:45.243673",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:38:43.851963",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:03:01.953133",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:13:05.132036",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:20:36.041862",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T06:50:04.612120",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T07:00:12.546079",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:09:35.364949",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:40:26.053564",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:56:38.508343",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:17:21.007141",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          6,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:40:30.935655",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T20:56:49.587504",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    }
+  ],
+  "test_allied_npc": [
+    {
+      "timestamp": "2026-02-01T16:57:22.648295",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:57:41.187211",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:57:42.578542",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T16:59:27.376323",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:11:14.515516",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:15:04.270221",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:16:46.776530",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:24:25.772076",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:35:28.159795",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:37:08.503167",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:44:28.923648",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T17:58:17.664640",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T18:47:25.341178",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:09:07.624412",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:12:05.405218",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:13:32.184299",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:14:40.449058",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:23:14.142475",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:28:19.868799",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:36:39.688222",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:39:28.720422",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:43:37.020706",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:50:10.974824",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:56:42.244087",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:01:36.825226",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:10:48.237297",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:16:19.460507",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:22:44.786629",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:29:52.871616",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:34:20.913885",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:45:36.453418",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:58:52.166105",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:34:54.039391",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T21:37:56.203142",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:01:22.279511",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:24:14.395031",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:27:56.506796",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:34:51.912009",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:49:41.194630",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:50:05.545787",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:52:12.205283",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:57:50.959383",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:02:49.250575",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:10:41.401401",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:12:57.945218",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:14:45.704298",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T23:19:38.431909",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T06:49:41.176541",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T06:59:15.579000",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:07:41.073560",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:39:31.524206",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:56:25.513566",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:16:54.235358",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:21:31.044472",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:30:46.531693",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T20:53:01.466383",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:03:57.483369",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:11:53.983047",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:14:18.481448",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          4,
+          4
+        ]
+      }
+    }
+  ],
+  "test_shop_item_2": [
+    {
+      "timestamp": "2026-02-01T17:26:33.213340",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T22:24:25.329473",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:54.942550",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:57.659825",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:57.858036",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:58.240894",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:58.440622",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:58.839944",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:59.233955",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:01.330786",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:01.528025",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:02.091422",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:02.685955",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:02.892310",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:03.111870",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:03.496125",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:39.369663",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:39.578146",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:42.280894",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:42.870619",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:43.257272",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:43.467642",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:43.823839",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:44.379713",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:44.780259",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:36:09.377246",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    }
+  ],
+  "test_shop_item_1": [
+    {
+      "timestamp": "2026-02-01T17:41:53.592045",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T19:28:17.866249",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-01T20:01:40.082561",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:57.467925",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:58.044889",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:58.639910",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:42:59.643296",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:00.403716",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:00.592290",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:00.784658",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:00.965015",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:01.153017",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:01.705561",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:01.894901",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T18:43:02.291414",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:38.184212",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:40.222923",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:40.399854",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:40.610343",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:41.183383",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:41.914449",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:42.112215",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:43.063932",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:44.204251",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:45.188272",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T19:19:45.372768",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-02T21:03:33.190385",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          5,
+          3
         ]
       }
     }

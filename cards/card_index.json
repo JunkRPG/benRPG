@@ -460,5 +460,110 @@
     "blueprint_subclass": null,
     "states": 2,
     "name": "1"
+  },
+  "test_shop_item_1": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Iron Ingot"
+  },
+  "test_shop_item_2": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Oak Plank"
+  },
+  "test_shop_item_3": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Healing Herbs"
+  },
+  "test_junk_loot_1": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Rusty Nails"
+  },
+  "test_junk_loot_2": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Broken Pottery"
+  },
+  "test_location_tavern": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Abandoned Tavern"
+  },
+  "test_location_shrine": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Forest Shrine"
+  },
+  "test_location_blacksmith": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Ruined Blacksmith"
+  },
+  "test_allied_npc": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Innkeeper Mira"
+  },
+  "test_escort_quest": {
+    "type": "Quest Card",
+    "subclass": "Escort",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Escort the Merchant"
+  },
+  "test_hunt_quest": {
+    "type": "Quest Card",
+    "subclass": "Hunt",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Hunt the Beast"
+  },
+  "test_instance_sinkhole": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Sinkhole Opens"
+  },
+  "test_instance_ambush": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Ambush!"
+  },
+  "test_instance_discovery": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Strange Discovery"
+  },
+  "test_transition_forest": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Forest Day Cycle"
   }
 }

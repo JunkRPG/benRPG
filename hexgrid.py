@@ -54,6 +54,7 @@ class HexGrid:
         # Grid stores a dict with "unit", "accessible", and "terrain" keys
         self.grid = [[{"unit": None, "accessible": True, "terrain": "grass"} for _ in range(cols)] for _ in range(rows)]
         self.player = None
+        self.players = []  # For multiplayer mode - list of players
         self.units = []
         self.selected_hex = None
         self.card_drawing_hexes = []
@@ -1105,7 +1106,9 @@ class HexGrid:
 
         # Third pass: Draw all units on top of hexes (for proper z-ordering)
         # This ensures animating units are visible and don't go under hexes
-        all_units = list(self.units) + ([self.player] if self.player else [])
+        # Collect all players (multiplayer mode or single player)
+        all_players = self.players if self.players else ([self.player] if self.player else [])
+        all_units = list(self.units) + all_players
         for unit in all_units:
             if unit and unit.position:
                 # Use render_pos for animating units, otherwise use hex center
@@ -1123,16 +1126,32 @@ class HexGrid:
                     hex_surface.blit(scaled_image, image_rect)
                     health_bar_y = image_rect.top - 5
                 else:
-                    color = (colors['GREEN'] if isinstance(unit, Player) else
-                             colors['RED'] if unit.allegiance == "Hostile" else
-                             colors['BLUE'] if unit.allegiance == "Allied" else
-                             colors['GRAY'])
+                    # Use player's custom color if available (multiplayer), otherwise default colors
+                    if isinstance(unit, Player):
+                        color = unit.player_color if hasattr(unit, 'player_color') else colors['GREEN']
+                    elif unit.allegiance == "Hostile":
+                        color = colors['RED']
+                    elif unit.allegiance == "Allied":
+                        color = colors['BLUE']
+                    else:
+                        color = colors['GRAY']
                     radius = max(10, int(self.hex_size / 3))
                     pygame.draw.circle(hex_surface, colors['WHITE'] if unit.attack_flash else color,
                                        (int(pos[0]), int(pos[1])), radius)
                     health_bar_y = pos[1] - radius - 5  # Position health bar just above the circle
+
+                    # Draw player number for multiplayer mode
+                    if isinstance(unit, Player) and hasattr(unit, 'player_number') and len(all_players) > 1:
+                        number_font = pygame.font.Font(None, int(radius * 1.5))
+                        number_surface = number_font.render(str(unit.player_number), True, colors['WHITE'])
+                        number_rect = number_surface.get_rect(center=(int(pos[0]), int(pos[1])))
+                        hex_surface.blit(number_surface, number_rect)
+
                     # Draw unit name above health bar (with proper spacing)
                     name = unit.class_name if isinstance(unit, Player) else unit.name
+                    # In multiplayer, prefix with "P1:" or "P2:"
+                    if isinstance(unit, Player) and hasattr(unit, 'player_number') and len(all_players) > 1:
+                        name = f"P{unit.player_number}: {name}"
                     text_surface = self.font.render(name, True, colors['WHITE'])
                     name_y = health_bar_y - 12  # Name above health bar with gap
                     text_rect = text_surface.get_rect(centerx=pos[0], bottom=name_y)

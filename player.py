@@ -53,6 +53,10 @@ class Player:
         self.skill_cooldowns = {}       # {"skill_name": turns_remaining}
         # Tool equipment slot
         self.equipped_tool = None       # Currently equipped tool card (Consumable or Tool type)
+        # Multiplayer attributes
+        self.player_number = 1  # 1 or 2 (for multiplayer mode)
+        self.player_color = (0, 200, 0)  # Default green, customized per player
+        self.party = []  # This player's recruited allied NPCs (for multiplayer independence)
         try:
             self.image = pygame.image.load(os.path.join(os.path.dirname(__file__), "images", "player.png")).convert_alpha()
         except FileNotFoundError:

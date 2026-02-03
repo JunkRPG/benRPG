@@ -31,14 +31,34 @@ LIGHT_CREAM = (245, 245, 220)    # Button text
 LIGHT_GREEN = (144, 238, 144)    # Card-drawing hex border
 YELLOW = (255, 255, 0)           # Selected hex border
 GRAY = (200, 200, 200)           # Default hex border
+ORANGE = (255, 165, 0)           # Location hex border
 
-# Terrain types and their colors
-TERRAIN_TYPES = ["grass", "water", "mountain"]
-TERRAIN_COLORS = {
-    "grass": (76, 153, 0),
-    "water": (0, 0, 255),
-    "mountain": (100, 100, 100)
+# Terrain types configuration (must match hexgrid.py)
+# Each terrain has: color, accessible (can units walk on it), blocks_los (does it block line of sight)
+TERRAIN_CONFIG = {
+    "grass": {"color": (76, 153, 0), "accessible": True, "blocks_los": False},
+    "dirt": {"color": (139, 90, 43), "accessible": True, "blocks_los": False},
+    "sand": {"color": (238, 214, 175), "accessible": True, "blocks_los": False},
+    "stone": {"color": (128, 128, 128), "accessible": True, "blocks_los": False},
+    "wood": {"color": (139, 69, 19), "accessible": True, "blocks_los": False},
+    "water": {"color": (30, 144, 255), "accessible": False, "blocks_los": False},
+    "deep_water": {"color": (0, 0, 139), "accessible": False, "blocks_los": False},
+    "lava": {"color": (255, 69, 0), "accessible": False, "blocks_los": False},
+    "mountain": {"color": (105, 105, 105), "accessible": False, "blocks_los": True},
+    "cliff": {"color": (70, 70, 70), "accessible": False, "blocks_los": True},
+    "forest": {"color": (34, 100, 34), "accessible": True, "blocks_los": True},
+    "swamp": {"color": (85, 107, 47), "accessible": True, "blocks_los": False},
+    "ice": {"color": (173, 216, 230), "accessible": True, "blocks_los": False},
+    "void": {"color": (20, 20, 30), "accessible": False, "blocks_los": True},
 }
+
+TERRAIN_TYPES = list(TERRAIN_CONFIG.keys())
+TERRAIN_COLORS = {k: v["color"] for k, v in TERRAIN_CONFIG.items()}
+
+# Grid size limits
+MIN_GRID_SIZE = 5
+MAX_GRID_SIZE = 200  # Hard maximum (40,000 hexes)
+WARN_GRID_SIZE = 100  # Soft warning threshold (10,000 hexes)
 
 # Initialize Pygame-GUI manager with Card Maker's theme
 manager = pygame_gui.UIManager((WINDOW_WIDTH, WINDOW_HEIGHT), "theme.json")
@@ -77,10 +97,20 @@ class EditorHexGrid:
         self.clamp_offsets()
 
     def clamp_offsets(self):
-        grid_width = self.cols * self.hex_size * 1.5
-        grid_height = self.rows * self.hex_size * 1.732
-        self.view_offset_x = max(min(self.view_offset_x, self.window_width - grid_width / 2), -grid_width / 2)
-        self.view_offset_y = max(min(self.view_offset_y, self.window_height - grid_height / 2), -grid_height / 2)
+        grid_width = self.cols * self.hex_size * 1.5 + self.hex_size
+        grid_height = self.rows * self.hex_size * 1.732 + self.hex_size
+        margin = self.hex_size  # Keep at least one hex visible at screen edge
+
+        # Allow panning so any edge of the grid can be brought into view
+        # Min offset: pan left until right edge of grid reaches left side of screen (with margin)
+        # Max offset: pan right until left edge of grid reaches right side of screen (with margin)
+        min_x = margin - grid_width
+        max_x = self.window_width - margin
+        min_y = margin - grid_height
+        max_y = self.window_height - margin
+
+        self.view_offset_x = max(min(self.view_offset_x, max_x), min_x)
+        self.view_offset_y = max(min(self.view_offset_y, max_y), min_y)
 
     def get_hex_center(self, row, col):
         x = self.view_offset_x + col * self.hex_size * 1.5
@@ -112,31 +142,65 @@ class EditorHexGrid:
             for col in range(self.cols):
                 center = self.get_hex_center(row, col)
                 points = [(center[0] + self.hex_size * math.cos(math.radians(60 * i)),
-                           center[1] + self.hex_size * math.sin(math.radians(60 * i))) 
+                           center[1] + self.hex_size * math.sin(math.radians(60 * i)))
                           for i in range(6)]
                 terrain_type = terrain[row][col]
                 color = TERRAIN_COLORS.get(terrain_type, GRAY)
                 pygame.draw.polygon(surface, color, points)
+
+                # Draw dark overlay for impassable terrain
+                terrain_accessible = TERRAIN_CONFIG.get(terrain_type, {}).get("accessible", True)
+                if not terrain_accessible:
+                    # Create semi-transparent dark overlay
+                    overlay = pygame.Surface((self.hex_size * 2.5, self.hex_size * 2.5), pygame.SRCALPHA)
+                    overlay_points = [(self.hex_size * 1.25 + self.hex_size * math.cos(math.radians(60 * i)),
+                                      self.hex_size * 1.25 + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                    pygame.draw.polygon(overlay, (0, 0, 0, 60), overlay_points, 0)
+                    surface.blit(overlay, (center[0] - self.hex_size * 1.25, center[1] - self.hex_size * 1.25))
+
                 pygame.draw.polygon(surface, GRAY, points, 1)
+
                 if (row, col) in card_drawing_dict:
                     pygame.draw.polygon(surface, LIGHT_GREEN, points, 3)
                 if (row, col) == selected_hex:
                     pygame.draw.polygon(surface, YELLOW, points, 3)
                 if (row, col) == player_start:
                     pygame.draw.circle(surface, (0, 0, 255), (int(center[0]), int(center[1])), 5)
-                if not level_editor.accessible[row][col]:
-                    p1 = (center[0] - self.hex_size, center[1] - self.hex_size * 0.866)
-                    p2 = (center[0] + self.hex_size, center[1] + self.hex_size * 0.866)
-                    p3 = (center[0] - self.hex_size, center[1] + self.hex_size * 0.866)
-                    p4 = (center[0] + self.hex_size, center[1] - self.hex_size * 0.866)
-                    pygame.draw.line(surface, (255, 0, 0), p1, p2, 3)
-                    pygame.draw.line(surface, (255, 0, 0), p3, p4, 3)
+
+                # Show red X only for manually blocked hexes (terrain is passable but hex is blocked)
+                if not level_editor.accessible[row][col] and terrain_accessible:
+                    p1 = (center[0] - self.hex_size * 0.5, center[1] - self.hex_size * 0.5)
+                    p2 = (center[0] + self.hex_size * 0.5, center[1] + self.hex_size * 0.5)
+                    p3 = (center[0] - self.hex_size * 0.5, center[1] + self.hex_size * 0.5)
+                    p4 = (center[0] + self.hex_size * 0.5, center[1] - self.hex_size * 0.5)
+                    pygame.draw.line(surface, (255, 0, 0), p1, p2, 2)
+                    pygame.draw.line(surface, (255, 0, 0), p3, p4, 2)
                 for hex_data in level_editor.card_drawing_hexes:
                     if hex_data["row"] == row and hex_data["column"] == col and hex_data.get("linked_level"):
-                        pygame.draw.polygon(surface, (128, 0, 128), 
+                        pygame.draw.polygon(surface, (128, 0, 128),
                                             [(center[0], center[1] - self.hex_size * 0.5),
                                              (center[0] - self.hex_size * 0.5, center[1] + self.hex_size * 0.5),
                                              (center[0] + self.hex_size * 0.5, center[1] + self.hex_size * 0.5)], 0)
+                # Draw location hex indicator
+                for loc_hex in level_editor.location_hexes:
+                    if loc_hex["row"] == row and loc_hex["column"] == col:
+                        pygame.draw.polygon(surface, ORANGE, points, 3)
+                        # Draw house icon
+                        house_size = self.hex_size * 0.3
+                        roof_points = [
+                            (center[0], center[1] - house_size * 0.8),
+                            (center[0] - house_size * 0.6, center[1] - house_size * 0.2),
+                            (center[0] + house_size * 0.6, center[1] - house_size * 0.2)
+                        ]
+                        base_rect = pygame.Rect(
+                            center[0] - house_size * 0.4,
+                            center[1] - house_size * 0.2,
+                            house_size * 0.8,
+                            house_size * 0.6
+                        )
+                        pygame.draw.polygon(surface, ORANGE, roof_points)
+                        pygame.draw.rect(surface, ORANGE, base_rect)
+                        break
         for hex_data in level_editor.card_drawing_hexes:
             row, col = hex_data["row"], hex_data["column"]
             center = self.get_hex_center(row, col)
@@ -180,11 +244,15 @@ class LevelEditor:
         self.accessible = [[True for _ in range(self.grid.cols)] for _ in range(self.grid.rows)]
         self.units = []
         self.unit_cards = {"Enemy": [], "Boss": [], "NPC": []}
+        # Location hex system
+        self.location_hexes = []
+        self.location_deck_files = []  # Decks containing Location cards
         self.setup_ui()
         self.current_unit_type = self.unit_type_dropdown.selected_option[0]
         self.load_decks()
         self.load_levels()
         self.load_unit_cards()
+        self.load_location_decks()
         self.unit_card_list.set_item_list([name for _, name in self.unit_cards.get(self.current_unit_type, [])] or ["No cards available"])
         os.makedirs("levels", exist_ok=True)
         self.is_panning = False
@@ -246,11 +314,46 @@ class LevelEditor:
         except Exception as e:
             self.status_label.set_text(f"Error loading card index: {e}")
 
+    def load_location_decks(self):
+        """Load decks that contain Location cards for location hex assignment."""
+        self.location_deck_files = []
+        index_file = os.path.join("cards", "card_index.json")
+        if not os.path.exists(index_file):
+            return
+
+        try:
+            with open(index_file, 'r') as f:
+                index = json.load(f)
+
+            # Find all Location card IDs
+            location_card_ids = set()
+            for card_id, info in index.items():
+                card_type = info.get('type', '')
+                if 'Location' in card_type:
+                    location_card_ids.add(card_id)
+
+            # Find decks that contain any location cards
+            for display_name, filename in self.deck_files:
+                deck_data = self.filename_to_deck_data.get(filename, {})
+                deck_cards = deck_data.get("cards", [])
+                if any(cid in location_card_ids for cid in deck_cards):
+                    self.location_deck_files.append((display_name, filename))
+
+            # Update location deck list UI if it exists
+            if hasattr(self, 'location_deck_list'):
+                self.location_deck_list.set_item_list(
+                    [name for name, _ in self.location_deck_files] or ["No location decks found"]
+                )
+        except Exception as e:
+            print(f"Error loading location decks: {e}")
+
     def setup_ui(self):
-        self.rows_entry = UITextEntryLine(relative_rect=pygame.Rect(10, 10, 80, 30), manager=manager, initial_text="10")
-        self.cols_entry = UITextEntryLine(relative_rect=pygame.Rect(100, 10, 80, 30), manager=manager, initial_text="10")
-        self.apply_button = UIButton(relative_rect=pygame.Rect(190, 10, 80, 30), text="Apply", manager=manager)
-        y_pos = 50
+        self.size_label = UILabel(relative_rect=pygame.Rect(10, 10, 260, 20),
+                                  text=f"Grid Size ({MIN_GRID_SIZE}-{MAX_GRID_SIZE}):", manager=manager)
+        self.rows_entry = UITextEntryLine(relative_rect=pygame.Rect(10, 32, 80, 30), manager=manager, initial_text="10")
+        self.cols_entry = UITextEntryLine(relative_rect=pygame.Rect(100, 32, 80, 30), manager=manager, initial_text="10")
+        self.apply_button = UIButton(relative_rect=pygame.Rect(190, 32, 80, 30), text="Apply", manager=manager)
+        y_pos = 70
         self.unit_type_dropdown = UIDropDownMenu(options_list=["Enemy", "Boss", "NPC"], starting_option="Enemy", 
                                                  relative_rect=pygame.Rect(10, y_pos, 190, 30), manager=manager)
         y_pos += 40
@@ -287,9 +390,23 @@ class LevelEditor:
         self.set_terrain_button = UIButton(relative_rect=pygame.Rect(WINDOW_WIDTH - 200, y_pos, 190, 30), 
                                            text="Set Terrain", manager=manager)
         y_pos += 40
-        self.toggle_inaccessible_button = UIButton(relative_rect=pygame.Rect(WINDOW_WIDTH - 200, y_pos, 190, 30), 
+        self.toggle_inaccessible_button = UIButton(relative_rect=pygame.Rect(WINDOW_WIDTH - 200, y_pos, 190, 30),
                                                    text="Toggle Inaccessible", manager=manager)
-        self.save_button = UIButton(relative_rect=pygame.Rect(10, WINDOW_HEIGHT - 40, 100, 30), 
+
+        # Location hex UI elements (left panel, below unit placement)
+        left_y_pos = 340
+        self.location_label = UILabel(relative_rect=pygame.Rect(10, left_y_pos, 190, 25),
+                                      text="Location Hexes:", manager=manager)
+        left_y_pos += 30
+        self.location_deck_list = UISelectionList(relative_rect=pygame.Rect(10, left_y_pos, 190, 100),
+                                                  item_list=["No location decks found"], manager=manager)
+        left_y_pos += 110
+        self.set_location_hex_button = UIButton(relative_rect=pygame.Rect(10, left_y_pos, 90, 30),
+                                                text="Set Location", manager=manager)
+        self.remove_location_button = UIButton(relative_rect=pygame.Rect(110, left_y_pos, 90, 30),
+                                               text="Remove Loc", manager=manager)
+
+        self.save_button = UIButton(relative_rect=pygame.Rect(10, WINDOW_HEIGHT - 40, 100, 30),
                                     text="Save Level", manager=manager)
         self.load_button = UIButton(relative_rect=pygame.Rect(120, WINDOW_HEIGHT - 40, 100, 30), 
                                     text="Load Level", manager=manager)
@@ -303,9 +420,15 @@ class LevelEditor:
     def update_info_label(self):
         if self.selected_hex:
             row, col = self.selected_hex
-            text = f"Hex ({row}, {col}): Terrain={self.terrain[row][col]}"
-            if not self.accessible[row][col]:
-                text += " [Inaccessible]"
+            terrain_type = self.terrain[row][col]
+            terrain_info = TERRAIN_CONFIG.get(terrain_type, {})
+            text = f"Hex ({row}, {col}): {terrain_type.capitalize()}"
+            if not terrain_info.get("accessible", True):
+                text += " (Impassable)"
+            elif not self.accessible[row][col]:
+                text += " [Blocked]"
+            if terrain_info.get("blocks_los", False):
+                text += " [Blocks LOS]"
             for hex_data in self.card_drawing_hexes:
                 if (hex_data["row"], hex_data["column"]) == self.selected_hex:
                     if hex_data.get("linked_level"):
@@ -325,6 +448,13 @@ class LevelEditor:
                 text += " [Unit]"
             if self.selected_hex == self.player_start:
                 text += " [Player Start]"
+            # Check for location hex
+            for loc_hex in self.location_hexes:
+                if (loc_hex["row"], loc_hex["column"]) == self.selected_hex:
+                    deck_file = loc_hex.get("location_deck_file", "")
+                    deck_name = self.filename_to_deck_data.get(deck_file, {}).get("deck_name", deck_file)
+                    text += f" [Location: {deck_name}]"
+                    break
         else:
             text = "No hex selected"
         self.info_label.set_text(text)
@@ -380,6 +510,16 @@ class LevelEditor:
                 try:
                     rows = int(self.rows_entry.get_text())
                     cols = int(self.cols_entry.get_text())
+                    # Validate grid size
+                    if rows < MIN_GRID_SIZE or cols < MIN_GRID_SIZE:
+                        self.status_label.set_text(f"Minimum grid size is {MIN_GRID_SIZE}x{MIN_GRID_SIZE}")
+                        return
+                    if rows > MAX_GRID_SIZE or cols > MAX_GRID_SIZE:
+                        self.status_label.set_text(f"Maximum grid size is {MAX_GRID_SIZE}x{MAX_GRID_SIZE}")
+                        return
+                    total_hexes = rows * cols
+                    if rows > WARN_GRID_SIZE or cols > WARN_GRID_SIZE:
+                        self.status_label.set_text(f"Warning: Large grid ({total_hexes:,} hexes) may be slow")
                     if rows > 0 and cols > 0:
                         old_terrain = self.terrain
                         old_accessible = self.accessible
@@ -390,10 +530,12 @@ class LevelEditor:
                             for c in range(min(cols, len(old_terrain[0]))):
                                 self.terrain[r][c] = old_terrain[r][c]
                                 self.accessible[r][c] = old_accessible[r][c]
-                        self.card_drawing_hexes = [hex for hex in self.card_drawing_hexes 
+                        self.card_drawing_hexes = [hex for hex in self.card_drawing_hexes
                                                  if 0 <= hex["row"] < rows and 0 <= hex["column"] < cols]
-                        self.card_drawing_dict = {(hex["row"], hex["column"]): hex["deck_file"] 
+                        self.card_drawing_dict = {(hex["row"], hex["column"]): hex["deck_file"]
                                                  for hex in self.card_drawing_hexes if hex["deck_file"]}
+                        self.location_hexes = [loc for loc in self.location_hexes
+                                              if 0 <= loc["row"] < rows and 0 <= loc["column"] < cols]
                         self.units = [u for u in self.units if 0 <= u["position"][0] < rows and 0 <= u["position"][1] < cols]
                         if self.player_start and (self.player_start[0] >= rows or self.player_start[1] >= cols):
                             self.player_start = None
@@ -484,9 +626,25 @@ class LevelEditor:
             elif event.ui_element == self.set_terrain_button and self.selected_hex:
                 selected_terrain = self.terrain_list.get_single_selection()
                 if selected_terrain:
-                    self.terrain[self.selected_hex[0]][self.selected_hex[1]] = selected_terrain
+                    row, col = self.selected_hex
+                    self.terrain[row][col] = selected_terrain
+                    # Automatically update accessibility based on terrain type
+                    terrain_accessible = TERRAIN_CONFIG.get(selected_terrain, {}).get("accessible", True)
+                    if not terrain_accessible:
+                        self.accessible[row][col] = False
+                        # Remove player start if on this hex
+                        if self.player_start == self.selected_hex:
+                            self.player_start = None
+                            self.status_label.set_text(f"Set terrain to {selected_terrain} (removed player start)")
+                        else:
+                            self.status_label.set_text(f"Set terrain to {selected_terrain} (impassable)")
+                        # Remove units on this hex
+                        self.units = [u for u in self.units if u["position"] != self.selected_hex]
+                    else:
+                        # Restore accessibility if terrain is passable (unless manually blocked)
+                        self.accessible[row][col] = True
+                        self.status_label.set_text(f"Set terrain to {selected_terrain}")
                     self.update_info_label()
-                    self.status_label.set_text(f"Set terrain to {selected_terrain}")
                 else:
                     self.status_label.set_text("No terrain selected")
             elif event.ui_element == self.toggle_inaccessible_button and self.selected_hex:
@@ -516,6 +674,50 @@ class LevelEditor:
                             self.status_label.set_text("Card not found")
                     else:
                         self.status_label.set_text("No card selected")
+            elif event.ui_element == self.set_location_hex_button and self.selected_hex:
+                if not self.accessible[self.selected_hex[0]][self.selected_hex[1]]:
+                    self.status_label.set_text("Cannot set location on inaccessible hex")
+                else:
+                    selected_loc_deck = self.location_deck_list.get_single_selection()
+                    if selected_loc_deck and selected_loc_deck != "No location decks found":
+                        # Find the filename for the selected deck
+                        deck_filename = None
+                        for display_name, filename in self.location_deck_files:
+                            if display_name == selected_loc_deck:
+                                deck_filename = filename
+                                break
+                        if deck_filename:
+                            # Remove existing location at this hex
+                            self.location_hexes = [loc for loc in self.location_hexes
+                                                  if (loc["row"], loc["column"]) != self.selected_hex]
+                            # Add new location hex
+                            self.location_hexes.append({
+                                "row": self.selected_hex[0],
+                                "column": self.selected_hex[1],
+                                "location_deck_file": deck_filename,
+                                "assigned_location_card_id": None,
+                                "assigned_npc_card_id": None,
+                                "location_state": 1,
+                                "shop_inventory": [],
+                                "turns_since_cycle": 0,
+                                "visited_this_turn": False
+                            })
+                            self.update_info_label()
+                            self.status_label.set_text(f"Set location hex with deck: {selected_loc_deck}")
+                        else:
+                            self.status_label.set_text("Deck file not found")
+                    else:
+                        self.status_label.set_text("No location deck selected")
+            elif event.ui_element == self.remove_location_button and self.selected_hex:
+                # Remove location from hex
+                old_count = len(self.location_hexes)
+                self.location_hexes = [loc for loc in self.location_hexes
+                                      if (loc["row"], loc["column"]) != self.selected_hex]
+                if len(self.location_hexes) < old_count:
+                    self.update_info_label()
+                    self.status_label.set_text(f"Removed location from {self.selected_hex}")
+                else:
+                    self.status_label.set_text("No location at this hex")
             elif event.ui_element == self.save_button:
                 self.save_level()
             elif event.ui_element == self.load_button:
@@ -545,9 +747,10 @@ class LevelEditor:
                 "player_start": {"row": self.player_start[0], "column": self.player_start[1]} if self.player_start else None,
                 "terrain": self.terrain,
                 "inaccessible_hexes": inaccessible_hexes,
-                "units": [{"card_id": u["card_id"], "position": {"row": u["position"][0], "column": u["position"][1]}} 
+                "units": [{"card_id": u["card_id"], "position": {"row": u["position"][0], "column": u["position"][1]}}
                          for u in self.units],
-                "card_drawing_hexes": self.card_drawing_hexes
+                "card_drawing_hexes": self.card_drawing_hexes,
+                "location_hexes": self.location_hexes
             }
             try:
                 with open(file_path, 'w') as f:
@@ -568,6 +771,13 @@ class LevelEditor:
                     level_data = json.load(f)
                 rows = level_data["grid"]["rows"]
                 cols = level_data["grid"]["columns"]
+                # Warn about large levels
+                if rows > MAX_GRID_SIZE or cols > MAX_GRID_SIZE:
+                    self.status_label.set_text(f"Level exceeds max size ({MAX_GRID_SIZE}x{MAX_GRID_SIZE})")
+                    return
+                total_hexes = rows * cols
+                if rows > WARN_GRID_SIZE or cols > WARN_GRID_SIZE:
+                    print(f"Warning: Loading large level with {total_hexes:,} hexes")
                 self.grid = EditorHexGrid(rows, cols, 30, WINDOW_WIDTH, WINDOW_HEIGHT)
                 self.terrain = level_data["terrain"]
                 self.accessible = [[True for _ in range(cols)] for _ in range(rows)]
@@ -579,14 +789,16 @@ class LevelEditor:
                              for u in level_data["units"]]
                 self.player_start = (level_data["player_start"]["row"], level_data["player_start"]["column"]) if level_data.get("player_start") else None
                 self.card_drawing_hexes = level_data["card_drawing_hexes"]
-                self.card_drawing_dict = {(hex["row"], hex["column"]): hex["deck_file"] 
+                self.card_drawing_dict = {(hex["row"], hex["column"]): hex["deck_file"]
                                          for hex in self.card_drawing_hexes if hex.get("deck_file")}
+                self.location_hexes = level_data.get("location_hexes", [])
                 self.selected_hex = None
                 self.rows_entry.set_text(str(rows))
                 self.cols_entry.set_text(str(cols))
                 self.update_info_label()
                 self.status_label.set_text(f"Loaded {os.path.basename(file_path)}")
                 self.load_levels()
+                self.load_location_decks()
             except Exception as e:
                 self.status_label.set_text(f"Error loading level: {e}")
 
