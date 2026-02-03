@@ -274,10 +274,11 @@ class InventoryScreen:
         consumables_cards = [card for card in game.player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Consumable"]
         tools_cards = [card for card in game.player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Tool"]
         combined_items = consumables_cards + tools_cards
-        self.consumables_list = UISelectionList(pygame.Rect(3 * column_width + 10, 60, column_width, column_height - 100),
+        self.consumables_list = UISelectionList(pygame.Rect(3 * column_width + 10, 60, column_width, column_height - 150),
                                                 [card.get_current_data().get("Name", "Unnamed") for card in combined_items] or ["No consumables/tools"],
                                                 manager, container=self.window)
-        self.use_button = UIButton(pygame.Rect(3 * column_width + 10, column_height - 30, column_width, 35), "Use Consumable", manager, container=self.window)
+        self.use_button = UIButton(pygame.Rect(3 * column_width + 10, column_height - 80, column_width, 35), "Use Consumable", manager, container=self.window)
+        self.equip_tool_button = UIButton(pygame.Rect(3 * column_width + 10, column_height - 40, column_width, 35), "Equip as Tool", manager, container=self.window)
 
         # Item details panel (bottom)
         UILabel(pygame.Rect(10, 610, 200, 25), "Item Details:", manager, container=self.window)
@@ -311,6 +312,13 @@ class InventoryScreen:
             elif event.ui_element == self.use_button and self.selected_card and self.selected_from_list == "consumables":
                 # Use crafted consumable
                 self._use_consumable_item()
+            elif event.ui_element == self.equip_tool_button and self.selected_card:
+                # Equip item as tool (works for junk with Use_HP or consumables/tools)
+                if self.selected_from_list in ["junk", "consumables"]:
+                    msg = game.player.equip_tool(self.selected_card)
+                    self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
+                else:
+                    self.info_text.set_text("<font color='#FF0000'>Select a consumable or tool item to equip</font>")
 
         elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
             selected_name = event.text
@@ -1014,6 +1022,239 @@ class LocationScreen:
         manager.draw_ui(screen)
 
 
+# RecruitmentScreen class for recruiting neutral NPCs
+class RecruitmentScreen:
+    def __init__(self):
+        self.window = None
+        self.target_unit = None
+        self.junk_list = None
+        self.selected_junk = []  # List of selected junk cards
+        self.junk_name_to_card = {}  # Maps list names to cards
+        self.info_text = None
+        self.recruit_button = None
+        self.cancel_button = None
+        self.cost_label = None
+        self.offered_label = None
+
+    def initialize_screen(self, target_unit):
+        """Initialize the recruitment screen for a specific neutral NPC."""
+        self.target_unit = target_unit
+        self.selected_junk = []
+        self.junk_name_to_card = {}
+
+        manager.clear_and_reset()
+
+        window_rect = pygame.Rect((WINDOW_WIDTH - 800) // 2, (WINDOW_HEIGHT - 600) // 2, 800, 600)
+        self.window = pygame_gui.elements.UIWindow(window_rect, manager, "Recruit NPC")
+
+        # NPC info header
+        npc_name = target_unit.name if target_unit else "Unknown"
+        pygame_gui.elements.UILabel(
+            pygame.Rect(10, 5, 780, 30), f"Recruit: {npc_name}", manager, container=self.window
+        )
+
+        # Calculate recruitment cost
+        recruitment_cost = self._calculate_recruitment_cost(target_unit)
+
+        # NPC stats panel (left side)
+        stats_text = self._get_npc_stats_text(target_unit)
+        self.npc_info_text = pygame_gui.elements.UITextBox(
+            f"<font color='#FFFFFF'>{stats_text}</font>",
+            pygame.Rect(10, 40, 300, 200), manager, container=self.window
+        )
+
+        # Cost label
+        self.cost_label = pygame_gui.elements.UILabel(
+            pygame.Rect(10, 250, 300, 30), f"Recruitment Cost: {recruitment_cost} material value",
+            manager, container=self.window
+        )
+
+        # Junk selection (right side)
+        pygame_gui.elements.UILabel(
+            pygame.Rect(320, 40, 460, 25), "Select junk to offer (multi-select):",
+            manager, container=self.window
+        )
+
+        # Build junk list with material values
+        junk_items = []
+        for card in game.player.inventory:
+            if card.card_data.get("card_type") == "Junk Card":
+                card_data = card.get_current_data()
+                name = card_data.get("Name", "Unnamed")
+                value = self._get_material_value(card)
+                display_name = f"{name} (Value: {value})"
+                junk_items.append(display_name)
+                self.junk_name_to_card[display_name] = card
+
+        self.junk_list = pygame_gui.elements.UISelectionList(
+            pygame.Rect(320, 70, 460, 300),
+            junk_items if junk_items else ["No junk items available"],
+            manager, container=self.window,
+            allow_multi_select=True
+        )
+
+        # Offered value label
+        self.offered_label = pygame_gui.elements.UILabel(
+            pygame.Rect(320, 380, 460, 30), "Total offered: 0 / " + str(recruitment_cost),
+            manager, container=self.window
+        )
+
+        # Info text at bottom
+        self.info_text = pygame_gui.elements.UITextBox(
+            "<font color='#FFFFFF'>Select junk items with enough total value to meet the recruitment cost.</font>",
+            pygame.Rect(10, 420, 780, 80), manager, container=self.window
+        )
+
+        # Buttons
+        self.recruit_button = pygame_gui.elements.UIButton(
+            pygame.Rect(200, 510, 180, 40), "Recruit", manager, container=self.window
+        )
+        self.cancel_button = pygame_gui.elements.UIButton(
+            pygame.Rect(420, 510, 180, 40), "Cancel", manager, container=self.window
+        )
+
+    def _calculate_recruitment_cost(self, unit):
+        """Calculate recruitment cost based on NPC stats: HP/10 + melee + ranged + movement + 5"""
+        if not unit:
+            return 10
+        hp_component = unit.max_hp // 10
+        melee = unit.melee_damage if hasattr(unit, 'melee_damage') else 0
+        ranged = unit.projectile_damage if hasattr(unit, 'projectile_damage') else 0
+        movement = unit.movement if hasattr(unit, 'movement') else 3
+        return hp_component + melee + ranged + movement + 5
+
+    def _get_material_value(self, card):
+        """Get total material value of a junk card."""
+        card_data = card.get_current_data()
+        total = 0
+        value_fields = ["Raw Material Value", "Refined Material Value", "Metal Value", "Wood Value"]
+        for field in value_fields:
+            try:
+                total += int(card_data.get(field, 0) or 0)
+            except (ValueError, TypeError):
+                pass
+        return max(1, total)  # Minimum value of 1
+
+    def _get_npc_stats_text(self, unit):
+        """Get formatted stats text for the NPC."""
+        if not unit:
+            return "No NPC selected"
+        lines = [
+            f"<b>{unit.name}</b>",
+            f"HP: {unit.hp}/{unit.max_hp}",
+            f"Movement: {unit.movement}",
+            f"Melee Damage: {unit.melee_damage}",
+        ]
+        if unit.projectile_damage > 0:
+            lines.append(f"Projectile Damage: {unit.projectile_damage}")
+            lines.append(f"Projectile Range: {unit.projectile_range}")
+        lines.append(f"Allegiance: {unit.allegiance}")
+        return "<br>".join(lines)
+
+    def _get_total_offered_value(self):
+        """Calculate total material value of selected junk."""
+        total = 0
+        for card in self.selected_junk:
+            total += self._get_material_value(card)
+        return total
+
+    def _update_offered_label(self):
+        """Update the offered value label."""
+        total = self._get_total_offered_value()
+        cost = self._calculate_recruitment_cost(self.target_unit)
+        color = "#00FF00" if total >= cost else "#FFFFFF"
+        self.offered_label.set_text(f"Total offered: {total} / {cost}")
+
+    def handle_event(self, event):
+        # Handle window X button close
+        if event.type == pygame_gui.UI_WINDOW_CLOSE:
+            if event.ui_element == self.window:
+                game.current_screen = "game"
+                game_screen.initialize_screen()
+                return
+
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.cancel_button:
+                game.current_screen = "game"
+                game_screen.initialize_screen()
+            elif event.ui_element == self.recruit_button:
+                self._attempt_recruitment()
+
+        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
+            if event.ui_element == self.junk_list:
+                # Add to selected
+                selected_name = event.text
+                if selected_name in self.junk_name_to_card:
+                    card = self.junk_name_to_card[selected_name]
+                    if card not in self.selected_junk:
+                        self.selected_junk.append(card)
+                        self._update_offered_label()
+
+        elif event.type == pygame_gui.UI_SELECTION_LIST_DROPPED_SELECTION:
+            if event.ui_element == self.junk_list:
+                # Remove from selected
+                selected_name = event.text
+                if selected_name in self.junk_name_to_card:
+                    card = self.junk_name_to_card[selected_name]
+                    if card in self.selected_junk:
+                        self.selected_junk.remove(card)
+                        self._update_offered_label()
+
+    def _attempt_recruitment(self):
+        """Attempt to recruit the NPC with selected junk."""
+        if not self.target_unit:
+            self.info_text.set_text("<font color='#FF0000'>No NPC to recruit!</font>")
+            return
+
+        cost = self._calculate_recruitment_cost(self.target_unit)
+        offered = self._get_total_offered_value()
+
+        if offered < cost:
+            self.info_text.set_text(f"<font color='#FF0000'>Not enough value! Need {cost}, offered {offered}</font>")
+            return
+
+        # Check party limit (max 5)
+        if len(game.party) >= 5:
+            self.info_text.set_text("<font color='#FF0000'>Party is full! (Max 5 members)</font>")
+            return
+
+        # Success! Remove junk from inventory
+        for card in self.selected_junk:
+            if card in game.player.inventory:
+                game.player.inventory.remove(card)
+
+        # Change NPC allegiance to Allied
+        self.target_unit.allegiance = "Allied"
+
+        # Create party card for the NPC
+        npc_card_data = {
+            "id": self.target_unit.card_id,
+            "card_type": "NPC Card",
+            "data": {
+                "Name": self.target_unit.name,
+                "Health": str(self.target_unit.max_hp),
+                "Movement": str(self.target_unit.movement),
+                "Melee Damage": str(self.target_unit.melee_damage),
+                "Projectile Damage": str(self.target_unit.projectile_damage),
+                "Projectile Range": str(self.target_unit.projectile_range),
+                "Allegiance (Hostile, Neutral, Allied)": "Allied"
+            }
+        }
+        npc_card = InventoryCard(npc_card_data)
+        game.party.append(npc_card)
+
+        # Log the recruitment
+        game_screen.add_to_log(f"{self.target_unit.name} joined your party!")
+
+        # Return to game
+        game.current_screen = "game"
+        game_screen.initialize_screen()
+
+    def draw(self):
+        screen.fill(DARK_INDIGO)
+        manager.draw_ui(screen)
+
+
 # PartyScreen class for viewing and managing party members (allied NPCs)
 class PartyScreen:
     def __init__(self):
@@ -1698,10 +1939,10 @@ class CraftingScreen:
         self.to_craft_info = UITextBox("<font color='#FFFFFF' size=4>To Craft</font>", pygame.Rect(705, 75, 330, 250), manager, container=self.window)
         self.selected_material_info = UITextBox("<font color='#FFFFFF' size=4>Selected Material</font>", pygame.Rect(705, 335, 330, 250), manager, container=self.window)
         self.state2_info = UITextBox("<font color='#FFFFFF' size=4>State 2 Info</font>", pygame.Rect(705, 595, 330, 250), manager, container=self.window)
-        self.requirements_info = UITextBox("<font color='#FFFFFF' size=4>Requirements</font>", pygame.Rect(1050, 75, 330, 200), manager, container=self.window)
-        self.craft_button = UIButton(pygame.Rect(1060, 375, 100, 30), "Craft", manager, container=self.window)
-        self.close_button = UIButton(pygame.Rect(1170, 375, 100, 30), "Close", manager, container=self.window)
-        self.success_label = UILabel(pygame.Rect(1060, 415, 310, 30), "", manager, container=self.window)
+        self.requirements_info = UITextBox("<font color='#FFFFFF' size=4>Requirements</font>", pygame.Rect(1050, 75, 330, 300), manager, container=self.window)
+        self.craft_button = UIButton(pygame.Rect(1060, 390, 100, 30), "Craft", manager, container=self.window)
+        self.close_button = UIButton(pygame.Rect(1170, 390, 100, 30), "Close", manager, container=self.window)
+        self.success_label = UILabel(pygame.Rect(1060, 430, 310, 30), "", manager, container=self.window)
         self.update_requirements_display()
 
     def update_materials_list(self):
@@ -1715,32 +1956,63 @@ class CraftingScreen:
             self.requirements_info.set_text("<font color='#FFFFFF' size=4>Requirements</font>")
             return
         state1_data = self.selected_to_craft.get_state_data(1)
-        requirements_text = "<font color='#FFFFFF' size=4>Requirements:<br>"
+
+        # Calculate provided totals from selected materials
         provided_totals = {val_key: 0 for val_key in self.REQUIREMENT_TO_VALUE.values()}
         for material in self.selected_materials:
             material_data = material.get_current_data()
             for val_key in provided_totals:
-                provided_totals[val_key] += int(material_data.get(val_key, 0) or 0)  # Handle empty or None values
+                provided_totals[val_key] += int(material_data.get(val_key, 0) or 0)
+
+        # Build table header
+        requirements_text = "<font color='#FFFFFF' size=4>"
+        requirements_text += "<b>Requirements:</b><br><br>"
+        requirements_text += "<font color='#AAAAAA'>Material</font>           "
+        requirements_text += "<font color='#00FF00'>Have</font>  "
+        requirements_text += "<font color='#FFAA00'>Need</font><br>"
+        requirements_text += "─────────────────────<br>"
+
         all_met = True
         for req_key, val_key in self.REQUIREMENT_TO_VALUE.items():
-            required = int(state1_data.get(req_key, 0) or 0)  # Handle empty or None values
+            required = int(state1_data.get(req_key, 0) or 0)
             provided = provided_totals[val_key]
             material_type = req_key.split(": ")[1]
-            requirements_text += f"{material_type}: {required} / {provided}<br>"
-            if provided < required:
+
+            # Color code: green if met, red if not
+            if provided >= required:
+                have_color = "#00FF00"  # Green - requirement met
+            else:
+                have_color = "#FF4444"  # Red - requirement not met
                 all_met = False
+
+            # Pad material type for alignment (max ~15 chars)
+            padded_type = material_type.ljust(18)
+            requirements_text += f"{padded_type}<font color='{have_color}'>{provided:>3}</font>   <font color='#FFAA00'>{required:>3}</font><br>"
+
         # Handle specific card requirements
         specific_cards = state1_data.get("Requirements: Specific Cards", "")
         if specific_cards:
             required_cards = [card.strip() for card in specific_cards.split(",") if card.strip()]
             provided_cards = [material.get_current_data().get("Name", "Unnamed") for material in self.selected_materials]
-            missing_cards = [card for card in required_cards if card not in provided_cards]
-            requirements_text += f"Specific Cards: {len(required_cards) - len(missing_cards)} / {len(required_cards)}<br>"
-            if missing_cards:
+            cards_have = len([card for card in required_cards if card in provided_cards])
+            cards_need = len(required_cards)
+
+            if cards_have >= cards_need:
+                have_color = "#00FF00"
+            else:
+                have_color = "#FF4444"
                 all_met = False
-        requirements_text += "</font>"
+
+            requirements_text += f"{'Specific Cards'.ljust(18)}<font color='{have_color}'>{cards_have:>3}</font>   <font color='#FFAA00'>{cards_need:>3}</font><br>"
+
+        requirements_text += "─────────────────────<br>"
+
         if all_met:
-            requirements_text += "<font color='#FFFFFF' size=4>Ready to Craft</font>"
+            requirements_text += "<font color='#00FF00'><b>✓ Ready to Craft!</b></font>"
+        else:
+            requirements_text += "<font color='#FF4444'>✗ Missing materials</font>"
+
+        requirements_text += "</font>"
         self.requirements_info.set_text(requirements_text)
 
     def handle_event(self, event):
@@ -1952,6 +2224,9 @@ class GameScreen:
         self.skill_buttons = []     # List of (button, skill_card) tuples
         self.skills_button = None   # Skills menu button
         self.special_attack_button = None  # Special attack button
+        # Recruitment mode
+        self.recruit_button = None
+        self.recruit_info_panel = None  # Panel showing adjacent NPC costs
         self.player_info_label = None
         self.game_started = False
         self.campaign = None
@@ -2324,6 +2599,9 @@ class GameScreen:
         quest_count = len(game.quest_manager.active_quests)
         self.quest_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), f"Quests ({quest_count}/5)", manager)
         self.left_panel_buttons.append(self.quest_button)
+        y_pos += 40
+        self.recruit_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Recruit NPC", manager)
+        self.left_panel_buttons.append(self.recruit_button)
 
         # Add equipped skill buttons
         self.skill_buttons = []
@@ -2336,6 +2614,17 @@ class GameScreen:
             btn = UIButton(pygame.Rect(10, y_pos, button_width, 30), text, manager)
             self.skill_buttons.append((btn, skill_card))
             self.left_panel_buttons.append(btn)
+            y_pos += 40
+
+        # Add equipped tool button if tool is equipped
+        self.tool_button = None
+        if game.player.equipped_tool:
+            tool_data = game.player.equipped_tool.get_current_data()
+            tool_name = tool_data.get("Name", "Tool")
+            effect_text = game.player.get_tool_effect_text()
+            btn_text = f"Use {tool_name} {effect_text}".strip()
+            self.tool_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), btn_text, manager)
+            self.left_panel_buttons.append(self.tool_button)
             y_pos += 40
 
         # Move "Draw Card" and "End Turn" below skills, with spacing
@@ -2477,28 +2766,75 @@ class GameScreen:
             quest_count = len(game.quest_manager.active_quests)
             self.quest_button.set_text(f"Quests ({quest_count}/5)")
 
+    def _get_adjacent_neutral_npcs(self):
+        """Get list of neutral NPCs adjacent to the player."""
+        if not game.player or not game.player.position:
+            return []
+
+        adjacent_hexes = self.hex_grid.get_adjacent_hexes(*game.player.position)
+        neutral_npcs = []
+
+        for row, col in adjacent_hexes:
+            if 0 <= row < self.hex_grid.rows and 0 <= col < self.hex_grid.cols:
+                unit = self.hex_grid.grid[row][col].get("unit")
+                if unit and hasattr(unit, 'allegiance') and unit.allegiance == "Neutral":
+                    neutral_npcs.append(unit)
+
+        return neutral_npcs
+
+    def _calculate_recruitment_cost(self, unit):
+        """Calculate recruitment cost based on NPC stats: HP/10 + melee + ranged + movement + 5"""
+        if not unit:
+            return 10
+        hp_component = unit.max_hp // 10
+        melee = unit.melee_damage if hasattr(unit, 'melee_damage') else 0
+        ranged = unit.projectile_damage if hasattr(unit, 'projectile_damage') else 0
+        movement = unit.movement if hasattr(unit, 'movement') else 3
+        return hp_component + melee + ranged + movement + 5
+
     def show_instance_event(self, instance_card):
         """Show an instance event and switch to instance event screen."""
+        import sys
+        print(f"[DEBUG] show_instance_event START for {instance_card.name}", flush=True)
+
         # Update hex_grid reference in instance manager
         game.instance_manager.set_hex_grid(self.hex_grid)
+        print("[DEBUG] show_instance_event: set hex_grid", flush=True)
 
         # Resolve the instance and get outcome
-        outcome_text, needs_choice = game.instance_manager.resolve_instance(
-            instance_card, self.hex_grid, game.player
-        )
+        print("[DEBUG] show_instance_event: calling resolve_instance...", flush=True)
+        try:
+            outcome_text, needs_choice = game.instance_manager.resolve_instance(
+                instance_card, self.hex_grid, game.player
+            )
+            print(f"[DEBUG] show_instance_event: resolve_instance returned, needs_choice={needs_choice}", flush=True)
+        except Exception as e:
+            import traceback
+            print(f"[DEBUG] EXCEPTION in resolve_instance: {e}", flush=True)
+            traceback.print_exc()
+            sys.stdout.flush()
+            outcome_text, needs_choice = "Error occurred.", False
 
         # Switch to instance event screen
+        print(f"[DEBUG] show_instance_event: setting current_screen to instance_event (was {game._current_screen})", flush=True)
         game.current_screen = "instance_event"
+        print(f"[DEBUG] show_instance_event: current_screen is now {game._current_screen}", flush=True)
+
+        print("[DEBUG] show_instance_event: calling instance_event_screen.initialize_screen...", flush=True)
         instance_event_screen.initialize_screen(instance_card, outcome_text, needs_choice)
+        print("[DEBUG] show_instance_event: initialize_screen completed", flush=True)
 
         # Log the event
         self.add_to_log(f"EVENT: {instance_card.name}")
+        print("[DEBUG] show_instance_event END", flush=True)
 
     def resume_after_instance(self):
         """Called after an instance event is resolved to continue the turn."""
+        print(f"[DEBUG] resume_after_instance: turn_phase={self.turn_phase}, campaign={bool(self.campaign)}")
         # If we're still in transition phase (instance was triggered by transition card),
         # complete the transition and move to player phase
         if self.turn_phase == "transition":
+            print("[DEBUG] In transition phase, completing transition...")
             # Complete transition phase processing
             self.hex_grid.on_turn_end()
             quest_results = game.quest_manager.update("turn_end", {}, self.hex_grid, game.player)
@@ -2506,12 +2842,16 @@ class GameScreen:
                 self.add_to_log(msg)
 
             # Check level completion (only matters for campaigns)
-            if self.check_level_completion():
+            level_complete = self.check_level_completion()
+            print(f"[DEBUG] check_level_completion() returned {level_complete}")
+            if level_complete:
                 self.current_level_idx += 1
+                print(f"[DEBUG] Incremented level_idx to {self.current_level_idx}, campaign levels={len(self.campaign['levels']) if self.campaign else 'N/A'}")
                 if self.campaign and self.current_level_idx < len(self.campaign["levels"]):
                     self.load_campaign_level()
                 else:
                     self.add_to_log("Campaign Completed!")
+                    print("[DEBUG] Campaign completed - going to main_menu!")
                     game.current_screen = "main_menu"
                     main_menu.initialize_buttons()
                     return
@@ -2520,12 +2860,14 @@ class GameScreen:
             self.turn_phase = "player"
             self.is_player_turn = True
             self.hex_grid.reset_location_visits()
+            print("[DEBUG] Moved to player phase")
 
         # Apply Turn_Start passives
         for msg in game.player.apply_passive_skills(self.hex_grid, "Turn_Start"):
             self.add_to_log(msg)
         self.update_turn_label()
         self.animating = self.check_animations()
+        print(f"[DEBUG] resume_after_instance complete, current_screen={game._current_screen}")
 
     def resume_after_transition(self):
         """Called after transition event screen is dismissed to continue the turn."""
@@ -2682,6 +3024,17 @@ class GameScreen:
                     self.selected_skill = None
                     self.player_mode = "movement"
                     self.initialize_screen()  # Refresh to update cooldown display
+                elif self.player_mode == "recruit" and unit and isinstance(unit, Unit):
+                    # Check if clicked unit is adjacent and neutral
+                    distance = self.hex_grid.hex_distance(game.player.position, hex_pos)
+                    if distance == 1 and unit.allegiance == "Neutral":
+                        # Open recruitment screen
+                        game.current_screen = "recruitment"
+                        recruitment_screen.initialize_screen(unit)
+                    elif unit.allegiance != "Neutral":
+                        self.add_to_log(f"{unit.name} is not a neutral NPC")
+                    else:
+                        self.add_to_log("NPC is not adjacent to you")
                 elif self.player_mode == "special_attack" and unit and isinstance(unit, Unit):
                     # Execute special attack on target
                     self._execute_special_attack(unit)
@@ -2840,6 +3193,23 @@ class GameScreen:
                 elif text.startswith("Quests") and self.turn_phase == "player":
                     game.current_screen = "quest"
                     quest_screen.initialize_screen()
+                elif text == "Recruit NPC" and self.turn_phase == "player":
+                    # Toggle recruit mode
+                    if self.player_mode == "recruit":
+                        self.player_mode = "movement"
+                        self.add_to_log("Exited recruit mode")
+                    else:
+                        # Check for adjacent neutral NPCs
+                        adjacent_neutrals = self._get_adjacent_neutral_npcs()
+                        if adjacent_neutrals:
+                            self.player_mode = "recruit"
+                            # Display adjacent NPC costs
+                            for unit in adjacent_neutrals:
+                                cost = self._calculate_recruitment_cost(unit)
+                                self.add_to_log(f"[Recruit] {unit.name} - Cost: {cost}")
+                            self.add_to_log("Click on an adjacent neutral NPC to recruit")
+                        else:
+                            self.add_to_log("No adjacent neutral NPCs to recruit")
                 elif self.location_button and event.ui_element == self.location_button and self.turn_phase == "player":
                     # Reopen location screen
                     if self.current_location_hex:
@@ -2876,6 +3246,14 @@ class GameScreen:
                                 self.add_to_log(f"Selected skill: {skill_name}")
                             skill_button_clicked = True
                             break
+
+                    # Check if tool button was clicked
+                    if not skill_button_clicked and self.tool_button and event.ui_element == self.tool_button:
+                        success, message = game.player.use_tool()
+                        self.add_to_log(message)
+                        if success:
+                            self.player_info_label.set_text(self.get_player_info())
+                        skill_button_clicked = True  # Prevent further processing
 
                     if not skill_button_clicked:
                         # Check if special attack button was clicked
@@ -2945,7 +3323,12 @@ class GameScreen:
                 elif game.player.special_attack == "Spin Punch":
                     attack_range = self.hex_grid.get_attack_range(game.player.position, 1, is_projectile=False)
 
-        self.hex_grid.draw(screen, movement_range, attack_range, self.colors)
+        # Get targetable units for visual highlighting
+        targetable_units = None
+        if attack_range:
+            targetable_units = self.hex_grid.get_targetable_units(attack_range, "player")
+
+        self.hex_grid.draw(screen, movement_range, attack_range, self.colors, targetable_units)
         for rect in (self.ui_elements[0].rect, self.ui_elements[1].rect if self.ui_elements[1].visible else None, self.ui_elements[2].rect):
             if rect:
                 pygame.draw.rect(screen, GRAY, rect)
@@ -3117,14 +3500,18 @@ class InstanceEventScreen:
 
     def close(self):
         """Return to game, resume player turn."""
+        print(f"[DEBUG] InstanceEventScreen.close() called, current_screen={game._current_screen}")
         self.closing = True  # Prevent further event processing
         game.instance_manager.clear_pending()
         game.current_screen = "game"
+        print(f"[DEBUG] Set current_screen to game, now={game._current_screen}")
         game_screen.initialize_screen()
         # Update player info in case HP or inventory changed
         game_screen.player_info_label.set_text(game_screen.get_player_info())
         # Resume the turn that was interrupted by the instance event
+        print("[DEBUG] Calling resume_after_instance...")
         game_screen.resume_after_instance()
+        print(f"[DEBUG] After resume_after_instance, current_screen={game._current_screen}")
 
     def draw(self):
         screen.fill(DARK_INDIGO)
@@ -3254,22 +3641,27 @@ class TransitionEventScreen:
 
     def close(self):
         """Return to game and continue the turn."""
+        print(f"[DEBUG] TransitionEventScreen.close() called, current_screen={game._current_screen}")
         self.closing = True  # Prevent further event processing
 
         # Check if transition triggered an instance event BEFORE switching screens
         # This avoids rapidly switching game -> instance_event
         if game.instance_manager.pending_instance:
             instance_card = game.instance_manager.pending_instance
+            print(f"[DEBUG] Found pending instance: {instance_card.name}, calling show_instance_event")
             game_screen.show_instance_event(instance_card)
+            print(f"[DEBUG] After show_instance_event, current_screen={game._current_screen}")
             return
 
         # No pending instance, go directly to game screen
+        print("[DEBUG] No pending instance, going to game screen")
         game.current_screen = "game"
         game_screen.initialize_screen()
         # Update player info in case stats changed
         game_screen.player_info_label.set_text(game_screen.get_player_info())
         # Continue to player phase
         game_screen.resume_after_transition()
+        print(f"[DEBUG] After resume_after_transition, current_screen={game._current_screen}")
 
     def draw(self):
         screen.fill(DARK_INDIGO)
@@ -3314,7 +3706,8 @@ class DefeatScreen:
 # Main Game class
 class Game:
     def __init__(self):
-        self.current_screen = "main_menu"
+        self._current_screen = "main_menu"
+        self._screen_changed_this_frame = False  # Prevents stray events after screen change
         self.player = None
         self.party = []  # List of allied NPC cards in the player's party
         self.card_manager = CardManager()
@@ -3330,6 +3723,7 @@ class Game:
             "crafting": crafting_screen,
             "inventory": inventory_screen,
             "location": location_screen,
+            "recruitment": recruitment_screen,
             "party": party_screen,
             "skills": skills_screen,
             "quest": quest_screen,
@@ -3339,11 +3733,40 @@ class Game:
         }
         game_screen.set_card_manager(self.card_manager)
 
+    @property
+    def current_screen(self):
+        return self._current_screen
+
+    @current_screen.setter
+    def current_screen(self, value):
+        if value != self._current_screen:
+            old_screen = self._current_screen
+            self._current_screen = value
+            self._screen_changed_this_frame = True  # Block further events this frame
+            # Flush pygame mouse events to prevent stray clicks from triggering
+            # buttons on the new screen. This is critical for preventing the bug where
+            # clicking Continue on instance screen accidentally triggers Main Menu.
+            pygame.event.clear([pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION])
+            # Debug: log screen transitions to help track down main_menu bug
+            if value == "main_menu" and old_screen not in ("", None):
+                import traceback
+                print(f"\n[DEBUG] Screen changed to main_menu from {old_screen}")
+                print("Stack trace:")
+                traceback.print_stack()
+                print()
+
+    def reset_frame_flags(self):
+        """Called at start of each frame to reset per-frame state."""
+        self._screen_changed_this_frame = False
+
     def handle_event(self, event):
-        self.screens[self.current_screen].handle_event(event)
+        # Skip event processing if screen changed this frame (prevents stray events)
+        if self._screen_changed_this_frame:
+            return
+        self.screens[self._current_screen].handle_event(event)
 
     def draw(self):
-        self.screens[self.current_screen].draw()
+        self.screens[self._current_screen].draw()
 
 # Instantiate screens and game
 main_menu = MainMenu()
@@ -3354,6 +3777,7 @@ game_settings_screen = GameSettingsScreen()
 crafting_screen = CraftingScreen()
 inventory_screen = InventoryScreen()
 location_screen = LocationScreen()
+recruitment_screen = RecruitmentScreen()
 party_screen = PartyScreen()
 skills_screen = SkillsScreen()
 quest_screen = QuestScreen()
@@ -3367,11 +3791,16 @@ clock = pygame.time.Clock()
 running = True
 while running:
     time_delta = clock.tick(60) / 1000.0
+    game.reset_frame_flags()  # Reset per-frame state (like screen change detection)
     for e in event.get():
         if e.type == pygame.QUIT or (e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE):
             running = False
         game.handle_event(e)
         manager.process_events(e)
+        # If screen changed during event handling, stop processing remaining events
+        # to prevent stray clicks from triggering buttons on the new screen
+        if game._screen_changed_this_frame:
+            break
     manager.update(time_delta)
     game.draw()
     display.flip()

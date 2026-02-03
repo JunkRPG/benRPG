@@ -69,6 +69,8 @@ class HexGrid:
         # Font for rendering unit names and damage text
         self.font = pygame.font.Font(None, 18)
         self.game_over = False  # Flag to indicate if the player is defeated
+        # Animation state for targeting visuals
+        self.pulse_time = 0
 
     def load_level(self, level_file, card_manager, player):
         try:
@@ -962,9 +964,42 @@ class HexGrid:
                         attack_hexes.add(hex_pos)
             return attack_hexes
         else:
-            return {(r, c) for r, c in self.get_neighbors(*start) if self.hex_distance(start, (r, c)) <= range_limit}
+            # For melee, get all adjacent hexes (including those with units)
+            return set(self.get_adjacent_hexes(*start))
 
-    def draw(self, surface, movement_range=None, attack_range=None, colors=None):
+    def get_targetable_units(self, attack_range, attacker_allegiance="player"):
+        """
+        Get list of units that can be targeted within the given attack range.
+
+        Args:
+            attack_range: Set of (row, col) positions that can be attacked
+            attacker_allegiance: "player", "Allied", "Neutral", or "Hostile"
+
+        Returns:
+            List of units that are valid targets within range
+        """
+        if not attack_range:
+            return []
+
+        targetable = []
+        for pos in attack_range:
+            row, col = pos
+            if 0 <= row < self.rows and 0 <= col < self.cols:
+                unit = self.grid[row][col].get("unit")
+                if unit and hasattr(unit, 'allegiance'):
+                    # Player targets hostile units
+                    if attacker_allegiance == "player" and unit.allegiance == "Hostile":
+                        targetable.append(unit)
+                    # Allied units target hostile units
+                    elif attacker_allegiance == "Allied" and unit.allegiance == "Hostile":
+                        targetable.append(unit)
+                    # Hostile units target player and allies
+                    elif attacker_allegiance == "Hostile" and unit.allegiance in ["Allied", "player"]:
+                        targetable.append(unit)
+
+        return targetable
+
+    def draw(self, surface, movement_range=None, attack_range=None, colors=None, targetable_units=None):
         if colors is None:
             colors = {
                 'BLUE': (0, 0, 255),
@@ -1016,6 +1051,7 @@ class HexGrid:
                                      self.hex_size + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
                     pygame.draw.polygon(attack_overlay, (255, 0, 0, 80), attack_points, 0)
                     hex_surface.blit(attack_overlay, (x - self.hex_size, y - self.hex_size))
+
                 # Draw special hex indicators
                 for hex_data in self.card_drawing_hexes:
                     if hex_data["row"] == row and hex_data["column"] == col:
@@ -1063,6 +1099,9 @@ class HexGrid:
                     name_surface = self.font.render(loc_name, True, colors['WHITE'])
                     name_rect = name_surface.get_rect(centerx=x, top=y + house_size * 0.5)
                     hex_surface.blit(name_surface, name_rect)
+
+        # Update pulse time for targeting visuals
+        self.pulse_time = pygame.time.get_ticks()
 
         # Third pass: Draw all units on top of hexes (for proper z-ordering)
         # This ensures animating units are visible and don't go under hexes

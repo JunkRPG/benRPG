@@ -51,6 +51,8 @@ class Player:
         self.active_skill_slots = 3     # Max equipped active skills
         self.equipped_skills = []       # Currently equipped Attack/Buff skills
         self.skill_cooldowns = {}       # {"skill_name": turns_remaining}
+        # Tool equipment slot
+        self.equipped_tool = None       # Currently equipped tool card (Consumable or Tool type)
         try:
             self.image = pygame.image.load(os.path.join(os.path.dirname(__file__), "images", "player.png")).convert_alpha()
         except FileNotFoundError:
@@ -287,8 +289,105 @@ class Player:
         attacks_str = ', '.join([f"{attack['name']} ({attack['damage']})" for attack in self.attacks.values()])
         melee = self.melee_weapon.get_current_data().get("Name", "None") if self.melee_weapon else "None"
         proj = self.projectile_weapon.get_current_data().get("Name", "None") if self.projectile_weapon else "None"
+        tool = self.equipped_tool.get_current_data().get("Name", "None") if self.equipped_tool else "None"
         return (f"Class: {self.class_name}\nHP: {self.hp}/{self.max_hp}\nMovement: {self.movement}\nRange: {self.projectile_range}\n"
-                f"Attacks: {attacks_str}\nSpecial: {self.special_attack}\nMelee Weapon: {melee}\nProjectile Weapon: {proj}")
+                f"Attacks: {attacks_str}\nSpecial: {self.special_attack}\nMelee Weapon: {melee}\nProjectile Weapon: {proj}\nTool: {tool}")
+
+    # ===== TOOL EQUIPMENT METHODS =====
+
+    def equip_tool(self, card):
+        """Equip a tool or consumable card to the tool slot."""
+        card_data = card.get_current_data()
+        card_type = card_data.get("Type", "")
+        card_subclass = card.card_data.get("subclass", "")
+
+        # Accept Consumable type cards (state 2) or Junk cards with Use_HP (consumable junk)
+        if card_type == "Consumable" or card_type == "Tool" or card_subclass == "Consumable" or card_data.get("Use_HP"):
+            self.equipped_tool = card
+            return f"Equipped tool: {card_data.get('Name', 'Unknown')}"
+        return "Cannot equip this item as a tool"
+
+    def unequip_tool(self):
+        """Unequip the currently equipped tool."""
+        if self.equipped_tool:
+            name = self.equipped_tool.get_current_data().get("Name", "Unknown")
+            self.equipped_tool = None
+            return f"Unequipped tool: {name}"
+        return "No tool equipped"
+
+    def use_tool(self):
+        """
+        Use the equipped tool. Returns (success, message).
+        Dispatches based on tool type:
+        - Healing: parse Use_HP, heal player, consume action
+        - Building: placeholder for future building interaction
+        - Other: extensible for future tool types
+        """
+        if not self.equipped_tool:
+            return False, "No tool equipped"
+
+        if self.action_used:
+            return False, "Action already used this turn"
+
+        tool_data = self.equipped_tool.get_current_data()
+        tool_name = tool_data.get("Name", "Unknown")
+        tool_type = tool_data.get("Type", "")
+        tool_subtype = tool_data.get("Subtype", "")
+        hp_effect = tool_data.get("Use_HP", "")
+
+        # Healing tool (has Use_HP field)
+        if hp_effect:
+            try:
+                # Handle case where hp_effect is a list
+                if isinstance(hp_effect, list):
+                    hp_effect = next((effect for effect in hp_effect if effect and "HP" in str(effect)), "+0HP")
+
+                # Parse HP value (handles +15HP, -10HP, etc.)
+                hp_str = str(hp_effect).replace("HP", "").replace("+", "")
+                hp_change = int(hp_str)
+
+                if hp_change > 0:
+                    old_hp = self.hp
+                    self.hp = min(self.max_hp, self.hp + hp_change)
+                    actual_heal = self.hp - old_hp
+                    self.action_used = True
+                    return True, f"Used {tool_name}: +{actual_heal} HP ({old_hp} -> {self.hp})"
+                elif hp_change < 0:
+                    self.hp = max(0, self.hp + hp_change)
+                    self.action_used = True
+                    return True, f"Used {tool_name}: {hp_change} HP"
+                else:
+                    return False, f"{tool_name} has no effect"
+            except (ValueError, AttributeError) as e:
+                return False, f"Cannot use {tool_name}: invalid effect"
+
+        # Building tool (future feature)
+        if tool_type == "Tool" and tool_subtype == "Building":
+            return False, "Building tools require a buildable target"
+
+        # Other tool types - placeholder for future mechanics
+        return False, f"{tool_name} cannot be used directly"
+
+    def get_tool_effect_text(self):
+        """Get a short description of the equipped tool's effect for UI display."""
+        if not self.equipped_tool:
+            return ""
+
+        tool_data = self.equipped_tool.get_current_data()
+        hp_effect = tool_data.get("Use_HP", "")
+
+        if hp_effect:
+            # Handle case where hp_effect is a list
+            if isinstance(hp_effect, list):
+                hp_effect = next((effect for effect in hp_effect if effect and "HP" in str(effect)), "")
+            if hp_effect:
+                return f"({hp_effect})"
+
+        tool_subtype = tool_data.get("Subtype", "")
+        if tool_subtype:
+            return f"({tool_subtype})"
+
+        return ""
 
     def set_damage_text(self, damage):
         """Set the damage text and timestamp when damage is taken."""
