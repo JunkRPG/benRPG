@@ -1,0 +1,24 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Searchable",
+  "states": 2,
+  "data": {
+    "Name": "Notes on Swamp Medicine",
+    "Description": "Smells like the swamp already. The author clearly spent too much time out there.",
+    "Search_Terrain": "swamp",
+    "Search_Location": "",
+    "Search_Success_Chance": "45",
+    "Background Image": "",
+    "2nd_state_Name": "Swamp Poultice",
+    "2nd_state_Type": "Consumable",
+    "2nd_state_Use_HP": "+30HP",
+    "2nd_state_Revert_Chance": "60",
+    "2nd_state_Melee Damage": "",
+    "2nd_state_Projectile Damage": "",
+    "2nd_state_Projectile Range": "",
+    "2nd_state_Raw Material Value": "",
+    "2nd_state_Metal Value": "",
+    "2nd_state_Wood Value": "",
+    "2nd_state_Item Image": ""
+  }
+}

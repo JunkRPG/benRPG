@@ -1,0 +1,27 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Rusty Shield",
+    "Description": "A dented and corroded shield. Clean it up and it might save your life.",
+    "Raw Material Value": "5",
+    "Refined Material Value": "2",
+    "Metal Value": "10",
+    "Wood Value": "0",
+    "Price": "7",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "3",
+    "Requirements: Refined Materials": "2",
+    "Requirements: Wood": "0",
+    "Requirements: Metal": "6",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Sturdy Shield",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "8",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "0",
+    "2nd_state_Weapon Image": ""
+  }
+}

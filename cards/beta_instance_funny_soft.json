@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "data": {
+    "Name": "Soft Ground",
+    "Description": "The ground seems... softer here. Suspiciously soft.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.50, \"type\": \"damage_player\", \"text\": \"It's a sinkhole! You fall in!\", \"params\": {\"damage\": 10}}, {\"probability\": 0.30, \"type\": \"draw_card\", \"text\": \"You find buried treasure!\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"It's just mud. Your boots are ruined.\", \"params\": {}}]"
+  }
+}

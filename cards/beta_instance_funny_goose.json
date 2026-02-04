@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "states": 1,
+  "data": {
+    "Name": "Menacing Goose",
+    "Description": "A goose is staring at you menacingly. Peace was never an option.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"none\", \"text\": \"The goose loses interest and waddles away.\", \"params\": {}}, {\"probability\": 0.30, \"type\": \"spawn_enemy\", \"text\": \"The goose attacks! HONK!\", \"params\": {\"card_id\": \"beta_enemy_funny_goose\", \"count\": 1}}, {\"probability\": 0.30, \"type\": \"draw_card\", \"text\": \"The goose drops something shiny and runs.\", \"params\": {\"card_type\": \"Junk Card\"}}]"
+  }
+}

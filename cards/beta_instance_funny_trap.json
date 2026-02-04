@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "states": 1,
+  "data": {
+    "Name": "Obvious Trap",
+    "Description": "A sign says 'Free Loot' with an arrow pointing to a suspicious pit.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.50, \"type\": \"player_choice\", \"text\": \"It's obviously a trap. Obviously. Do you follow anyway?\", \"params\": {\"choices\": [{\"name\": \"Follow the arrow\", \"risk\": 0.7, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 15}}, {\"name\": \"No, I'm not an idiot\", \"effect\": {\"type\": \"none\", \"text\": \"Smart. You walk away with your dignity.\"}}]}}, {\"probability\": 0.50, \"type\": \"none\", \"text\": \"The sign blows away. Crisis averted.\", \"params\": {}}]"
+  }
+}

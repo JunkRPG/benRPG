@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Herbalist's Journal",
+    "Description": "A journal filled with recipes for healing salves and information about local plants.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

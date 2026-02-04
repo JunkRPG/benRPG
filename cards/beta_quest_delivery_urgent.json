@@ -1,0 +1,18 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Delivery",
+  "states": 2,
+  "data": {
+    "Name": "Urgent Delivery",
+    "Description": "Time-sensitive supplies must reach their destination",
+    "Template_Text": "[NPC1] desperately needs [Junk1] delivered to [Location1]. Time is running out! Succeed and they'll give you [Junk2].",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":true,\"spawn_near\":\"player\",\"spawn_distance\":1},{\"id\":\"Junk1\",\"type\":\"Junk Card\",\"count\":1,\"spawn\":false},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false},{\"id\":\"Junk2\",\"type\":\"Junk Card\",\"count\":1,\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"unit_reaches_location\",\"params\":{\"unit\":\"player\",\"location\":\"Location1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}},{\"type\":\"turn_limit\",\"params\":{\"turns\":10}}]",
+    "Rewards": "{\"cards\":[\"Junk2\"]}",
+    "2nd_state_Name": "Delivery Complete",
+    "2nd_state_Template_Text": "The delivery reached [Location1] in time. [NPC1] is grateful and gives you [Junk2].",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

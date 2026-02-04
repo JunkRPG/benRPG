@@ -1,0 +1,16 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Questionable Leather",
+    "Description": "From what animal? Yes. All of them. Maybe none of them.",
+    "Raw Material Value": "3",
+    "Refined Material Value": "5",
+    "Metal Value": "0",
+    "Wood Value": "0",
+    "Price": "8",
+    "Background Image": "",
+    "Junk Image": ""
+  }
+}

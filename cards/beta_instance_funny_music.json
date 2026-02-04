@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "data": {
+    "Name": "Ominous Boss Music",
+    "Description": "You hear ominous boss music. Where is it coming from?",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.60, \"type\": \"none\", \"text\": \"False alarm. Just a bard practicing nearby.\", \"params\": {}}, {\"probability\": 0.40, \"type\": \"spawn_enemy\", \"text\": \"Something emerges from the shadows!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"count\": 1}}]"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Strange Offer",
+    "Description": "A hooded figure steps from the shadows with a proposition...",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"player_choice\", \"text\": \"The stranger makes you an unusual offer...\", \"params\": {\"choices\": [{\"name\": \"Accept the deal\", \"risk\": 0.5, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 15}}, {\"name\": \"Decline politely\", \"effect\": {\"type\": \"none\", \"text\": \"The stranger nods and vanishes into the darkness.\"}}, {\"name\": \"Demand answers\", \"risk\": 0.4, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Document Card\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\"}}]}}, {\"probability\": 0.25, \"type\": \"draw_card\", \"text\": \"They hand you something before disappearing.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"The figure vanishes before you can respond.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"spawn_enemy\", \"text\": \"It was a ruse! Attackers emerge!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"count\": 1}}]"
+  }
+}

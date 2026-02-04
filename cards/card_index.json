@@ -565,5 +565,887 @@
     "blueprint_subclass": null,
     "states": 2,
     "name": "Forest Day Cycle"
+  },
+  "beta_enemy_hungry_wolf": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Hungry Wolf"
+  },
+  "beta_enemy_wandering_bandit": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wandering Bandit"
+  },
+  "beta_enemy_marsh_crawler": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Marsh Crawler"
+  },
+  "beta_enemy_plague_rat_swarm": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Plague Rat Swarm"
+  },
+  "beta_enemy_corrupted_guard": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Corrupted Guard"
+  },
+  "beta_enemy_forest_archer": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Forest Archer"
+  },
+  "beta_enemy_shadow_stalker": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Shadow Stalker"
+  },
+  "beta_enemy_the_collector": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Collector"
+  },
+  "beta_npc_traveling_merchant": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Traveling Merchant"
+  },
+  "beta_npc_lost_pilgrim": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Lost Pilgrim"
+  },
+  "beta_npc_retired_soldier": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Retired Soldier"
+  },
+  "beta_npc_herb_gatherer": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Herb Gatherer"
+  },
+  "beta_npc_runaway_squire": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Runaway Squire"
+  },
+  "beta_npc_mysterious_stranger": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Mysterious Stranger"
+  },
+  "beta_npc_village_elder": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Village Elder"
+  },
+  "beta_npc_wounded_scout": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wounded Scout"
+  },
+  "beta_junk_scrap_metal": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Scrap Metal"
+  },
+  "beta_junk_worn_leather": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Worn Leather"
+  },
+  "beta_junk_cracked_wood": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Cracked Wood"
+  },
+  "beta_junk_frayed_rope": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Frayed Rope"
+  },
+  "beta_junk_healing_herbs": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Healing Herbs"
+  },
+  "beta_junk_mystery_mushroom": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Mystery Mushroom"
+  },
+  "beta_junk_travelers_rations": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Traveler's Rations"
+  },
+  "beta_junk_strong_tonic": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Strong Tonic"
+  },
+  "beta_junk_bent_sword": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Bent Sword"
+  },
+  "beta_junk_broken_bow": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Broken Bow"
+  },
+  "beta_junk_rusty_shield": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rusty Shield"
+  },
+  "beta_junk_old_lantern": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Old Lantern"
+  },
+  "beta_document_tattered_map": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Tattered Map"
+  },
+  "beta_document_blacksmiths_notes": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Blacksmith's Notes"
+  },
+  "beta_document_herbalists_journal": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Herbalist's Journal"
+  },
+  "beta_document_bounty_poster": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Bounty Poster"
+  },
+  "beta_location_rusty_anchor": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "The Rusty Anchor"
+  },
+  "beta_location_crumbling_watchtower": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Crumbling Watchtower"
+  },
+  "beta_location_overgrown_shrine": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Overgrown Shrine"
+  },
+  "beta_location_scavengers_market": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Scavenger's Market"
+  },
+  "beta_location_hollowed_tree": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "The Hollowed Tree"
+  },
+  "beta_location_bandits_rest": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Bandit's Rest"
+  },
+  "beta_quest_escort_pilgrim": {
+    "type": "Quest Card",
+    "subclass": "Escort",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Guide the Lost"
+  },
+  "beta_quest_escort_survivor": {
+    "type": "Quest Card",
+    "subclass": "Escort",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Desperate Escape"
+  },
+  "beta_quest_hunt_beast": {
+    "type": "Quest Card",
+    "subclass": "Hunt",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Beast Hunt"
+  },
+  "beta_quest_hunt_bounty": {
+    "type": "Quest Card",
+    "subclass": "Hunt",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Bounty Collection"
+  },
+  "beta_quest_fetch_artifact": {
+    "type": "Quest Card",
+    "subclass": "Fetch",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Retrieve the Relic"
+  },
+  "beta_quest_delivery_urgent": {
+    "type": "Quest Card",
+    "subclass": "Delivery",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Urgent Delivery"
+  },
+  "beta_quest_defense_location": {
+    "type": "Quest Card",
+    "subclass": "Defense",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Hold the Line"
+  },
+  "beta_quest_mystery_investigation": {
+    "type": "Quest Card",
+    "subclass": "Mystery",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Strange Happenings"
+  },
+  "beta_quest_rescue_captive": {
+    "type": "Quest Card",
+    "subclass": "Rescue",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Captive Rescue"
+  },
+  "beta_quest_clear_path": {
+    "type": "Quest Card",
+    "subclass": "Hunt",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Clear the Path"
+  },
+  "beta_instance_ambush": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Ambush!"
+  },
+  "beta_instance_territorial_beast": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Territorial Beast"
+  },
+  "beta_instance_rival_scavengers": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Rival Scavengers"
+  },
+  "beta_instance_hidden_cache": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Hidden Cache"
+  },
+  "beta_instance_abandoned_camp": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Abandoned Camp"
+  },
+  "beta_instance_strange_markings": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Strange Markings"
+  },
+  "beta_instance_sudden_storm": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Sudden Storm"
+  },
+  "beta_instance_unstable_ground": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Unstable Ground"
+  },
+  "beta_instance_mysterious_light": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Mysterious Light"
+  },
+  "beta_instance_wandering_merchant": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wandering Merchant"
+  },
+  "beta_instance_desperate_traveler": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Desperate Traveler"
+  },
+  "beta_instance_strange_offer": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Strange Offer"
+  },
+  "beta_transition_wandering_world": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "The Wandering World - Day"
+  },
+  "beta_transition_seasons": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Seasons Turn - Calm"
+  },
+  "beta_searchable_mushrooms": {
+    "type": "Document Card",
+    "subclass": "Searchable",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "How to Find Questionable Mushrooms"
+  },
+  "beta_searchable_soup": {
+    "type": "Document Card",
+    "subclass": "Searchable",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Grandma's Secret Recipe"
+  },
+  "beta_searchable_herbs": {
+    "type": "Document Card",
+    "subclass": "Searchable",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Suspiciously Specific Herb Guide"
+  },
+  "beta_searchable_forager": {
+    "type": "Document Card",
+    "subclass": "Searchable",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "The Forager's Lament"
+  },
+  "beta_searchable_swamp": {
+    "type": "Document Card",
+    "subclass": "Searchable",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Notes on Swamp Medicine"
+  },
+  "beta_searchable_buried": {
+    "type": "Document Card",
+    "subclass": "Searchable",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Where I Buried Something Good"
+  },
+  "beta_searchable_tavern": {
+    "type": "Document Card",
+    "subclass": "Searchable",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Tavern Basement Rumors"
+  },
+  "beta_searchable_watchtower": {
+    "type": "Document Card",
+    "subclass": "Searchable",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Blacksmith's Hidden Stash"
+  },
+  "beta_searchable_miner": {
+    "type": "Document Card",
+    "subclass": "Searchable",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Old Miner's Map"
+  },
+  "beta_searchable_traveler": {
+    "type": "Document Card",
+    "subclass": "Searchable",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Lost Traveler's Cache Notes"
+  },
+  "beta_searchable_medic": {
+    "type": "Document Card",
+    "subclass": "Searchable",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Field Medic's Diary"
+  },
+  "beta_searchable_merchant": {
+    "type": "Document Card",
+    "subclass": "Searchable",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Shady Merchant's Drop Location"
+  },
+  "beta_junk_tool_hammer": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Bent Hammer"
+  },
+  "beta_junk_tool_rock": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rock That Works As Hammer"
+  },
+  "beta_junk_tool_multitool": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Suspicious Multi-Tool"
+  },
+  "beta_junk_tool_tongs": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rusty Tongs"
+  },
+  "beta_junk_tool_saw": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Crooked Saw"
+  },
+  "beta_junk_tool_rope": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Tangled Rope"
+  },
+  "beta_junk_material_mystery_metal": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Mystery Metal"
+  },
+  "beta_junk_material_wood_probably": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wood (Probably)"
+  },
+  "beta_junk_material_rope": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Rope of Dubious Origin"
+  },
+  "beta_junk_material_cloth": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Cloth That Was Something"
+  },
+  "beta_junk_material_gold": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Definitely Not Stolen Gold"
+  },
+  "beta_junk_material_rocks": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Rocks (Assorted)"
+  },
+  "beta_junk_material_leather": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Questionable Leather"
+  },
+  "beta_junk_material_nails": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Salvaged Nails"
+  },
+  "beta_junk_material_powder": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Mysterious Powder"
+  },
+  "beta_junk_material_bolt": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Ancient Bolt"
+  },
+  "beta_junk_weapon_chair_leg": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Broken Chair Leg"
+  },
+  "beta_junk_weapon_metal_shard": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Twisted Metal Shard"
+  },
+  "beta_junk_weapon_plank": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Splintered Plank"
+  },
+  "beta_junk_weapon_pipe": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Bent Pipe"
+  },
+  "beta_junk_weapon_bottle": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Cracked Bottle"
+  },
+  "beta_junk_weapon_wire": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Tangled Wire"
+  },
+  "beta_npc_funny_merchant": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Overly Enthusiastic Merchant"
+  },
+  "beta_npc_funny_not_bandit": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Guy Who's Definitely Not A Bandit"
+  },
+  "beta_npc_funny_tourist": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Lost Tourist"
+  },
+  "beta_npc_funny_child": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Suspiciously Competent Child"
+  },
+  "beta_npc_funny_cat": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Talking Cat"
+  },
+  "beta_npc_funny_farmer": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Nervous Farmer"
+  },
+  "beta_npc_funny_monster": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Reformed Monster"
+  },
+  "beta_npc_funny_retired": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Retired Adventurer"
+  },
+  "beta_enemy_funny_goose": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Angry Goose"
+  },
+  "beta_enemy_funny_garbage": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Sentient Garbage Pile"
+  },
+  "beta_enemy_funny_tax": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Tax Collector"
+  },
+  "beta_enemy_funny_salesman": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Overly Aggressive Salesman"
+  },
+  "beta_enemy_funny_squirrel": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Territorial Squirrel"
+  },
+  "beta_enemy_funny_guard": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Confused Guard"
+  },
+  "beta_enemy_funny_tumbleweed": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Sentient Tumbleweed"
+  },
+  "beta_enemy_funny_past": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Your Past Mistakes"
+  },
+  "beta_instance_funny_goose": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Menacing Goose"
+  },
+  "beta_instance_funny_run": {
+    "type": "Instance Card",
+    "subclass": "Mystery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "RUN"
+  },
+  "beta_instance_funny_legal": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Definitely Legal Goods"
+  },
+  "beta_instance_funny_soft": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Soft Ground"
+  },
+  "beta_instance_funny_charm": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Lucky Charm"
+  },
+  "beta_instance_funny_music": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Ominous Boss Music"
+  },
+  "beta_instance_funny_ticking": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Something's Ticking"
+  },
+  "beta_instance_funny_trap": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Obvious Trap"
+  },
+  "beta_instance_funny_list": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Lost Shopping List"
+  },
+  "beta_instance_funny_weather": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Ominous Weather"
+  },
+  "beta_location_plan_watchtower": {
+    "type": "Document Card",
+    "subclass": "Location_Plan",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "DIY Watchtower Kit"
+  },
+  "beta_location_plan_archer": {
+    "type": "Document Card",
+    "subclass": "Location_Plan",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Archer Tower Blueprint"
+  },
+  "beta_location_plan_trading": {
+    "type": "Document Card",
+    "subclass": "Location_Plan",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Trading Post Plans"
+  },
+  "beta_location_plan_fort": {
+    "type": "Document Card",
+    "subclass": "Location_Plan",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Fortification Sketch"
   }
 }

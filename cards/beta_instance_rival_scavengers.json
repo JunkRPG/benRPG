@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Rival Scavengers",
+    "Description": "You encounter a group of scavengers picking through debris...",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.25, \"type\": \"player_choice\", \"text\": \"The scavengers eye you warily. What do you do?\", \"params\": {\"choices\": [{\"name\": \"Negotiate a trade\", \"risk\": 0.2, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"none\", \"text\": \"They decline your offer but let you pass.\"}}, {\"name\": \"Intimidate them\", \"risk\": 0.5, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\"}}, {\"name\": \"Share supplies\", \"effect\": {\"type\": \"spawn_ally\", \"deck\": \"beta_npc_deck.json\"}}]}}, {\"probability\": 0.25, \"type\": \"spawn_enemy\", \"text\": \"They attack on sight!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.25, \"type\": \"draw_card\", \"text\": \"They offer to trade. You gain supplies.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.25, \"type\": \"none\", \"text\": \"They ignore you and move on.\", \"params\": {}}]"
+  }
+}

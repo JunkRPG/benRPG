@@ -1,6 +1,7 @@
 import pygame
 import os
 import math
+import random
 
 # Character classes
 CHARACTER_CLASSES = {
@@ -355,6 +356,17 @@ class Player:
                     self.hp = min(self.max_hp, self.hp + hp_change)
                     actual_heal = self.hp - old_hp
                     self.action_used = True
+
+                    # Check for revert chance (consumable may revert to document form)
+                    revert_chance = int(tool_data.get("Revert_Chance", 0) or 0)
+                    if revert_chance > 0 and random.randint(1, 100) <= revert_chance:
+                        # Revert the card back to state 1 (document form) and return to inventory
+                        self.equipped_tool.current_state = 1
+                        reverted_card = self.equipped_tool
+                        self.inventory.append(reverted_card)
+                        self.equipped_tool = None
+                        return True, f"Used {tool_name}: +{actual_heal} HP. Item reverted to document form!"
+
                     return True, f"Used {tool_name}: +{actual_heal} HP ({old_hp} -> {self.hp})"
                 elif hp_change < 0:
                     self.hp = max(0, self.hp + hp_change)
@@ -392,6 +404,180 @@ class Player:
             return f"({tool_subtype})"
 
         return ""
+
+    def search(self, terrain_type, location_name=None):
+        """
+        Search for items at the current location using Searchable documents in inventory.
+
+        Args:
+            terrain_type: The terrain type at the current hex (e.g., "forest", "grass")
+            location_name: Optional name of a location hex the player is on
+
+        Returns:
+            tuple: (success, message, flipped_card or None)
+        """
+        if self.action_used:
+            return False, "Action already used this turn", None
+
+        # Find Searchable documents in inventory that match current terrain/location
+        searchable_cards = []
+        for card in self.inventory:
+            card_data = card.card_data
+            subclass = card_data.get("subclass", "")
+            if subclass != "Searchable":
+                continue
+            # Only search with cards in state 1 (the document side)
+            if card.current_state != 1:
+                continue
+
+            current_data = card.get_current_data()
+            search_terrain = current_data.get("Search_Terrain", "")
+            search_location = current_data.get("Search_Location", "")
+
+            # Check if this card matches the current terrain or location
+            match = False
+
+            # Location-based search (if card specifies a location)
+            if search_location and location_name:
+                if search_location.lower() == location_name.lower():
+                    match = True
+
+            # Terrain-based search (if card specifies terrains)
+            if search_terrain and not match:
+                allowed_terrains = [t.strip().lower() for t in search_terrain.split(",")]
+                if "any" in allowed_terrains or terrain_type.lower() in allowed_terrains:
+                    match = True
+
+            if match:
+                searchable_cards.append(card)
+
+        if not searchable_cards:
+            return False, "No matching searchable documents for this location", None
+
+        # Use the first matching searchable document
+        card = searchable_cards[0]
+        current_data = card.get_current_data()
+        card_name = current_data.get("Name", "Unknown")
+
+        # Roll against success chance
+        success_chance = int(current_data.get("Search_Success_Chance", 50) or 50)
+        roll = random.randint(1, 100)
+
+        if roll <= success_chance:
+            # Success! Flip the card to state 2
+            card.current_state = 2
+            found_item = card.get_current_data().get("Name", "something")
+            self.action_used = True
+            return True, f"Found {found_item}! (Searched using {card_name})", card
+        else:
+            # Failed search
+            self.action_used = True
+            return False, f"Searched but found nothing. (Used {card_name}, rolled {roll} vs {success_chance}%)", None
+
+    def get_location_plans(self):
+        """Get all Location_Plan documents in inventory that are still in state 1."""
+        plans = []
+        for card in self.inventory:
+            subclass = card.card_data.get("subclass", "")
+            if subclass == "Location_Plan" and card.current_state == 1:
+                plans.append(card)
+        return plans
+
+    def has_building_tool(self):
+        """Check if player has a building tool (hammer) equipped."""
+        if not self.equipped_tool:
+            return False
+        tool_data = self.equipped_tool.get_current_data()
+        tool_type = tool_data.get("Type", "")
+        tool_subtype = tool_data.get("Subtype", "")
+        # Check for Building type tools or hammers
+        if tool_type == "Tool" and tool_subtype == "Building":
+            return True
+        # Also check name for hammer-like tools
+        tool_name = tool_data.get("Name", "").lower()
+        if "hammer" in tool_name:
+            return True
+        return False
+
+    def can_build(self, location_plan_card):
+        """
+        Check if player can build a location from a Location_Plan card.
+
+        Args:
+            location_plan_card: The Location_Plan card to check
+
+        Returns:
+            tuple: (can_build: bool, missing_requirements: list of strings)
+        """
+        missing = []
+
+        # Check if card is a Location_Plan in state 1
+        if location_plan_card.card_data.get("subclass") != "Location_Plan":
+            missing.append("Not a Location Plan")
+            return False, missing
+        if location_plan_card.current_state != 1:
+            missing.append("Plan already used")
+            return False, missing
+
+        # Check for building tool
+        if not self.has_building_tool():
+            missing.append("Need a hammer/building tool equipped")
+
+        # Get requirements from the plan
+        plan_data = location_plan_card.get_current_data()
+        req_materials_str = plan_data.get("Requirements_Materials", "{}")
+
+        try:
+            import json
+            req_materials = json.loads(req_materials_str) if isinstance(req_materials_str, str) else (req_materials_str or {})
+        except (json.JSONDecodeError, TypeError):
+            req_materials = {}
+
+        # Calculate total materials from inventory
+        totals = {"Metal": 0, "Wood": 0, "Raw": 0, "Refined": 0}
+        for card in self.inventory:
+            card_data = card.get_current_data()
+            totals["Metal"] += int(card_data.get("Metal Value", 0) or 0)
+            totals["Wood"] += int(card_data.get("Wood Value", 0) or 0)
+            totals["Raw"] += int(card_data.get("Raw Material Value", 0) or 0)
+            totals["Refined"] += int(card_data.get("Refined Material Value", 0) or 0)
+
+        # Check each requirement
+        for material, required in req_materials.items():
+            required = int(required or 0)
+            if required <= 0:
+                continue
+            available = totals.get(material, 0)
+            if available < required:
+                missing.append(f"Need {required} {material} (have {available})")
+
+        return len(missing) == 0, missing
+
+    def build(self, location_plan_card, material_cards):
+        """
+        Build a location from a Location_Plan card.
+
+        Args:
+            location_plan_card: The Location_Plan card to build
+            material_cards: List of inventory cards to consume for materials
+
+        Returns:
+            tuple: (success: bool, message: str, built_card: InventoryCard or None)
+        """
+        can, missing = self.can_build(location_plan_card)
+        if not can:
+            return False, f"Cannot build: {', '.join(missing)}", None
+
+        # Consume material cards
+        for card in material_cards:
+            if card in self.inventory:
+                self.inventory.remove(card)
+
+        # Flip the plan card to state 2 (the actual location)
+        location_plan_card.current_state = 2
+        location_name = location_plan_card.get_current_data().get("Name", "Built Location")
+
+        return True, f"Built {location_name}!", location_plan_card
 
     def set_damage_text(self, damage):
         """Set the damage text and timestamp when damage is taken."""

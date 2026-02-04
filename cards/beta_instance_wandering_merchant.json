@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Wandering Merchant",
+    "Description": "A traveling trader approaches with goods to sell...",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"player_choice\", \"text\": \"The merchant offers their wares.\", \"params\": {\"choices\": [{\"name\": \"Browse goods\", \"effect\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}}, {\"name\": \"Trade junk\", \"risk\": 0.2, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"none\", \"text\": \"The merchant isn't interested in your goods.\"}}, {\"name\": \"Ask for news\", \"effect\": {\"type\": \"draw_card\", \"card_type\": \"Document Card\"}}]}}, {\"probability\": 0.30, \"type\": \"draw_card\", \"text\": \"The merchant gives you a sample to entice future business.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.30, \"type\": \"spawn_npc\", \"text\": \"The merchant offers to travel with you for safety.\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"allegiance\": \"Neutral\"}}]"
+  }
+}

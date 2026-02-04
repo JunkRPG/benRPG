@@ -1,0 +1,25 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "The Hollowed Tree",
+    "Description": "A massive ancient oak with a hollow interior. Nature spirits are said to dwell here.",
+    "Outcomes": "[{\"probability\":0.35,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_shop_deck.json\"},{\"probability\":0.30,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_junk_deck.json\"},{\"probability\":0.20,\"card_type\":\"None\",\"deck_file\":\"\"},{\"probability\":0.15,\"card_type\":\"Document Card\",\"deck_file\":\"\"}]",
+    "Choices": "[{\"name\":\"View Available Quests\",\"action\":\"view_quests\",\"costs_action\":false,\"params\":{\"deck\":\"decks/beta_quest_deck.json\"}},{\"name\":\"Forage Herbs\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Rest in Shade\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":12}},{\"name\":\"Check Nature's Gifts\",\"action\":\"shop\",\"costs_action\":false}]",
+    "Shop_Deck": "beta_shop_deck.json",
+    "Shop_Size": "3",
+    "Shop_Currency": "wood",
+    "Shop_Cycle_Turns": "4",
+    "Upgrade_NPC_Type": "Allied",
+    "Upgrade_Material_Cost": "{\"Wood\":6}",
+    "2nd_state_Name": "Spirit's Sanctuary",
+    "2nd_state_Description": "A sacred grove protected by your ally. Healing energy flows through the area.",
+    "2nd_state_Outcomes": "[{\"probability\":0.40,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_shop_deck.json\"},{\"probability\":0.30,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_junk_deck.json\"},{\"probability\":0.20,\"card_type\":\"Document Card\",\"deck_file\":\"\"},{\"probability\":0.10,\"card_type\":\"None\",\"deck_file\":\"\"}]",
+    "2nd_state_Choices": "[{\"name\":\"View Available Quests\",\"action\":\"view_quests\",\"costs_action\":false,\"params\":{\"deck\":\"decks/beta_quest_deck.json\"}},{\"name\":\"Harvest Rare Herbs\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Spirit Healing\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":30}},{\"name\":\"Nature's Bounty\",\"action\":\"shop\",\"costs_action\":false}]",
+    "2nd_state_Shop_Deck": "beta_shop_deck.json",
+    "2nd_state_Shop_Size": "5",
+    "2nd_state_Shop_Currency": "wood",
+    "2nd_state_Shop_Cycle_Turns": "3"
+  }
+}

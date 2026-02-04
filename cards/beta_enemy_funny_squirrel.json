@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Territorial Squirrel",
+    "Health": "10",
+    "Movement": "7",
+    "Melee Damage": "6",
+    "Projectile Damage": "8",
+    "Projectile Range": "3",
+    "Background Image File Path": "",
+    "Enemy Image File Path": ""
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "states": 2,
+  "data": {
+    "Name": "Seasons Turn - Calm",
+    "Description": "The weather is mild. Good time for travel and exploration...",
+    "Background Image": "",
+    "Outcomes": "[{\"probability\": 0.20, \"type\": \"draw_instance\", \"text\": \"An event unfolds...\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"spawn_npc\", \"text\": \"Travelers appear on the roads.\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_npc_deck.json\", \"allegiance\": \"Neutral\"}}, {\"probability\": 0.15, \"type\": \"spawn_enemy\", \"text\": \"Raiders take advantage of the good weather!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.15, \"type\": \"draw_junk\", \"text\": \"Easy foraging yields supplies.\", \"params\": {\"deck\": \"beta_junk_deck.json\"}}, {\"probability\": 0.15, \"type\": \"flip_state\", \"text\": \"Storm clouds gather on the horizon...\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"none\", \"text\": \"A pleasant day.\", \"params\": {}}]",
+    "2nd_state_Name": "Seasons Turn - Storm",
+    "2nd_state_Description": "Harsh weather batters the land. Travel is treacherous...",
+    "2nd_state_Background Image": "",
+    "2nd_state_Outcomes": "[{\"probability\": 0.25, \"type\": \"weather\", \"text\": \"The storm intensifies!\", \"params\": {\"effect\": \"storm\", \"range_modifier\": -3}}, {\"probability\": 0.20, \"type\": \"draw_instance\", \"text\": \"The storm brings unexpected events...\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"spawn_enemy\", \"text\": \"Predators hunt in the storm!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.10, \"type\": \"spawn_npc\", \"text\": \"Someone seeks shelter from the storm.\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_npc_deck.json\", \"allegiance\": \"Neutral\"}}, {\"probability\": 0.15, \"type\": \"flip_state\", \"text\": \"The clouds break. Calm weather returns...\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"none\", \"text\": \"You hunker down and wait.\", \"params\": {}}]"
+  }
+}

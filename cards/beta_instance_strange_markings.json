@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "states": 1,
+  "data": {
+    "Name": "Strange Markings",
+    "Description": "Unusual symbols are carved into a nearby tree...",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.35, \"type\": \"draw_card\", \"text\": \"You decipher the markings - they lead to hidden supplies!\", \"params\": {\"card_type\": \"Document Card\"}}, {\"probability\": 0.25, \"type\": \"spawn_npc\", \"text\": \"A hermit appears, curious about your interest.\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"allegiance\": \"Neutral\"}}, {\"probability\": 0.20, \"type\": \"draw_card\", \"text\": \"Following the trail leads to buried treasure!\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"The markings are old and meaningless now.\", \"params\": {}}]"
+  }
+}

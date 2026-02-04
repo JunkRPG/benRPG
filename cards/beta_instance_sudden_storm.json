@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "data": {
+    "Name": "Sudden Storm",
+    "Description": "Dark clouds gather overhead. A storm is coming fast...",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.30, \"type\": \"weather\", \"text\": \"The storm hits hard! Visibility drops.\", \"params\": {\"effect\": \"storm\", \"range_modifier\": -2}}, {\"probability\": 0.25, \"type\": \"player_choice\", \"text\": \"You have moments to react!\", \"params\": {\"choices\": [{\"name\": \"Seek shelter\", \"effect\": {\"type\": \"none\", \"text\": \"You wait out the storm safely.\"}}, {\"name\": \"Press on\", \"risk\": 0.4, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 8}}]}}, {\"probability\": 0.25, \"type\": \"none\", \"text\": \"The storm passes quickly with little effect.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"damage_player\", \"text\": \"Lightning strikes nearby! You're thrown back.\", \"params\": {\"damage\": 10}}]"
+  }
+}

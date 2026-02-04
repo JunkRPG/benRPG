@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "states": 1,
+  "data": {
+    "Name": "Something's Ticking",
+    "Description": "Something in your bag is ticking. That's... concerning.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"player_choice\", \"text\": \"What do you do?\", \"params\": {\"choices\": [{\"name\": \"Throw it away!\", \"effect\": {\"type\": \"none\", \"text\": \"It was a clock. You threw away a clock.\"}}, {\"name\": \"Investigate carefully\", \"risk\": 0.4, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 8}}, {\"name\": \"Ignore it\", \"effect\": {\"type\": \"none\", \"text\": \"The ticking stops. This is fine.\"}}]}}, {\"probability\": 0.60, \"type\": \"none\", \"text\": \"It's your heartbeat. You're paranoid.\", \"params\": {}}]"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Crumbling Watchtower",
+    "Description": "An old military outpost overlooking the plains. Weapons still line the walls.",
+    "Outcomes": "[{\"probability\":0.30,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_junk_deck.json\"},{\"probability\":0.25,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_shop_deck.json\"},{\"probability\":0.25,\"card_type\":\"None\",\"deck_file\":\"\"},{\"probability\":0.20,\"card_type\":\"Document Card\",\"deck_file\":\"\"}]",
+    "Choices": "[{\"name\":\"View Available Quests\",\"action\":\"view_quests\",\"costs_action\":false,\"params\":{\"deck\":\"decks/beta_quest_deck.json\"}},{\"name\":\"Search Armory\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Stand Watch\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":5}},{\"name\":\"Check Supplies\",\"action\":\"shop\",\"costs_action\":false}]",
+    "Shop_Deck": "beta_shop_deck.json",
+    "Shop_Size": "4",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "4",
+    "Upgrade_NPC_Type": "Allied",
+    "Upgrade_Material_Cost": "{\"Metal\":8}",
+    "2nd_state_Name": "Restored Watchtower",
+    "2nd_state_Description": "A fortified garrison manned by your ally. The surrounding area is well defended.",
+    "2nd_state_Outcomes": "[{\"probability\":0.35,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_shop_deck.json\"},{\"probability\":0.30,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_junk_deck.json\"},{\"probability\":0.20,\"card_type\":\"Document Card\",\"deck_file\":\"\"},{\"probability\":0.15,\"card_type\":\"None\",\"deck_file\":\"\"}]",
+    "2nd_state_Choices": "[{\"name\":\"View Available Quests\",\"action\":\"view_quests\",\"costs_action\":false,\"params\":{\"deck\":\"decks/beta_quest_deck.json\"}},{\"name\":\"Raid the Armory\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Garrison Rest\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":15}},{\"name\":\"Military Surplus\",\"action\":\"shop\",\"costs_action\":false}]",
+    "2nd_state_Shop_Deck": "beta_shop_deck.json",
+    "2nd_state_Shop_Size": "6",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "3"
+  }
+}

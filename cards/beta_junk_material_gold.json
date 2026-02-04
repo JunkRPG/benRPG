@@ -1,0 +1,16 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Definitely Not Stolen Gold",
+    "Description": "Found it. On the ground. In a vault. That was locked. Don't worry about it.",
+    "Raw Material Value": "8",
+    "Refined Material Value": "8",
+    "Metal Value": "8",
+    "Wood Value": "0",
+    "Price": "25",
+    "Background Image": "",
+    "Junk Image": ""
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Old Lantern",
+    "Description": "A battered oil lantern. Still has some fuel left.",
+    "Raw Material Value": "1",
+    "Refined Material Value": "1",
+    "Metal Value": "3",
+    "Wood Value": "0",
+    "Price": "3"
+  }
+}

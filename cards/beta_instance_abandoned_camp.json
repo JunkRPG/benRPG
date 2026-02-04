@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "states": 1,
+  "data": {
+    "Name": "Abandoned Camp",
+    "Description": "You stumble upon a recently vacated campsite...",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.35, \"type\": \"draw_card\", \"text\": \"You find useful supplies left behind!\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.25, \"type\": \"spawn_enemy\", \"text\": \"It's a trap! The occupants were hiding!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.20, \"type\": \"spawn_npc\", \"text\": \"A wounded survivor emerges from hiding.\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"allegiance\": \"Neutral\"}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"The camp has been thoroughly looted already.\", \"params\": {}}]"
+  }
+}

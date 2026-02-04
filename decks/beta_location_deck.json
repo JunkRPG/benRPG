@@ -1,0 +1,12 @@
+{
+  "deck_name": "Beta Test Locations",
+  "back_image": null,
+  "cards": [
+    "beta_location_rusty_anchor",
+    "beta_location_crumbling_watchtower",
+    "beta_location_overgrown_shrine",
+    "beta_location_scavengers_market",
+    "beta_location_hollowed_tree",
+    "beta_location_bandits_rest"
+  ]
+}

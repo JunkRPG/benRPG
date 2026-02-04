@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "states": 1,
+  "data": {
+    "Name": "Lost Shopping List",
+    "Description": "You find someone's lost shopping list. Why do they need that much cheese?",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.70, \"type\": \"draw_card\", \"text\": \"At the bottom of the list: 'Emergency stash location: under the rock'. You check nearby.\", \"params\": {\"card_type\": \"Document Card\"}}, {\"probability\": 0.30, \"type\": \"none\", \"text\": \"It's just a list. Useless. But you keep it anyway.\", \"params\": {}}]"
+  }
+}

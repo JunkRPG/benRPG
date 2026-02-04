@@ -1,0 +1,22 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Location_Plan",
+  "states": 2,
+  "data": {
+    "Name": "Archer Tower Blueprint",
+    "Description": "Plans for a defensive tower. Requires an NPC to operate.",
+    "Requirements_NPC_Type": "Allied",
+    "Requirements_Gems": "",
+    "Requirements_Materials": "{\"Wood\": 15, \"Metal\": 10, \"Refined\": 5}",
+    "Background Image": "",
+    "2nd_state_Name": "Archer Tower",
+    "2nd_state_Description": "A sturdy tower that auto-attacks enemies when staffed with an NPC.",
+    "2nd_state_Outcomes": "[]",
+    "2nd_state_Choices": "[]",
+    "2nd_state_Shop_Deck": "",
+    "2nd_state_Shop_Size": "0",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "",
+    "2nd_state_Location Image File Path": ""
+  }
+}

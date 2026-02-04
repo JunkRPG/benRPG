@@ -1,0 +1,18 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Escort",
+  "states": 2,
+  "data": {
+    "Name": "Guide the Lost",
+    "Description": "A traveler needs safe passage through dangerous territory",
+    "Template_Text": "[NPC1] is lost and needs to reach [Location1] safely. [Enemy1] prowls the path between here and there. Escort them and receive [Junk1] as thanks.",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":true,\"spawn_near\":\"player\",\"spawn_distance\":2},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false},{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":4},{\"id\":\"Junk1\",\"type\":\"Junk Card\",\"count\":1,\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"unit_reaches_location\",\"params\":{\"unit\":\"NPC1\",\"location\":\"Location1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"unit_death\",\"params\":{\"unit\":\"NPC1\"}},{\"type\":\"player_death\",\"params\":{}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "2nd_state_Name": "Journey Complete",
+    "2nd_state_Template_Text": "You guided [NPC1] to [Location1] safely. They gratefully gave you [Junk1].",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

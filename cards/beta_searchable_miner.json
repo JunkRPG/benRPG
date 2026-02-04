@@ -1,0 +1,24 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Searchable",
+  "states": 2,
+  "data": {
+    "Name": "Old Miner's Map",
+    "Description": "Faded and crinkled. Shows promising dig spots in rocky areas.",
+    "Search_Terrain": "stone,mountain",
+    "Search_Location": "",
+    "Search_Success_Chance": "50",
+    "Background Image": "",
+    "2nd_state_Name": "Pickaxe (Bent)",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Use_HP": "",
+    "2nd_state_Revert_Chance": "",
+    "2nd_state_Melee Damage": "6",
+    "2nd_state_Projectile Damage": "",
+    "2nd_state_Projectile Range": "",
+    "2nd_state_Raw Material Value": "2",
+    "2nd_state_Metal Value": "4",
+    "2nd_state_Wood Value": "2",
+    "2nd_state_Item Image": ""
+  }
+}

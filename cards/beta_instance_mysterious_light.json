@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "data": {
+    "Name": "Mysterious Light",
+    "Description": "A strange glow emanates from somewhere nearby...",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.30, \"type\": \"heal_player\", \"text\": \"The light washes over you with warmth.\", \"params\": {\"amount\": 15}}, {\"probability\": 0.25, \"type\": \"draw_instance\", \"text\": \"The light leads you to another discovery...\", \"params\": {}}, {\"probability\": 0.25, \"type\": \"draw_card\", \"text\": \"You find the source - a glowing artifact!\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.20, \"type\": \"spawn_npc\", \"text\": \"The light was someone's signal fire!\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"allegiance\": \"Neutral\"}}]"
+  }
+}

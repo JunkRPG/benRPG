@@ -1,0 +1,22 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Blacksmith's Notes",
+    "Description": "Detailed instructions for forging a sturdy weapon.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "2nd_state_Name": "War Hammer",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "22",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "0",
+    "2nd_state_Weapon Image": "",
+    "Requirements: Raw Materials": "5",
+    "Requirements: Refined Materials": "3",
+    "Requirements: Wood": "2",
+    "Requirements: Metal": "8"
+  }
+}

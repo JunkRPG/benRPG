@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Tax Collector",
+    "Health": "30",
+    "Movement": "4",
+    "Melee Damage": "6",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Background Image File Path": "",
+    "Enemy Image File Path": ""
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Rocks (Assorted)",
+    "Description": "Some big, some small, one suspicious. That one keeps staring at you.",
+    "Raw Material Value": "6",
+    "Refined Material Value": "0",
+    "Metal Value": "2",
+    "Wood Value": "0",
+    "Price": "3",
+    "Background Image": "",
+    "Junk Image": ""
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Ancient Bolt",
+    "Description": "Older than your grandma. Also sturdier than your grandma. No offense to grandmas.",
+    "Raw Material Value": "0",
+    "Refined Material Value": "4",
+    "Metal Value": "6",
+    "Wood Value": "0",
+    "Price": "9",
+    "Background Image": "",
+    "Junk Image": ""
+  }
+}

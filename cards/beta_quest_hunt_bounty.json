@@ -1,0 +1,18 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Hunt",
+  "states": 2,
+  "data": {
+    "Name": "Bounty Collection",
+    "Description": "A wanted outlaw must be brought to justice",
+    "Template_Text": "A bounty has been posted for [Enemy1]. Last seen lurking near [Location1]. Bring proof of the deed to claim [Junk1] and [Junk2].",
+    "Placeholders": "[{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":4},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false},{\"id\":\"Junk1\",\"type\":\"Junk Card\",\"count\":1,\"spawn\":false},{\"id\":\"Junk2\",\"type\":\"Junk Card\",\"count\":1,\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"unit_death\",\"params\":{\"unit\":\"Enemy1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}}]",
+    "Rewards": "{\"cards\":[\"Junk1\",\"Junk2\"]}",
+    "2nd_state_Name": "Bounty Claimed",
+    "2nd_state_Template_Text": "[Enemy1] has been dealt with. Your rewards: [Junk1] and [Junk2].",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

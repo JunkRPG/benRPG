@@ -1,0 +1,18 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Defense",
+  "states": 2,
+  "data": {
+    "Name": "Hold the Line",
+    "Description": "Defend a location from attackers",
+    "Template_Text": "[Location1] is under attack! [Enemy1] and [Enemy2] are approaching. [NPC1] will help you defend. Survive 5 turns for [Junk1] and [Junk2].",
+    "Placeholders": "[{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false},{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":5},{\"id\":\"Enemy2\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":6},{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":1},{\"id\":\"Junk1\",\"type\":\"Junk Card\",\"count\":1,\"spawn\":false},{\"id\":\"Junk2\",\"type\":\"Junk Card\",\"count\":1,\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"enemy_defeated\",\"params\":{}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}},{\"type\":\"unit_death\",\"params\":{\"unit\":\"NPC1\"}}]",
+    "Rewards": "{\"cards\":[\"Junk1\",\"Junk2\"]}",
+    "2nd_state_Name": "Defense Successful",
+    "2nd_state_Template_Text": "You held [Location1] against the attackers! [NPC1] thanks you with [Junk1] and [Junk2].",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

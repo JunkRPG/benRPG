@@ -1,0 +1,25 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Overgrown Shrine",
+    "Description": "An ancient temple consumed by vines. Strange symbols cover the walls.",
+    "Outcomes": "[{\"probability\":0.35,\"card_type\":\"Document Card\",\"deck_file\":\"\"},{\"probability\":0.25,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_junk_deck.json\"},{\"probability\":0.20,\"card_type\":\"None\",\"deck_file\":\"\"},{\"probability\":0.20,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_shop_deck.json\"}]",
+    "Choices": "[{\"name\":\"View Available Quests\",\"action\":\"view_quests\",\"costs_action\":false,\"params\":{\"deck\":\"decks/beta_quest_deck.json\"}},{\"name\":\"Search Ruins\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Meditate\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":15}},{\"name\":\"Check Offerings\",\"action\":\"shop\",\"costs_action\":false}]",
+    "Shop_Deck": "beta_shop_deck.json",
+    "Shop_Size": "2",
+    "Shop_Currency": "refined",
+    "Shop_Cycle_Turns": "6",
+    "Upgrade_NPC_Type": "Allied",
+    "Upgrade_Material_Cost": "{\"Refined\":5}",
+    "2nd_state_Name": "Restored Shrine",
+    "2nd_state_Description": "The temple has been cleared and consecrated. A peaceful aura fills the air.",
+    "2nd_state_Outcomes": "[{\"probability\":0.40,\"card_type\":\"Document Card\",\"deck_file\":\"\"},{\"probability\":0.30,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_shop_deck.json\"},{\"probability\":0.20,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_junk_deck.json\"},{\"probability\":0.10,\"card_type\":\"None\",\"deck_file\":\"\"}]",
+    "2nd_state_Choices": "[{\"name\":\"View Available Quests\",\"action\":\"view_quests\",\"costs_action\":false,\"params\":{\"deck\":\"decks/beta_quest_deck.json\"}},{\"name\":\"Study Archives\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Pray & Heal\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":25}},{\"name\":\"Sacred Relics\",\"action\":\"shop\",\"costs_action\":false}]",
+    "2nd_state_Shop_Deck": "beta_shop_deck.json",
+    "2nd_state_Shop_Size": "4",
+    "2nd_state_Shop_Currency": "refined",
+    "2nd_state_Shop_Cycle_Turns": "4"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Location_Plan",
+  "states": 2,
+  "data": {
+    "Name": "Fortification Sketch",
+    "Description": "It's a very crooked sketch. The fortifications will probably be crooked too.",
+    "Requirements_NPC_Type": "",
+    "Requirements_Gems": "",
+    "Requirements_Materials": "{\"Wood\": 6, \"Metal\": 4}",
+    "Background Image": "",
+    "2nd_state_Name": "Crooked Fort",
+    "2nd_state_Description": "A defensive structure. It's leaning but it's trying its best.",
+    "2nd_state_Outcomes": "[]",
+    "2nd_state_Choices": "[]",
+    "2nd_state_Shop_Deck": "",
+    "2nd_state_Shop_Size": "0",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "",
+    "2nd_state_Location Image File Path": ""
+  }
+}

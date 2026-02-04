@@ -1,0 +1,14 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Worn Leather",
+    "Description": "Cracked and weathered leather scraps. Still usable for crafting.",
+    "Raw Material Value": "3",
+    "Refined Material Value": "2",
+    "Metal Value": "0",
+    "Wood Value": "0",
+    "Price": "4"
+  }
+}

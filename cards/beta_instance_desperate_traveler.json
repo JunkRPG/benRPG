@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Desperate Traveler",
+    "Description": "A wounded traveler stumbles toward you, pleading for help...",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.35, \"type\": \"player_choice\", \"text\": \"The traveler begs for assistance.\", \"params\": {\"choices\": [{\"name\": \"Help them\", \"effect\": {\"type\": \"spawn_ally\", \"deck\": \"beta_npc_deck.json\"}}, {\"name\": \"Ignore them\", \"effect\": {\"type\": \"none\", \"text\": \"You walk on. Their fate is not your concern.\"}}, {\"name\": \"Rob them\", \"risk\": 0.5, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\"}}]}}, {\"probability\": 0.25, \"type\": \"spawn_ally\", \"text\": \"They're grateful for your presence alone!\", \"params\": {\"deck\": \"beta_npc_deck.json\"}}, {\"probability\": 0.25, \"type\": \"draw_card\", \"text\": \"They share supplies before collapsing from exhaustion.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.15, \"type\": \"spawn_enemy\", \"text\": \"It's a trap! They were bait!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"count\": 1}}]"
+  }
+}

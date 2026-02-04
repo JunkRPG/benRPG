@@ -1,0 +1,25 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Scavenger's Market",
+    "Description": "A ramshackle trading post where survivors barter for supplies.",
+    "Outcomes": "[{\"probability\":0.40,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_junk_deck.json\"},{\"probability\":0.30,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_shop_deck.json\"},{\"probability\":0.15,\"card_type\":\"None\",\"deck_file\":\"\"},{\"probability\":0.15,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_junk_deck.json\"}]",
+    "Choices": "[{\"name\":\"View Available Quests\",\"action\":\"view_quests\",\"costs_action\":false,\"params\":{\"deck\":\"decks/beta_quest_deck.json\"}},{\"name\":\"Dig Through Piles\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Rest in Tent\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":8}},{\"name\":\"Browse Stalls\",\"action\":\"shop\",\"costs_action\":false}]",
+    "Shop_Deck": "beta_shop_deck.json",
+    "Shop_Size": "5",
+    "Shop_Currency": "raw",
+    "Shop_Cycle_Turns": "3",
+    "Upgrade_NPC_Type": "Allied",
+    "Upgrade_Material_Cost": "{\"Raw\":8}",
+    "2nd_state_Name": "Thriving Market",
+    "2nd_state_Description": "A bustling marketplace with diverse goods. Your ally keeps order among the traders.",
+    "2nd_state_Outcomes": "[{\"probability\":0.45,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_shop_deck.json\"},{\"probability\":0.30,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_junk_deck.json\"},{\"probability\":0.15,\"card_type\":\"Document Card\",\"deck_file\":\"\"},{\"probability\":0.10,\"card_type\":\"None\",\"deck_file\":\"\"}]",
+    "2nd_state_Choices": "[{\"name\":\"View Available Quests\",\"action\":\"view_quests\",\"costs_action\":false,\"params\":{\"deck\":\"decks/beta_quest_deck.json\"}},{\"name\":\"Premium Salvage\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"VIP Lounge\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":15}},{\"name\":\"Exclusive Wares\",\"action\":\"shop\",\"costs_action\":false}]",
+    "2nd_state_Shop_Deck": "beta_shop_deck.json",
+    "2nd_state_Shop_Size": "8",
+    "2nd_state_Shop_Currency": "raw",
+    "2nd_state_Shop_Cycle_Turns": "2"
+  }
+}

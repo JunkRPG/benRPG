@@ -1,0 +1,24 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Searchable",
+  "states": 2,
+  "data": {
+    "Name": "Where I Buried Something Good",
+    "Description": "A crude map with an X marked near dirt. The handwriting is... enthusiastic.",
+    "Search_Terrain": "dirt",
+    "Search_Location": "",
+    "Search_Success_Chance": "40",
+    "Background Image": "",
+    "2nd_state_Name": "Suspiciously Clean Blade",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Use_HP": "",
+    "2nd_state_Revert_Chance": "",
+    "2nd_state_Melee Damage": "12",
+    "2nd_state_Projectile Damage": "",
+    "2nd_state_Projectile Range": "",
+    "2nd_state_Raw Material Value": "",
+    "2nd_state_Metal Value": "5",
+    "2nd_state_Wood Value": "",
+    "2nd_state_Item Image": ""
+  }
+}

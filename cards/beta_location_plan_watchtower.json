@@ -1,0 +1,22 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Location_Plan",
+  "states": 2,
+  "data": {
+    "Name": "DIY Watchtower Kit",
+    "Description": "Build your own watchtower! Some assembly required. Hammer sold separately.",
+    "Requirements_NPC_Type": "Allied",
+    "Requirements_Gems": "",
+    "Requirements_Materials": "{\"Wood\": 10, \"Metal\": 5}",
+    "Background Image": "",
+    "2nd_state_Name": "Makeshift Watchtower",
+    "2nd_state_Description": "A rickety but functional watchtower. Don't look down.",
+    "2nd_state_Outcomes": "[]",
+    "2nd_state_Choices": "[]",
+    "2nd_state_Shop_Deck": "",
+    "2nd_state_Shop_Size": "0",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "",
+    "2nd_state_Location Image File Path": ""
+  }
+}

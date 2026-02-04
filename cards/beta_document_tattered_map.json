@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Tattered Map",
+    "Description": "A weathered map showing trails and landmarks in the region. Some areas are marked with X.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

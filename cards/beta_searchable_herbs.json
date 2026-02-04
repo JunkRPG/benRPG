@@ -1,0 +1,24 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Searchable",
+  "states": 2,
+  "data": {
+    "Name": "Suspiciously Specific Herb Guide",
+    "Description": "Written by 'Anonymous Healer'. Contains way too much detail about where to find 'medicinal' plants.",
+    "Search_Terrain": "forest,swamp",
+    "Search_Location": "",
+    "Search_Success_Chance": "55",
+    "Background Image": "",
+    "2nd_state_Name": "Herbs (Probably Medicinal)",
+    "2nd_state_Type": "Consumable",
+    "2nd_state_Use_HP": "+10HP",
+    "2nd_state_Revert_Chance": "40",
+    "2nd_state_Melee Damage": "",
+    "2nd_state_Projectile Damage": "",
+    "2nd_state_Projectile Range": "",
+    "2nd_state_Raw Material Value": "",
+    "2nd_state_Metal Value": "",
+    "2nd_state_Wood Value": "",
+    "2nd_state_Item Image": ""
+  }
+}

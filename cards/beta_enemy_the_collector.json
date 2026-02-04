@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "The Collector",
+    "Health": "60",
+    "Movement": "2",
+    "Melee Damage": "10",
+    "Projectile Damage": "10",
+    "Projectile Range": "4",
+    "Background Image File Path": "",
+    "Enemy Image File Path": ""
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Mystery Metal",
+    "Description": "It's metal. Probably. Could be an alloy. Could be painted wood. Who knows?",
+    "Raw Material Value": "2",
+    "Refined Material Value": "5",
+    "Metal Value": "10",
+    "Wood Value": "0",
+    "Price": "12",
+    "Background Image": "",
+    "Junk Image": ""
+  }
+}

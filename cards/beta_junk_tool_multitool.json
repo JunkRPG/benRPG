@@ -1,0 +1,26 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Suspicious Multi-Tool",
+    "Description": "Has way too many fold-out attachments. Some you can't identify.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "3",
+    "Metal Value": "5",
+    "Wood Value": "1",
+    "Price": "15",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "2",
+    "Requirements: Wood": "",
+    "Requirements: Metal": "3",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Swiss Army Junk",
+    "2nd_state_Type": "Tool",
+    "2nd_state_Subtype": "Building",
+    "2nd_state_Use": "Somehow works for everything. Don't ask how.",
+    "2nd_state_Tool Image": ""
+  }
+}

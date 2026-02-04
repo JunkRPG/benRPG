@@ -1,0 +1,14 @@
+{
+  "deck_name": "Beta Test Shop Items",
+  "back_image": null,
+  "cards": [
+    "beta_junk_scrap_metal",
+    "beta_junk_worn_leather",
+    "beta_junk_cracked_wood",
+    "beta_junk_frayed_rope",
+    "beta_junk_healing_herbs",
+    "beta_junk_travelers_rations",
+    "beta_junk_strong_tonic",
+    "beta_junk_old_lantern"
+  ]
+}

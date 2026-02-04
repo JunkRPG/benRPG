@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "data": {
+    "Name": "Ominous Weather",
+    "Description": "The weather is described as 'ominous'. Whatever that means.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"none\", \"text\": \"It's just cloudy. Very dramatically cloudy.\", \"params\": {}}, {\"probability\": 0.30, \"type\": \"damage_player\", \"text\": \"Lightning strikes nearby! Too close!\", \"params\": {\"damage\": 8}}, {\"probability\": 0.30, \"type\": \"heal_player\", \"text\": \"It rains! Refreshing, actually.\", \"params\": {\"amount\": 5}}]"
+  }
+}

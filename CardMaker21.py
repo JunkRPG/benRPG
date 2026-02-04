@@ -960,7 +960,7 @@ class CardCreationScreen:
         )
         self.ui_elements.append(self.title)
 
-        subclasses = ["Blueprint", "Skill_Tome", "Location_Plan", "Journal", "Map", "Note", "Book", "Pamphlet"]
+        subclasses = ["Blueprint", "Skill_Tome", "Location_Plan", "Searchable", "Journal", "Map", "Note", "Book", "Pamphlet"]
         for i, subclass in enumerate(subclasses):
             y_pos = 100 + i * 60
             button = UIButton(
@@ -1254,6 +1254,7 @@ class CardCreationScreen:
                         ("2nd_state_Name", "text"),
                         ("2nd_state_Type", "text", "Consumable"),
                         ("2nd_state_Use_HP", "dropdown", HP_OPTIONS, "+15HP"),
+                        ("2nd_state_Revert_Chance", "text"),
                         ("2nd_state_Use_Placeholder", "dropdown", PLACEHOLDER_OPTIONS, "TBD"),
                         ("2nd_state_Item Image", "file"),
                     ]
@@ -1333,6 +1334,7 @@ class CardCreationScreen:
                         ("2nd_state_Name", "text"),
                         ("2nd_state_Type", "text", "Consumable"),
                         ("2nd_state_Use_HP", "dropdown", HP_OPTIONS, "+15HP"),
+                        ("2nd_state_Revert_Chance", "text"),
                         ("2nd_state_Use_Placeholder", "dropdown", PLACEHOLDER_OPTIONS, "TBD"),
                         ("2nd_state_Item Image", "file"),
                     ]
@@ -1429,6 +1431,45 @@ class CardCreationScreen:
                     ("2nd_state_Shop_Currency", "dropdown", CURRENCY_TYPES, "metal"),
                     ("2nd_state_Shop_Cycle_Turns", "text"),
                     ("2nd_state_Location Image File Path", "file"),
+                ]
+
+                column_width = 300
+                left_column_x = (WINDOW_WIDTH - 2 * column_width - 100) // 2
+                right_column_x = left_column_x + column_width + 100
+
+                for i, field_info in enumerate(fields_state_1):
+                    y_pos = y_start + i * 80
+                    create_field_ui(left_column_x, y_pos, field_info, column_width)
+
+                for i, field_info in enumerate(fields_state_2):
+                    y_pos = y_start + i * 80
+                    create_field_ui(right_column_x, y_pos, field_info, column_width)
+
+                total_form_height = max(len(fields_state_1), len(fields_state_2)) * 80 + 140
+                self.max_scroll = max(0, total_form_height - WINDOW_HEIGHT)
+            elif self.card_type == "Document Card" and self.selected_subclass == "Searchable":
+                # Searchable documents: State 1 describes where to search, State 2 is the found item
+                fields_state_1 = [
+                    ("Name", "text"),
+                    ("Description", "text"),
+                    ("Search_Terrain", "text"),  # Comma-separated: "forest,swamp" or empty for location-based
+                    ("Search_Location", "text"),  # Location name to search at (optional)
+                    ("Search_Success_Chance", "text"),  # Percentage 0-100
+                    ("Background Image", "file"),
+                ]
+                # State 2 is the found item (consumable, weapon, or material)
+                fields_state_2 = [
+                    ("2nd_state_Name", "text"),
+                    ("2nd_state_Type", "dropdown", ["Consumable", "Melee", "Projectile", "Material"], "Consumable"),
+                    ("2nd_state_Use_HP", "dropdown", HP_OPTIONS, "+15HP"),
+                    ("2nd_state_Revert_Chance", "text"),
+                    ("2nd_state_Melee Damage", "text"),
+                    ("2nd_state_Projectile Damage", "text"),
+                    ("2nd_state_Projectile Range", "text"),
+                    ("2nd_state_Raw Material Value", "text"),
+                    ("2nd_state_Metal Value", "text"),
+                    ("2nd_state_Wood Value", "text"),
+                    ("2nd_state_Item Image", "file"),
                 ]
 
                 column_width = 300

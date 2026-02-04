@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Bounty Poster",
+    "Description": "A wanted poster describing a dangerous outlaw. Reward offered for their capture.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

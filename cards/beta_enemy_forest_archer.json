@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Forest Archer",
+    "Health": "25",
+    "Movement": "4",
+    "Melee Damage": "6",
+    "Projectile Damage": "14",
+    "Projectile Range": "5",
+    "Background Image File Path": "",
+    "Enemy Image File Path": ""
+  }
+}

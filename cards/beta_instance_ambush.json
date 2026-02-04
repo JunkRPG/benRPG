@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "states": 1,
+  "data": {
+    "Name": "Ambush!",
+    "Description": "Shadows move in the underbrush. Something is stalking you...",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.30, \"type\": \"damage_player\", \"text\": \"An attacker strikes from the shadows!\", \"params\": {\"damage\": 12}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"It was just wildlife. False alarm.\", \"params\": {}}, {\"probability\": 0.25, \"type\": \"spawn_enemy\", \"text\": \"Bandits emerge from hiding!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.25, \"type\": \"player_choice\", \"text\": \"You spot the attacker before they strike!\", \"params\": {\"choices\": [{\"name\": \"Strike first\", \"risk\": 0.3, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 15}}, {\"name\": \"Hide and wait\", \"effect\": {\"type\": \"none\", \"text\": \"The threat passes by without noticing you.\"}}]}}]"
+  }
+}

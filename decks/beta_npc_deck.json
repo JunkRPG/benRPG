@@ -1,0 +1,22 @@
+{
+  "deck_name": "Beta Test NPCs",
+  "back_image": null,
+  "cards": [
+    "beta_npc_traveling_merchant",
+    "beta_npc_lost_pilgrim",
+    "beta_npc_retired_soldier",
+    "beta_npc_herb_gatherer",
+    "beta_npc_runaway_squire",
+    "beta_npc_mysterious_stranger",
+    "beta_npc_village_elder",
+    "beta_npc_wounded_scout",
+    "beta_npc_funny_merchant",
+    "beta_npc_funny_not_bandit",
+    "beta_npc_funny_tourist",
+    "beta_npc_funny_child",
+    "beta_npc_funny_cat",
+    "beta_npc_funny_farmer",
+    "beta_npc_funny_monster",
+    "beta_npc_funny_retired"
+  ]
+}

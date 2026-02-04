@@ -1,0 +1,24 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Searchable",
+  "states": 2,
+  "data": {
+    "Name": "The Forager's Lament",
+    "Description": "A journal filled with complaints about how hard foraging is. Includes some useful locations though.",
+    "Search_Terrain": "any",
+    "Search_Location": "",
+    "Search_Success_Chance": "70",
+    "Background Image": "",
+    "2nd_state_Name": "Suspicious Berries",
+    "2nd_state_Type": "Consumable",
+    "2nd_state_Use_HP": "+20HP",
+    "2nd_state_Revert_Chance": "25",
+    "2nd_state_Melee Damage": "",
+    "2nd_state_Projectile Damage": "",
+    "2nd_state_Projectile Range": "",
+    "2nd_state_Raw Material Value": "",
+    "2nd_state_Metal Value": "",
+    "2nd_state_Wood Value": "",
+    "2nd_state_Item Image": ""
+  }
+}

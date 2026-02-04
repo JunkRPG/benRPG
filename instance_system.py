@@ -368,7 +368,7 @@ class InstanceManager:
                 # Find adjacent empty hex
                 adjacent = hex_grid.get_adjacent_hexes(*player.position)
                 for adj in adjacent:
-                    if hex_grid.is_valid_position(*adj):
+                    if 0 <= adj[0] < hex_grid.rows and 0 <= adj[1] < hex_grid.cols:
                         cell = hex_grid.grid[adj[0]][adj[1]]
                         if not cell.get("unit") and cell.get("type") != "obstacle":
                             spawn_pos = adj
@@ -379,7 +379,7 @@ class InstanceManager:
                 for _ in range(50):  # Try 50 times
                     row = random.randint(0, hex_grid.rows - 1)
                     col = random.randint(0, hex_grid.cols - 1)
-                    if hex_grid.is_valid_position(row, col):
+                    if 0 <= row < hex_grid.rows and 0 <= col < hex_grid.cols:
                         cell = hex_grid.grid[row][col]
                         if not cell.get("unit") and cell.get("type") != "obstacle":
                             spawn_pos = (row, col)

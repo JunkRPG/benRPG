@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Lucky Charm",
+    "Description": "A stranger offers you a 'lucky' charm. Their smile is unsettling.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.60, \"type\": \"player_choice\", \"text\": \"Do you accept the charm?\", \"params\": {\"choices\": [{\"name\": \"Accept graciously\", \"risk\": 0.3, \"success\": {\"type\": \"heal_player\", \"amount\": 15}, \"failure\": {\"type\": \"damage_player\", \"damage\": 20}}, {\"name\": \"Politely decline\", \"effect\": {\"type\": \"none\", \"text\": \"They shrug and walk away. The charm wasn't real anyway.\"}}]}}, {\"probability\": 0.40, \"type\": \"none\", \"text\": \"They disappear before you can respond.\", \"params\": {}}]"
+  }
+}

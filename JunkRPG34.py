@@ -2085,6 +2085,41 @@ class CraftingScreen:
         screen.fill(DARK_INDIGO)
         manager.draw_ui(screen)
 
+# Player Count Selection Screen (shown after selecting a level file)
+class PlayerCountScreen:
+    def __init__(self):
+        self.ui_elements = []
+        self.level_file = None
+
+    def initialize_screen(self, level_file=None):
+        self.level_file = level_file
+        manager.clear_and_reset()
+        level_name = os.path.basename(level_file) if level_file else "Unknown"
+        self.ui_elements = [
+            UILabel(pygame.Rect(0, 50, WINDOW_WIDTH, 50), "Select Number of Players", manager, anchors={'centerx': 'centerx'}),
+            UILabel(pygame.Rect(0, 120, WINDOW_WIDTH, 30), f"Level: {level_name}", manager, anchors={'centerx': 'centerx'}),
+            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 200, 200, 50), "1 Player", manager),
+            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 270, 200, 50), "2 Players", manager),
+            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 370, 200, 50), "Back", manager)
+        ]
+
+    def handle_event(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.ui_elements[2]:  # 1 Player
+                game.current_screen = "character_creation"
+                character_creation_screen.initialize_screen(level_file=self.level_file)
+            elif event.ui_element == self.ui_elements[3]:  # 2 Players
+                game.current_screen = "multiplayer_character_creation"
+                multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file)
+            elif event.ui_element == self.ui_elements[4]:  # Back
+                game.current_screen = "main_menu"
+                main_menu.initialize_buttons()
+
+    def draw(self):
+        screen.fill(DARK_INDIGO)
+        manager.draw_ui(screen)
+
+
 # Main Menu screen (updated to include Load Campaign)
 class MainMenu:
     def __init__(self):
@@ -2124,8 +2159,8 @@ class MainMenu:
                 file_path = filedialog.askopenfilename(initialdir="levels", filetypes=[("JSON files", "*.json")])
                 root.destroy()
                 if file_path:
-                    game.current_screen = "character_creation"
-                    character_creation_screen.initialize_screen(level_file=file_path)
+                    game.current_screen = "player_count"
+                    player_count_screen.initialize_screen(level_file=file_path)
                 else:
                     print("No level file selected")
             elif event.ui_element == self.ui_elements[4]:  # 2-Player Local
@@ -2319,6 +2354,7 @@ class GameScreen:
         self.turn_phase = "player"
         self.animating = False
         self.dragging = False
+        self.drag_button = None  # Track which button started the drag (2=middle, 3=right)
         self.drag_start_x = self.drag_start_y = self.start_view_offset_x = self.start_view_offset_y = 0
         self.player_mode = "movement"
         self.selected_skill = None  # Currently selected skill for use
@@ -2351,6 +2387,9 @@ class GameScreen:
         # Current location button (when player is standing on a location)
         self.location_button = None
         self.current_location_hex = None  # (row, col) if player is on a location
+        # Building/placement mode
+        self.placement_mode = False
+        self.placement_card = None  # The location card being placed
         self.colors = {
             'BLUE': BLUE,
             'DARK_RED_ALPHA': DARK_RED_ALPHA,
@@ -2534,31 +2573,145 @@ class GameScreen:
         self.initialize_screen()
 
     def load_campaign_level(self):
-        if self.campaign and self.current_level_idx < len(self.campaign["levels"]):
-            level_data = self.campaign["levels"][self.current_level_idx]
-            level_file = os.path.join("levels", level_data["level_file"])
+        """Load the current campaign level and configure decks based on stage settings."""
+        # Support both old format (campaign["levels"]) and new format (campaign["stages"])
+        stages = self.campaign.get("stages") or self.campaign.get("levels", [])
+        if not stages or self.current_level_idx >= len(stages):
+            return
+
+        stage_data = stages[self.current_level_idx]
+        level_file = stage_data.get("level_file", "")
+
+        # Handle level_file path - it may or may not include "levels/" prefix
+        if level_file:
+            if not level_file.startswith("levels"):
+                level_file = os.path.join("levels", level_file)
+        else:
+            self.log.append(f"Stage {self.current_level_idx + 1} has no level file configured.")
+            return
+
+        try:
+            self.hex_grid.load_level(level_file, self.card_manager, game.player)
+            stage_name = stage_data.get("name", f"Stage {self.current_level_idx + 1}")
+            self.log.append(f"Loaded {stage_name}: {os.path.basename(level_file)}")
+        except Exception as e:
+            print(f"Error loading level '{level_file}': {e}")
+            self.hex_grid.place_unit(game.player, self.hex_grid.rows // 2, self.hex_grid.cols // 2)
+            self.log.append(f"Failed to load level {self.current_level_idx + 1}. Starting default level.")
+            return
+
+        # Load stage-specific decks if configured (new format)
+        deck_config = stage_data.get("deck_config", {})
+        self._load_stage_decks(deck_config)
+
+    def _load_stage_decks(self, deck_config):
+        """Load decks configured for the current stage."""
+        # Load transition deck
+        transition_deck = deck_config.get("transition_deck", "")
+        if transition_deck:
+            # Transition system loads individual cards, so we need to pick one from the deck
             try:
-                self.hex_grid.load_level(level_file, self.card_manager, game.player)
-                self.log.append(f"Loaded level {self.current_level_idx + 1}: {level_data['level_file']}")
+                deck_path = transition_deck if os.path.exists(transition_deck) else os.path.join("decks", os.path.basename(transition_deck))
+                if os.path.exists(deck_path):
+                    with open(deck_path, 'r') as f:
+                        deck_data = json.load(f)
+                    card_ids = deck_data.get("cards", [])
+                    if card_ids:
+                        # Load the first transition card from the deck
+                        card_id = card_ids[0]
+                        if game.transition_manager.load_transition_card(card_id):
+                            self.log.append(f"Loaded transition card: {game.transition_manager.active_transition.name}")
             except Exception as e:
-                print(f"Error loading level '{level_file}': {e}")
-                self.hex_grid.place_unit(game.player, self.hex_grid.rows // 2, self.hex_grid.cols // 2)
-                self.log.append(f"Failed to load level {self.current_level_idx + 1}. Starting default level.")
+                print(f"Error loading transition deck: {e}")
+
+        # Load instance deck
+        instance_deck = deck_config.get("instance_deck", "")
+        if instance_deck:
+            deck_path = instance_deck if os.path.exists(instance_deck) else os.path.join("decks", os.path.basename(instance_deck))
+            if os.path.exists(deck_path):
+                if game.instance_manager.load_instance_deck(deck_path):
+                    self.log.append(f"Loaded instance deck: {os.path.basename(deck_path)}")
+
+        # Load quest deck - store path for quest manager to use
+        quest_deck = deck_config.get("quest_deck", "")
+        if quest_deck:
+            deck_path = quest_deck if os.path.exists(quest_deck) else os.path.join("decks", os.path.basename(quest_deck))
+            if os.path.exists(deck_path):
+                game.current_quest_manager.quest_deck_path = deck_path
+                self.log.append(f"Loaded quest deck: {os.path.basename(deck_path)}")
+
+        # Load junk deck - store path for card drawing hexes
+        junk_deck = deck_config.get("junk_deck", "")
+        if junk_deck:
+            deck_path = junk_deck if os.path.exists(junk_deck) else os.path.join("decks", os.path.basename(junk_deck))
+            if os.path.exists(deck_path):
+                self.current_junk_deck = deck_path
+                self.log.append(f"Loaded junk deck: {os.path.basename(deck_path)}")
 
     def check_level_completion(self):
-        if not self.campaign or self.current_level_idx >= len(self.campaign["levels"]):
+        """Check if the current level's completion conditions are met."""
+        # Support both old format (campaign["levels"]) and new format (campaign["stages"])
+        stages = self.campaign.get("stages") or self.campaign.get("levels", []) if self.campaign else []
+        if not stages or self.current_level_idx >= len(stages):
             return False
-        transition = self.campaign["levels"][self.current_level_idx].get("transition_to_next")
-        if not transition:  # Final level, assume defeat all enemies
-            return len([u for u in self.hex_grid.units if u.allegiance == "Hostile"]) == 0
-        if "Defeat Boss" in transition:
-            boss_name = transition.split("'")[1] if "'" in transition else None
-            if boss_name:
-                return not any(u.name == boss_name and u.allegiance == "Hostile" for u in self.hex_grid.units)
-        elif "Collect" in transition:
-            item_name = transition.split("'")[1] if "'" in transition else None
-            if item_name:
-                return any(card.get_current_data().get("Name") == item_name for card in game.current_player.inventory)
+
+        stage_data = stages[self.current_level_idx]
+
+        # New format: completion_conditions object
+        completion = stage_data.get("completion_conditions", {})
+        if completion:
+            comp_type = completion.get("type", "defeat_all_enemies")
+            target = completion.get("target", "")
+            turn_limit = completion.get("turn_limit")
+
+            if comp_type == "none" or comp_type == "sandbox":
+                # Sandbox mode - never auto-complete
+                return False
+
+            if comp_type == "defeat_all_enemies":
+                return len([u for u in self.hex_grid.units if u.allegiance == "Hostile"]) == 0
+
+            elif comp_type == "defeat_boss":
+                if target:
+                    return not any(u.name == target and u.allegiance == "Hostile" for u in self.hex_grid.units)
+                # If no target specified, check for any boss-type units
+                return len([u for u in self.hex_grid.units if u.allegiance == "Hostile"]) == 0
+
+            elif comp_type == "collect_item":
+                if target:
+                    return any(card.get_current_data().get("Name") == target for card in game.current_player.inventory)
+                return False
+
+            elif comp_type == "reach_location":
+                if target:
+                    # Check if player is at a location hex with the target name
+                    player_pos = (game.player.row, game.player.col)
+                    for loc_hex in self.hex_grid.location_hexes:
+                        if (loc_hex["row"], loc_hex["column"]) == player_pos:
+                            loc_card = loc_hex.get("assigned_location_card")
+                            if loc_card and loc_card.get_current_data().get("Name") == target:
+                                return True
+                return False
+
+            elif comp_type == "survive_turns":
+                if turn_limit:
+                    # This would need turn tracking - for now, default to defeat all
+                    pass
+                return len([u for u in self.hex_grid.units if u.allegiance == "Hostile"]) == 0
+
+        # Old format: transition_to_next string
+        transition = stage_data.get("transition_to_next")
+        if transition:
+            if "Defeat Boss" in transition:
+                boss_name = transition.split("'")[1] if "'" in transition else None
+                if boss_name:
+                    return not any(u.name == boss_name and u.allegiance == "Hostile" for u in self.hex_grid.units)
+            elif "Collect" in transition:
+                item_name = transition.split("'")[1] if "'" in transition else None
+                if item_name:
+                    return any(card.get_current_data().get("Name") == item_name for card in game.current_player.inventory)
+
+        # Default: defeat all enemies
         return len([u for u in self.hex_grid.units if u.allegiance == "Hostile"]) == 0
 
     def advance_turn(self):
@@ -2619,7 +2772,8 @@ class GameScreen:
 
             if self.check_level_completion():
                 self.current_level_idx += 1
-                if self.campaign and self.current_level_idx < len(self.campaign["levels"]):
+                stages = self.campaign.get("stages") or self.campaign.get("levels", []) if self.campaign else []
+                if self.campaign and self.current_level_idx < len(stages):
                     self.load_campaign_level()
                     if game.multiplayer_mode:
                         self.turn_phase = "player1"
@@ -2837,6 +2991,12 @@ class GameScreen:
         y_pos += 40
         self.recruit_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Recruit NPC", manager)
         self.left_panel_buttons.append(self.recruit_button)
+        y_pos += 40
+        self.search_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Search", manager)
+        self.left_panel_buttons.append(self.search_button)
+        y_pos += 40
+        self.build_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Build", manager)
+        self.left_panel_buttons.append(self.build_button)
 
         # Add equipped skill buttons
         self.skill_buttons = []
@@ -3007,6 +3167,12 @@ class GameScreen:
         y_pos += 40
         self.recruit_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Recruit NPC", manager)
         self.left_panel_buttons.append(self.recruit_button)
+        y_pos += 40
+        self.search_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Search", manager)
+        self.left_panel_buttons.append(self.search_button)
+        y_pos += 40
+        self.build_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Build", manager)
+        self.left_panel_buttons.append(self.build_button)
 
         # Add equipped skill buttons
         self.skill_buttons = []
@@ -3206,8 +3372,9 @@ class GameScreen:
             print(f"[DEBUG] check_level_completion() returned {level_complete}")
             if level_complete:
                 self.current_level_idx += 1
-                print(f"[DEBUG] Incremented level_idx to {self.current_level_idx}, campaign levels={len(self.campaign['levels']) if self.campaign else 'N/A'}")
-                if self.campaign and self.current_level_idx < len(self.campaign["levels"]):
+                stages = self.campaign.get("stages") or self.campaign.get("levels", []) if self.campaign else []
+                print(f"[DEBUG] Incremented level_idx to {self.current_level_idx}, campaign stages={len(stages)}")
+                if self.campaign and self.current_level_idx < len(stages):
                     self.load_campaign_level()
                     if game.multiplayer_mode:
                         self.turn_phase = "player1"
@@ -3257,7 +3424,8 @@ class GameScreen:
         # Check level completion (only matters for campaigns)
         if self.check_level_completion():
             self.current_level_idx += 1
-            if self.campaign and self.current_level_idx < len(self.campaign["levels"]):
+            stages = self.campaign.get("stages") or self.campaign.get("levels", []) if self.campaign else []
+            if self.campaign and self.current_level_idx < len(stages):
                 self.load_campaign_level()
                 if game.multiplayer_mode:
                     self.turn_phase = "player1"
@@ -3434,6 +3602,22 @@ class GameScreen:
                     if loc_data and loc_data.get("card"):
                         game.current_screen = "location"
                         location_screen.initialize_screen(loc_data["card"], hex_pos, self.hex_grid)
+                elif self.player_mode == "placement" and self.placement_mode and self.placement_card:
+                    # Place the built location on the clicked hex
+                    if unit:
+                        self.add_to_log("Cannot place location on an occupied hex")
+                    else:
+                        success, msg = self.hex_grid.create_location_hex(hex_pos[0], hex_pos[1], self.placement_card)
+                        self.add_to_log(msg)
+                        if success:
+                            # Remove from inventory if it's still there
+                            if self.placement_card in current_player.inventory:
+                                current_player.inventory.remove(self.placement_card)
+                            # Exit placement mode
+                            self.placement_mode = False
+                            self.placement_card = None
+                            self.player_mode = "movement"
+                            self.initialize_screen()  # Refresh UI
                 elif self.player_mode == "movement" and not current_player.movement_used and not unit:
                     path = self.hex_grid.find_path(current_player.position, hex_pos)
                     if path and len(path) - 1 <= current_player.movement:
@@ -3517,12 +3701,14 @@ class GameScreen:
                             self.update_location_button()  # Update location button after movement
                     else:
                         self.add_to_log("No valid path within movement range")
-            elif event.button == 3 and hex_pos:
+            elif event.button in (2, 3) and hex_pos:  # Middle mouse (2) or right-click (3) to pan
                 self.dragging = True
+                self.drag_button = event.button
                 self.drag_start_x, self.drag_start_y = pos
                 self.start_view_offset_x, self.start_view_offset_y = self.hex_grid.view_offset_x, self.hex_grid.view_offset_y
-        elif event.type == pygame.MOUSEBUTTONUP and event.button == 3:
-            self.dragging = False
+        elif event.type == pygame.MOUSEBUTTONUP and event.button in (2, 3):
+            if hasattr(self, 'drag_button') and event.button == self.drag_button:
+                self.dragging = False
         elif event.type == pygame.MOUSEMOTION and self.dragging:
             dx = event.pos[0] - self.drag_start_x
             dy = event.pos[1] - self.drag_start_y
@@ -3601,6 +3787,63 @@ class GameScreen:
                             self.add_to_log("Click on an adjacent neutral NPC to recruit")
                         else:
                             self.add_to_log("No adjacent neutral NPCs to recruit")
+                elif text == "Search" and is_player_turn:
+                    # Search for items using Searchable documents in inventory
+                    current_player = game.current_player
+                    if current_player.action_used:
+                        self.add_to_log("Action already used this turn")
+                    else:
+                        # Get terrain at current position
+                        player_pos = current_player.position
+                        terrain = self.hex_grid.grid[player_pos[0]][player_pos[1]].get("terrain", "grass")
+                        # Get location name if on a location hex
+                        location_name = None
+                        loc_data = self.hex_grid.location_data.get(player_pos)
+                        if loc_data and loc_data.get("card"):
+                            location_name = loc_data["card"].get_current_data().get("Name", "")
+                        # Perform search
+                        success, message, flipped_card = current_player.search(terrain, location_name)
+                        self.add_to_log(message)
+                        if success:
+                            self.player_info_label.set_text(self.get_player_info())
+                            self.initialize_screen()  # Refresh UI
+                elif text == "Build" and is_player_turn:
+                    # Open build screen or toggle build mode
+                    current_player = game.current_player
+                    if self.placement_mode:
+                        # Cancel placement mode
+                        self.placement_mode = False
+                        self.placement_card = None
+                        self.add_to_log("Cancelled building placement")
+                    else:
+                        # Check for location plans
+                        plans = current_player.get_location_plans()
+                        if not plans:
+                            self.add_to_log("No Location Plans in inventory")
+                        elif not current_player.has_building_tool():
+                            self.add_to_log("Need a hammer/building tool equipped")
+                        else:
+                            # For simplicity, use first available plan and auto-select materials
+                            plan = plans[0]
+                            can, missing = current_player.can_build(plan)
+                            if can:
+                                # Build and enter placement mode
+                                # Gather material cards (for now just consume from inventory proportionally)
+                                material_cards = [c for c in current_player.inventory
+                                                 if c.get_current_data().get("Metal Value") or
+                                                    c.get_current_data().get("Wood Value") or
+                                                    c.get_current_data().get("Raw Material Value")]
+                                success, msg, built_card = current_player.build(plan, material_cards[:5])  # Consume up to 5 material cards
+                                if success:
+                                    self.add_to_log(msg + " Click on an empty hex to place it.")
+                                    self.placement_mode = True
+                                    self.placement_card = built_card
+                                    self.player_mode = "placement"
+                                else:
+                                    self.add_to_log(msg)
+                            else:
+                                for m in missing:
+                                    self.add_to_log(f"Missing: {m}")
                 elif self.location_button and event.ui_element == self.location_button and is_player_turn:
                     # Reopen location screen
                     if self.current_location_hex:
@@ -4115,6 +4358,7 @@ class Game:
         self.quest_managers = []  # Per-player quest managers in multiplayer
         self.screens = {
             "main_menu": main_menu,
+            "player_count": player_count_screen,
             "character_creation": character_creation_screen,
             "multiplayer_character_creation": multiplayer_character_creation_screen,
             "settings": settings_screen,
@@ -4191,6 +4435,7 @@ class Game:
 
 # Instantiate screens and game
 main_menu = MainMenu()
+player_count_screen = PlayerCountScreen()
 character_creation_screen = CharacterCreationScreen()
 multiplayer_character_creation_screen = MultiplayerCharacterCreationScreen()
 settings_screen = SettingsScreen()
@@ -4207,6 +4452,21 @@ defeat_screen = DefeatScreen()
 instance_event_screen = InstanceEventScreen()
 transition_event_screen = TransitionEventScreen()
 game = Game()
+
+# Parse command-line arguments for campaign/level launching
+import argparse
+parser = argparse.ArgumentParser(description="JunkRPG - Hexagonal Grid RPG")
+parser.add_argument("--campaign", type=str, help="Path to campaign file to load")
+parser.add_argument("--level", type=str, help="Path to level file to load")
+args, _ = parser.parse_known_args()
+
+# If campaign or level specified via command line, go directly to character creation
+if args.campaign:
+    game.current_screen = "character_creation"
+    character_creation_screen.initialize_screen(campaign_file=args.campaign)
+elif args.level:
+    game.current_screen = "character_creation"
+    character_creation_screen.initialize_screen(level_file=args.level)
 
 # Main game loop
 clock = pygame.time.Clock()

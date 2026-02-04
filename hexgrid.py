@@ -712,6 +712,66 @@ class HexGrid:
         for loc_data in self.location_data.values():
             loc_data["visited"] = False
 
+    def create_location_hex(self, row, col, location_card):
+        """
+        Create a new location hex from a Location_Plan card.
+
+        Args:
+            row, col: Position to place the location
+            location_card: InventoryCard (Location_Plan in state 2) to use
+
+        Returns:
+            tuple: (success, message)
+        """
+        # Validate position
+        if not (0 <= row < self.rows and 0 <= col < self.cols):
+            return False, "Position is out of bounds"
+
+        # Check if hex is accessible terrain
+        cell = self.grid[row][col]
+        if not cell.get("accessible", True):
+            return False, "Cannot build on inaccessible terrain"
+
+        # Check if there's already a location here
+        if (row, col) in self.location_data:
+            return False, "A location already exists at this position"
+
+        # Check if there's a unit here
+        if cell.get("unit") is not None:
+            return False, "Cannot build on an occupied hex"
+
+        # Get card data (should be in state 2 - the actual location)
+        card_data = location_card.get_current_data()
+        loc_name = card_data.get("Name", "Built Location")
+
+        # Add to location_hexes list
+        loc_hex_data = {
+            "row": row,
+            "column": col,
+            "shop_inventory": [],
+            "turns_since_cycle": 0,
+            "visited_this_turn": False
+        }
+        self.location_hexes.append(loc_hex_data)
+
+        # Add to location_data dict
+        self.location_data[(row, col)] = {
+            "card": location_card,
+            "shop": [],
+            "turns": 0,
+            "visited": False,
+            "deck_file": None,
+            "assigned_card_id": location_card.card_data.get("id"),
+            "assigned_npc_id": None,
+            "state": location_card.current_state,
+            "available_npcs": []
+        }
+
+        # Initialize shop if defined in card
+        self._initialize_shop(row, col)
+
+        return True, f"Built {loc_name} at ({row}, {col})"
+
     def get_location_choices(self, row, col):
         """Get the available choices for a location."""
         loc_data = self.location_data.get((row, col))

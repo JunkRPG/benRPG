@@ -1,0 +1,25 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "The Rusty Anchor",
+    "Description": "An abandoned riverside tavern. The sign still creaks in the wind.",
+    "Outcomes": "[{\"probability\":0.35,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_junk_deck.json\"},{\"probability\":0.25,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_shop_deck.json\"},{\"probability\":0.20,\"card_type\":\"None\",\"deck_file\":\"\"},{\"probability\":0.20,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_junk_deck.json\"}]",
+    "Choices": "[{\"name\":\"View Available Quests\",\"action\":\"view_quests\",\"costs_action\":false,\"params\":{\"deck\":\"decks/beta_quest_deck.json\"}},{\"name\":\"Search Cellar\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Rest by the Fire\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":10}},{\"name\":\"Browse Supplies\",\"action\":\"shop\",\"costs_action\":false}]",
+    "Shop_Deck": "beta_shop_deck.json",
+    "Shop_Size": "3",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "5",
+    "Upgrade_NPC_Type": "Allied",
+    "Upgrade_Material_Cost": "{\"Metal\":5}",
+    "2nd_state_Name": "The Anchor's Rest",
+    "2nd_state_Description": "A bustling tavern restored to its former glory. Travelers gather here for news and respite.",
+    "2nd_state_Outcomes": "[{\"probability\":0.40,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_shop_deck.json\"},{\"probability\":0.30,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_junk_deck.json\"},{\"probability\":0.15,\"card_type\":\"Document Card\",\"deck_file\":\"\"},{\"probability\":0.15,\"card_type\":\"None\",\"deck_file\":\"\"}]",
+    "2nd_state_Choices": "[{\"name\":\"View Available Quests\",\"action\":\"view_quests\",\"costs_action\":false,\"params\":{\"deck\":\"decks/beta_quest_deck.json\"}},{\"name\":\"Search Storage\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Rest & Recover\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":20}},{\"name\":\"Visit Shop\",\"action\":\"shop\",\"costs_action\":false}]",
+    "2nd_state_Shop_Deck": "beta_shop_deck.json",
+    "2nd_state_Shop_Size": "5",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "3"
+  }
+}

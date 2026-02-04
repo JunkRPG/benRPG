@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Sentient Garbage Pile",
+    "Health": "45",
+    "Movement": "2",
+    "Melee Damage": "8",
+    "Projectile Damage": "5",
+    "Projectile Range": "2",
+    "Background Image File Path": "",
+    "Enemy Image File Path": ""
+  }
+}

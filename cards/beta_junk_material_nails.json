@@ -1,0 +1,16 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Salvaged Nails",
+    "Description": "Only slightly bent. Most of them. Some of them. A few are straight.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "3",
+    "Metal Value": "4",
+    "Wood Value": "0",
+    "Price": "4",
+    "Background Image": "",
+    "Junk Image": ""
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "data": {
+    "Name": "Unstable Ground",
+    "Description": "The ground beneath you feels soft and treacherous...",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.30, \"type\": \"damage_player\", \"text\": \"The ground gives way! You take a tumble.\", \"params\": {\"damage\": 8}}, {\"probability\": 0.30, \"type\": \"player_choice\", \"text\": \"You notice the danger just in time.\", \"params\": {\"choices\": [{\"name\": \"Careful path\", \"effect\": {\"type\": \"none\", \"text\": \"You navigate around the hazard safely.\"}}, {\"name\": \"Quick dash\", \"risk\": 0.35, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 12}}]}}, {\"probability\": 0.25, \"type\": \"none\", \"text\": \"The ground holds. False alarm.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"draw_card\", \"text\": \"The collapse reveals something buried beneath!\", \"params\": {\"card_type\": \"Junk Card\"}}]"
+  }
+}

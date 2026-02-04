@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Wandering Bandit",
+    "Health": "30",
+    "Movement": "4",
+    "Melee Damage": "12",
+    "Projectile Damage": "6",
+    "Projectile Range": "3",
+    "Background Image File Path": "",
+    "Enemy Image File Path": ""
+  }
+}

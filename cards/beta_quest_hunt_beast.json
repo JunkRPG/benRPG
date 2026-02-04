@@ -1,0 +1,18 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Hunt",
+  "states": 2,
+  "data": {
+    "Name": "Beast Hunt",
+    "Description": "A dangerous creature threatens travelers",
+    "Template_Text": "[Enemy1] has been terrorizing travelers near [Location1]. End this threat and claim [Junk1] as your bounty.",
+    "Placeholders": "[{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":3},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false},{\"id\":\"Junk1\",\"type\":\"Junk Card\",\"count\":1,\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"unit_death\",\"params\":{\"unit\":\"Enemy1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}},{\"type\":\"turn_limit\",\"params\":{\"turns\":15}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "2nd_state_Name": "Beast Slain",
+    "2nd_state_Template_Text": "The [Enemy1] is no more. [Location1] is safe again. You collect your reward: [Junk1].",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

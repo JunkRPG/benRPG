@@ -1,0 +1,22 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Location_Plan",
+  "states": 2,
+  "data": {
+    "Name": "Trading Post Plans",
+    "Description": "Build a shop! Attract merchants! Get robbed slightly less often!",
+    "Requirements_NPC_Type": "Neutral",
+    "Requirements_Gems": "",
+    "Requirements_Materials": "{\"Wood\": 8, \"Metal\": 8, \"Refined\": 3}",
+    "Background Image": "",
+    "2nd_state_Name": "Trading Post",
+    "2nd_state_Description": "A small trading post with rotating inventory.",
+    "2nd_state_Outcomes": "[]",
+    "2nd_state_Choices": "[]",
+    "2nd_state_Shop_Deck": "beta_junk_deck.json",
+    "2nd_state_Shop_Size": "4",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "5",
+    "2nd_state_Location Image File Path": ""
+  }
+}

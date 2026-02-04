@@ -1,0 +1,18 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Hunt",
+  "states": 2,
+  "data": {
+    "Name": "Clear the Path",
+    "Description": "Eliminate threats blocking a trade route",
+    "Template_Text": "The road between here and [Location1] is blocked by [Enemy1] and [Enemy2]. Clear them out so [NPC1] can travel safely. Payment: [Junk1] and [Junk2].",
+    "Placeholders": "[{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false},{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"player\",\"spawn_distance\":4},{\"id\":\"Enemy2\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":3},{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":true,\"spawn_near\":\"player\",\"spawn_distance\":2},{\"id\":\"Junk1\",\"type\":\"Junk Card\",\"count\":1,\"spawn\":false},{\"id\":\"Junk2\",\"type\":\"Junk Card\",\"count\":1,\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"enemy_defeated\",\"params\":{}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}},{\"type\":\"unit_death\",\"params\":{\"unit\":\"NPC1\"}}]",
+    "Rewards": "{\"cards\":[\"Junk1\",\"Junk2\"]}",
+    "2nd_state_Name": "Path Cleared",
+    "2nd_state_Template_Text": "The route to [Location1] is safe now. [NPC1] pays you [Junk1] and [Junk2].",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

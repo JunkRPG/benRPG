@@ -1,0 +1,18 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Rescue",
+  "states": 2,
+  "data": {
+    "Name": "Captive Rescue",
+    "Description": "Free a prisoner from enemy captivity",
+    "Template_Text": "[NPC1] has been captured and is being held near [Location1]. [Enemy1] guards them. Free the captive before it's too late! Reward: [Junk1].",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":1},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false},{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"NPC1\",\"spawn_distance\":1},{\"id\":\"Junk1\",\"type\":\"Junk Card\",\"count\":2,\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"unit_death\",\"params\":{\"unit\":\"Enemy1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}},{\"type\":\"unit_death\",\"params\":{\"unit\":\"NPC1\"}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "2nd_state_Name": "Captive Freed",
+    "2nd_state_Template_Text": "You defeated [Enemy1] and freed [NPC1]! They gratefully offer [Junk1] as thanks.",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "deck_name": "Beta Test Instances",
+  "back_image": null,
+  "cards": [
+    "beta_instance_ambush",
+    "beta_instance_territorial_beast",
+    "beta_instance_rival_scavengers",
+    "beta_instance_hidden_cache",
+    "beta_instance_abandoned_camp",
+    "beta_instance_strange_markings",
+    "beta_instance_sudden_storm",
+    "beta_instance_unstable_ground",
+    "beta_instance_mysterious_light",
+    "beta_instance_wandering_merchant",
+    "beta_instance_desperate_traveler",
+    "beta_instance_strange_offer",
+    "beta_instance_funny_goose",
+    "beta_instance_funny_run",
+    "beta_instance_funny_legal",
+    "beta_instance_funny_soft",
+    "beta_instance_funny_charm",
+    "beta_instance_funny_music",
+    "beta_instance_funny_ticking",
+    "beta_instance_funny_trap",
+    "beta_instance_funny_list",
+    "beta_instance_funny_weather"
+  ]
+}

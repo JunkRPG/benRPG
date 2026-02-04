@@ -1,0 +1,18 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Mystery",
+  "states": 2,
+  "data": {
+    "Name": "Strange Happenings",
+    "Description": "Investigate unusual events",
+    "Template_Text": "Strange events have been reported at [Location1]. [NPC1] may know more. Investigate the area to uncover [Document1].",
+    "Placeholders": "[{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false},{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":2},{\"id\":\"Document1\",\"type\":\"Document Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":1}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"unit_reaches_location\",\"params\":{\"unit\":\"player\",\"location\":\"Location1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}}]",
+    "Rewards": "{\"cards\":[\"Document1\"]}",
+    "2nd_state_Name": "Mystery Solved",
+    "2nd_state_Template_Text": "You investigated [Location1] and discovered [Document1]. [NPC1] can explain what it means.",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

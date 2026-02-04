@@ -1,0 +1,24 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Searchable",
+  "states": 2,
+  "data": {
+    "Name": "How to Find Questionable Mushrooms",
+    "Description": "A field guide with extremely vague mushroom descriptions and questionable illustrations.",
+    "Search_Terrain": "forest",
+    "Search_Location": "",
+    "Search_Success_Chance": "60",
+    "Background Image": "",
+    "2nd_state_Name": "Definitely Safe Mushroom",
+    "2nd_state_Type": "Consumable",
+    "2nd_state_Use_HP": "+15HP",
+    "2nd_state_Revert_Chance": "30",
+    "2nd_state_Melee Damage": "",
+    "2nd_state_Projectile Damage": "",
+    "2nd_state_Projectile Range": "",
+    "2nd_state_Raw Material Value": "",
+    "2nd_state_Metal Value": "",
+    "2nd_state_Wood Value": "",
+    "2nd_state_Item Image": ""
+  }
+}

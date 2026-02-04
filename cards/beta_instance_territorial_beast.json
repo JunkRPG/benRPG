@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "states": 1,
+  "data": {
+    "Name": "Territorial Beast",
+    "Description": "A large creature blocks your path, growling menacingly...",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.35, \"type\": \"spawn_enemy\", \"text\": \"The beast attacks!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.25, \"type\": \"player_choice\", \"text\": \"The beast seems territorial but not aggressive yet.\", \"params\": {\"choices\": [{\"name\": \"Back away slowly\", \"effect\": {\"type\": \"none\", \"text\": \"You carefully retreat. The beast lets you go.\"}}, {\"name\": \"Offer food\", \"risk\": 0.4, \"success\": {\"type\": \"spawn_ally\", \"deck\": \"beta_npc_deck.json\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 10}}]}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"The creature sniffs the air and wanders away.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"damage_player\", \"text\": \"The beast charges without warning!\", \"params\": {\"damage\": 8}}]"
+  }
+}

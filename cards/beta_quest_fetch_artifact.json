@@ -1,0 +1,18 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Fetch",
+  "states": 2,
+  "data": {
+    "Name": "Retrieve the Relic",
+    "Description": "An important item must be recovered",
+    "Template_Text": "[NPC1] needs you to retrieve [Document1] from somewhere near [Location1]. Return it and receive [Junk1] in payment.",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":true,\"spawn_near\":\"player\",\"spawn_distance\":2},{\"id\":\"Document1\",\"type\":\"Document Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":2},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false},{\"id\":\"Junk1\",\"type\":\"Junk Card\",\"count\":1,\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"unit_reaches_location\",\"params\":{\"unit\":\"player\",\"location\":\"NPC1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}},{\"type\":\"unit_death\",\"params\":{\"unit\":\"NPC1\"}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "2nd_state_Name": "Relic Returned",
+    "2nd_state_Template_Text": "You returned [Document1] to [NPC1]. They reward you with [Junk1].",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "states": 1,
+  "data": {
+    "Name": "Hidden Cache",
+    "Description": "You notice something glinting beneath some rubble...",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"draw_card\", \"text\": \"You uncover a stash of supplies!\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.25, \"type\": \"draw_card\", \"text\": \"You find old documents among the debris.\", \"params\": {\"card_type\": \"Document Card\"}}, {\"probability\": 0.20, \"type\": \"player_choice\", \"text\": \"The cache is trapped! Do you risk it?\", \"params\": {\"choices\": [{\"name\": \"Disarm carefully\", \"risk\": 0.3, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 10}}, {\"name\": \"Leave it alone\", \"effect\": {\"type\": \"none\", \"text\": \"Better safe than sorry.\"}}]}}, {\"probability\": 0.15, \"type\": \"none\", \"text\": \"It was just broken glass catching the light.\", \"params\": {}}]"
+  }
+}

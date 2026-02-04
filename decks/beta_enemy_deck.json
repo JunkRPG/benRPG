@@ -1,0 +1,22 @@
+{
+  "deck_name": "Beta Test Enemies",
+  "back_image": null,
+  "cards": [
+    "beta_enemy_hungry_wolf",
+    "beta_enemy_wandering_bandit",
+    "beta_enemy_marsh_crawler",
+    "beta_enemy_plague_rat_swarm",
+    "beta_enemy_corrupted_guard",
+    "beta_enemy_forest_archer",
+    "beta_enemy_shadow_stalker",
+    "beta_enemy_the_collector",
+    "beta_enemy_funny_goose",
+    "beta_enemy_funny_garbage",
+    "beta_enemy_funny_tax",
+    "beta_enemy_funny_salesman",
+    "beta_enemy_funny_squirrel",
+    "beta_enemy_funny_guard",
+    "beta_enemy_funny_tumbleweed",
+    "beta_enemy_funny_past"
+  ]
+}
