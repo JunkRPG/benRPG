@@ -52,8 +52,17 @@ class Player:
         self.active_skill_slots = 3     # Max equipped active skills
         self.equipped_skills = []       # Currently equipped Attack/Buff skills
         self.skill_cooldowns = {}       # {"skill_name": turns_remaining}
-        # Tool equipment slot
-        self.equipped_tool = None       # Currently equipped tool card (Consumable or Tool type)
+        # Tool equipment slot (multi-slot system with tool belt support)
+        self.equipped_tool = None       # Legacy: single equipped tool (kept for backwards compatibility)
+        self.tool_slots = 1             # Number of available tool slots (expandable via tool belt)
+        self.equipped_tools = []        # List of equipped tool cards (multi-slot)
+        self.equipped_accessory = None  # Tool belt or other accessory in accessory slot
+
+        # Range properties (set by equipped projectile weapon)
+        self.projectile_range_type = "line_of_sight"  # Pattern: line_of_sight, area_effect, echo, perimeter
+        self.projectile_include_pos = False           # Include caster's hex in range
+        self.projectile_exclude_adj = False           # Exclude adjacent hexes (for sniper-type weapons)
+
         # Multiplayer attributes
         self.player_number = 1  # 1 or 2 (for multiplayer mode)
         self.player_color = (0, 200, 0)  # Default green, customized per player
@@ -82,18 +91,7 @@ class Player:
                 return "", False
 
         if is_projectile:
-            damage = self.attacks["projectile"]["damage"]
-            max_range = self.projectile_range
-            distance = grid.hex_distance(self.position, enemy.position)
-            if (1 < distance <= max_range and
-                grid.is_aligned(self.position, enemy.position, max_range) and
-                grid.has_clear_line_of_sight(self.position, enemy.position)):
-                enemy.hp -= damage
-                enemy.set_damage_text(damage)
-                self._mark_attack_used(is_projectile=True)
-                self.attack_flash = True
-                self.flash_start = pygame.time.get_ticks()
-                return f"{self.class_name} used {attack_name} on {enemy.name} for {damage} damage", enemy.hp <= 0
+            return self._execute_projectile_attack(enemy, attack_name, grid)
         elif is_melee:
             damage = self.attacks["melee"]["damage"]
             distance = grid.hex_distance(self.position, enemy.position)
@@ -105,6 +103,118 @@ class Player:
                 self.flash_start = pygame.time.get_ticks()
                 return f"{self.class_name} used {attack_name} on {enemy.name} for {damage} damage", enemy.hp <= 0
         return "", False
+
+    def _execute_projectile_attack(self, enemy, attack_name, grid):
+        """Execute a projectile attack, handling ammunition requirements."""
+        weapon_data = self.projectile_weapon.get_current_data() if self.projectile_weapon else {}
+        attack_info = self.attacks.get("projectile", {})
+        requires_ammo = attack_info.get("requires_ammo", False)
+
+        # Get ammunition if required
+        ammo_card = None
+        ammo_data = {}
+        damage = attack_info.get("damage", 0)
+
+        if requires_ammo:
+            # Find equipped ammunition - check multi-slot system first, then legacy single slot
+            ammo_card = self._get_equipped_ammunition()
+
+            if not ammo_card:
+                return "No ammunition equipped - cannot fire!", False
+
+            ammo_data = ammo_card.get_current_data()
+
+            # Check ammo compatibility with weapon
+            compatible_weapons = ammo_data.get("Compatible_Weapons", "")
+            weapon_name = weapon_data.get("Name", "")
+
+            if compatible_weapons:
+                compatible_list = [w.strip() for w in compatible_weapons.split(",")]
+                if weapon_name not in compatible_list:
+                    return f"{ammo_data.get('Name', 'Ammunition')} not compatible with {weapon_name}", False
+
+            # ALL damage comes from ammunition
+            damage = int(ammo_data.get("Ammo_Damage", 0))
+
+        # Use the unified range system to check if target is valid
+        if not self._is_valid_projectile_target(enemy.position, grid):
+            # Provide more specific error messages
+            distance = grid.hex_distance(self.position, enemy.position)
+            if self.projectile_exclude_adj and distance == 1:
+                return "Target too close for this weapon", False
+            elif distance < 2 and self.projectile_range_type == "line_of_sight":
+                return "Target too close for projectile attack", False
+            elif distance > self.projectile_range:
+                return "Target out of range", False
+            else:
+                return "Target not in valid range pattern", False
+
+        # Execute the attack
+        enemy.hp -= damage
+        enemy.set_damage_text(damage)
+        self._mark_attack_used(is_projectile=True)
+        self.attack_flash = True
+        self.flash_start = pygame.time.get_ticks()
+
+        base_msg = f"{self.class_name} used {attack_name} on {enemy.name} for {damage} damage"
+        killed = enemy.hp <= 0
+
+        # Handle ammunition runout after successful attack
+        if requires_ammo and ammo_card:
+            runout_msg = self._check_ammo_runout(ammo_card, ammo_data)
+            if runout_msg:
+                base_msg += f" {runout_msg}"
+
+        return base_msg, killed
+
+    def _get_equipped_ammunition(self):
+        """Find equipped ammunition card from tool slots."""
+        # Check multi-slot system first
+        for tool in self.equipped_tools:
+            if tool:
+                tool_data = tool.get_current_data()
+                if tool_data.get("Type") == "Ammunition":
+                    return tool
+
+        # Fall back to legacy single tool slot
+        if self.equipped_tool:
+            tool_data = self.equipped_tool.get_current_data()
+            if tool_data.get("Type") == "Ammunition":
+                return self.equipped_tool
+
+        return None
+
+    def _is_valid_projectile_target(self, target_pos, grid):
+        """Check if target position is valid for projectile attack based on range type."""
+        # Use the grid's calculate_range method for full pattern support
+        return grid.is_in_range(
+            self.position,
+            target_pos,
+            self.projectile_range,
+            self.projectile_range_type,
+            self.projectile_include_pos,
+            self.projectile_exclude_adj
+        )
+
+    def _check_ammo_runout(self, ammo_card, ammo_data):
+        """Check if ammunition runs out after use, return message if it does."""
+        runout_chance = int(ammo_data.get("Runout_Chance", 0) or 0)
+
+        if runout_chance > 0 and random.randint(1, 100) <= runout_chance:
+            # Revert ammo card back to state 1 (document/raw material form)
+            ammo_card.current_state = 1
+
+            # Remove from equipped slot and return to inventory
+            if ammo_card in self.equipped_tools:
+                idx = self.equipped_tools.index(ammo_card)
+                self.equipped_tools[idx] = None
+            elif ammo_card == self.equipped_tool:
+                self.equipped_tool = None
+
+            self.inventory.append(ammo_card)
+            return "Your ammunition has run out!"
+
+        return None
 
     def _mark_attack_used(self, is_projectile):
         """Mark an attack as used, handling Double Attack mode."""
@@ -118,6 +228,42 @@ class Player:
                 self.action_used = True
         else:
             self.action_used = True
+
+    def get_projectile_attack_range(self, grid):
+        """
+        Get the set of valid hexes for projectile attack based on equipped weapon's range pattern.
+
+        Args:
+            grid: The HexGrid instance
+
+        Returns:
+            set: Set of (row, col) positions that can be targeted
+        """
+        return grid.calculate_range(
+            self.position,
+            self.projectile_range,
+            self.projectile_range_type,
+            self.projectile_include_pos,
+            self.projectile_exclude_adj
+        )
+
+    def get_melee_attack_range(self, grid):
+        """
+        Get the set of valid hexes for melee attack (adjacent hexes).
+
+        Args:
+            grid: The HexGrid instance
+
+        Returns:
+            set: Set of (row, col) positions that can be targeted
+        """
+        return grid.calculate_range(
+            self.position,
+            1,
+            "melee",
+            include_pos=False,
+            exclude_adj=False
+        )
 
     def reset_double_attack(self):
         """Reset Double Attack mode at end of turn."""
@@ -273,8 +419,10 @@ class Player:
         return result, defeated
 
     def equip_weapon(self, weapon_card):
+        """Equip a weapon card, updating attack stats and range properties."""
         weapon_data = weapon_card.get_current_data()
         weapon_type = weapon_data.get("Type")
+
         if weapon_type == "Melee" and "Melee Damage" in weapon_data:
             try:
                 damage = int(weapon_data["Melee Damage"])
@@ -282,59 +430,263 @@ class Player:
                 self.attacks["melee"] = {"name": weapon_data["Name"], "damage": damage}
             except ValueError:
                 print(f"Error: Invalid 'Melee Damage' for {weapon_data.get('Name', 'Unknown')}")
-        elif weapon_type == "Projectile" and "Projectile Damage" in weapon_data:
+
+        elif weapon_type == "Projectile":
             try:
-                damage = int(weapon_data["Projectile Damage"])
                 self.projectile_weapon = weapon_card
-                self.attacks["projectile"] = {"name": weapon_data["Name"], "damage": damage}
-            except ValueError:
-                print(f"Error: Invalid 'Projectile Damage' for {weapon_data.get('Name', 'Unknown')}")
+
+                # Load full range properties from weapon
+                self.projectile_range = int(weapon_data.get("Range_Distance", weapon_data.get("Projectile Range", 5)))
+                self.projectile_range_type = weapon_data.get("Range_Type", "line_of_sight")
+                self.projectile_include_pos = str(weapon_data.get("Include_Position", "false")).lower() == "true"
+                self.projectile_exclude_adj = str(weapon_data.get("Exclude_Adjacent", "false")).lower() == "true"
+
+                # Check if weapon requires ammunition
+                requires_ammo = str(weapon_data.get("Requires_Ammo", "false")).lower() == "true"
+
+                if requires_ammo:
+                    # Bow-type weapon: has NO damage alone, damage comes from ammo
+                    self.attacks["projectile"] = {
+                        "name": weapon_data["Name"],
+                        "damage": 0,
+                        "requires_ammo": True,
+                        "compatible_ammo": weapon_data.get("Compatible_Ammo", "")  # e.g., "Arrow,Bolt"
+                    }
+                else:
+                    # Standard projectile weapon with built-in damage
+                    damage = int(weapon_data.get("Projectile Damage", 0))
+                    self.attacks["projectile"] = {
+                        "name": weapon_data["Name"],
+                        "damage": damage,
+                        "requires_ammo": False
+                    }
+            except ValueError as e:
+                print(f"Error: Invalid projectile weapon data for {weapon_data.get('Name', 'Unknown')}: {e}")
 
     def get_stats(self):
         attacks_str = ', '.join([f"{attack['name']} ({attack['damage']})" for attack in self.attacks.values()])
         melee = self.melee_weapon.get_current_data().get("Name", "None") if self.melee_weapon else "None"
         proj = self.projectile_weapon.get_current_data().get("Name", "None") if self.projectile_weapon else "None"
-        tool = self.equipped_tool.get_current_data().get("Name", "None") if self.equipped_tool else "None"
+
+        # Tool slot display (supports multi-slot)
+        if self.equipped_tools:
+            tool_names = [t.get_current_data().get("Name", "Empty") if t else "Empty" for t in self.equipped_tools]
+            tool = ", ".join(tool_names)
+        elif self.equipped_tool:
+            tool = self.equipped_tool.get_current_data().get("Name", "None")
+        else:
+            tool = "None"
+
+        # Accessory slot display
+        accessory = self.equipped_accessory.get_current_data().get("Name", "None") if self.equipped_accessory else "None"
+
+        # Check if projectile weapon requires ammo
+        proj_info = proj
+        if self.projectile_weapon and self.attacks.get("projectile", {}).get("requires_ammo"):
+            proj_info = f"{proj} (Needs Ammo)"
+
         return (f"Class: {self.class_name}\nHP: {self.hp}/{self.max_hp}\nMovement: {self.movement}\nRange: {self.projectile_range}\n"
-                f"Attacks: {attacks_str}\nSpecial: {self.special_attack}\nMelee Weapon: {melee}\nProjectile Weapon: {proj}\nTool: {tool}")
+                f"Attacks: {attacks_str}\nSpecial: {self.special_attack}\nMelee Weapon: {melee}\nProjectile Weapon: {proj_info}\n"
+                f"Tool: {tool} (Slots: {self.tool_slots})\nAccessory: {accessory}")
 
     # ===== TOOL EQUIPMENT METHODS =====
 
-    def equip_tool(self, card):
-        """Equip a tool or consumable card to the tool slot."""
+    def equip_tool(self, card, slot_index=None):
+        """
+        Equip a tool, consumable, or ammunition card to a tool slot.
+
+        Args:
+            card: The card to equip
+            slot_index: Optional specific slot index (0-based). If None, uses first available slot.
+
+        Returns:
+            str: Result message
+        """
         card_data = card.get_current_data()
         card_type = card_data.get("Type", "")
         card_subclass = card.card_data.get("subclass", "")
 
-        # Accept Consumable type cards (state 2) or Junk cards with Use_HP (consumable junk)
-        if card_type == "Consumable" or card_type == "Tool" or card_subclass == "Consumable" or card_data.get("Use_HP"):
+        # Determine if card can be equipped as a tool
+        valid_types = ["Consumable", "Tool", "Ammunition"]
+        is_valid = (card_type in valid_types or
+                    card_subclass == "Consumable" or
+                    card_data.get("Use_HP") or
+                    card_data.get("Ammo_Damage"))
+
+        if not is_valid:
+            return "Cannot equip this item as a tool"
+
+        # Ensure equipped_tools list is properly sized
+        while len(self.equipped_tools) < self.tool_slots:
+            self.equipped_tools.append(None)
+
+        # Find slot to use
+        if slot_index is not None:
+            if slot_index >= self.tool_slots:
+                return f"Invalid tool slot (max: {self.tool_slots})"
+            target_slot = slot_index
+        else:
+            # Find first empty slot, or use slot 0 if all full
+            target_slot = 0
+            for i, slot in enumerate(self.equipped_tools):
+                if slot is None:
+                    target_slot = i
+                    break
+
+        # Unequip existing item in that slot if any
+        if target_slot < len(self.equipped_tools) and self.equipped_tools[target_slot]:
+            old_card = self.equipped_tools[target_slot]
+            self.inventory.append(old_card)
+
+        # Equip new card
+        self.equipped_tools[target_slot] = card
+        if card in self.inventory:
+            self.inventory.remove(card)
+
+        # Also update legacy single slot for backwards compatibility
+        if target_slot == 0:
             self.equipped_tool = card
-            return f"Equipped tool: {card_data.get('Name', 'Unknown')}"
-        return "Cannot equip this item as a tool"
 
-    def unequip_tool(self):
-        """Unequip the currently equipped tool."""
-        if self.equipped_tool:
-            name = self.equipped_tool.get_current_data().get("Name", "Unknown")
-            self.equipped_tool = None
-            return f"Unequipped tool: {name}"
-        return "No tool equipped"
+        return f"Equipped {card_data.get('Name', 'Unknown')} to tool slot {target_slot + 1}"
 
-    def use_tool(self):
+    def unequip_tool(self, slot_index=0):
         """
-        Use the equipped tool. Returns (success, message).
+        Unequip tool from specified slot.
+
+        Args:
+            slot_index: The slot to unequip from (0-based)
+
+        Returns:
+            str: Result message
+        """
+        if slot_index >= len(self.equipped_tools) or self.equipped_tools[slot_index] is None:
+            # Check legacy single slot
+            if slot_index == 0 and self.equipped_tool:
+                name = self.equipped_tool.get_current_data().get("Name", "Unknown")
+                self.inventory.append(self.equipped_tool)
+                self.equipped_tool = None
+                return f"Unequipped tool: {name}"
+            return "No tool in this slot"
+
+        card = self.equipped_tools[slot_index]
+        name = card.get_current_data().get("Name", "Unknown")
+        self.inventory.append(card)
+        self.equipped_tools[slot_index] = None
+
+        # Update legacy single slot
+        if slot_index == 0:
+            self.equipped_tool = None
+
+        return f"Unequipped tool: {name}"
+
+    # ===== ACCESSORY/TOOL BELT METHODS =====
+
+    def equip_accessory(self, card):
+        """
+        Equip an accessory (tool belt, pouch, etc.) to the accessory slot.
+        Tool belts increase available tool slots.
+
+        Args:
+            card: The accessory card to equip
+
+        Returns:
+            str: Result message
+        """
+        card_data = card.get_current_data()
+        card_type = card_data.get("Type", "")
+
+        # Check if this is a valid accessory
+        valid_accessory_types = ["Tool_Belt", "Accessory", "Belt", "Pouch"]
+        if card_type not in valid_accessory_types:
+            return "This item cannot be equipped as an accessory"
+
+        # Unequip current accessory if any
+        if self.equipped_accessory:
+            old_accessory = self.equipped_accessory
+            old_name = old_accessory.get_current_data().get("Name", "Unknown")
+            self.inventory.append(old_accessory)
+
+            # Reset tool slots to base
+            self.tool_slots = 1
+
+        # Equip new accessory
+        self.equipped_accessory = card
+        if card in self.inventory:
+            self.inventory.remove(card)
+
+        # Apply tool slot bonus from tool belt
+        extra_slots = int(card_data.get("Extra_Tool_Slots", 0) or 0)
+        self.tool_slots = 1 + extra_slots
+
+        # Resize equipped_tools list if needed
+        while len(self.equipped_tools) < self.tool_slots:
+            self.equipped_tools.append(None)
+
+        return f"Equipped {card_data.get('Name', 'Unknown')}. Tool slots: {self.tool_slots}"
+
+    def unequip_accessory(self):
+        """
+        Unequip the current accessory.
+
+        Returns:
+            str: Result message
+        """
+        if not self.equipped_accessory:
+            return "No accessory equipped"
+
+        accessory = self.equipped_accessory
+        name = accessory.get_current_data().get("Name", "Unknown")
+
+        # Move any tools beyond slot 0 back to inventory
+        for i in range(1, len(self.equipped_tools)):
+            if self.equipped_tools[i]:
+                self.inventory.append(self.equipped_tools[i])
+                self.equipped_tools[i] = None
+
+        # Resize to single slot
+        self.tool_slots = 1
+        self.equipped_tools = self.equipped_tools[:1] if self.equipped_tools else [None]
+
+        # Return accessory to inventory
+        self.inventory.append(accessory)
+        self.equipped_accessory = None
+
+        return f"Unequipped accessory: {name}. Tool slots reset to 1."
+
+    def get_tool_in_slot(self, slot_index):
+        """Get the tool card in a specific slot."""
+        if slot_index < len(self.equipped_tools):
+            return self.equipped_tools[slot_index]
+        if slot_index == 0:
+            return self.equipped_tool  # Legacy fallback
+        return None
+
+    def use_tool(self, slot_index=0, target=None, grid=None):
+        """
+        Use the tool in the specified slot. Returns (success, message).
         Dispatches based on tool type:
-        - Healing: parse Use_HP, heal player, consume action
+        - Healing: parse Use_HP, heal player or target at range
         - Building: placeholder for future building interaction
         - Other: extensible for future tool types
+
+        Args:
+            slot_index: Which tool slot to use (0-based)
+            target: Optional target unit/player for ranged effects
+            grid: HexGrid for range validation (required for ranged effects)
+
+        Returns:
+            tuple: (success: bool, message: str)
         """
-        if not self.equipped_tool:
-            return False, "No tool equipped"
+        # Get tool from specified slot
+        tool = self.get_tool_in_slot(slot_index)
+
+        if not tool:
+            return False, f"No tool in slot {slot_index + 1}"
 
         if self.action_used:
             return False, "Action already used this turn"
 
-        tool_data = self.equipped_tool.get_current_data()
+        tool_data = tool.get_current_data()
         tool_name = tool_data.get("Name", "Unknown")
         tool_type = tool_data.get("Type", "")
         tool_subtype = tool_data.get("Subtype", "")
@@ -351,27 +703,53 @@ class Player:
                 hp_str = str(hp_effect).replace("HP", "").replace("+", "")
                 hp_change = int(hp_str)
 
+                # Determine target (self or ranged target)
+                heal_target = self  # Default: heal self
+                target_name = "self"
+
+                # Check if this is a ranged tool with a specified target
+                effect_range = int(tool_data.get("Effect_Range_Distance", 0) or 0)
+
+                if effect_range > 0 and target and grid and target != self:
+                    # Validate target is in range
+                    range_type = tool_data.get("Effect_Range_Type", "line_of_sight")
+                    include_pos = str(tool_data.get("Effect_Include_Position", "true")).lower() == "true"
+                    exclude_adj = str(tool_data.get("Effect_Exclude_Adjacent", "false")).lower() == "true"
+
+                    if grid.is_in_range(self.position, target.position, effect_range, range_type, include_pos, exclude_adj):
+                        heal_target = target
+                        target_name = target.name if hasattr(target, 'name') else target.class_name
+                    else:
+                        return False, f"Target is not in range for {tool_name}"
+
                 if hp_change > 0:
-                    old_hp = self.hp
-                    self.hp = min(self.max_hp, self.hp + hp_change)
-                    actual_heal = self.hp - old_hp
+                    old_hp = heal_target.hp
+                    max_hp = heal_target.max_hp if hasattr(heal_target, 'max_hp') else heal_target.hp + hp_change
+                    heal_target.hp = min(max_hp, heal_target.hp + hp_change)
+                    actual_heal = heal_target.hp - old_hp
                     self.action_used = True
 
                     # Check for revert chance (consumable may revert to document form)
                     revert_chance = int(tool_data.get("Revert_Chance", 0) or 0)
                     if revert_chance > 0 and random.randint(1, 100) <= revert_chance:
                         # Revert the card back to state 1 (document form) and return to inventory
-                        self.equipped_tool.current_state = 1
-                        reverted_card = self.equipped_tool
-                        self.inventory.append(reverted_card)
-                        self.equipped_tool = None
-                        return True, f"Used {tool_name}: +{actual_heal} HP. Item reverted to document form!"
+                        tool.current_state = 1
+                        self.inventory.append(tool)
 
-                    return True, f"Used {tool_name}: +{actual_heal} HP ({old_hp} -> {self.hp})"
+                        # Clear from multi-slot system
+                        if slot_index < len(self.equipped_tools):
+                            self.equipped_tools[slot_index] = None
+                        # Clear legacy slot if it was slot 0
+                        if slot_index == 0:
+                            self.equipped_tool = None
+
+                        return True, f"Used {tool_name} on {target_name}: +{actual_heal} HP. Item reverted to document form!"
+
+                    return True, f"Used {tool_name} on {target_name}: +{actual_heal} HP ({old_hp} -> {heal_target.hp})"
                 elif hp_change < 0:
-                    self.hp = max(0, self.hp + hp_change)
+                    heal_target.hp = max(0, heal_target.hp + hp_change)
                     self.action_used = True
-                    return True, f"Used {tool_name}: {hp_change} HP"
+                    return True, f"Used {tool_name} on {target_name}: {hp_change} HP"
                 else:
                     return False, f"{tool_name} has no effect"
             except (ValueError, AttributeError) as e:
@@ -384,19 +762,41 @@ class Player:
         # Other tool types - placeholder for future mechanics
         return False, f"{tool_name} cannot be used directly"
 
-    def get_tool_effect_text(self):
-        """Get a short description of the equipped tool's effect for UI display."""
-        if not self.equipped_tool:
+    def get_tool_effect_text(self, slot_index=0):
+        """
+        Get a short description of the equipped tool's effect for UI display.
+
+        Args:
+            slot_index: Which tool slot to get effect text for (0-based)
+
+        Returns:
+            str: Effect text for display
+        """
+        tool = self.get_tool_in_slot(slot_index)
+
+        if not tool:
             return ""
 
-        tool_data = self.equipped_tool.get_current_data()
-        hp_effect = tool_data.get("Use_HP", "")
+        tool_data = tool.get_current_data()
+        tool_type = tool_data.get("Type", "")
 
+        # Ammunition shows damage
+        if tool_type == "Ammunition":
+            ammo_damage = tool_data.get("Ammo_Damage", "?")
+            runout = tool_data.get("Runout_Chance", "0")
+            return f"({ammo_damage} dmg, {runout}% runout)"
+
+        # Healing shows HP effect
+        hp_effect = tool_data.get("Use_HP", "")
         if hp_effect:
             # Handle case where hp_effect is a list
             if isinstance(hp_effect, list):
                 hp_effect = next((effect for effect in hp_effect if effect and "HP" in str(effect)), "")
             if hp_effect:
+                # Check if it's a ranged tool
+                effect_range = int(tool_data.get("Effect_Range_Distance", 0) or 0)
+                if effect_range > 0:
+                    return f"({hp_effect}, Range: {effect_range})"
                 return f"({hp_effect})"
 
         tool_subtype = tool_data.get("Subtype", "")
@@ -404,6 +804,60 @@ class Player:
             return f"({tool_subtype})"
 
         return ""
+
+    def get_tool_effect_range(self, grid, slot_index=0):
+        """
+        Get the set of valid hexes for tool effect based on range properties.
+
+        Args:
+            grid: The HexGrid instance
+            slot_index: Which tool slot to get range for (0-based)
+
+        Returns:
+            set: Set of (row, col) positions that can be targeted, or None if no range
+        """
+        tool = self.get_tool_in_slot(slot_index)
+
+        if not tool:
+            return None
+
+        tool_data = tool.get_current_data()
+        effect_range = int(tool_data.get("Effect_Range_Distance", 0) or 0)
+
+        if effect_range <= 0:
+            return None
+
+        range_type = tool_data.get("Effect_Range_Type", "line_of_sight")
+        include_pos = str(tool_data.get("Effect_Include_Position", "true")).lower() == "true"
+        exclude_adj = str(tool_data.get("Effect_Exclude_Adjacent", "false")).lower() == "true"
+
+        return grid.calculate_range(
+            self.position,
+            effect_range,
+            range_type,
+            include_pos,
+            exclude_adj
+        )
+
+    def is_tool_ranged(self, slot_index=0):
+        """
+        Check if the tool in the specified slot has range (for UI purposes).
+
+        Args:
+            slot_index: Which tool slot to check (0-based)
+
+        Returns:
+            bool: True if the tool has an effect range > 0
+        """
+        tool = self.get_tool_in_slot(slot_index)
+
+        if not tool:
+            return False
+
+        tool_data = tool.get_current_data()
+        effect_range = int(tool_data.get("Effect_Range_Distance", 0) or 0)
+
+        return effect_range > 0
 
     def search(self, terrain_type, location_name=None):
         """

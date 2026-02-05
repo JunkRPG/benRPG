@@ -1,0 +1,30 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Bolt Components",
+    "Description": "Heavy metal bolts and parts for a crossbow.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "3",
+    "Metal Value": "5",
+    "Wood Value": "1",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "1",
+    "Requirements: Refined Materials": "2",
+    "Requirements: Wood": "1",
+    "Requirements: Metal": "3",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Crossbow Bolts",
+    "2nd_state_Type": "Ammunition",
+    "2nd_state_Use_HP": "+0HP",
+    "2nd_state_Revert_Chance": "0",
+    "2nd_state_Use_Placeholder": "TBD",
+    "2nd_state_Ammo_Type": "Bolt",
+    "2nd_state_Ammo_Damage": "15",
+    "2nd_state_Runout_Chance": "25",
+    "2nd_state_Compatible_Weapons": "Sniper Crossbow, Hand Crossbow, Heavy Crossbow",
+    "2nd_state_Item Image": ""
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Arrow Fletching Materials",
+    "Description": "Feathers, sticks, and arrowheads - everything needed to make arrows.",
+    "Raw Material Value": "3",
+    "Refined Material Value": "1",
+    "Metal Value": "2",
+    "Wood Value": "4",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "3",
+    "Requirements: Metal": "1",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Arrow Quiver",
+    "2nd_state_Type": "Ammunition",
+    "2nd_state_Use_HP": "+0HP",
+    "2nd_state_Revert_Chance": "0",
+    "2nd_state_Use_Placeholder": "TBD",
+    "2nd_state_Ammo_Type": "Arrow",
+    "2nd_state_Ammo_Damage": "12",
+    "2nd_state_Runout_Chance": "20",
+    "2nd_state_Compatible_Weapons": "Hunting Bow, Longbow, Shortbow",
+    "2nd_state_Item Image": ""
+  }
+}

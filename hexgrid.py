@@ -8,43 +8,20 @@ from collections import deque
 from player import Player  # Import Player for type checking
 from unit import Unit      # Import Unit for instantiation
 from inventory_card import InventoryCard
+from terrain_config import (
+    TERRAIN_CONFIG,
+    get_terrain_color,
+    is_terrain_accessible,
+    does_terrain_block_los
+)
+from deck_utils import resolve_deck_path
+from card_utils import load_card
 
 # Hexagonal directions for LOS
 DIRECTIONS = [
     (1, 0, -1), (1, -1, 0), (0, -1, 1),
     (-1, 0, 1), (-1, 1, 0), (0, 1, -1)
 ]
-
-# Terrain types configuration
-# Each terrain has: color, accessible (can units walk on it), blocks_los (does it block line of sight)
-TERRAIN_CONFIG = {
-    "grass": {"color": (76, 153, 0), "accessible": True, "blocks_los": False},
-    "dirt": {"color": (139, 90, 43), "accessible": True, "blocks_los": False},
-    "sand": {"color": (238, 214, 175), "accessible": True, "blocks_los": False},
-    "stone": {"color": (128, 128, 128), "accessible": True, "blocks_los": False},
-    "wood": {"color": (139, 69, 19), "accessible": True, "blocks_los": False},
-    "water": {"color": (30, 144, 255), "accessible": False, "blocks_los": False},
-    "deep_water": {"color": (0, 0, 139), "accessible": False, "blocks_los": False},
-    "lava": {"color": (255, 69, 0), "accessible": False, "blocks_los": False},
-    "mountain": {"color": (105, 105, 105), "accessible": False, "blocks_los": True},
-    "cliff": {"color": (70, 70, 70), "accessible": False, "blocks_los": True},
-    "forest": {"color": (34, 100, 34), "accessible": True, "blocks_los": True},
-    "swamp": {"color": (85, 107, 47), "accessible": True, "blocks_los": False},
-    "ice": {"color": (173, 216, 230), "accessible": True, "blocks_los": False},
-    "void": {"color": (20, 20, 30), "accessible": False, "blocks_los": True},
-}
-
-def get_terrain_color(terrain_type):
-    """Get the color for a terrain type."""
-    return TERRAIN_CONFIG.get(terrain_type, TERRAIN_CONFIG["grass"])["color"]
-
-def is_terrain_accessible(terrain_type):
-    """Check if a terrain type is walkable."""
-    return TERRAIN_CONFIG.get(terrain_type, TERRAIN_CONFIG["grass"])["accessible"]
-
-def does_terrain_block_los(terrain_type):
-    """Check if a terrain type blocks line of sight."""
-    return TERRAIN_CONFIG.get(terrain_type, TERRAIN_CONFIG["grass"])["blocks_los"]
 
 class HexGrid:
     def __init__(self, rows, cols, hex_size, window_width, window_height):
@@ -109,13 +86,30 @@ class HexGrid:
             elif player:
                 # Fallback to center if no player_start is specified
                 self.place_unit(player, self.rows // 2, self.cols // 2)
-            
+
+            # Load starting inventory for player
+            starting_inventory = level_data.get("starting_inventory", [])
+            if player and starting_inventory:
+                for item in starting_inventory:
+                    card_id = item.get("card_id") if isinstance(item, dict) else item
+                    card_data = load_card(card_id)
+                    if card_data:
+                        inv_card = InventoryCard(card_data)
+                        # Check if card should start in state 2 (crafted)
+                        if isinstance(item, dict) and item.get("state", 1) == 2:
+                            inv_card.current_state = 2
+                        player.inventory.append(inv_card)
+                        print(f"Added starting item: {inv_card.get_current_data().get('Name', card_id)}")
+                    else:
+                        print(f"Warning: Starting inventory card '{card_id}' not found")
+
             # Load and place units
             for unit_data in level_data.get("units", []):
-                card_file = os.path.join("cards", f"{unit_data['card_id']}.json")
-                with open(card_file, 'r') as cf:
-                    card_data = json.load(cf)
-                card_data["id"] = unit_data["card_id"]
+                card_id = unit_data.get("card_id")
+                card_data = load_card(card_id)
+                if card_data is None:
+                    print(f"Skipping unit: card '{card_id}' not found")
+                    continue
                 unit = Unit(card_data)
                 self.place_unit(unit, unit_data["position"]["row"], unit_data["position"]["column"])
                 card_manager.track_card_usage(unit.card_id, {
@@ -127,7 +121,7 @@ class HexGrid:
             # Preload deck data for card-drawing hexes
             for hex_data in self.card_drawing_hexes:
                 if "deck_file" in hex_data and hex_data["deck_file"]:
-                    deck_file = os.path.join("decks", hex_data["deck_file"])
+                    deck_file = resolve_deck_path(hex_data["deck_file"])
                     if deck_file not in self.deck_data:
                         try:
                             with open(deck_file, 'r') as df:
@@ -154,20 +148,18 @@ class HexGrid:
                 }
                 # Load pre-assigned location card if specified
                 if loc_hex.get("assigned_location_card_id"):
-                    try:
-                        card_file = os.path.join("cards", f"{loc_hex['assigned_location_card_id']}.json")
-                        with open(card_file, 'r') as cf:
-                            card_data = json.load(cf)
-                        card_data["id"] = loc_hex["assigned_location_card_id"]
+                    card_id = loc_hex["assigned_location_card_id"]
+                    card_data = load_card(card_id)
+                    if card_data:
                         self.location_data[(row, col)]["card"] = InventoryCard(card_data)
                         # Set the card state if specified
                         if loc_hex.get("location_state", 1) == 2:
                             self.location_data[(row, col)]["card"].current_state = 2
-                    except Exception as e:
-                        print(f"Error loading location card: {e}")
+                    else:
+                        print(f"Warning: Location card '{card_id}' not found")
                 # Preload location deck
                 if loc_hex.get("location_deck_file"):
-                    deck_file = os.path.join("decks", loc_hex["location_deck_file"])
+                    deck_file = resolve_deck_path(loc_hex["location_deck_file"])
                     if deck_file not in self.deck_data:
                         try:
                             with open(deck_file, 'r') as df:
@@ -241,21 +233,17 @@ class HexGrid:
                     # This hex is a portal to another level
                     return None, f"Portal to {hex_data['linked_level']}"
                 elif "deck_file" in hex_data and hex_data["deck_file"]:
-                    deck_file = os.path.join("decks", hex_data["deck_file"])
+                    deck_file = resolve_deck_path(hex_data["deck_file"])
                     deck = self.deck_data.get(deck_file)
                     if not deck or not deck["cards"]:
                         return None, "Deck is empty"
                     card_id = hex_data.get("card_id") or random.choice(deck["cards"])
-                    card_file = os.path.join("cards", f"{card_id}.json")
-                    try:
-                        with open(card_file, 'r') as f:
-                            card_data = json.load(f)
-                        card_data["id"] = card_id
-                        card = InventoryCard(card_data)
-                        card_manager.track_card_usage(card_id, {"action": "drawn", "screen": "game", "position": (row, col)})
-                        return card, f"Drew {card.get_current_data().get('Name', 'Unnamed')}"
-                    except Exception as e:
-                        return None, f"Error drawing card: {e}"
+                    card_data = load_card(card_id)
+                    if not card_data:
+                        return None, f"Card '{card_id}' not found"
+                    card = InventoryCard(card_data)
+                    card_manager.track_card_usage(card_id, {"action": "drawn", "screen": "game", "position": (row, col)})
+                    return card, f"Drew {card.get_current_data().get('Name', 'Unnamed')}"
         return None, "No deck or linked level at this hex"
 
     # ========== LOCATION SYSTEM METHODS ==========
@@ -284,7 +272,7 @@ class HexGrid:
         if not deck_file:
             return None, "No location deck assigned"
 
-        deck_path = os.path.join("decks", deck_file)
+        deck_path = resolve_deck_path(deck_file)
         deck = self.deck_data.get(deck_path)
         if not deck or not deck.get("cards"):
             return None, "Location deck is empty"
@@ -293,26 +281,23 @@ class HexGrid:
         # Remove the drawn card from the deck so it can't be drawn again
         deck["cards"].remove(card_id)
 
-        card_file = os.path.join("cards", f"{card_id}.json")
-        try:
-            with open(card_file, 'r') as f:
-                card_data = json.load(f)
-            card_data["id"] = card_id
-            location_card = InventoryCard(card_data)
-            loc_data["card"] = location_card
-            loc_data["assigned_card_id"] = card_id
+        card_data = load_card(card_id)
+        if not card_data:
+            return None, f"Location card '{card_id}' not found"
 
-            # Initialize shop inventory
-            self._initialize_shop(row, col)
+        location_card = InventoryCard(card_data)
+        loc_data["card"] = location_card
+        loc_data["assigned_card_id"] = card_id
 
-            card_manager.track_card_usage(card_id, {
-                "action": "location_assigned",
-                "screen": "game",
-                "position": (row, col)
-            })
-            return location_card, f"Discovered {card_data['data'].get('Name', 'Unknown Location')}"
-        except Exception as e:
-            return None, f"Error drawing location card: {e}"
+        # Initialize shop inventory
+        self._initialize_shop(row, col)
+
+        card_manager.track_card_usage(card_id, {
+            "action": "location_assigned",
+            "screen": "game",
+            "position": (row, col)
+        })
+        return location_card, f"Discovered {card_data['data'].get('Name', 'Unknown Location')}"
 
     def _initialize_shop(self, row, col):
         """Initialize or refresh the shop inventory for a location."""
@@ -330,7 +315,7 @@ class HexGrid:
             loc_data["shop"] = []
             return
 
-        deck_path = os.path.join("decks", shop_deck_file)
+        deck_path = resolve_deck_path(shop_deck_file)
         if deck_path not in self.deck_data:
             try:
                 with open(deck_path, 'r') as df:
@@ -354,18 +339,15 @@ class HexGrid:
             card_id = random.choice(available_cards)
             available_cards.remove(card_id)
 
-            try:
-                card_file = os.path.join("cards", f"{card_id}.json")
-                with open(card_file, 'r') as f:
-                    item_data = json.load(f)
-                item_data["id"] = card_id
-                item_card = InventoryCard(item_data)
+            item_data = load_card(card_id)
+            if not item_data:
+                print(f"Skipping shop item: card '{card_id}' not found")
+                continue
 
-                # Calculate price
-                price = self._calculate_item_price(item_card, card_data)
-                shop_items.append({"card": item_card, "price": price})
-            except Exception as e:
-                print(f"Error loading shop item {card_id}: {e}")
+            item_card = InventoryCard(item_data)
+            # Calculate price
+            price = self._calculate_item_price(item_card, card_data)
+            shop_items.append({"card": item_card, "price": price})
 
         loc_data["shop"] = shop_items
 
@@ -441,7 +423,7 @@ class HexGrid:
         if not deck_file:
             return None, f"No deck specified for {card_type}"
 
-        deck_path = os.path.join("decks", deck_file)
+        deck_path = resolve_deck_path(deck_file)
         if deck_path not in self.deck_data:
             try:
                 with open(deck_path, 'r') as df:
@@ -454,15 +436,12 @@ class HexGrid:
             return None, "Outcome deck is empty"
 
         card_id = random.choice(deck["cards"])
-        card_file = os.path.join("cards", f"{card_id}.json")
-        try:
-            with open(card_file, 'r') as f:
-                outcome_card_data = json.load(f)
-            outcome_card_data["id"] = card_id
-            outcome_card = InventoryCard(outcome_card_data)
-            return outcome_card, f"Found {outcome_card_data['data'].get('Name', 'Unknown Item')}"
-        except Exception as e:
-            return None, f"Error drawing outcome card: {e}"
+        outcome_card_data = load_card(card_id)
+        if not outcome_card_data:
+            return None, f"Outcome card '{card_id}' not found"
+
+        outcome_card = InventoryCard(outcome_card_data)
+        return outcome_card, f"Found {outcome_card_data['data'].get('Name', 'Unknown Item')}"
 
     def upgrade_location(self, row, col, npc_card=None, doc_card=None):
         """Upgrade a location to its second state (requires NPC or document conditions)."""
@@ -646,7 +625,7 @@ class HexGrid:
         if not shop_deck_file:
             return
 
-        deck_path = os.path.join("decks", shop_deck_file)
+        deck_path = resolve_deck_path(shop_deck_file)
         deck = self.deck_data.get(deck_path)
         if not deck or not deck.get("cards"):
             return
@@ -663,16 +642,14 @@ class HexGrid:
             available_cards = deck["cards"].copy()
 
         card_id = random.choice(available_cards)
-        try:
-            card_file = os.path.join("cards", f"{card_id}.json")
-            with open(card_file, 'r') as f:
-                item_data = json.load(f)
-            item_data["id"] = card_id
-            item_card = InventoryCard(item_data)
-            price = self._calculate_item_price(item_card, card_data)
-            shop.append({"card": item_card, "price": price})
-        except Exception as e:
-            print(f"Error replenishing shop slot: {e}")
+        item_data = load_card(card_id)
+        if not item_data:
+            print(f"Skipping shop replenishment: card '{card_id}' not found")
+            return
+
+        item_card = InventoryCard(item_data)
+        price = self._calculate_item_price(item_card, card_data)
+        shop.append({"card": item_card, "price": price})
 
     def cycle_shop_inventory(self, row, col):
         """Refresh all shop items for a location."""
@@ -1027,6 +1004,173 @@ class HexGrid:
         else:
             # For melee, get all adjacent hexes (including those with units)
             return set(self.get_adjacent_hexes(*start))
+
+    def calculate_range(self, pos, distance, pattern, include_pos=False, exclude_adj=False):
+        """
+        Calculate range hexes based on pattern type and modifiers.
+
+        Patterns:
+        - line_of_sight: Standard projectile range along hex lines with LOS check
+        - melee: Adjacent hexes only (distance 1)
+        - area_effect: All reachable hexes within distance (like movement)
+        - echo: Hexes at odd distances only
+        - multi_echo: Hexes at even distances only
+        - perimeter: Hexes at exactly the specified distance
+        - mist_shadow: 6 directional lines (bisecting hex directions)
+
+        Args:
+            pos: Starting position (row, col)
+            distance: Maximum range distance
+            pattern: Pattern type string
+            include_pos: Include caster's hex in range
+            exclude_adj: Exclude adjacent hexes from range
+
+        Returns:
+            set: Set of (row, col) positions in range
+        """
+        if distance < 0:
+            return set()
+
+        range_set = set()
+
+        if pattern == "line_of_sight":
+            range_set = self.get_attack_range(pos, distance, is_projectile=True)
+
+        elif pattern == "melee":
+            range_set = self.get_attack_range(pos, distance, is_projectile=False)
+
+        elif pattern == "area_effect":
+            # All hexes within distance (uses movement range logic but includes blocked hexes for targeting)
+            range_set = self._get_area_effect_range(pos, distance)
+
+        elif pattern == "echo":
+            # Hexes at odd distances only
+            base_range = self._get_area_effect_range(pos, distance)
+            range_set = {hex_pos for hex_pos in base_range
+                        if self.hex_distance(pos, hex_pos) % 2 == 1 and
+                        self.grid[hex_pos[0]][hex_pos[1]]["accessible"]}
+
+        elif pattern == "multi_echo":
+            # Hexes at even distances only
+            base_range = self._get_area_effect_range(pos, distance)
+            range_set = {hex_pos for hex_pos in base_range
+                        if self.hex_distance(pos, hex_pos) % 2 == 0 and
+                        self.grid[hex_pos[0]][hex_pos[1]]["accessible"]}
+
+        elif pattern == "perimeter":
+            # Hexes at exactly the specified distance
+            base_range = self._get_area_effect_range(pos, distance)
+            range_set = {hex_pos for hex_pos in base_range
+                        if self.hex_distance(pos, hex_pos) == distance and
+                        self.grid[hex_pos[0]][hex_pos[1]]["accessible"]}
+
+        elif pattern == "mist_shadow":
+            # 6 directional lines bisecting hex directions
+            range_set = self._get_mist_shadow_range(pos, distance)
+
+        else:
+            # Default to line of sight
+            range_set = self.get_attack_range(pos, distance, is_projectile=True)
+
+        # Apply include_pos modifier
+        if include_pos:
+            range_set.add(pos)
+        elif pos in range_set:
+            range_set.remove(pos)
+
+        # Apply exclude_adjacent modifier
+        if exclude_adj:
+            adjacent = set(self.get_adjacent_hexes(*pos))
+            range_set -= adjacent
+
+        return range_set
+
+    def _get_area_effect_range(self, start, max_distance):
+        """Get all hexes within max_distance (flood fill without requiring path)."""
+        result = set()
+        for dist in range(0, max_distance + 1):
+            hexes_at_dist = self.get_hexes_at_distance(start, dist)
+            for hex_pos in hexes_at_dist:
+                r, c = hex_pos
+                if 0 <= r < self.rows and 0 <= c < self.cols:
+                    result.add(hex_pos)
+        return result
+
+    def _get_mist_shadow_range(self, pos, distance):
+        """
+        Calculate mist/shadow range pattern - 6 directional lines that bisect
+        the standard hex directions (30°, 90°, 150°, 210°, 270°, 330°).
+        """
+        range_set = set()
+        row, col = pos
+        is_odd_col = col % 2 != 0
+
+        # Define step offsets for diagonal angles based on column parity
+        # These create lines that bisect the standard hex directions
+        step_offsets = {
+            30: [(-1, 1), (-3, 2), (-4, 3), (-6, 4)] if is_odd_col else [(-2, 1), (-3, 2), (-5, 3), (-6, 4)],
+            150: [(2, 1), (3, 2), (5, 3), (6, 4)] if is_odd_col else [(1, 1), (3, 2), (4, 3), (6, 4)],
+            210: [(2, -1), (3, -2), (5, -3), (6, -4)] if is_odd_col else [(1, -1), (3, -2), (4, -3), (6, -4)],
+            330: [(-1, -1), (-3, -2), (-4, -3), (-6, -4)] if is_odd_col else [(-2, -1), (-3, -2), (-5, -3), (-6, -4)]
+        }
+
+        angles = [30, 90, 150, 210, 270, 330]
+
+        for angle in angles:
+            line = []
+
+            if angle in [90, 270]:
+                # Horizontal directions: step by 2 columns
+                steps = min(4, distance)
+                for step in range(1, steps + 1):
+                    new_c = col + (2 * step if angle == 90 else -2 * step)
+                    new_pos = (row, new_c)
+
+                    if (0 <= row < self.rows and 0 <= new_c < self.cols and
+                        self.hex_distance(pos, new_pos) <= distance):
+                        if self.grid[row][new_c]["accessible"]:
+                            line.append(new_pos)
+                        else:
+                            break  # Stop at obstruction
+                    else:
+                        break
+            else:
+                # Diagonal directions: use predefined offsets
+                offsets = step_offsets[angle]
+                for dr, dc in offsets[:min(4, distance)]:
+                    new_r, new_c = row + dr, col + dc
+                    new_pos = (new_r, new_c)
+
+                    if (0 <= new_r < self.rows and 0 <= new_c < self.cols and
+                        self.hex_distance(pos, new_pos) <= distance):
+                        if self.grid[new_r][new_c]["accessible"]:
+                            line.append(new_pos)
+                        else:
+                            break  # Stop at obstruction
+                    else:
+                        break
+
+            range_set.update(line)
+
+        return range_set
+
+    def is_in_range(self, attacker_pos, target_pos, distance, pattern, include_pos=False, exclude_adj=False):
+        """
+        Check if a target position is within attack range using specified pattern.
+
+        Args:
+            attacker_pos: Attacker's position (row, col)
+            target_pos: Target's position (row, col)
+            distance: Maximum range distance
+            pattern: Pattern type string
+            include_pos: Include caster's hex in range
+            exclude_adj: Exclude adjacent hexes from range
+
+        Returns:
+            bool: True if target is in range
+        """
+        range_set = self.calculate_range(attacker_pos, distance, pattern, include_pos, exclude_adj)
+        return target_pos in range_set
 
     def get_targetable_units(self, attack_range, attacker_allegiance="player"):
         """

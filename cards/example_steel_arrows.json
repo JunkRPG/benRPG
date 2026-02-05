@@ -1,0 +1,30 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Steel Arrowhead Kit",
+    "Description": "High-quality steel arrowheads and premium fletching materials.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "4",
+    "Metal Value": "6",
+    "Wood Value": "2",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "1",
+    "Requirements: Refined Materials": "3",
+    "Requirements: Wood": "2",
+    "Requirements: Metal": "4",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Steel Arrow Quiver",
+    "2nd_state_Type": "Ammunition",
+    "2nd_state_Use_HP": "+0HP",
+    "2nd_state_Revert_Chance": "0",
+    "2nd_state_Use_Placeholder": "TBD",
+    "2nd_state_Ammo_Type": "Arrow",
+    "2nd_state_Ammo_Damage": "18",
+    "2nd_state_Runout_Chance": "15",
+    "2nd_state_Compatible_Weapons": "Hunting Bow, Longbow, Shortbow, War Bow",
+    "2nd_state_Item Image": ""
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Broken Sniper Crossbow",
+    "Description": "A precision crossbow designed for long-range shots. Cannot hit close targets.",
+    "Raw Material Value": "6",
+    "Refined Material Value": "8",
+    "Metal Value": "10",
+    "Wood Value": "6",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "4",
+    "Requirements: Refined Materials": "6",
+    "Requirements: Wood": "8",
+    "Requirements: Metal": "6",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Sniper Crossbow",
+    "2nd_state_Type": "Projectile",
+    "2nd_state_Melee Damage": "3",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Range_Type": "line_of_sight",
+    "2nd_state_Range_Distance": "10",
+    "2nd_state_Include_Position": "false",
+    "2nd_state_Exclude_Adjacent": "true",
+    "2nd_state_Requires_Ammo": "true",
+    "2nd_state_Compatible_Ammo": "Bolt",
+    "2nd_state_range_id": "None",
+    "2nd_state_Weapon Image": ""
+  }
+}

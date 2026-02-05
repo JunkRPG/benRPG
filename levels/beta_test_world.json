@@ -7,6 +7,15 @@
     "row": 32,
     "column": 35
   },
+  "starting_inventory": [
+    {"card_id": "example_hunting_bow", "state": 2},
+    {"card_id": "example_arrow_quiver", "state": 2},
+    {"card_id": "example_tool_belt", "state": 2},
+    {"card_id": "example_steel_arrows", "state": 1},
+    {"card_id": "example_sniper_crossbow", "state": 1},
+    {"card_id": "example_crossbow_bolts", "state": 1},
+    {"card_id": "beta_junk_healing_herbs", "state": 2}
+  ],
   "terrain": [
     ["forest", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "cliff", "swamp"],
     ["forest", "mountain", "mountain", "mountain", "stone", "mountain", "mountain", "stone", "mountain", "mountain", "stone", "stone", "forest", "mountain", "forest", "mountain", "mountain", "mountain", "mountain", "mountain", "stone", "stone", "stone", "mountain", "grass", "mountain", "mountain", "stone", "mountain", "mountain", "grass", "grass", "mountain", "mountain", "dirt", "mountain", "dirt", "grass", "mountain", "mountain", "grass", "mountain", "mountain", "mountain", "mountain", "stone", "mountain", "mountain", "grass", "mountain", "mountain", "mountain", "mountain", "grass", "mountain", "mountain", "stone", "stone", "stone", "grass", "stone", "mountain", "stone", "stone", "mountain", "stone", "water", "stone", "stone", "swamp"],

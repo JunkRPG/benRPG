@@ -9,6 +9,8 @@ import os
 import json
 import uuid
 import re
+from deck_utils import resolve_deck_path, DECKS_DIR
+from card_utils import validate_card_json_fields, JSON_FIELDS, get_json_field_help
 
 # Constants
 CARD_WIDTH = 400
@@ -119,6 +121,16 @@ LOCATION_OUTCOME_TYPES = ["Junk Card", "NPC Card", "Enemy Card", "Document Card"
 LOCATION_CHOICE_ACTIONS = ["draw_card", "heal", "trade", "shop", "sell", "exit"]
 CURRENCY_TYPES = ["metal", "wood", "raw_materials", "refined_materials", "cards"]
 ALLEGIANCE_TYPES = ["Hostile", "Neutral", "Allied"]
+
+# Weapon/Ammunition system options
+RANGE_TYPES = ["line_of_sight", "area_effect", "echo", "multi_echo", "perimeter", "mist_shadow"]
+AMMO_TYPES = ["Arrow", "Bolt", "Stone", "Bullet", "Dart", "None"]
+BOOL_OPTIONS = ["false", "true"]
+RUNOUT_CHANCE_OPTIONS = ["0", "5", "10", "15", "20", "25", "30", "40", "50", "75", "100"]
+TOOL_SLOT_OPTIONS = ["0", "1", "2", "3"]
+
+# Tool/Accessory types
+ACCESSORY_TYPES = ["Tool_Belt", "Pouch", "Belt", "Accessory"]
 
 # CardPreview class (unchanged)
 class CardPreview:
@@ -693,30 +705,75 @@ class CardEditor:
     def submit_changes(self):
         if not self.selected_card:
             return
-        
+
         card_file = os.path.join("cards", f"{self.selected_card}.json")
         with open(card_file, 'r') as f:
             card_data = json.load(f)
-        
+
         new_data = {entry[1]: entry[0].get_text() for entry in self.input_boxes}
         new_data.update({entry[2]: entry[0].get_text() for entry in self.file_inputs})
         new_data.update({dropdown[1]: dropdown[0].selected_option for dropdown in self.dropdown_inputs})
         card_data["data"] = new_data
-        
+
+        # Validate JSON fields before saving
+        is_valid, errors = validate_card_json_fields(card_data)
+        if not is_valid:
+            error_msg = "JSON Validation Errors:\n" + "\n".join(errors)
+            print(error_msg)
+            self.show_validation_error(errors)
+            return
+
         with open(card_file, 'w') as f:
             json.dump(card_data, f, indent=2)
-        
+
         with open(INDEX_FILE, 'r') as f:
             index = json.load(f)
-        
-        index[self.selected_card]["name"] = card_data["data"].get("Name", 
+
+        index[self.selected_card]["name"] = card_data["data"].get("Name",
                                                                card_data["data"].get("Default Name", "Unnamed"))
-        
+
         with open(INDEX_FILE, 'w') as f:
             json.dump(index, f, indent=2)
-        
+
         print(f"Card updated: {self.selected_card}")
         self.preview_card(card_data)
+
+    def show_validation_error(self, errors):
+        """Show validation errors in a popup window."""
+        # Clear any existing error window
+        if hasattr(self, 'error_window') and self.error_window:
+            self.error_window.kill()
+
+        error_text = "Cannot save card - JSON validation failed:\n\n"
+        for error in errors:
+            error_text += f"• {error}\n"
+        error_text += "\nPlease fix the errors and try again."
+
+        # Create error window
+        window_width = 500
+        window_height = 200 + len(errors) * 30
+        window_x = (WINDOW_WIDTH - window_width) // 2
+        window_y = (WINDOW_HEIGHT - window_height) // 2
+
+        self.error_window = pygame_gui.elements.UIWindow(
+            rect=pygame.Rect(window_x, window_y, window_width, window_height),
+            manager=manager,
+            window_display_title="Validation Error"
+        )
+
+        pygame_gui.elements.UITextBox(
+            relative_rect=pygame.Rect(10, 10, window_width - 40, window_height - 80),
+            html_text=error_text.replace('\n', '<br>'),
+            manager=manager,
+            container=self.error_window
+        )
+
+        pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((window_width - 120) // 2, window_height - 70, 100, 40),
+            text="OK",
+            manager=manager,
+            container=self.error_window
+        )
 
     def delete_card(self):
         if not self.selected_card:
@@ -1238,24 +1295,48 @@ class CardCreationScreen:
                         ("2nd_state_Type", "dropdown", ["Melee", "Projectile"], "Melee"),
                         ("2nd_state_Melee Damage", "text"),
                         ("2nd_state_Projectile Damage", "text"),
-                        ("2nd_state_Projectile Range", "text"),
-                        ("2nd_state_range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id
+                        # Range properties for projectile weapons
+                        ("2nd_state_Range_Type", "dropdown", RANGE_TYPES, "line_of_sight"),
+                        ("2nd_state_Range_Distance", "text"),
+                        ("2nd_state_Include_Position", "dropdown", BOOL_OPTIONS, "false"),
+                        ("2nd_state_Exclude_Adjacent", "dropdown", BOOL_OPTIONS, "false"),
+                        ("2nd_state_Requires_Ammo", "dropdown", BOOL_OPTIONS, "false"),
+                        ("2nd_state_Compatible_Ammo", "text"),  # e.g., "Arrow,Bolt"
+                        ("2nd_state_range_id", "dropdown", RANGE_OPTIONS, "None"),  # Legacy range_id
                         ("2nd_state_Weapon Image", "file"),
                     ]
                 elif self.selected_subclass == "Junk_to_Tool":
                     right_fields = [
                         ("2nd_state_Name", "text"),
-                        ("2nd_state_Type", "text", "Tool"),
+                        ("2nd_state_Type", "dropdown", ["Tool", "Tool_Belt", "Accessory"], "Tool"),
                         ("2nd_state_Use", "text"),
+                        ("2nd_state_Subtype", "text"),  # e.g., "Building", "Repair"
+                        # Range properties for tools with effects (healing at range, etc.)
+                        ("2nd_state_Effect_Range_Type", "dropdown", RANGE_TYPES, "line_of_sight"),
+                        ("2nd_state_Effect_Range_Distance", "text"),
+                        ("2nd_state_Effect_Include_Position", "dropdown", BOOL_OPTIONS, "true"),
+                        ("2nd_state_Effect_Exclude_Adjacent", "dropdown", BOOL_OPTIONS, "false"),
+                        # Tool belt/accessory fields
+                        ("2nd_state_Extra_Tool_Slots", "dropdown", TOOL_SLOT_OPTIONS, "0"),
                         ("2nd_state_Tool Image", "file"),
                     ]
                 elif self.selected_subclass == "Junk_to_Consumable_Item":
                     right_fields = [
                         ("2nd_state_Name", "text"),
-                        ("2nd_state_Type", "text", "Consumable"),
+                        ("2nd_state_Type", "dropdown", ["Consumable", "Ammunition"], "Consumable"),
                         ("2nd_state_Use_HP", "dropdown", HP_OPTIONS, "+15HP"),
                         ("2nd_state_Revert_Chance", "text"),
                         ("2nd_state_Use_Placeholder", "dropdown", PLACEHOLDER_OPTIONS, "TBD"),
+                        # Range properties for ranged consumables (healing potions thrown at allies, etc.)
+                        ("2nd_state_Effect_Range_Type", "dropdown", RANGE_TYPES, "line_of_sight"),
+                        ("2nd_state_Effect_Range_Distance", "text"),
+                        ("2nd_state_Effect_Include_Position", "dropdown", BOOL_OPTIONS, "true"),
+                        ("2nd_state_Effect_Exclude_Adjacent", "dropdown", BOOL_OPTIONS, "false"),
+                        # Ammunition-specific fields (used when Type is Ammunition)
+                        ("2nd_state_Ammo_Type", "dropdown", AMMO_TYPES, "None"),
+                        ("2nd_state_Ammo_Damage", "text"),
+                        ("2nd_state_Runout_Chance", "dropdown", RUNOUT_CHANCE_OPTIONS, "15"),
+                        ("2nd_state_Compatible_Weapons", "text"),  # e.g., "Hunting Bow,Longbow"
                         ("2nd_state_Item Image", "file"),
                     ]
                 else:
@@ -1300,8 +1381,14 @@ class CardCreationScreen:
                         ("2nd_state_Type", "dropdown", ["Melee", "Projectile"], "Melee"),
                         ("2nd_state_Melee Damage", "text"),
                         ("2nd_state_Projectile Damage", "text"),
-                        ("2nd_state_Projectile Range", "text"),
-                        ("2nd_state_range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id
+                        # Range properties for projectile weapons
+                        ("2nd_state_Range_Type", "dropdown", RANGE_TYPES, "line_of_sight"),
+                        ("2nd_state_Range_Distance", "text"),
+                        ("2nd_state_Include_Position", "dropdown", BOOL_OPTIONS, "false"),
+                        ("2nd_state_Exclude_Adjacent", "dropdown", BOOL_OPTIONS, "false"),
+                        ("2nd_state_Requires_Ammo", "dropdown", BOOL_OPTIONS, "false"),
+                        ("2nd_state_Compatible_Ammo", "text"),  # e.g., "Arrow,Bolt"
+                        ("2nd_state_range_id", "dropdown", RANGE_OPTIONS, "None"),  # Legacy range_id
                         ("2nd_state_Weapon Image", "file"),
                     ]
                 elif self.selected_blueprint_subclass == "Blueprint_to_Tool":
@@ -1316,8 +1403,11 @@ class CardCreationScreen:
                     ]
                     fields_state_2 = [
                         ("2nd_state_Name", "text"),
-                        ("2nd_state_Type", "text", "Tool"),
+                        ("2nd_state_Type", "dropdown", ["Tool", "Tool_Belt", "Accessory"], "Tool"),
                         ("2nd_state_Use", "text"),
+                        ("2nd_state_Subtype", "text"),  # e.g., "Building", "Repair"
+                        # Tool belt/accessory fields
+                        ("2nd_state_Extra_Tool_Slots", "dropdown", TOOL_SLOT_OPTIONS, "0"),
                         ("2nd_state_Tool Image", "file"),
                     ]
                 elif self.selected_blueprint_subclass == "Blueprint_to_Consumable_Item":
@@ -1332,10 +1422,15 @@ class CardCreationScreen:
                     ]
                     fields_state_2 = [
                         ("2nd_state_Name", "text"),
-                        ("2nd_state_Type", "text", "Consumable"),
+                        ("2nd_state_Type", "dropdown", ["Consumable", "Ammunition"], "Consumable"),
                         ("2nd_state_Use_HP", "dropdown", HP_OPTIONS, "+15HP"),
                         ("2nd_state_Revert_Chance", "text"),
                         ("2nd_state_Use_Placeholder", "dropdown", PLACEHOLDER_OPTIONS, "TBD"),
+                        # Ammunition-specific fields (used when Type is Ammunition)
+                        ("2nd_state_Ammo_Type", "dropdown", AMMO_TYPES, "None"),
+                        ("2nd_state_Ammo_Damage", "text"),
+                        ("2nd_state_Runout_Chance", "dropdown", RUNOUT_CHANCE_OPTIONS, "15"),
+                        ("2nd_state_Compatible_Weapons", "text"),  # e.g., "Hunting Bow,Longbow"
                         ("2nd_state_Item Image", "file"),
                     ]
                 column_width = 300
@@ -2063,20 +2158,28 @@ class CardCreationScreen:
         }
         card_data["data"].update({entry[2]: entry[0].get_text() for entry in self.file_inputs})
         card_data["data"].update({dropdown[1]: dropdown[0].selected_option for dropdown in self.dropdown_inputs})
-        
+
+        # Validate JSON fields before saving
+        is_valid, errors = validate_card_json_fields(card_data)
+        if not is_valid:
+            error_msg = "JSON Validation Errors:\n" + "\n".join(errors)
+            print(error_msg)
+            self.show_validation_error(errors)
+            return
+
         # Debug print to verify dropdown values
         print("Submitting card data:")
         for key, value in card_data["data"].items():
             print(f"{key}: {value} (type: {type(value)})")
-        
+
         card_id = str(uuid.uuid4())
         card_file = os.path.join("cards", f"{card_id}.json")
         with open(card_file, 'w') as f:
             json.dump(card_data, f, indent=2)
-        
+
         with open(INDEX_FILE, 'r') as f:
             index = json.load(f)
-        
+
         index[card_id] = {
             "type": self.card_type,
             "subclass": card_data["subclass"],
@@ -2086,12 +2189,49 @@ class CardCreationScreen:
             "name": card_data["data"].get("Name",
                                         card_data["data"].get("Default Name", "Unnamed"))
         }
-        
+
         with open(INDEX_FILE, 'w') as f:
             json.dump(index, f, indent=2)
-        
+
         print(f"Card saved with ID: {card_id}")
         self.preview_card(card_data, card_id)
+
+    def show_validation_error(self, errors):
+        """Show validation errors in a popup window."""
+        # Clear any existing error window
+        if hasattr(self, 'error_window') and self.error_window:
+            self.error_window.kill()
+
+        error_text = "Cannot save card - JSON validation failed:\n\n"
+        for error in errors:
+            error_text += f"• {error}\n"
+        error_text += "\nPlease fix the errors and try again."
+
+        # Create error window
+        window_width = 500
+        window_height = 200 + len(errors) * 30
+        window_x = (WINDOW_WIDTH - window_width) // 2
+        window_y = (WINDOW_HEIGHT - window_height) // 2
+
+        self.error_window = pygame_gui.elements.UIWindow(
+            rect=pygame.Rect(window_x, window_y, window_width, window_height),
+            manager=manager,
+            window_display_title="Validation Error"
+        )
+
+        pygame_gui.elements.UITextBox(
+            relative_rect=pygame.Rect(10, 10, window_width - 40, window_height - 80),
+            html_text=error_text.replace('\n', '<br>'),
+            manager=manager,
+            container=self.error_window
+        )
+
+        pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((window_width - 120) // 2, window_height - 70, 100, 40),
+            text="OK",
+            manager=manager,
+            container=self.error_window
+        )
 
     def preview_card(self, card_data, card_id):
         CardManager.instance.preview_screen = CardPreview(
@@ -2292,7 +2432,7 @@ class DeckMaker:
         }
 
         deck_id = str(uuid.uuid4())
-        deck_file = os.path.join("decks", f"{safe_filename}_{deck_id}.json")
+        deck_file = os.path.join(DECKS_DIR, f"{safe_filename}_{deck_id}.json")
         
         try:
             with open(deck_file, 'w') as f:

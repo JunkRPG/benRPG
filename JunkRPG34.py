@@ -1,7 +1,7 @@
 import pygame
 import sys
 import pygame_gui
-from pygame_gui.elements import UIButton, UITextBox, UIWindow, UISelectionList, UIDropDownMenu, UILabel, UIPanel
+from pygame_gui.elements import UIButton, UITextBox, UIWindow, UISelectionList, UIDropDownMenu, UILabel, UIPanel, UITextEntryLine
 from pygame import display, event
 import math
 from heapq import heappush, heappop
@@ -19,6 +19,8 @@ from inventory_card import InventoryCard
 from quest_system import QuestManager
 from instance_system import InstanceManager
 from transition_system import TransitionManager
+from deck_utils import resolve_deck_path
+from card_utils import load_card, load_card_index
 
 # Initialize Pygame and Pygame-GUI
 pygame.init()
@@ -87,29 +89,21 @@ class CardManager:
         self.card_types = ["Junk Card", "Document Card", "Enemy Card", "NPC Card", "Location Card", "Quest Card", "Instance Card", "Boss Card"]
 
     def get_cards_for_game(self, card_type=None, filters=None):
-        try:
-            with open(INDEX_FILE, 'r') as f:
-                index = json.load(f)
-        except Exception as e:
-            print(f"Error loading card index: {e}")
+        index = load_card_index()
+        if not index:
             return []
 
         cards = []
         for card_id, info in index.items():
             if card_type and info['type'] != card_type:
                 continue
-            card_file = os.path.join("cards", f"{card_id}.json")
-            try:
-                with open(card_file, 'r') as cf:
-                    card_data = json.load(cf)
-            except Exception as e:
-                print(f"Error loading card {card_id}: {e}")
+            card_data = load_card(card_id, silent=True)
+            if not card_data:
                 continue
             if filters and not self._apply_filters(card_data, filters):
                 continue
             is_valid, _ = self.validate_card_for_game(card_data)
             if is_valid:
-                card_data["id"] = card_id
                 cards.append(card_data)
         return cards
 
@@ -185,15 +179,10 @@ class CardManager:
             return None
 
         card_id = random.choice(cards)
-        card_file = os.path.join("cards", f"{card_id}.json")
-        try:
-            with open(card_file, 'r') as f:
-                card_data = json.load(f)
-            card_data["id"] = card_id
-            return InventoryCard(card_data)
-        except Exception as e:
-            print(f"Error loading card {card_id}: {e}")
+        card_data = load_card(card_id)
+        if not card_data:
             return None
+        return InventoryCard(card_data)
 
     def track_card_usage(self, card_id, usage_context):
         usage_log = os.path.join("cards", "usage_log.json")
@@ -224,6 +213,9 @@ class InventoryScreen:
         self.use_button = None
         self.use_junk_button = None
         self.tools_list = None
+        self.equip_tool_button = None
+        self.equip_accessory_button = None  # For tool belts and accessories
+        self.browse_cards_button = None  # Creative mode: browse all cards
         self.info_text = None
         self.close_button = None
         self.selected_card = None
@@ -270,20 +262,43 @@ class InventoryScreen:
                                             manager, container=self.window)
         self.equip_button = UIButton(pygame.Rect(2 * column_width + 10, column_height - 30, column_width, 35), "Equip Weapon", manager, container=self.window)
 
-        # Consumables and Tools (column 4)
+        # Consumables, Tools, and Ammunition (column 4)
         consumables_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Consumable"]
         tools_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Tool"]
-        combined_items = consumables_cards + tools_cards
-        self.consumables_list = UISelectionList(pygame.Rect(3 * column_width + 10, 60, column_width, column_height - 150),
-                                                [card.get_current_data().get("Name", "Unnamed") for card in combined_items] or ["No consumables/tools"],
+        ammo_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Ammunition"]
+        accessory_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") in ["Tool_Belt", "Accessory", "Belt", "Pouch"]]
+        combined_items = consumables_cards + tools_cards + ammo_cards + accessory_cards
+
+        # Mark item types in the list
+        item_names = []
+        for card in combined_items:
+            name = card.get_current_data().get("Name", "Unnamed")
+            card_type = card.get_current_data().get("Type", "")
+            if card_type == "Ammunition":
+                name += " [Ammo]"
+            elif card_type in ["Tool_Belt", "Accessory", "Belt", "Pouch"]:
+                name += " [Accessory]"
+            item_names.append(name)
+
+        self.consumables_list = UISelectionList(pygame.Rect(3 * column_width + 10, 60, column_width, column_height - 190),
+                                                item_names if item_names else ["No consumables/tools"],
                                                 manager, container=self.window)
-        self.use_button = UIButton(pygame.Rect(3 * column_width + 10, column_height - 80, column_width, 35), "Use Consumable", manager, container=self.window)
-        self.equip_tool_button = UIButton(pygame.Rect(3 * column_width + 10, column_height - 40, column_width, 35), "Equip as Tool", manager, container=self.window)
+        self.use_button = UIButton(pygame.Rect(3 * column_width + 10, column_height - 120, column_width, 35), "Use Consumable", manager, container=self.window)
+        self.equip_tool_button = UIButton(pygame.Rect(3 * column_width + 10, column_height - 80, column_width, 35), "Equip as Tool/Ammo", manager, container=self.window)
+        self.equip_accessory_button = UIButton(pygame.Rect(3 * column_width + 10, column_height - 40, column_width, 35), "Equip Accessory", manager, container=self.window)
 
         # Item details panel (bottom)
         UILabel(pygame.Rect(10, 610, 200, 25), "Item Details:", manager, container=self.window)
         self.info_text = UITextBox("<font color='#FFFFFF'>Select an item to view its stats and details</font>",
                                    pygame.Rect(10, 635, 870, 120), manager, container=self.window)
+
+        # Creative mode button (browse all cards)
+        if game.game_mode == "creative":
+            self.browse_cards_button = UIButton(pygame.Rect(900, 635, 150, 35), "Browse Cards", manager, container=self.window)
+            # Mode indicator
+            UILabel(pygame.Rect(900, 680, 150, 25), "[Creative Mode]", manager, container=self.window)
+        else:
+            self.browse_cards_button = None
 
         # Close button
         self.close_button = UIButton(pygame.Rect(1050, 720, 120, 35), "Close", manager, container=self.window)
@@ -302,6 +317,9 @@ class InventoryScreen:
             if event.ui_element == self.close_button:
                 game.current_screen = "game"
                 game_screen.initialize_screen()
+            elif self.browse_cards_button and event.ui_element == self.browse_cards_button:
+                game.current_screen = "card_browser"
+                card_browser_screen.initialize_screen()
             elif event.ui_element == self.equip_button and self.selected_card and self.selected_from_list == "weapons":
                 game.current_player.equip_weapon(self.selected_card)
                 game_screen.player_info_label.set_text(game_screen.get_player_info())
@@ -313,12 +331,30 @@ class InventoryScreen:
                 # Use crafted consumable
                 self._use_consumable_item()
             elif event.ui_element == self.equip_tool_button and self.selected_card:
-                # Equip item as tool (works for junk with Use_HP or consumables/tools)
+                # Equip item as tool (works for junk with Use_HP, consumables, tools, or ammunition)
                 if self.selected_from_list in ["junk", "consumables"]:
-                    msg = game.current_player.equip_tool(self.selected_card)
-                    self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
+                    card_type = self.selected_card.get_current_data().get("Type", "")
+                    # Don't equip accessories via tool button
+                    if card_type in ["Tool_Belt", "Accessory", "Belt", "Pouch"]:
+                        self.info_text.set_text("<font color='#FF0000'>Use 'Equip Accessory' for tool belts</font>")
+                    else:
+                        msg = game.current_player.equip_tool(self.selected_card)
+                        self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
+                        self.initialize_screen()  # Refresh to remove from list
                 else:
-                    self.info_text.set_text("<font color='#FF0000'>Select a consumable or tool item to equip</font>")
+                    self.info_text.set_text("<font color='#FF0000'>Select a consumable, tool, or ammo to equip</font>")
+            elif hasattr(self, 'equip_accessory_button') and event.ui_element == self.equip_accessory_button and self.selected_card:
+                # Equip accessory (tool belt, pouch, etc.)
+                if self.selected_from_list == "consumables":
+                    card_type = self.selected_card.get_current_data().get("Type", "")
+                    if card_type in ["Tool_Belt", "Accessory", "Belt", "Pouch"]:
+                        msg = game.current_player.equip_accessory(self.selected_card)
+                        self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
+                        self.initialize_screen()  # Refresh to remove from list
+                    else:
+                        self.info_text.set_text("<font color='#FF0000'>Select a tool belt or accessory to equip</font>")
+                else:
+                    self.info_text.set_text("<font color='#FF0000'>Select a tool belt or accessory to equip</font>")
 
         elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
             selected_name = event.text
@@ -345,10 +381,12 @@ class InventoryScreen:
                                           and card.get_current_data().get("Name") == clean_name), None)
             elif event.ui_element == self.consumables_list:
                 self.selected_from_list = "consumables"
+                # Remove type suffixes for matching
+                match_name = clean_name.replace(" [Ammo]", "").replace(" [Accessory]", "")
                 self.selected_card = next((card for card in game.current_player.inventory
                                           if card.current_state == 2
-                                          and card.get_current_data().get("Type") in ["Consumable", "Tool"]
-                                          and card.get_current_data().get("Name") == clean_name), None)
+                                          and card.get_current_data().get("Type") in ["Consumable", "Tool", "Ammunition", "Tool_Belt", "Accessory", "Belt", "Pouch"]
+                                          and card.get_current_data().get("Name") == match_name), None)
 
             if self.selected_card:
                 # Build detailed info display
@@ -2090,25 +2128,58 @@ class PlayerCountScreen:
     def __init__(self):
         self.ui_elements = []
         self.level_file = None
+        self.mode_buttons = []
+        self.selected_mode = "survival"
 
     def initialize_screen(self, level_file=None):
         self.level_file = level_file
+        self.selected_mode = "survival"  # Reset to default
         manager.clear_and_reset()
         level_name = os.path.basename(level_file) if level_file else "Unknown"
+
+        # Mode selection
+        mode_label = UILabel(pygame.Rect(0, 50, WINDOW_WIDTH, 30), "Select Game Mode", manager, anchors={'centerx': 'centerx'})
+        survival_btn = UIButton(pygame.Rect((WINDOW_WIDTH - 420) // 2, 90, 200, 40), "Survival Mode", manager)
+        creative_btn = UIButton(pygame.Rect((WINDOW_WIDTH - 420) // 2 + 220, 90, 200, 40), "Creative Mode", manager)
+        mode_desc = UILabel(pygame.Rect(0, 140, WINDOW_WIDTH, 25), "Survival: Normal gameplay | Creative: Test with card browser", manager, anchors={'centerx': 'centerx'})
+
+        # Player count selection
         self.ui_elements = [
-            UILabel(pygame.Rect(0, 50, WINDOW_WIDTH, 50), "Select Number of Players", manager, anchors={'centerx': 'centerx'}),
-            UILabel(pygame.Rect(0, 120, WINDOW_WIDTH, 30), f"Level: {level_name}", manager, anchors={'centerx': 'centerx'}),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 200, 200, 50), "1 Player", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 270, 200, 50), "2 Players", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 370, 200, 50), "Back", manager)
+            UILabel(pygame.Rect(0, 190, WINDOW_WIDTH, 50), "Select Number of Players", manager, anchors={'centerx': 'centerx'}),
+            UILabel(pygame.Rect(0, 240, WINDOW_WIDTH, 30), f"Level: {level_name}", manager, anchors={'centerx': 'centerx'}),
+            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 290, 200, 50), "1 Player", manager),
+            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 360, 200, 50), "2 Players", manager),
+            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 460, 200, 50), "Back", manager)
         ]
+        self.mode_buttons = [survival_btn, creative_btn]
+        self.mode_label = mode_label
+        self.mode_desc = mode_desc
+        self._update_mode_buttons()
+
+    def _update_mode_buttons(self):
+        """Update button appearance based on selected mode."""
+        # Visual feedback - we'll just update the text to show selection
+        if self.selected_mode == "survival":
+            self.mode_buttons[0].set_text(">> Survival <<")
+            self.mode_buttons[1].set_text("Creative Mode")
+        else:
+            self.mode_buttons[0].set_text("Survival Mode")
+            self.mode_buttons[1].set_text(">> Creative <<")
 
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.ui_elements[2]:  # 1 Player
+            if event.ui_element == self.mode_buttons[0]:  # Survival
+                self.selected_mode = "survival"
+                self._update_mode_buttons()
+            elif event.ui_element == self.mode_buttons[1]:  # Creative
+                self.selected_mode = "creative"
+                self._update_mode_buttons()
+            elif event.ui_element == self.ui_elements[2]:  # 1 Player
+                game.game_mode = self.selected_mode
                 game.current_screen = "character_creation"
                 character_creation_screen.initialize_screen(level_file=self.level_file)
             elif event.ui_element == self.ui_elements[3]:  # 2 Players
+                game.game_mode = self.selected_mode
                 game.current_screen = "multiplayer_character_creation"
                 multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file)
             elif event.ui_element == self.ui_elements[4]:  # Back
@@ -2611,7 +2682,7 @@ class GameScreen:
         if transition_deck:
             # Transition system loads individual cards, so we need to pick one from the deck
             try:
-                deck_path = transition_deck if os.path.exists(transition_deck) else os.path.join("decks", os.path.basename(transition_deck))
+                deck_path = resolve_deck_path(transition_deck)
                 if os.path.exists(deck_path):
                     with open(deck_path, 'r') as f:
                         deck_data = json.load(f)
@@ -2627,7 +2698,7 @@ class GameScreen:
         # Load instance deck
         instance_deck = deck_config.get("instance_deck", "")
         if instance_deck:
-            deck_path = instance_deck if os.path.exists(instance_deck) else os.path.join("decks", os.path.basename(instance_deck))
+            deck_path = resolve_deck_path(instance_deck)
             if os.path.exists(deck_path):
                 if game.instance_manager.load_instance_deck(deck_path):
                     self.log.append(f"Loaded instance deck: {os.path.basename(deck_path)}")
@@ -2635,7 +2706,7 @@ class GameScreen:
         # Load quest deck - store path for quest manager to use
         quest_deck = deck_config.get("quest_deck", "")
         if quest_deck:
-            deck_path = quest_deck if os.path.exists(quest_deck) else os.path.join("decks", os.path.basename(quest_deck))
+            deck_path = resolve_deck_path(quest_deck)
             if os.path.exists(deck_path):
                 game.current_quest_manager.quest_deck_path = deck_path
                 self.log.append(f"Loaded quest deck: {os.path.basename(deck_path)}")
@@ -2643,7 +2714,7 @@ class GameScreen:
         # Load junk deck - store path for card drawing hexes
         junk_deck = deck_config.get("junk_deck", "")
         if junk_deck:
-            deck_path = junk_deck if os.path.exists(junk_deck) else os.path.join("decks", os.path.basename(junk_deck))
+            deck_path = resolve_deck_path(junk_deck)
             if os.path.exists(deck_path):
                 self.current_junk_deck = deck_path
                 self.log.append(f"Loaded junk deck: {os.path.basename(deck_path)}")
@@ -3011,9 +3082,25 @@ class GameScreen:
             self.left_panel_buttons.append(btn)
             y_pos += 40
 
-        # Add equipped tool button if tool is equipped
-        self.tool_button = None
-        if game.current_player.equipped_tool:
+        # Add equipped tool buttons (multi-slot support)
+        self.tool_buttons = []  # List of (button, slot_index) tuples
+        self.tool_button = None  # Legacy single button (for backwards compatibility)
+
+        # Check multi-slot system first
+        if game.current_player.equipped_tools:
+            for slot_idx, tool in enumerate(game.current_player.equipped_tools):
+                if tool:
+                    tool_data = tool.get_current_data()
+                    tool_name = tool_data.get("Name", "Tool")
+                    effect_text = game.current_player.get_tool_effect_text(slot_idx)
+                    slot_label = f"[{slot_idx + 1}] " if game.current_player.tool_slots > 1 else ""
+                    btn_text = f"Use {slot_label}{tool_name} {effect_text}".strip()
+                    btn = UIButton(pygame.Rect(10, y_pos, button_width, 30), btn_text, manager)
+                    self.tool_buttons.append((btn, slot_idx))
+                    self.left_panel_buttons.append(btn)
+                    y_pos += 35
+        # Fallback to legacy single slot
+        elif game.current_player.equipped_tool:
             tool_data = game.current_player.equipped_tool.get_current_data()
             tool_name = tool_data.get("Name", "Tool")
             effect_text = game.current_player.get_tool_effect_text()
@@ -3187,9 +3274,25 @@ class GameScreen:
             self.left_panel_buttons.append(btn)
             y_pos += 40
 
-        # Add equipped tool button if tool is equipped
-        self.tool_button = None
-        if current_player.equipped_tool:
+        # Add equipped tool buttons (multi-slot support)
+        self.tool_buttons = []  # List of (button, slot_index) tuples
+        self.tool_button = None  # Legacy single button (for backwards compatibility)
+
+        # Check multi-slot system first
+        if current_player.equipped_tools:
+            for slot_idx, tool in enumerate(current_player.equipped_tools):
+                if tool:
+                    tool_data = tool.get_current_data()
+                    tool_name = tool_data.get("Name", "Tool")
+                    effect_text = current_player.get_tool_effect_text(slot_idx)
+                    slot_label = f"[{slot_idx + 1}] " if current_player.tool_slots > 1 else ""
+                    btn_text = f"Use {slot_label}{tool_name} {effect_text}".strip()
+                    btn = UIButton(pygame.Rect(10, y_pos, button_width, 30), btn_text, manager)
+                    self.tool_buttons.append((btn, slot_idx))
+                    self.left_panel_buttons.append(btn)
+                    y_pos += 35
+        # Fallback to legacy single slot
+        elif current_player.equipped_tool:
             tool_data = current_player.equipped_tool.get_current_data()
             tool_name = tool_data.get("Name", "Tool")
             effect_text = current_player.get_tool_effect_text()
@@ -3881,13 +3984,29 @@ class GameScreen:
                             skill_button_clicked = True
                             break
 
-                    # Check if tool button was clicked
-                    if not skill_button_clicked and self.tool_button and event.ui_element == self.tool_button:
-                        success, message = game.current_player.use_tool()
-                        self.add_to_log(message)
-                        if success:
-                            self.player_info_label.set_text(self.get_player_info())
-                        skill_button_clicked = True  # Prevent further processing
+                    # Check if tool button was clicked (multi-slot support)
+                    tool_button_clicked = False
+                    if not skill_button_clicked:
+                        # Check multi-slot tool buttons
+                        for btn, slot_idx in self.tool_buttons:
+                            if event.ui_element == btn:
+                                success, message = game.current_player.use_tool(slot_idx)
+                                self.add_to_log(message)
+                                if success:
+                                    self.player_info_label.set_text(self.get_player_info())
+                                    self._refresh_left_panel()  # Refresh to update tool buttons
+                                tool_button_clicked = True
+                                break
+
+                        # Fallback to legacy single tool button
+                        if not tool_button_clicked and self.tool_button and event.ui_element == self.tool_button:
+                            success, message = game.current_player.use_tool()
+                            self.add_to_log(message)
+                            if success:
+                                self.player_info_label.set_text(self.get_player_info())
+                            tool_button_clicked = True
+
+                    skill_button_clicked = skill_button_clicked or tool_button_clicked  # Prevent further processing
 
                     if not skill_button_clicked:
                         current_player = game.current_player
@@ -3944,21 +4063,22 @@ class GameScreen:
         is_player_turn = self.turn_phase in ("player", "player1", "player2")
         movement_range = self.hex_grid.get_valid_moves(current_player.position, current_player.movement) if is_player_turn and self.player_mode == "movement" and not current_player.movement_used else None
 
-        # Determine attack range based on mode
+        # Determine attack range based on mode (uses weapon's range pattern)
         attack_range = None
         if is_player_turn and not current_player.action_used:
             if self.selected_attack == current_player.attacks["projectile"]["name"]:
-                attack_range = self.hex_grid.get_attack_range(current_player.position, current_player.projectile_range, is_projectile=True)
+                # Use player's method for proper range pattern support
+                attack_range = current_player.get_projectile_attack_range(self.hex_grid)
             elif self.selected_attack == current_player.attacks["melee"]["name"]:
-                attack_range = self.hex_grid.get_attack_range(current_player.position, 1, is_projectile=False)
+                attack_range = current_player.get_melee_attack_range(self.hex_grid)
             elif self.player_mode == "special_attack":
                 # Show range for special attacks
                 if current_player.special_attack == "Multi-target Projectile":
-                    attack_range = self.hex_grid.get_attack_range(current_player.position, current_player.projectile_range, is_projectile=True)
+                    attack_range = current_player.get_projectile_attack_range(self.hex_grid)
                 elif current_player.special_attack == "Double Attack":
-                    attack_range = self.hex_grid.get_attack_range(current_player.position, 1, is_projectile=False)
+                    attack_range = current_player.get_melee_attack_range(self.hex_grid)
                 elif current_player.special_attack == "Spin Punch":
-                    attack_range = self.hex_grid.get_attack_range(current_player.position, 1, is_projectile=False)
+                    attack_range = current_player.get_melee_attack_range(self.hex_grid)
 
         # Get targetable units for visual highlighting
         targetable_units = None
@@ -4340,6 +4460,267 @@ class DefeatScreen:
         screen.fill(DARK_INDIGO)
         manager.draw_ui(screen)
 
+
+# Card Browser Screen (Creative Mode - browse and add any card to inventory)
+class CardBrowserScreen:
+    def __init__(self):
+        self.window = None
+        self.card_list = None
+        self.filter_dropdown = None
+        self.search_entry = None
+        self.info_text = None
+        self.add_button = None
+        self.add_all_button = None
+        self.close_button = None
+        self.state_dropdown = None
+        self.selected_cards = []  # List of selected card IDs
+        self.all_cards = []  # List of all card data from index
+        self.filtered_cards = []  # Currently displayed cards after filtering
+
+    def initialize_screen(self):
+        manager.clear_and_reset()
+        window_rect = pygame.Rect((WINDOW_WIDTH - 1000) // 2, (WINDOW_HEIGHT - 700) // 2, 1000, 700)
+        self.window = UIWindow(window_rect, manager, "Card Browser (Creative Mode)")
+
+        # Header
+        UILabel(pygame.Rect(10, 5, 980, 30), "Browse and add cards to your inventory", manager, container=self.window)
+
+        # Filter controls row
+        UILabel(pygame.Rect(10, 40, 80, 25), "Filter:", manager, container=self.window)
+        filter_options = ["All Cards", "Junk Cards", "Document Cards", "Enemy Cards", "NPC Cards",
+                         "Location Cards", "Quest Cards", "Instance Cards", "Transition Cards"]
+        self.filter_dropdown = UIDropDownMenu(filter_options, "All Cards",
+                                              pygame.Rect(90, 40, 180, 30), manager, container=self.window)
+
+        UILabel(pygame.Rect(290, 40, 60, 25), "Search:", manager, container=self.window)
+        self.search_entry = UITextEntryLine(pygame.Rect(350, 40, 200, 30), manager, container=self.window)
+
+        UILabel(pygame.Rect(570, 40, 80, 25), "Add as:", manager, container=self.window)
+        self.state_dropdown = UIDropDownMenu(["State 1 (Raw)", "State 2 (Crafted)"], "State 2 (Crafted)",
+                                             pygame.Rect(650, 40, 150, 30), manager, container=self.window)
+
+        # Load all cards first
+        self._load_all_cards()
+
+        # Build initial display list
+        self.filtered_cards = self.all_cards.copy()
+        display_items = [f"[{card['type'][:4]}] {card['name']}" for card in self.filtered_cards]
+        if not display_items:
+            display_items = ["No cards available"]
+
+        # Card list (left side)
+        UILabel(pygame.Rect(10, 80, 200, 25), f"Available Cards ({len(self.all_cards)}):", manager, container=self.window)
+        self.card_list = UISelectionList(pygame.Rect(10, 105, 550, 400),
+                                         display_items, manager, container=self.window,
+                                         allow_multi_select=True)
+
+        # Selected cards info (right side)
+        UILabel(pygame.Rect(580, 80, 200, 25), "Card Details:", manager, container=self.window)
+        self.info_text = UITextBox("<font color='#FFFFFF'>Select a card to view details</font>",
+                                   pygame.Rect(580, 105, 390, 400), manager, container=self.window)
+
+        # Buttons at bottom
+        self.add_button = UIButton(pygame.Rect(10, 520, 180, 40), "Add Selected", manager, container=self.window)
+        self.add_all_button = UIButton(pygame.Rect(200, 520, 180, 40), "Add All Filtered", manager, container=self.window)
+        self.clear_selection_button = UIButton(pygame.Rect(390, 520, 180, 40), "Clear Selection", manager, container=self.window)
+        self.close_button = UIButton(pygame.Rect(850, 620, 120, 35), "Close", manager, container=self.window)
+
+        # Status label
+        self.status_label = UILabel(pygame.Rect(10, 570, 600, 25), "0 cards selected", manager, container=self.window)
+
+    def _load_all_cards(self):
+        """Load all cards from card_index.json."""
+        self.all_cards = []
+        try:
+            # Use the existing load_card_index function from card_utils
+            card_index = load_card_index()
+
+            for card_id, card_info in card_index.items():
+                # card_index uses "type" not "card_type"
+                card_type = card_info.get("type", "Unknown")
+                card_name = card_info.get("name", card_id)
+                self.all_cards.append({
+                    "id": card_id,
+                    "name": card_name,
+                    "type": card_type
+                })
+
+            # Sort by type then name
+            self.all_cards.sort(key=lambda x: (x["type"], x["name"]))
+            print(f"Card browser loaded {len(self.all_cards)} cards")
+        except Exception as e:
+            print(f"Error loading card index: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def _apply_filter(self):
+        """Apply filter and search to card list."""
+        # Handle pygame_gui dropdown which may return tuple (text, id)
+        filter_option = self.filter_dropdown.selected_option
+        if isinstance(filter_option, tuple):
+            filter_type = filter_option[0]
+        else:
+            filter_type = filter_option
+
+        search_text = self.search_entry.get_text().lower().strip()
+
+        print(f"[CardBrowser] Applying filter: type='{filter_type}', search='{search_text}', all_cards={len(self.all_cards)}")
+
+        self.filtered_cards = []
+        for card in self.all_cards:
+            # Filter by type
+            if filter_type != "All Cards":
+                # Convert filter option to card type
+                type_map = {
+                    "Junk Cards": "Junk Card",
+                    "Document Cards": "Document Card",
+                    "Enemy Cards": "Enemy Card",
+                    "NPC Cards": "NPC Card",
+                    "Location Cards": "Location Card",
+                    "Quest Cards": "Quest Card",
+                    "Instance Cards": "Instance Card",
+                    "Transition Cards": "Transition Card"
+                }
+                if card["type"] != type_map.get(filter_type, ""):
+                    continue
+
+            # Filter by search text
+            if search_text and search_text not in card["name"].lower() and search_text not in card["id"].lower():
+                continue
+
+            self.filtered_cards.append(card)
+
+        # Update list display
+        display_items = [f"[{card['type'][:4]}] {card['name']}" for card in self.filtered_cards]
+        print(f"[CardBrowser] Filtered to {len(self.filtered_cards)} cards, display_items={len(display_items)}")
+        self.card_list.set_item_list(display_items if display_items else ["No cards match filter"])
+
+    def _get_card_details(self, card_info):
+        """Get detailed info about a card."""
+        try:
+            card_data = load_card(card_info["id"])
+            if not card_data:
+                return f"<b>{card_info['name']}</b><br>Card file not found"
+
+            lines = [f"<b>{card_info['name']}</b>"]
+            lines.append(f"<i>Type: {card_info['type']}</i>")
+            lines.append(f"ID: {card_info['id']}")
+            lines.append("")
+
+            # Show state 1 data
+            data = card_data.get("data", {})
+            lines.append("<b>State 1:</b>")
+            for key, value in data.items():
+                if value and not key.startswith("2nd_state_") and key not in ["id"]:
+                    # Truncate long values
+                    str_val = str(value)
+                    if len(str_val) > 50:
+                        str_val = str_val[:50] + "..."
+                    lines.append(f"  {key}: {str_val}")
+
+            # Show state 2 data if exists
+            state2_fields = {k: v for k, v in data.items() if k.startswith("2nd_state_") and v}
+            if state2_fields:
+                lines.append("")
+                lines.append("<b>State 2:</b>")
+                for key, value in state2_fields.items():
+                    display_key = key.replace("2nd_state_", "")
+                    str_val = str(value)
+                    if len(str_val) > 50:
+                        str_val = str_val[:50] + "..."
+                    lines.append(f"  {display_key}: {str_val}")
+
+            return "<br>".join(lines)
+        except Exception as e:
+            return f"Error loading card: {e}"
+
+    def _add_cards_to_inventory(self, card_infos):
+        """Add selected cards to player inventory."""
+        if not game.current_player:
+            return "No active player!"
+
+        state = 2 if "State 2" in self.state_dropdown.selected_option else 1
+        added_count = 0
+
+        for card_info in card_infos:
+            try:
+                card_data = load_card(card_info["id"])
+                if card_data:
+                    inv_card = InventoryCard(card_data)
+                    inv_card.current_state = state
+                    game.current_player.inventory.append(inv_card)
+                    added_count += 1
+            except Exception as e:
+                print(f"Error adding card {card_info['id']}: {e}")
+
+        return f"Added {added_count} card(s) to inventory"
+
+    def handle_event(self, event):
+        if event.type == pygame_gui.UI_WINDOW_CLOSE:
+            if event.ui_element == self.window:
+                game.current_screen = "inventory"
+                inventory_screen.initialize_screen()
+                return
+
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.close_button:
+                game.current_screen = "inventory"
+                inventory_screen.initialize_screen()
+            elif event.ui_element == self.add_button:
+                # Add selected cards
+                if self.selected_cards:
+                    msg = self._add_cards_to_inventory(self.selected_cards)
+                    self.status_label.set_text(msg)
+                    self.selected_cards = []
+                else:
+                    self.status_label.set_text("No cards selected!")
+            elif event.ui_element == self.add_all_button:
+                # Add all filtered cards
+                if self.filtered_cards:
+                    msg = self._add_cards_to_inventory(self.filtered_cards)
+                    self.status_label.set_text(msg)
+                else:
+                    self.status_label.set_text("No cards to add!")
+            elif event.ui_element == self.clear_selection_button:
+                self.selected_cards = []
+                self.status_label.set_text("Selection cleared")
+
+        elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
+            if event.ui_element == self.filter_dropdown:
+                self._apply_filter()
+                self.selected_cards = []
+                self.status_label.set_text("0 cards selected")
+
+        elif event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED:
+            if event.ui_element == self.search_entry:
+                self._apply_filter()
+                self.selected_cards = []
+                self.status_label.set_text("0 cards selected")
+
+        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
+            if event.ui_element == self.card_list:
+                # Find selected card
+                selected_text = event.text
+                # Parse card name from display format "[Type] Name"
+                if "] " in selected_text:
+                    card_name = selected_text.split("] ", 1)[1]
+                    for card in self.filtered_cards:
+                        if card["name"] == card_name:
+                            # Toggle selection
+                            if card in self.selected_cards:
+                                self.selected_cards.remove(card)
+                            else:
+                                self.selected_cards.append(card)
+                            # Show details
+                            self.info_text.set_text(f"<font color='#FFFFFF'>{self._get_card_details(card)}</font>")
+                            break
+                self.status_label.set_text(f"{len(self.selected_cards)} card(s) selected")
+
+    def draw(self):
+        screen.fill(DARK_INDIGO)
+        manager.draw_ui(screen)
+
+
 # Main Game class
 class Game:
     def __init__(self):
@@ -4356,6 +4737,8 @@ class Game:
         self.current_player_index = 0  # Whose turn it is (0 or 1)
         self.multiplayer_mode = False  # True when in 2-player mode
         self.quest_managers = []  # Per-player quest managers in multiplayer
+        # Game mode: "survival" (normal) or "creative" (testing with card browser)
+        self.game_mode = "survival"
         self.screens = {
             "main_menu": main_menu,
             "player_count": player_count_screen,
@@ -4373,7 +4756,8 @@ class Game:
             "quest": quest_screen,
             "defeat": defeat_screen,
             "instance_event": instance_event_screen,
-            "transition_event": transition_event_screen
+            "transition_event": transition_event_screen,
+            "card_browser": card_browser_screen
         }
         game_screen.set_card_manager(self.card_manager)
 
@@ -4451,6 +4835,7 @@ quest_screen = QuestScreen()
 defeat_screen = DefeatScreen()
 instance_event_screen = InstanceEventScreen()
 transition_event_screen = TransitionEventScreen()
+card_browser_screen = CardBrowserScreen()
 game = Game()
 
 # Parse command-line arguments for campaign/level launching

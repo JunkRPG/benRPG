@@ -1447,5 +1447,47 @@
     "blueprint_subclass": null,
     "states": 2,
     "name": "Fortification Sketch"
+  },
+  "example_hunting_bow": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Broken Hunting Bow"
+  },
+  "example_arrow_quiver": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Arrow Fletching Materials"
+  },
+  "example_tool_belt": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Scrap Leather Strips"
+  },
+  "example_steel_arrows": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Steel Arrowhead Kit"
+  },
+  "example_sniper_crossbow": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Broken Sniper Crossbow"
+  },
+  "example_crossbow_bolts": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Bolt Components"
   }
 }

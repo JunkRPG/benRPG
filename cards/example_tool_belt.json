@@ -1,0 +1,26 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Scrap Leather Strips",
+    "Description": "Strips of leather that could be fashioned into a useful belt.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "1",
+    "Metal Value": "1",
+    "Wood Value": "0",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "0",
+    "Requirements: Metal": "2",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Adventurer's Tool Belt",
+    "2nd_state_Type": "Tool_Belt",
+    "2nd_state_Use": "Equip to accessory slot to gain extra tool slots",
+    "2nd_state_Subtype": "Belt",
+    "2nd_state_Extra_Tool_Slots": "2",
+    "2nd_state_Tool Image": ""
+  }
+}
