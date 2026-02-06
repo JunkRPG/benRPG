@@ -1902,6 +1902,8 @@ class CardCreationScreen:
                 self.max_scroll = max(0, total_form_height - WINDOW_HEIGHT)
             elif self.card_type == "Location Card":
                 # Location cards now support 1 or 2 states (Location/Location)
+                # Spawn location options
+                SPAWN_LOCATION_OPTIONS = ["false", "true"]
                 # State 1 fields (left column)
                 left_fields = [
                     ("Name", "text"),
@@ -1912,6 +1914,12 @@ class CardCreationScreen:
                     ("Shop_Size", "text"),
                     ("Shop_Currency", "dropdown", CURRENCY_TYPES, "metal"),
                     ("Shop_Cycle_Turns", "text"),
+                    ("Is_Spawn_Location", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),  # Enemy spawn location
+                    ("Health", "text"),  # Health for enemy spawn locations
+                    ("Spawn_Enemy_Deck", "text"),  # Deck file for spawning enemies
+                    ("Is_NPC_Spawn_Location", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),  # NPC spawn location (church)
+                    ("NPC_Health", "text"),  # Health for NPC spawn locations (can be destroyed by enemies)
+                    ("NPC_Spawn_Deck", "text"),  # Deck file for spawning NPCs
                     ("Background Image File Path", "file"),
                     ("Location Image File Path", "file")
                 ]
@@ -1933,6 +1941,12 @@ class CardCreationScreen:
                         ("2nd_state_Shop_Size", "text"),
                         ("2nd_state_Shop_Currency", "dropdown", CURRENCY_TYPES, "metal"),
                         ("2nd_state_Shop_Cycle_Turns", "text"),
+                        ("2nd_state_Is_Spawn_Location", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),  # Usually false for ruins
+                        ("2nd_state_Health", "text"),  # Usually 0 for ruins
+                        ("2nd_state_Spawn_Enemy_Deck", "text"),  # Usually empty for ruins
+                        ("2nd_state_Is_NPC_Spawn_Location", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),  # Usually false for ruins
+                        ("2nd_state_NPC_Health", "text"),  # Usually 0 for ruins
+                        ("2nd_state_NPC_Spawn_Deck", "text"),  # Usually empty for ruins
                         ("2nd_state_Location Image File Path", "file")
                     ]
 

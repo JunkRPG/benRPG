@@ -144,7 +144,17 @@ class HexGrid:
                     "assigned_card_id": loc_hex.get("assigned_location_card_id"),
                     "assigned_npc_id": loc_hex.get("assigned_npc_card_id"),
                     "state": loc_hex.get("location_state", 1),
-                    "available_npcs": []  # NPCs waiting to be recruited at this location
+                    "available_npcs": [],  # NPCs waiting to be recruited at this location
+                    # Enemy spawn location fields
+                    "health": 0,
+                    "max_health": 0,
+                    "is_spawn_location": False,
+                    "spawn_enemy_deck": None,
+                    # NPC spawn location fields (churches)
+                    "npc_health": 0,
+                    "npc_max_health": 0,
+                    "is_npc_spawn_location": False,
+                    "npc_spawn_deck": None
                 }
                 # Load pre-assigned location card if specified
                 if loc_hex.get("assigned_location_card_id"):
@@ -155,6 +165,8 @@ class HexGrid:
                         # Set the card state if specified
                         if loc_hex.get("location_state", 1) == 2:
                             self.location_data[(row, col)]["card"].current_state = 2
+                        # Load spawn location properties from card data
+                        self._init_spawn_location_data((row, col), card_data, loc_hex.get("location_state", 1))
                     else:
                         print(f"Warning: Location card '{card_id}' not found")
                 # Preload location deck
@@ -252,6 +264,244 @@ class HexGrid:
         """Check if a hex is designated as a location hex."""
         return (row, col) in self.location_data
 
+    def _init_spawn_location_data(self, pos, card_data, state=1):
+        """Initialize spawn location data from a location card (both enemy and NPC spawns)."""
+        if pos not in self.location_data:
+            return
+
+        loc_data = self.location_data[pos]
+        data = card_data.get("data", {})
+
+        # Get the correct state data (use 2nd_state_ prefix if state 2)
+        if state == 2:
+            # Enemy spawn fields
+            is_spawn = data.get("2nd_state_Is_Spawn_Location", "false")
+            health_str = data.get("2nd_state_Health", "0")
+            spawn_deck = data.get("2nd_state_Spawn_Enemy_Deck", "")
+            # NPC spawn fields
+            is_npc_spawn = data.get("2nd_state_Is_NPC_Spawn_Location", "false")
+            npc_health_str = data.get("2nd_state_NPC_Health", "0")
+            npc_spawn_deck = data.get("2nd_state_NPC_Spawn_Deck", "")
+        else:
+            # Enemy spawn fields
+            is_spawn = data.get("Is_Spawn_Location", "false")
+            health_str = data.get("Health", "0")
+            spawn_deck = data.get("Spawn_Enemy_Deck", "")
+            # NPC spawn fields
+            is_npc_spawn = data.get("Is_NPC_Spawn_Location", "false")
+            npc_health_str = data.get("NPC_Health", "0")
+            npc_spawn_deck = data.get("NPC_Spawn_Deck", "")
+
+        # Parse enemy spawn values
+        is_spawn_location = str(is_spawn).lower() == "true"
+        try:
+            health = int(health_str) if health_str else 0
+        except (ValueError, TypeError):
+            health = 0
+
+        loc_data["is_spawn_location"] = is_spawn_location
+        loc_data["health"] = health
+        loc_data["max_health"] = health
+        loc_data["spawn_enemy_deck"] = spawn_deck if spawn_deck else None
+
+        # Parse NPC spawn values
+        is_npc_spawn_location = str(is_npc_spawn).lower() == "true"
+        try:
+            npc_health = int(npc_health_str) if npc_health_str else 0
+        except (ValueError, TypeError):
+            npc_health = 0
+
+        loc_data["is_npc_spawn_location"] = is_npc_spawn_location
+        loc_data["npc_health"] = npc_health
+        loc_data["npc_max_health"] = npc_health
+        loc_data["npc_spawn_deck"] = npc_spawn_deck if npc_spawn_deck else None
+
+    # ========== SPAWN LOCATION METHODS ==========
+
+    def is_attackable_location(self, row, col):
+        """Check if a location at this hex can be attacked (is a spawn location with health > 0)."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data:
+            return False
+        return loc_data.get("is_spawn_location", False) and loc_data.get("health", 0) > 0
+
+    def get_active_spawn_locations(self):
+        """Get all spawn locations that are still active (health > 0).
+        Returns list of ((row, col), loc_data) tuples."""
+        active = []
+        for pos, loc_data in self.location_data.items():
+            if loc_data.get("is_spawn_location", False) and loc_data.get("health", 0) > 0:
+                active.append((pos, loc_data))
+        return active
+
+    def damage_location(self, row, col, damage):
+        """Apply damage to a spawn location.
+        Returns (damage_dealt, destroyed, message)."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data:
+            return 0, False, "Not a location hex"
+
+        if not loc_data.get("is_spawn_location", False):
+            return 0, False, "This location cannot be attacked"
+
+        current_health = loc_data.get("health", 0)
+        if current_health <= 0:
+            return 0, False, "Location already destroyed"
+
+        # Apply damage
+        damage_dealt = min(damage, current_health)
+        loc_data["health"] = current_health - damage_dealt
+
+        # Get location name
+        card = loc_data.get("card")
+        loc_name = card.get_current_data().get("Name", "Location") if card else "Location"
+
+        if loc_data["health"] <= 0:
+            # Location destroyed - flip to state 2 (ruins)
+            self._destroy_spawn_location(row, col)
+            return damage_dealt, True, f"{loc_name} destroyed!"
+
+        return damage_dealt, False, f"Dealt {damage_dealt} damage to {loc_name} ({loc_data['health']} HP remaining)"
+
+    def _destroy_spawn_location(self, row, col):
+        """Handle destruction of a spawn location - flip card to state 2 (ruins)."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data:
+            return
+
+        loc_data["health"] = 0
+        loc_data["is_spawn_location"] = False
+        loc_data["state"] = 2
+
+        # Flip the card to state 2 if it has 2 states
+        card = loc_data.get("card")
+        if card and card.is_two_state():
+            card.current_state = 2
+            # Re-initialize with new state data (ruins usually have no spawn properties)
+            self._init_spawn_location_data((row, col), card.card_data, 2)
+
+    # ========== NPC SPAWN LOCATION METHODS (Churches) ==========
+
+    def is_attackable_npc_location(self, row, col):
+        """Check if an NPC spawn location (church) can be attacked by enemies."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data:
+            return False
+        return loc_data.get("is_npc_spawn_location", False) and loc_data.get("npc_health", 0) > 0
+
+    def get_active_npc_spawn_locations(self):
+        """Get all NPC spawn locations (churches) that are still active (npc_health > 0).
+        Returns list of ((row, col), loc_data) tuples."""
+        active = []
+        for pos, loc_data in self.location_data.items():
+            if loc_data.get("is_npc_spawn_location", False) and loc_data.get("npc_health", 0) > 0:
+                active.append((pos, loc_data))
+        return active
+
+    def damage_npc_location(self, row, col, damage):
+        """Apply damage to an NPC spawn location (church) from an enemy attack.
+        Returns (damage_dealt, destroyed, message)."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data:
+            return 0, False, "Not a location hex"
+
+        if not loc_data.get("is_npc_spawn_location", False):
+            return 0, False, "This location cannot be attacked"
+
+        current_health = loc_data.get("npc_health", 0)
+        if current_health <= 0:
+            return 0, False, "Location already destroyed"
+
+        # Apply damage
+        damage_dealt = min(damage, current_health)
+        loc_data["npc_health"] = current_health - damage_dealt
+
+        # Get location name
+        card = loc_data.get("card")
+        loc_name = card.get_current_data().get("Name", "Church") if card else "Church"
+
+        if loc_data["npc_health"] <= 0:
+            # Location destroyed - flip to state 2 (ruins)
+            self._destroy_npc_spawn_location(row, col)
+            return damage_dealt, True, f"{loc_name} destroyed!"
+
+        return damage_dealt, False, f"{loc_name} takes {damage_dealt} damage ({loc_data['npc_health']} HP remaining)"
+
+    def _destroy_npc_spawn_location(self, row, col):
+        """Handle destruction of an NPC spawn location (church) - flip card to state 2 (ruins)."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data:
+            return
+
+        loc_data["npc_health"] = 0
+        loc_data["is_npc_spawn_location"] = False
+        loc_data["state"] = 2
+
+        # Flip the card to state 2 if it has 2 states
+        card = loc_data.get("card")
+        if card and card.is_two_state():
+            card.current_state = 2
+            # Re-initialize with new state data (ruins usually have no spawn properties)
+            self._init_spawn_location_data((row, col), card.card_data, 2)
+
+    def repair_npc_location(self, row, col, heal_amount, can_rebuild=True):
+        """Repair an NPC spawn location (church).
+        If the church is destroyed (state 2) and can_rebuild=True, it will be rebuilt.
+        Returns (success, healed_amount, rebuilt, message)."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data:
+            return False, 0, False, "Not a location hex"
+
+        card = loc_data.get("card")
+        if not card:
+            return False, 0, False, "No location card assigned"
+
+        # Check if this is/was an NPC spawn location (church)
+        card_data = card.card_data.get("data", {})
+
+        # Check state 1 for NPC spawn location property
+        is_church_state1 = str(card_data.get("Is_NPC_Spawn_Location", "false")).lower() == "true"
+
+        if not is_church_state1:
+            return False, 0, False, "This location cannot be repaired"
+
+        current_state = loc_data.get("state", 1)
+        current_health = loc_data.get("npc_health", 0)
+        max_health = loc_data.get("npc_max_health", 0)
+
+        # If destroyed (state 2), rebuild it first
+        rebuilt = False
+        if current_state == 2 and can_rebuild:
+            # Flip card back to state 1
+            card.current_state = 1
+            loc_data["state"] = 1
+            # Re-initialize spawn location data with state 1 values
+            self._init_spawn_location_data((row, col), card.card_data, 1)
+            # Update local references after re-init
+            max_health = loc_data.get("npc_max_health", 0)
+            current_health = 0  # Start at 0, will heal below
+            rebuilt = True
+
+        # Now heal the location
+        if max_health <= 0:
+            return False, 0, rebuilt, "Location has no health to repair"
+
+        if current_health >= max_health and not rebuilt:
+            return False, 0, False, "Location is already at full health"
+
+        # Apply healing
+        old_health = current_health
+        new_health = min(max_health, current_health + heal_amount)
+        loc_data["npc_health"] = new_health
+        healed = new_health - old_health
+
+        loc_name = card.get_current_data().get("Name", "Church")
+
+        if rebuilt:
+            return True, healed, True, f"{loc_name} rebuilt and repaired! ({new_health}/{max_health} HP)"
+        else:
+            return True, healed, False, f"{loc_name} repaired for {healed} HP ({new_health}/{max_health} HP)"
+
     def get_location_card(self, row, col):
         """Get the assigned location card for a hex."""
         loc_data = self.location_data.get((row, col))
@@ -291,6 +541,9 @@ class HexGrid:
 
         # Initialize shop inventory
         self._initialize_shop(row, col)
+
+        # Initialize spawn location data if this is a spawn location
+        self._init_spawn_location_data((row, col), card_data, 1)
 
         card_manager.track_card_usage(card_id, {
             "action": "location_assigned",
@@ -741,11 +994,24 @@ class HexGrid:
             "assigned_card_id": location_card.card_data.get("id"),
             "assigned_npc_id": None,
             "state": location_card.current_state,
-            "available_npcs": []
+            "available_npcs": [],
+            # Enemy spawn location fields
+            "health": 0,
+            "max_health": 0,
+            "is_spawn_location": False,
+            "spawn_enemy_deck": None,
+            # NPC spawn location fields (churches)
+            "npc_health": 0,
+            "npc_max_health": 0,
+            "is_npc_spawn_location": False,
+            "npc_spawn_deck": None
         }
 
         # Initialize shop if defined in card
         self._initialize_shop(row, col)
+
+        # Initialize spawn location data if applicable
+        self._init_spawn_location_data((row, col), location_card.card_data, location_card.current_state)
 
         return True, f"Built {loc_name} at ({row}, {col})"
 
@@ -1268,27 +1534,130 @@ class HexGrid:
                 # Draw location hex indicators
                 if (row, col) in self.location_data:
                     loc_data = self.location_data[(row, col)]
-                    pygame.draw.polygon(hex_surface, colors['ORANGE'], points, 3)  # Orange border for locations
-                    # Draw house icon if location is assigned
+                    is_spawn_location = loc_data.get("is_spawn_location", False)
+                    has_health = loc_data.get("health", 0) > 0
+                    is_npc_spawn = loc_data.get("is_npc_spawn_location", False)
+                    has_npc_health = loc_data.get("npc_health", 0) > 0
+
+                    # Determine border color: red for enemy spawns, blue for NPC spawns, orange for regular
+                    if is_spawn_location and has_health:
+                        border_color = colors['RED']
+                    elif is_npc_spawn and has_npc_health:
+                        border_color = colors['BLUE']
+                    else:
+                        border_color = colors['ORANGE']
+                    pygame.draw.polygon(hex_surface, border_color, points, 3)
+
+                    # Draw icon if location is assigned
                     if loc_data.get("card"):
                         is_upgraded = loc_data.get("state", 1) == 2
-                        icon_color = colors['GREEN'] if is_upgraded else colors['ORANGE']
-                        # Simple house shape (triangle roof + rectangle base)
-                        house_size = self.hex_size * 0.3
-                        house_x, house_y = x, y
-                        roof_points = [
-                            (house_x, house_y - house_size * 0.8),  # Top
-                            (house_x - house_size * 0.6, house_y - house_size * 0.2),  # Bottom left
-                            (house_x + house_size * 0.6, house_y - house_size * 0.2)   # Bottom right
-                        ]
-                        base_rect = pygame.Rect(
-                            house_x - house_size * 0.4,
-                            house_y - house_size * 0.2,
-                            house_size * 0.8,
-                            house_size * 0.6
-                        )
-                        pygame.draw.polygon(hex_surface, icon_color, roof_points)
-                        pygame.draw.rect(hex_surface, icon_color, base_rect)
+
+                        if is_spawn_location and has_health:
+                            # Draw tower/fort icon for active enemy spawn locations (red)
+                            icon_color = colors['RED']
+                            tower_size = self.hex_size * 0.3
+                            tower_x, tower_y = x, y
+                            # Tower shape: rectangular base with crenellations on top
+                            base_rect = pygame.Rect(
+                                tower_x - tower_size * 0.4,
+                                tower_y - tower_size * 0.3,
+                                tower_size * 0.8,
+                                tower_size * 0.8
+                            )
+                            pygame.draw.rect(hex_surface, icon_color, base_rect)
+                            # Crenellations (small rectangles on top)
+                            cren_width = tower_size * 0.2
+                            cren_height = tower_size * 0.25
+                            for i in range(3):
+                                cren_rect = pygame.Rect(
+                                    tower_x - tower_size * 0.4 + i * cren_width * 1.5,
+                                    tower_y - tower_size * 0.3 - cren_height,
+                                    cren_width,
+                                    cren_height
+                                )
+                                pygame.draw.rect(hex_surface, icon_color, cren_rect)
+
+                            # Draw health bar below the tower icon
+                            max_health = loc_data.get("max_health", 1)
+                            current_health = loc_data.get("health", 0)
+                            if max_health > 0:
+                                bar_width = self.hex_size * 0.6
+                                bar_height = 4
+                                bar_x = tower_x - bar_width / 2
+                                bar_y = tower_y + tower_size * 0.6
+                                # Background (gray)
+                                pygame.draw.rect(hex_surface, colors['GRAY'],
+                                               (bar_x, bar_y, bar_width, bar_height))
+                                # Health (red)
+                                health_ratio = current_health / max_health
+                                pygame.draw.rect(hex_surface, colors['RED'],
+                                               (bar_x, bar_y, bar_width * health_ratio, bar_height))
+
+                        elif is_npc_spawn and has_npc_health:
+                            # Draw church icon for active NPC spawn locations (blue)
+                            icon_color = colors['BLUE']
+                            church_size = self.hex_size * 0.3
+                            church_x, church_y = x, y
+                            # Church shape: rectangle with pointed steeple on top
+                            # Steeple (triangle)
+                            steeple_points = [
+                                (church_x, church_y - church_size * 1.0),  # Top point
+                                (church_x - church_size * 0.2, church_y - church_size * 0.4),  # Bottom left
+                                (church_x + church_size * 0.2, church_y - church_size * 0.4)   # Bottom right
+                            ]
+                            pygame.draw.polygon(hex_surface, icon_color, steeple_points)
+                            # Church body (rectangle)
+                            body_rect = pygame.Rect(
+                                church_x - church_size * 0.4,
+                                church_y - church_size * 0.4,
+                                church_size * 0.8,
+                                church_size * 0.8
+                            )
+                            pygame.draw.rect(hex_surface, icon_color, body_rect)
+                            # Cross on top (small lines)
+                            cross_color = colors['WHITE']
+                            cross_y = church_y - church_size * 0.85
+                            pygame.draw.line(hex_surface, cross_color,
+                                           (church_x, cross_y - church_size * 0.15),
+                                           (church_x, cross_y + church_size * 0.1), 2)
+                            pygame.draw.line(hex_surface, cross_color,
+                                           (church_x - church_size * 0.1, cross_y),
+                                           (church_x + church_size * 0.1, cross_y), 2)
+
+                            # Draw health bar below the church icon
+                            max_npc_health = loc_data.get("npc_max_health", 1)
+                            current_npc_health = loc_data.get("npc_health", 0)
+                            if max_npc_health > 0:
+                                bar_width = self.hex_size * 0.6
+                                bar_height = 4
+                                bar_x = church_x - bar_width / 2
+                                bar_y = church_y + church_size * 0.6
+                                # Background (gray)
+                                pygame.draw.rect(hex_surface, colors['GRAY'],
+                                               (bar_x, bar_y, bar_width, bar_height))
+                                # Health (blue)
+                                health_ratio = current_npc_health / max_npc_health
+                                pygame.draw.rect(hex_surface, colors['BLUE'],
+                                               (bar_x, bar_y, bar_width * health_ratio, bar_height))
+                        else:
+                            # Draw house icon for regular locations
+                            icon_color = colors['GREEN'] if is_upgraded else colors['ORANGE']
+                            # Simple house shape (triangle roof + rectangle base)
+                            house_size = self.hex_size * 0.3
+                            house_x, house_y = x, y
+                            roof_points = [
+                                (house_x, house_y - house_size * 0.8),  # Top
+                                (house_x - house_size * 0.6, house_y - house_size * 0.2),  # Bottom left
+                                (house_x + house_size * 0.6, house_y - house_size * 0.2)   # Bottom right
+                            ]
+                            base_rect = pygame.Rect(
+                                house_x - house_size * 0.4,
+                                house_y - house_size * 0.2,
+                                house_size * 0.8,
+                                house_size * 0.6
+                            )
+                            pygame.draw.polygon(hex_surface, icon_color, roof_points)
+                            pygame.draw.rect(hex_surface, icon_color, base_rect)
                 if self.selected_hex == (row, col):
                     pygame.draw.polygon(hex_surface, colors['YELLOW'], points, 0)
                 pygame.draw.polygon(hex_surface, colors['GOLDEN_YELLOW'], points, 1)

@@ -939,9 +939,19 @@ class Player:
 
     def has_building_tool(self):
         """Check if player has a building tool (hammer) equipped."""
-        if not self.equipped_tool:
-            return False
-        tool_data = self.equipped_tool.get_current_data()
+        # Check multi-slot tool system first
+        if self.equipped_tools:
+            for tool in self.equipped_tools:
+                if tool and self._is_building_tool(tool):
+                    return True
+        # Fall back to legacy single tool slot
+        if self.equipped_tool and self._is_building_tool(self.equipped_tool):
+            return True
+        return False
+
+    def _is_building_tool(self, tool):
+        """Check if a tool is a building tool (hammer)."""
+        tool_data = tool.get_current_data()
         tool_type = tool_data.get("Type", "")
         tool_subtype = tool_data.get("Subtype", "")
         # Check for Building type tools or hammers

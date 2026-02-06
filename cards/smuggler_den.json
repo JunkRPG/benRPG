@@ -1,0 +1,31 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Smuggler's Den",
+    "Description": "A hidden cave network used by smugglers and thieves. Criminal reinforcements arrive here.",
+    "Outcomes": "[]",
+    "Choices": "[]",
+    "Shop_Deck": "",
+    "Shop_Size": "",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "",
+    "Is_Spawn_Location": "true",
+    "Health": "35",
+    "Spawn_Enemy_Deck": "decks/beta_enemy_deck.json",
+    "Upgrade_NPC_Type": "Allied",
+    "Upgrade_Material_Cost": "{}",
+    "2nd_state_Name": "Empty Cave",
+    "2nd_state_Description": "The smugglers have fled. Their abandoned supplies litter the cave floor.",
+    "2nd_state_Outcomes": "[{\"probability\":0.45,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_junk_deck.json\"},{\"probability\":0.35,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_shop_deck.json\"},{\"probability\":0.20,\"card_type\":\"None\",\"deck_file\":\"\"}]",
+    "2nd_state_Choices": "[{\"name\":\"Loot Cave\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Rest\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":5}}]",
+    "2nd_state_Shop_Deck": "",
+    "2nd_state_Shop_Size": "",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "",
+    "2nd_state_Is_Spawn_Location": "false",
+    "2nd_state_Health": "0",
+    "2nd_state_Spawn_Enemy_Deck": ""
+  }
+}

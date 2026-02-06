@@ -193,6 +193,83 @@
       "shop_inventory": [],
       "turns_since_cycle": 0,
       "visited_this_turn": false
+    },
+    {
+      "row": 5,
+      "column": 5,
+      "location_deck_file": null,
+      "assigned_location_card_id": "bandit_hideout",
+      "assigned_npc_card_id": null,
+      "location_state": 1,
+      "shop_inventory": [],
+      "turns_since_cycle": 0,
+      "visited_this_turn": false
+    },
+    {
+      "row": 3,
+      "column": 40,
+      "location_deck_file": null,
+      "assigned_location_card_id": "skeleton_fort",
+      "assigned_npc_card_id": null,
+      "location_state": 1,
+      "shop_inventory": [],
+      "turns_since_cycle": 0,
+      "visited_this_turn": false
+    },
+    {
+      "row": 22,
+      "column": 55,
+      "location_deck_file": null,
+      "assigned_location_card_id": "goblin_camp",
+      "assigned_npc_card_id": null,
+      "location_state": 1,
+      "shop_inventory": [],
+      "turns_since_cycle": 0,
+      "visited_this_turn": false
+    },
+    {
+      "row": 35,
+      "column": 62,
+      "location_deck_file": null,
+      "assigned_location_card_id": "smuggler_den",
+      "assigned_npc_card_id": null,
+      "location_state": 1,
+      "shop_inventory": [],
+      "turns_since_cycle": 0,
+      "visited_this_turn": false
+    },
+    {
+      "row": 30,
+      "column": 35,
+      "location_deck_file": null,
+      "assigned_location_card_id": "village_church",
+      "assigned_npc_card_id": null,
+      "location_state": 1,
+      "shop_inventory": [],
+      "turns_since_cycle": 0,
+      "visited_this_turn": false
+    },
+    {
+      "row": 15,
+      "column": 15,
+      "location_deck_file": null,
+      "assigned_location_card_id": "forest_chapel",
+      "assigned_npc_card_id": null,
+      "location_state": 1,
+      "shop_inventory": [],
+      "turns_since_cycle": 0,
+      "visited_this_turn": false
+    },
+    {
+      "row": 25,
+      "column": 60,
+      "location_deck_file": null,
+      "assigned_location_card_id": "roadside_shrine",
+      "assigned_npc_card_id": null,
+      "location_state": 1,
+      "shop_inventory": [],
+      "turns_since_cycle": 0,
+      "visited_this_turn": false
     }
   ]
 }

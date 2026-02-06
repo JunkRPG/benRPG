@@ -111,7 +111,33 @@ class Unit:
                     self.flash_start = pygame.time.get_ticks()
                     log.append(f"{self.name} attacked {target.name} with projectile for {damage} damage")
                     return log
-                
+
+                # Check for NPC spawn locations (churches) to attack
+                npc_spawn_locations = grid.get_active_npc_spawn_locations()
+                for loc_pos, loc_data in npc_spawn_locations:
+                    distance_to_loc = grid.hex_distance(self.position, loc_pos)
+                    # Check melee attack on church
+                    if distance_to_loc == 1:
+                        damage = self.melee_damage
+                        damage_dealt, destroyed, msg = grid.damage_npc_location(loc_pos[0], loc_pos[1], damage)
+                        if damage_dealt > 0:
+                            self.attack_flash = True
+                            self.flash_start = pygame.time.get_ticks()
+                            log.append(msg)
+                            return log
+                    # Check projectile attack on church
+                    elif (self.projectile_damage > 0 and
+                          1 < distance_to_loc <= self.projectile_range and
+                          grid.is_aligned(self.position, loc_pos, self.projectile_range) and
+                          grid.has_clear_line_of_sight(self.position, loc_pos)):
+                        damage = self.projectile_damage
+                        damage_dealt, destroyed, msg = grid.damage_npc_location(loc_pos[0], loc_pos[1], damage)
+                        if damage_dealt > 0:
+                            self.attack_flash = True
+                            self.flash_start = pygame.time.get_ticks()
+                            log.append(msg)
+                            return log
+
                 path = grid.find_path(self.position, player.position)
                 if path and len(path) > 1:
                     max_steps = min(self.movement, len(path) - 1)

@@ -7,6 +7,8 @@ like spawning enemies from map edges, weather changes, drawing cards, etc.
 import json
 import random
 import os
+from deck_utils import resolve_deck_path
+from card_utils import load_card
 
 
 class TransitionCard:
@@ -112,18 +114,14 @@ class TransitionManager:
 
     def load_transition_card(self, card_id):
         """Load a specific transition card by ID."""
-        card_file = os.path.join("cards", f"{card_id}.json")
-        try:
-            with open(card_file, 'r') as f:
-                card_data = json.load(f)
+        card_data = load_card(card_id)
+        if not card_data:
+            return False
 
-            if card_data.get("card_type") == "Transition Card":
-                card_data["id"] = card_id
-                self.active_transition = TransitionCard(card_data)
-                print(f"Loaded transition card: {self.active_transition.name}")
-                return True
-        except Exception as e:
-            print(f"Error loading transition card {card_id}: {e}")
+        if card_data.get("card_type") == "Transition Card":
+            self.active_transition = TransitionCard(card_data)
+            print(f"Loaded transition card: {self.active_transition.name}")
+            return True
         return False
 
     def load_from_level_data(self, level_data):
@@ -215,7 +213,7 @@ class TransitionManager:
             deck = params.get("deck", None)
             count = params.get("count", 1)
             allegiance = params.get("allegiance", "Neutral")
-            return self._spawn_from_edge(hex_grid, edge, deck, allegiance, count)
+            return self._spawn_npc_from_location(hex_grid, edge, deck, allegiance, count)
 
         elif outcome_type == "draw_junk":
             deck = params.get("deck", None)
@@ -248,30 +246,49 @@ class TransitionManager:
         return ""
 
     def _spawn_from_edge(self, hex_grid, edge, deck_file, allegiance, count):
-        """Spawn units from a map edge."""
+        """Spawn units from a map edge or adjacent to active spawn locations."""
         from unit import Unit
 
         if not deck_file:
             return "No deck specified for spawning."
 
-        # Handle deck path - try both deck locations for compatibility
-        if os.path.sep in deck_file:
-            deck_path = deck_file
-        else:
-            # Try cards/decks first, then decks
-            deck_path = os.path.join("cards", "decks", deck_file)
-            if not os.path.exists(deck_path):
-                deck_path = os.path.join("decks", deck_file)
+        # Check for active spawn locations first
+        active_spawn_locations = hex_grid.get_active_spawn_locations()
 
         spawned = []
         for _ in range(count):
-            card = self.card_manager.draw_from_deck(deck_path)
-            if not card:
+            spawn_pos = None
+            actual_deck = deck_file
+            spawn_source = edge
+
+            # If spawn locations exist, spawn adjacent to a random one
+            if active_spawn_locations:
+                spawn_location_pos, spawn_loc_data = random.choice(active_spawn_locations)
+                # Use spawn location's deck if specified, otherwise use the transition deck
+                loc_spawn_deck = spawn_loc_data.get("spawn_enemy_deck")
+                if loc_spawn_deck:
+                    actual_deck = loc_spawn_deck
+
+                # Find an empty adjacent hex to the spawn location
+                spawn_pos = self._get_spawn_adjacent_position(hex_grid, spawn_location_pos)
+
+                # Get location name for message
+                loc_card = spawn_loc_data.get("card")
+                loc_name = loc_card.get_current_data().get("Name", "Spawn Location") if loc_card else "Spawn Location"
+                spawn_source = loc_name
+
+            # Fallback to edge spawning if no spawn locations or no adjacent position available
+            if not spawn_pos:
+                spawn_pos = hex_grid.get_edge_spawn_position(edge)
+                spawn_source = edge
+
+            if not spawn_pos:
                 continue
 
-            # Get spawn position on edge
-            spawn_pos = hex_grid.get_edge_spawn_position(edge)
-            if not spawn_pos:
+            # Draw card from the appropriate deck
+            deck_path = resolve_deck_path(actual_deck)
+            card = self.card_manager.draw_from_deck(deck_path)
+            if not card:
                 continue
 
             # Create unit from card - Unit takes card_data dict
@@ -283,11 +300,93 @@ class TransitionManager:
 
             unit = Unit(card_data)
             hex_grid.place_unit(unit, *spawn_pos)
-            spawned.append(f"{unit.name} ({edge})")
+            spawned.append(f"{unit.name} ({spawn_source})")
 
         if spawned:
-            return f"Spawned from edge: {', '.join(spawned)}"
+            return f"Spawned: {', '.join(spawned)}"
         return "Failed to spawn units."
+
+    def _get_spawn_adjacent_position(self, hex_grid, location_pos):
+        """Get a random empty position adjacent to a spawn location."""
+        row, col = location_pos
+        # Get neighbor offsets based on column parity
+        if col % 2 == 0:
+            offsets = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1)]
+        else:
+            offsets = [(-1, 0), (1, 0), (0, -1), (0, 1), (1, -1), (1, 1)]
+
+        candidates = []
+        for dr, dc in offsets:
+            nr, nc = row + dr, col + dc
+            if 0 <= nr < hex_grid.rows and 0 <= nc < hex_grid.cols:
+                cell = hex_grid.grid[nr][nc]
+                if cell.get("unit") is None and cell.get("accessible", True):
+                    candidates.append((nr, nc))
+
+        if candidates:
+            return random.choice(candidates)
+        return None
+
+    def _spawn_npc_from_location(self, hex_grid, edge, deck_file, allegiance, count):
+        """Spawn NPCs from NPC spawn locations (churches) or from map edges as fallback."""
+        from unit import Unit
+
+        if not deck_file:
+            return "No deck specified for spawning."
+
+        # Check for active NPC spawn locations (churches) first
+        active_npc_locations = hex_grid.get_active_npc_spawn_locations()
+
+        spawned = []
+        for _ in range(count):
+            spawn_pos = None
+            actual_deck = deck_file
+            spawn_source = edge
+
+            # If NPC spawn locations (churches) exist, spawn adjacent to a random one
+            if active_npc_locations:
+                npc_location_pos, npc_loc_data = random.choice(active_npc_locations)
+                # Use church's NPC deck if specified, otherwise use the transition deck
+                loc_npc_deck = npc_loc_data.get("npc_spawn_deck")
+                if loc_npc_deck:
+                    actual_deck = loc_npc_deck
+
+                # Find an empty adjacent hex to the church
+                spawn_pos = self._get_spawn_adjacent_position(hex_grid, npc_location_pos)
+
+                # Get location name for message
+                loc_card = npc_loc_data.get("card")
+                loc_name = loc_card.get_current_data().get("Name", "Church") if loc_card else "Church"
+                spawn_source = loc_name
+
+            # Fallback to edge spawning if no NPC spawn locations or no adjacent position available
+            if not spawn_pos:
+                spawn_pos = hex_grid.get_edge_spawn_position(edge)
+                spawn_source = edge
+
+            if not spawn_pos:
+                continue
+
+            # Draw card from the appropriate deck
+            deck_path = resolve_deck_path(actual_deck)
+            card = self.card_manager.draw_from_deck(deck_path)
+            if not card:
+                continue
+
+            # Create unit from card - Unit takes card_data dict
+            card_data = card.card_data.copy()
+            # Override allegiance if specified
+            if "data" in card_data:
+                card_data["data"] = card_data["data"].copy()
+                card_data["data"]["Allegiance (Hostile, Neutral, Allied)"] = allegiance
+
+            unit = Unit(card_data)
+            hex_grid.place_unit(unit, *spawn_pos)
+            spawned.append(f"{unit.name} ({spawn_source})")
+
+        if spawned:
+            return f"Spawned: {', '.join(spawned)}"
+        return "Failed to spawn NPCs."
 
     def _draw_cards(self, card_type, deck_file, count, player):
         """Draw cards to player inventory."""
@@ -296,13 +395,7 @@ class TransitionManager:
         cards_drawn = []
         for _ in range(count):
             if deck_file:
-                # Try both deck locations for compatibility
-                if deck_file.startswith("cards") or os.path.sep in deck_file:
-                    deck_path = deck_file
-                else:
-                    deck_path = os.path.join("cards", "decks", deck_file)
-                    if not os.path.exists(deck_path):
-                        deck_path = os.path.join("decks", deck_file)
+                deck_path = resolve_deck_path(deck_file)
                 card = self.card_manager.draw_from_deck(deck_path)
             else:
                 # Draw random card of type

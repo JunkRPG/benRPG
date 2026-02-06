@@ -1489,5 +1489,54 @@
     "blueprint_subclass": null,
     "states": 2,
     "name": "Bolt Components"
+  },
+  "bandit_hideout": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Bandit Hideout"
+  },
+  "skeleton_fort": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Skeleton Fort"
+  },
+  "goblin_camp": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Goblin Camp"
+  },
+  "smuggler_den": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Smuggler's Den"
+  },
+  "village_church": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Village Church"
+  },
+  "forest_chapel": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Forest Chapel"
+  },
+  "roadside_shrine": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Roadside Shrine"
   }
 }

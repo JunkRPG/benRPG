@@ -774,8 +774,8 @@ class LocationScreen:
                                 rewards = json.loads(rewards_json) if isinstance(rewards_json, str) else rewards_json
                                 if rewards.get('cards'):
                                     info += f"<b>Rewards:</b> {len(rewards['cards'])} item(s)"
-                            except:
-                                pass
+                            except (json.JSONDecodeError, KeyError, TypeError, AttributeError):
+                                pass  # Invalid rewards format, skip display
                             if self.quest_details_text:
                                 self.quest_details_text.set_text(f"<font color='#FFFFFF'>{info}</font>")
                             break
@@ -885,6 +885,79 @@ class LocationScreen:
             deck_file = params.get("deck", "decks/test_quest_deck.json")
             self.quest_deck_file = deck_file
             self.load_available_quests(deck_file)
+        elif action == "repair_location":
+            # Repair an NPC spawn location (church) using a hammer and materials
+            heal_amount = int(params.get("amount", 20))
+            can_rebuild = params.get("can_rebuild", True)
+            required_materials = params.get("materials", {})  # e.g., {"Metal": 2, "Wood": 3}
+
+            # Check for building tool (hammer)
+            if not game.current_player.has_building_tool():
+                self.info_text.set_text("<font color='#FF0000'>You need a hammer equipped to repair!</font>")
+                return
+
+            # Calculate player's available materials
+            totals = {"Metal": 0, "Wood": 0, "Raw": 0, "Refined": 0}
+            for card in game.current_player.inventory:
+                card_data = card.get_current_data()
+                totals["Metal"] += int(card_data.get("Metal Value", 0) or 0)
+                totals["Wood"] += int(card_data.get("Wood Value", 0) or 0)
+                totals["Raw"] += int(card_data.get("Raw Material Value", 0) or 0)
+                totals["Refined"] += int(card_data.get("Refined Material Value", 0) or 0)
+
+            # Check material requirements
+            missing = []
+            for material, required in required_materials.items():
+                required = int(required or 0)
+                if required <= 0:
+                    continue
+                available = totals.get(material, 0)
+                if available < required:
+                    missing.append(f"{material}: need {required}, have {available}")
+
+            if missing:
+                self.info_text.set_text(f"<font color='#FF0000'>Missing materials: {', '.join(missing)}</font>")
+                return
+
+            # Consume materials from inventory (consume cards until requirements met)
+            materials_to_consume = dict(required_materials)
+            cards_to_remove = []
+            for card in game.current_player.inventory[:]:  # Copy list to avoid modification during iteration
+                if all(v <= 0 for v in materials_to_consume.values()):
+                    break
+                card_data = card.get_current_data()
+                card_contributes = False
+                for mat_type in ["Metal", "Wood", "Raw", "Refined"]:
+                    if materials_to_consume.get(mat_type, 0) > 0:
+                        card_value = int(card_data.get(f"{mat_type} Value" if mat_type in ["Metal", "Wood"] else f"{mat_type} Material Value", 0) or 0)
+                        if card_value > 0:
+                            card_contributes = True
+                            materials_to_consume[mat_type] = max(0, materials_to_consume.get(mat_type, 0) - card_value)
+                if card_contributes:
+                    cards_to_remove.append(card)
+
+            # Remove consumed cards
+            for card in cards_to_remove:
+                if card in game.current_player.inventory:
+                    game.current_player.inventory.remove(card)
+
+            # Perform the repair
+            success, healed, rebuilt, msg = self.hex_grid.repair_npc_location(
+                self.hex_pos[0], self.hex_pos[1], heal_amount, can_rebuild
+            )
+
+            if success:
+                game_screen.add_to_log(msg)
+                if costs_action:
+                    game.current_player.action_used = True
+                color = "#00FF00"
+                # Refresh location card display
+                self.location_card = self.hex_grid.get_location_card(self.hex_pos[0], self.hex_pos[1])
+                self.initialize_screen(self.location_card, self.hex_pos, self.hex_grid)
+            else:
+                color = "#FF0000"
+
+            self.info_text.set_text(f"<font color='{color}'>{msg}</font>")
 
     def load_available_quests(self, deck_file):
         """Load all quests from a deck and display them for selection."""
@@ -3357,6 +3430,75 @@ class GameScreen:
         self.player_info_label.set_text(self.get_player_info())
         self.player_mode = "movement"
 
+    def _attack_location(self, hex_pos, player):
+        """Attack a spawn location and return (message, action_used)."""
+        if not self.hex_grid.is_attackable_location(hex_pos[0], hex_pos[1]):
+            return "This location cannot be attacked", False
+
+        # Check if action has already been used
+        if player.action_used:
+            return "You've already used your action this turn", False
+
+        # Determine attack type and damage
+        is_projectile = self.selected_attack == player.attacks["projectile"]["name"]
+        is_melee = self.selected_attack == player.attacks["melee"]["name"]
+
+        if is_melee:
+            # Melee attack - must be adjacent
+            distance = self.hex_grid.hex_distance(player.position, hex_pos)
+            if distance != 1:
+                return "Target not in melee range", False
+            damage = player.attacks["melee"]["damage"]
+        elif is_projectile:
+            # Projectile attack - check range
+            if not player._is_valid_projectile_target(hex_pos, self.hex_grid):
+                distance = self.hex_grid.hex_distance(player.position, hex_pos)
+                if player.projectile_exclude_adj and distance == 1:
+                    return "Target too close for this weapon", False
+                elif distance > player.projectile_range:
+                    return "Target out of range", False
+                else:
+                    return "Target not in valid range pattern", False
+
+            # Get damage (handle ammunition if required)
+            attack_info = player.attacks.get("projectile", {})
+            requires_ammo = attack_info.get("requires_ammo", False)
+
+            if requires_ammo:
+                ammo_card = player._get_equipped_ammunition()
+                if not ammo_card:
+                    return "No ammunition equipped - cannot fire!", False
+                ammo_data = ammo_card.get_current_data()
+                damage = int(ammo_data.get("Ammo_Damage", 0))
+                # Check ammo runout after attack
+                runout_check = True
+            else:
+                damage = attack_info.get("damage", 0)
+                ammo_card = None
+                runout_check = False
+        else:
+            return "Invalid attack type", False
+
+        # Apply damage to the location
+        damage_dealt, destroyed, message = self.hex_grid.damage_location(hex_pos[0], hex_pos[1], damage)
+
+        if damage_dealt > 0:
+            # Mark action as used
+            player.action_used = True
+            player.attack_flash = True
+            player.flash_start = pygame.time.get_ticks()
+
+            # Handle ammunition runout for projectile attacks
+            if is_projectile and runout_check and ammo_card:
+                ammo_data = ammo_card.get_current_data()
+                runout_msg = player._check_ammo_runout(ammo_card, ammo_data)
+                if runout_msg:
+                    message += f" {runout_msg}"
+
+            return message, True
+        else:
+            return message, False
+
     def update_location_button(self):
         """Update the location button based on player's current position."""
         # Remove old location button if it exists
@@ -3662,6 +3804,14 @@ class GameScreen:
                             self.show_stats(None)
                         self.player_info_label.set_text(self.get_player_info())
                         self.selected_attack = None
+                elif self.player_mode == "attack" and self.selected_attack and not unit and self.hex_grid.is_attackable_location(hex_pos[0], hex_pos[1]):
+                    # Attack a spawn location
+                    message, action_used = self._attack_location(hex_pos, current_player)
+                    if message:
+                        self.add_to_log(message)
+                    if action_used:
+                        self.player_info_label.set_text(self.get_player_info())
+                        self.selected_attack = None
                 elif self.player_mode == "skill" and self.selected_skill:
                     # Use skill on target
                     target = unit if unit and isinstance(unit, Unit) else current_player
@@ -3819,10 +3969,13 @@ class GameScreen:
             self.hex_grid.view_offset_y = self.start_view_offset_y + dy
             grid_width = self.hex_grid.cols * self.hex_grid.hex_size * 1.5
             grid_height = self.hex_grid.rows * self.hex_grid.hex_size * 1.732
-            min_offset_x = WINDOW_WIDTH - grid_width if grid_width > WINDOW_WIDTH else 0
-            max_offset_x = 0 if grid_width > WINDOW_WIDTH else WINDOW_WIDTH - grid_width
-            min_offset_y = WINDOW_HEIGHT - grid_height if grid_height > WINDOW_HEIGHT else 0
-            max_offset_y = 0 if grid_height > WINDOW_HEIGHT else WINDOW_HEIGHT - grid_height
+            # Allow scrolling with padding so edges can be seen when zoomed in
+            padding_x = WINDOW_WIDTH * 0.4  # 40% of window as padding
+            padding_y = WINDOW_HEIGHT * 0.4
+            min_offset_x = WINDOW_WIDTH - grid_width - padding_x
+            max_offset_x = padding_x
+            min_offset_y = WINDOW_HEIGHT - grid_height - padding_y
+            max_offset_y = padding_y
             self.hex_grid.view_offset_x = max(min(self.hex_grid.view_offset_x, max_offset_x), min_offset_x)
             self.hex_grid.view_offset_y = max(min(self.hex_grid.view_offset_y, max_offset_y), min_offset_y)
         elif event.type == pygame.MOUSEWHEEL:
@@ -3848,10 +4001,13 @@ class GameScreen:
                 self.hex_grid.view_offset_y = my - zoom_factor * (my - oy)
                 grid_width = self.hex_grid.cols * self.hex_grid.hex_size * 1.5
                 grid_height = self.hex_grid.rows * self.hex_grid.hex_size * 1.732
-                min_offset_x = WINDOW_WIDTH - grid_width if grid_width > WINDOW_WIDTH else 0
-                max_offset_x = 0 if grid_width > WINDOW_WIDTH else WINDOW_WIDTH - grid_width
-                min_offset_y = WINDOW_HEIGHT - grid_height if grid_height > WINDOW_HEIGHT else 0
-                max_offset_y = 0 if grid_height > WINDOW_HEIGHT else WINDOW_HEIGHT - grid_height
+                # Allow scrolling with padding so edges can be seen when zoomed in
+                padding_x = WINDOW_WIDTH * 0.4  # 40% of window as padding
+                padding_y = WINDOW_HEIGHT * 0.4
+                min_offset_x = WINDOW_WIDTH - grid_width - padding_x
+                max_offset_x = padding_x
+                min_offset_y = WINDOW_HEIGHT - grid_height - padding_y
+                max_offset_y = padding_y
                 self.hex_grid.view_offset_x = max(min(self.hex_grid.view_offset_x, max_offset_x), min_offset_x)
                 self.hex_grid.view_offset_y = max(min(self.hex_grid.view_offset_y, max_offset_y), min_offset_y)
         elif event.type == pygame_gui.UI_BUTTON_PRESSED:

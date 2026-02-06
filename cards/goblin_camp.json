@@ -1,0 +1,31 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Goblin Camp",
+    "Description": "A ramshackle camp of crude tents and fire pits. Goblins gather here to launch raids.",
+    "Outcomes": "[]",
+    "Choices": "[]",
+    "Shop_Deck": "",
+    "Shop_Size": "",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "",
+    "Is_Spawn_Location": "true",
+    "Health": "25",
+    "Spawn_Enemy_Deck": "decks/beta_enemy_deck.json",
+    "Upgrade_NPC_Type": "Allied",
+    "Upgrade_Material_Cost": "{}",
+    "2nd_state_Name": "Abandoned Camp",
+    "2nd_state_Description": "Burned out remains of the goblin camp. The fires have gone cold.",
+    "2nd_state_Outcomes": "[{\"probability\":0.60,\"card_type\":\"Junk Card\",\"deck_file\":\"beta_junk_deck.json\"},{\"probability\":0.40,\"card_type\":\"None\",\"deck_file\":\"\"}]",
+    "2nd_state_Choices": "[{\"name\":\"Scavenge\",\"action\":\"draw_card\",\"costs_action\":true}]",
+    "2nd_state_Shop_Deck": "",
+    "2nd_state_Shop_Size": "",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "",
+    "2nd_state_Is_Spawn_Location": "false",
+    "2nd_state_Health": "0",
+    "2nd_state_Spawn_Enemy_Deck": ""
+  }
+}
