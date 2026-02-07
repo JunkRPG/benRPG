@@ -2329,18 +2329,22 @@ class CharacterCreationScreen:
         self.class_buttons = []
         self.level_file = None
         self.campaign_file = None
+        self.name_entry = None
 
     def initialize_screen(self, level_file=None, campaign_file=None):
         self.level_file = level_file
         self.campaign_file = campaign_file
         manager.clear_and_reset()
         self.ui_elements = [
-            UILabel(pygame.Rect(0, 50, WINDOW_WIDTH, 50), "Choose Your Class", manager, anchors={'centerx': 'centerx'}),
+            UILabel(pygame.Rect(0, 30, WINDOW_WIDTH, 40), "Enter Your Name", manager, anchors={'centerx': 'centerx'}),
             UIButton(pygame.Rect(20, 20, 100, 50), "Back", manager)
         ]
+        self.name_entry = UITextEntryLine(pygame.Rect((WINDOW_WIDTH - 250) // 2, 70, 250, 40), manager, placeholder_text="Player Name")
+        self.ui_elements.append(self.name_entry)
+        self.ui_elements.append(UILabel(pygame.Rect(0, 120, WINDOW_WIDTH, 40), "Choose Your Class", manager, anchors={'centerx': 'centerx'}))
         self.class_buttons = []
         for i, (class_name, stats) in enumerate(CHARACTER_CLASSES.items()):
-            y_pos = 150 + i * 100
+            y_pos = 170 + i * 100
             button = UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, y_pos, 200, 50), class_name, manager)
             self.class_buttons.append((button, class_name))
             self.ui_elements.append(button)
@@ -2358,6 +2362,8 @@ class CharacterCreationScreen:
                 for button, class_name in self.class_buttons:
                     if event.ui_element == button:
                         game.player = Player(class_name)
+                        entered_name = self.name_entry.get_text().strip() if self.name_entry else ""
+                        game.player.name = entered_name if entered_name else class_name
                         game.current_screen = "game"
                         game_screen.start_new_game(level_file=self.level_file, campaign_file=self.campaign_file)
                         break
@@ -2374,25 +2380,31 @@ class MultiplayerCharacterCreationScreen:
         self.class_buttons = []
         self.current_player_selecting = 1  # 1 or 2
         self.player1_class = None
+        self.player1_name = ""
         self.level_file = None
+        self.name_entry = None
 
     def initialize_screen(self, level_file=None):
         self.level_file = level_file
         self.current_player_selecting = 1
         self.player1_class = None
+        self.player1_name = ""
         manager.clear_and_reset()
         self._build_selection_ui()
 
     def _build_selection_ui(self):
         """Build the class selection UI for the current player."""
         manager.clear_and_reset()
-        player_label = f"Player {self.current_player_selecting}: Choose Your Class"
+        player_label = f"Player {self.current_player_selecting}: Enter Name & Choose Class"
         color_hint = "(Green)" if self.current_player_selecting == 1 else "(Blue)"
         self.ui_elements = [
-            UILabel(pygame.Rect(0, 50, WINDOW_WIDTH, 50), player_label, manager, anchors={'centerx': 'centerx'}),
-            UILabel(pygame.Rect(0, 100, WINDOW_WIDTH, 30), color_hint, manager, anchors={'centerx': 'centerx'}),
+            UILabel(pygame.Rect(0, 30, WINDOW_WIDTH, 40), player_label, manager, anchors={'centerx': 'centerx'}),
+            UILabel(pygame.Rect(0, 70, WINDOW_WIDTH, 30), color_hint, manager, anchors={'centerx': 'centerx'}),
             UIButton(pygame.Rect(20, 20, 100, 50), "Back", manager)
         ]
+        placeholder = f"Player {self.current_player_selecting} Name"
+        self.name_entry = UITextEntryLine(pygame.Rect((WINDOW_WIDTH - 250) // 2, 105, 250, 40), manager, placeholder_text=placeholder)
+        self.ui_elements.append(self.name_entry)
         self.class_buttons = []
         for i, (class_name, stats) in enumerate(CHARACTER_CLASSES.items()):
             y_pos = 170 + i * 100
@@ -2411,6 +2423,7 @@ class MultiplayerCharacterCreationScreen:
                     # Go back to player 1 selection
                     self.current_player_selecting = 1
                     self.player1_class = None
+                    self.player1_name = ""
                     self._build_selection_ui()
                 else:
                     game.current_screen = "main_menu"
@@ -2418,26 +2431,31 @@ class MultiplayerCharacterCreationScreen:
             else:
                 for button, class_name in self.class_buttons:
                     if event.ui_element == button:
+                        entered_name = self.name_entry.get_text().strip() if self.name_entry else ""
                         if self.current_player_selecting == 1:
-                            # Store Player 1's class and move to Player 2 selection
+                            # Store Player 1's name and class, move to Player 2 selection
                             self.player1_class = class_name
+                            self.player1_name = entered_name if entered_name else "Player 1"
                             self.current_player_selecting = 2
                             self._build_selection_ui()
                         else:
                             # Both players selected - start the game
-                            self._start_multiplayer_game(self.player1_class, class_name)
+                            player2_name = entered_name if entered_name else "Player 2"
+                            self._start_multiplayer_game(self.player1_class, class_name, self.player1_name, player2_name)
                         break
 
-    def _start_multiplayer_game(self, player1_class, player2_class):
+    def _start_multiplayer_game(self, player1_class, player2_class, player1_name, player2_name):
         """Create both players and start the multiplayer game."""
         # Create Player 1
         player1 = Player(player1_class)
+        player1.name = player1_name
         player1.player_number = 1
         player1.player_color = (0, 200, 0)  # Green
         player1.party = []
 
         # Create Player 2
         player2 = Player(player2_class)
+        player2.name = player2_name
         player2.player_number = 2
         player2.player_color = (100, 150, 255)  # Blue
         player2.party = []
@@ -2538,6 +2556,8 @@ class GameScreen:
         # Building/placement mode
         self.placement_mode = False
         self.placement_card = None  # The location card being placed
+        # Multiplayer transition target cycle: 0=P1, 1=P2, 2=Both
+        self.transition_target_cycle = 0
         self.colors = {
             'BLUE': BLUE,
             'DARK_RED_ALPHA': DARK_RED_ALPHA,
@@ -2572,6 +2592,7 @@ class GameScreen:
         self.pending_defeat = False
         self.location_button = None
         self.current_location_hex = None
+        self.transition_target_cycle = 0
         # Reset party
         game.party = []
         # Reset quest manager
@@ -2637,6 +2658,7 @@ class GameScreen:
             unit.hp = unit.max_hp
             unit.current_state = 1  # Reset to initial state if applicable
         
+        self.hex_grid.active_turn_unit = game.player
         self.game_started = True
         self.initialize_screen()
 
@@ -2659,6 +2681,7 @@ class GameScreen:
         self.pending_defeat = False
         self.location_button = None
         self.current_location_hex = None
+        self.transition_target_cycle = 0
 
         # Reset instance manager and try to load test deck
         game.instance_manager = InstanceManager(self.card_manager, self.hex_grid)
@@ -2717,6 +2740,7 @@ class GameScreen:
             unit.hp = unit.max_hp
             unit.current_state = 1
 
+        self.hex_grid.active_turn_unit = game.players[0]
         self.game_started = True
         self.initialize_screen()
 
@@ -2884,6 +2908,7 @@ class GameScreen:
             game.current_player_index = 1
             self.turn_phase = "player2"
             self.is_player_turn = True
+            self.hex_grid.active_turn_unit = game.players[1]
             self.rebuild_left_panel()
             # Apply Turn_Start passives for player 2
             for msg in game.players[1].apply_passive_skills(self.hex_grid, "Turn_Start"):
@@ -2908,6 +2933,7 @@ class GameScreen:
         elif self.turn_phase == "hostile":
             # Move to transition phase
             self.turn_phase = "transition"
+            self.hex_grid.active_turn_unit = None
             self.update_turn_label()  # Show "World Events" immediately
             self.process_transition_turn()
         elif self.turn_phase == "transition":
@@ -2926,9 +2952,11 @@ class GameScreen:
                     if game.multiplayer_mode:
                         self.turn_phase = "player1"
                         game.current_player_index = 0
+                        self.hex_grid.active_turn_unit = game.players[0]
                         self.rebuild_left_panel()
                     else:
                         self.turn_phase = "player"
+                        self.hex_grid.active_turn_unit = game.player
                     self.is_player_turn = True
                 else:
                     self.add_to_log("Campaign Completed!")
@@ -2939,9 +2967,11 @@ class GameScreen:
                 if game.multiplayer_mode:
                     self.turn_phase = "player1"
                     game.current_player_index = 0
+                    self.hex_grid.active_turn_unit = game.players[0]
                     self.rebuild_left_panel()
                 else:
                     self.turn_phase = "player"
+                    self.hex_grid.active_turn_unit = game.player
                 self.is_player_turn = True
                 # Reset location visits for new turn
                 self.hex_grid.reset_location_visits()
@@ -2987,6 +3017,7 @@ class GameScreen:
             return
 
         self.current_acting_unit = unit
+        self.hex_grid.active_turn_unit = unit
         self.last_action_time = pygame.time.get_ticks()
 
         # Track position before turn for quest movement detection
@@ -3308,16 +3339,24 @@ class GameScreen:
             self.ui_elements[1].hide()
 
     def update_turn_label(self):
-        phases = {
-            "player": "Player's Turn",
-            "player1": "Player 1's Turn",
-            "player2": "Player 2's Turn",
-            "allied": "Allied Turn",
-            "neutral": "Neutral Turn",
-            "hostile": "Enemies' Turn",
-            "transition": "World Events"
-        }
-        self.ui_elements[2].set_text(f"<font color='#FFFFFF' size=4>{phases.get(self.turn_phase, 'Unknown')}</font>")
+        if self.turn_phase == "player" and game.player:
+            player_name = game.player.name if hasattr(game.player, 'name') and game.player.name else "Player"
+            label = f"{player_name}'s Turn"
+        elif self.turn_phase == "player1" and game.multiplayer_mode and len(game.players) > 0:
+            player_name = game.players[0].name if hasattr(game.players[0], 'name') and game.players[0].name else "Player 1"
+            label = f"{player_name}'s Turn"
+        elif self.turn_phase == "player2" and game.multiplayer_mode and len(game.players) > 1:
+            player_name = game.players[1].name if hasattr(game.players[1], 'name') and game.players[1].name else "Player 2"
+            label = f"{player_name}'s Turn"
+        else:
+            phases = {
+                "allied": "Allied Turn",
+                "neutral": "Neutral Turn",
+                "hostile": "Enemies' Turn",
+                "transition": "World Events"
+            }
+            label = phases.get(self.turn_phase, "Unknown")
+        self.ui_elements[2].set_text(f"<font color='#FFFFFF' size=4>{label}</font>")
 
     def rebuild_left_panel(self):
         """Rebuild the left panel UI for the current player (used in multiplayer when turn changes)."""
@@ -3667,6 +3706,7 @@ class GameScreen:
                     if game.multiplayer_mode:
                         self.turn_phase = "player1"
                         game.current_player_index = 0
+                        self.hex_grid.active_turn_unit = game.players[0]
                         self.rebuild_left_panel()
                 else:
                     self.add_to_log("Campaign Completed!")
@@ -3679,9 +3719,11 @@ class GameScreen:
             if game.multiplayer_mode:
                 self.turn_phase = "player1"
                 game.current_player_index = 0
+                self.hex_grid.active_turn_unit = game.players[0]
                 self.rebuild_left_panel()
             else:
                 self.turn_phase = "player"
+                self.hex_grid.active_turn_unit = game.player
             self.is_player_turn = True
             self.hex_grid.reset_location_visits()
             print("[DEBUG] Moved to player phase")
@@ -3718,9 +3760,11 @@ class GameScreen:
                 if game.multiplayer_mode:
                     self.turn_phase = "player1"
                     game.current_player_index = 0
+                    self.hex_grid.active_turn_unit = game.players[0]
                     self.rebuild_left_panel()
                 else:
                     self.turn_phase = "player"
+                    self.hex_grid.active_turn_unit = game.player
                 self.is_player_turn = True
             else:
                 self.add_to_log("Campaign Completed!")
@@ -3732,9 +3776,11 @@ class GameScreen:
         if game.multiplayer_mode:
             self.turn_phase = "player1"
             game.current_player_index = 0
+            self.hex_grid.active_turn_unit = game.players[0]
             self.rebuild_left_panel()
         else:
             self.turn_phase = "player"
+            self.hex_grid.active_turn_unit = game.player
         self.is_player_turn = True
         self.hex_grid.reset_location_visits()
 
@@ -3757,10 +3803,42 @@ class GameScreen:
             transition_card = game.transition_manager.active_transition
             all_outcomes = transition_card.get_current_outcomes()
 
-            # Process transition card outcomes and get selected index
-            selected_index, result_text, log_messages = game.transition_manager.process_transition_turn_with_index(
-                self.hex_grid, game.current_player
-            )
+            # Determine target player(s) for multiplayer cycling
+            if game.multiplayer_mode and len(game.players) >= 2:
+                cycle = self.transition_target_cycle
+                p1, p2 = game.players[0], game.players[1]
+
+                if cycle == 0:
+                    target_player = p1
+                    target_label = p1.name or "Player 1"
+                elif cycle == 1:
+                    target_player = p2
+                    target_label = p2.name or "Player 2"
+                else:
+                    target_player = p1  # Will also apply to p2
+                    target_label = "Both Players"
+
+                # Roll and apply to primary target
+                selected_index, result_text, log_messages = game.transition_manager.process_transition_turn_with_index(
+                    self.hex_grid, target_player
+                )
+
+                # For "Both" cycle, also apply same outcome to player 2
+                if cycle == 2 and 0 <= selected_index < len(all_outcomes):
+                    outcome = all_outcomes[selected_index]
+                    outcome_type = outcome.get("type", "none")
+                    params = outcome.get("params", {})
+                    extra_result = game.transition_manager.apply_outcome(outcome_type, params, self.hex_grid, p2)
+                    if extra_result:
+                        result_text += f"\n{extra_result}"
+                        log_messages.append(extra_result)
+
+                self.transition_target_cycle = (self.transition_target_cycle + 1) % 3
+            else:
+                target_label = ""
+                selected_index, result_text, log_messages = game.transition_manager.process_transition_turn_with_index(
+                    self.hex_grid, game.current_player
+                )
 
             # Log the transition events
             for msg in log_messages:
@@ -3772,7 +3850,7 @@ class GameScreen:
             # Show the transition event screen
             game.current_screen = "transition_event"
             transition_event_screen.initialize_screen(
-                transition_card, all_outcomes, selected_index, result_text
+                transition_card, all_outcomes, selected_index, result_text, target_label
             )
             return  # Wait for user to click OK
 
@@ -3786,9 +3864,11 @@ class GameScreen:
             if game.multiplayer_mode:
                 self.turn_phase = "player1"
                 game.current_player_index = 0
+                self.hex_grid.active_turn_unit = game.players[0]
                 self.rebuild_left_panel()
             else:
                 self.turn_phase = "player"
+                self.hex_grid.active_turn_unit = game.player
             self.is_player_turn = True
             self.update_turn_label()
 
@@ -4509,8 +4589,9 @@ class TransitionEventScreen:
         self.result_text = ""
         self.ok_button = None
         self.closing = False  # Prevent event processing after close starts
+        self.target_label = ""
 
-    def initialize_screen(self, transition_card, all_outcomes, selected_index, result_text):
+    def initialize_screen(self, transition_card, all_outcomes, selected_index, result_text, target_label=""):
         """Display the transition card with all outcomes, highlighting the selected one."""
         manager.clear_and_reset()
         self.transition_card = transition_card
@@ -4518,6 +4599,7 @@ class TransitionEventScreen:
         self.selected_index = selected_index
         self.selected_outcome = all_outcomes[selected_index] if 0 <= selected_index < len(all_outcomes) else None
         self.result_text = result_text
+        self.target_label = target_label
         self.ui_elements = []
         self.closing = False  # Reset closing flag when screen opens
 
@@ -4531,25 +4613,42 @@ class TransitionEventScreen:
         )
         self.ui_elements.append(title_label)
 
+        # Show target player label in multiplayer
+        if target_label:
+            if target_label == "Both Players":
+                label_color = "#FFD700"  # Gold
+            elif game.multiplayer_mode and len(game.players) >= 2 and target_label == (game.players[1].name or "Player 2"):
+                label_color = "#4488FF"  # Blue for P2
+            else:
+                label_color = "#44FF44"  # Green for P1
+            target_text = f"<font color='{label_color}' size=4><b>Affecting: {target_label}</b></font>"
+            target_box = UITextBox(
+                target_text,
+                pygame.Rect((WINDOW_WIDTH - 400) // 2, 55, 400, 35),
+                manager
+            )
+            self.ui_elements.append(target_box)
+
         # Description
+        desc_y = 95 if target_label else 60
         desc_text = f"<font color='#AAAAAA' size=3>{transition_card.get_current_description()}</font>"
         desc_box = UITextBox(
             desc_text,
-            pygame.Rect((WINDOW_WIDTH - 700) // 2, 60, 700, 50),
+            pygame.Rect((WINDOW_WIDTH - 700) // 2, desc_y, 700, 50),
             manager
         )
         self.ui_elements.append(desc_box)
 
         # Outcomes list header
         outcomes_header = UILabel(
-            pygame.Rect((WINDOW_WIDTH - 700) // 2, 115, 700, 25),
+            pygame.Rect((WINDOW_WIDTH - 700) // 2, desc_y + 55, 700, 25),
             "Possible Outcomes:",
             manager
         )
         self.ui_elements.append(outcomes_header)
 
         # Build outcomes display - show all outcomes with the selected one highlighted
-        y_pos = 145
+        y_pos = desc_y + 85
         for i, outcome in enumerate(all_outcomes):
             prob = outcome.get("probability", 0)
             prob_pct = int(prob * 100)

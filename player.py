@@ -19,6 +19,7 @@ class Player:
     def __init__(self, class_name):
         stats = CHARACTER_CLASSES[class_name]
         self.class_name = class_name
+        self.name = ""  # Set during character creation; defaults to class_name
         self.hp = stats["hp"]
         self.max_hp = stats["hp"]
         self.movement = stats["movement"]

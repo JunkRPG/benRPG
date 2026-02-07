@@ -47,6 +47,7 @@ class HexGrid:
         # Font for rendering unit names and damage text
         self.font = pygame.font.Font(None, 18)
         self.game_over = False  # Flag to indicate if the player is defeated
+        self.active_turn_unit = None  # Unit/player whose turn is currently active (for glow ring)
         # Animation state for targeting visuals
         self.pulse_time = 0
 
@@ -1728,6 +1729,9 @@ class HexGrid:
         # Collect all players (multiplayer mode or single player)
         all_players = self.players if self.players else ([self.player] if self.player else [])
         all_units = list(self.units) + all_players
+        # Pre-calculate glow animation values
+        ticks = pygame.time.get_ticks()
+        glow_pulse = (math.sin(ticks / 300.0) + 1) / 2  # 0.0 to 1.0 pulsing
         for unit in all_units:
             if unit and unit.position:
                 # Use render_pos for animating units, otherwise use hex center
@@ -1735,6 +1739,31 @@ class HexGrid:
                     pos = unit.render_pos
                 else:
                     pos = self.get_hex_center(*unit.position)
+
+                # Draw active turn glow ring
+                is_active = (self.active_turn_unit is not None and unit is self.active_turn_unit)
+                if is_active:
+                    # Determine glow color based on unit type
+                    if isinstance(unit, Player):
+                        glow_color = (255, 215, 0)  # Gold for players
+                    elif hasattr(unit, 'allegiance'):
+                        if unit.allegiance == "Hostile":
+                            glow_color = (255, 60, 60)  # Red for enemies
+                        elif unit.allegiance == "Allied":
+                            glow_color = (60, 120, 255)  # Blue for allies
+                        else:
+                            glow_color = (0, 220, 200)  # Teal for neutral
+                    else:
+                        glow_color = (255, 215, 0)
+                    glow_radius = max(14, int(self.hex_size / 2.2))
+                    # Draw 3 concentric glow rings with pulsing alpha
+                    for i in range(3):
+                        ring_radius = glow_radius + (3 - i) * 3 + int(glow_pulse * 3)
+                        alpha = int((0.25 + glow_pulse * 0.35) * 255 * (i + 1) / 3)
+                        glow_surf = pygame.Surface((ring_radius * 2 + 4, ring_radius * 2 + 4), pygame.SRCALPHA)
+                        pygame.draw.circle(glow_surf, (*glow_color, alpha),
+                                           (ring_radius + 2, ring_radius + 2), ring_radius, 2)
+                        hex_surface.blit(glow_surf, (int(pos[0]) - ring_radius - 2, int(pos[1]) - ring_radius - 2))
 
                 if isinstance(unit, Player) and unit.image:
                     scale_factor = (self.hex_size * 1.5 * unit.image_scale_factor) / unit.image.get_height()
@@ -1763,18 +1792,27 @@ class HexGrid:
                                        (int(pos[0]), int(pos[1])), radius)
                     health_bar_y = pos[1] - radius - 5  # Position health bar just above the circle
 
-                    # Draw player number for multiplayer mode
+                    # Draw P1/P2 badge for multiplayer mode
                     if isinstance(unit, Player) and hasattr(unit, 'player_number') and len(all_players) > 1:
-                        number_font = pygame.font.Font(None, int(radius * 1.5))
-                        number_surface = number_font.render(str(unit.player_number), True, colors['WHITE'])
-                        number_rect = number_surface.get_rect(center=(int(pos[0]), int(pos[1])))
-                        hex_surface.blit(number_surface, number_rect)
+                        badge_font = pygame.font.Font(None, 16)
+                        badge_text = f"P{unit.player_number}"
+                        badge_surface = badge_font.render(badge_text, True, colors['WHITE'])
+                        badge_w = badge_surface.get_width() + 6
+                        badge_h = badge_surface.get_height() + 4
+                        badge_x = int(pos[0]) - radius - badge_w + 2
+                        badge_y = int(pos[1]) - radius - badge_h + 2
+                        # Draw badge background
+                        badge_bg = pygame.Surface((badge_w, badge_h), pygame.SRCALPHA)
+                        badge_color = unit.player_color if hasattr(unit, 'player_color') else (0, 200, 0)
+                        pygame.draw.rect(badge_bg, (*badge_color, 200), (0, 0, badge_w, badge_h), border_radius=3)
+                        hex_surface.blit(badge_bg, (badge_x, badge_y))
+                        hex_surface.blit(badge_surface, (badge_x + 3, badge_y + 2))
 
                     # Draw unit name above health bar (with proper spacing)
-                    name = unit.class_name if isinstance(unit, Player) else unit.name
-                    # In multiplayer, prefix with "P1:" or "P2:"
-                    if isinstance(unit, Player) and hasattr(unit, 'player_number') and len(all_players) > 1:
-                        name = f"P{unit.player_number}: {name}"
+                    if isinstance(unit, Player):
+                        name = unit.name if hasattr(unit, 'name') and unit.name else unit.class_name
+                    else:
+                        name = unit.name
                     text_surface = self.font.render(name, True, colors['WHITE'])
                     name_y = health_bar_y - 12  # Name above health bar with gap
                     text_rect = text_surface.get_rect(centerx=pos[0], bottom=name_y)
