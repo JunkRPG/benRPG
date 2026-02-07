@@ -824,7 +824,7 @@ class LocationScreen:
             game.current_screen = "game"
             game_screen.initialize_screen()
         elif action == "draw_card":
-            outcome_card, msg = self.hex_grid.trigger_location_outcome(self.hex_pos[0], self.hex_pos[1])
+            outcome_card, msg = self.hex_grid.trigger_location_outcome(self.hex_pos[0], self.hex_pos[1], game_screen.card_manager)
             if outcome_card:
                 party_msg = add_card_to_player(outcome_card)
                 if party_msg:
@@ -832,6 +832,7 @@ class LocationScreen:
             game_screen.add_to_log(msg)
             if costs_action:
                 game.current_player.action_used = True
+            self.hex_grid.mark_location_visited(self.hex_pos[0], self.hex_pos[1])
             self.info_text.set_text(f"<font color='#FFFFFF'>{msg}</font>")
         elif action == "heal":
             hp_amount = int(params.get("amount", 10))
@@ -2505,6 +2506,9 @@ class GameScreen:
         self.skill_buttons = []     # List of (button, skill_card) tuples
         self.skills_button = None   # Skills menu button
         self.special_attack_button = None  # Special attack button
+        self.attack_button = None  # Main "Attack" button that opens submenu
+        self.attack_submenu_open = False
+        self.attack_submenu_buttons = []  # List of (button, action_type, data)
         # Recruitment mode
         self.recruit_button = None
         self.recruit_info_panel = None  # Panel showing adjacent NPC costs
@@ -2992,18 +2996,9 @@ class GameScreen:
         for entry in unit.take_turn(self.hex_grid):
             self.add_to_log(entry)
 
-        # Check for any units killed during this turn (e.g., by allied attacks)
-        dead_units = [u for u in self.hex_grid.units if u.hp <= 0]
-        for dead_unit in dead_units:
-            if dead_unit.position:
-                self.hex_grid.grid[dead_unit.position[0]][dead_unit.position[1]]["unit"] = None
-            self.hex_grid.units.remove(dead_unit)
-            self.add_to_log(f"{dead_unit.name} defeated")
-            self.card_manager.track_card_usage(dead_unit.card_id, {"action": "defeated", "screen": "game"})
-            # Notify quest system of unit death
-            quest_results = game.current_quest_manager.update("unit_death", {"unit": dead_unit}, self.hex_grid, game.current_player)
-            for quest, result, msg in quest_results:
-                self.add_to_log(msg)
+        # Process immediate attack results (attacks without movement)
+        if self._post_attack_processing(unit):
+            return
 
         # Notify quest system if unit moved
         if unit.position != position_before:
@@ -3014,8 +3009,26 @@ class GameScreen:
             for quest, result, qmsg in quest_results:
                 self.add_to_log(qmsg)
 
-        # Check for game over - delay showing defeat screen until animation completes
-        # In multiplayer, only game over when ALL players are dead
+        self.player_info_label.set_text(self.get_player_info())
+        self.waiting_for_animation = True
+        self.animating = self.check_animations()
+
+    def _post_attack_processing(self, unit):
+        """Handle post-attack cleanup: dead units, game over, state switch.
+        Returns True if game over was triggered (caller should return early)."""
+        # Check for any units killed
+        dead_units = [u for u in self.hex_grid.units if u.hp <= 0]
+        for dead_unit in dead_units:
+            if dead_unit.position:
+                self.hex_grid.grid[dead_unit.position[0]][dead_unit.position[1]]["unit"] = None
+            self.hex_grid.units.remove(dead_unit)
+            self.add_to_log(f"{dead_unit.name} defeated")
+            self.card_manager.track_card_usage(dead_unit.card_id, {"action": "defeated", "screen": "game"})
+            quest_results = game.current_quest_manager.update("unit_death", {"unit": dead_unit}, self.hex_grid, game.current_player)
+            for quest, result, msg in quest_results:
+                self.add_to_log(msg)
+
+        # Check for game over
         if game.multiplayer_mode:
             all_dead = all(p.hp <= 0 for p in game.players)
             any_dead = any(p.hp <= 0 for p in game.players)
@@ -3024,22 +3037,20 @@ class GameScreen:
                     if p.hp <= 0:
                         self.add_to_log(f"Player {i+1} ({p.class_name}) defeated!")
             if all_dead:
-                # Notify quest system of player death
                 quest_results = game.current_quest_manager.update("player_death", {}, self.hex_grid, game.current_player)
                 for quest, result, msg in quest_results:
                     self.add_to_log(msg)
-                self.turn_queue.clear()  # Clear remaining actions
-                self.pending_defeat = True  # Will show defeat screen after animation
-                return
+                self.turn_queue.clear()
+                self.pending_defeat = True
+                return True
         elif isinstance(self.hex_grid.player, Player) and self.hex_grid.player.hp <= 0:
             self.add_to_log("Player defeated!")
-            # Notify quest system of player death
             quest_results = game.current_quest_manager.update("player_death", {}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
                 self.add_to_log(msg)
-            self.turn_queue.clear()  # Clear remaining actions
-            self.pending_defeat = True  # Will show defeat screen after animation
-            return
+            self.turn_queue.clear()
+            self.pending_defeat = True
+            return True
 
         # Check for state switch (only if unit is still alive)
         if unit in self.hex_grid.units and unit.hp > 0:
@@ -3048,9 +3059,7 @@ class GameScreen:
                 if switch_msg:
                     self.add_to_log(switch_msg)
 
-        self.player_info_label.set_text(self.get_player_info())
-        self.waiting_for_animation = True
-        self.animating = self.check_animations()
+        return False
 
     def update_turn_queue(self):
         """Update the turn queue - called each frame to process consecutive unit turns."""
@@ -3066,6 +3075,21 @@ class GameScreen:
             elif self.current_acting_unit.animating:
                 return  # Wait for animation to finish
 
+        # After movement animation completes, execute any deferred attack
+        if self.current_acting_unit and getattr(self.current_acting_unit, 'pending_attack', None):
+            attack_log = self.current_acting_unit.execute_pending_attack(self.hex_grid)
+            for entry in attack_log:
+                self.add_to_log(entry)
+
+            # Process deaths and game over from the deferred attack
+            if self._post_attack_processing(self.current_acting_unit):
+                return
+
+            self.player_info_label.set_text(self.get_player_info())
+            # Reset timer so there's a brief pause after the attack before next unit
+            self.last_action_time = pygame.time.get_ticks()
+            return
+
         # Check if enough time has passed since last action
         current_time = pygame.time.get_ticks()
         if current_time - self.last_action_time < self.turn_action_delay:
@@ -3075,11 +3099,44 @@ class GameScreen:
         self.waiting_for_animation = False
         self.process_next_unit()
 
+    def _open_attack_submenu(self):
+        """Open the attack submenu to the right of the Attack button."""
+        self._close_attack_submenu()
+        current_player = game.current_player
+        left_panel_width = WINDOW_WIDTH // 4
+        button_width = (left_panel_width - 20) // 2
+
+        # Position submenu to the right of the Attack button
+        x = 10 + button_width + 5
+        y = self.attack_button_y
+        attacks_list = list(current_player.attacks.values())
+        for attack in attacks_list:
+            btn = UIButton(pygame.Rect(x, y, button_width, 30),
+                           f"{attack['name']} ({attack['damage']} dmg)", manager)
+            self.attack_submenu_buttons.append((btn, "attack", attack))
+            y += 34
+
+        # Special attack
+        btn = UIButton(pygame.Rect(x, y, button_width, 30),
+                       f"[Special] {current_player.special_attack}", manager)
+        self.attack_submenu_buttons.append((btn, "special", None))
+        self.special_attack_button = btn
+
+        self.attack_submenu_open = True
+
+    def _close_attack_submenu(self):
+        """Close the attack submenu."""
+        for btn, _, _ in self.attack_submenu_buttons:
+            btn.kill()
+        self.attack_submenu_buttons = []
+        self.attack_submenu_open = False
+        self.special_attack_button = None
+
     def initialize_screen(self):
         manager.clear_and_reset()
         self.ui_elements = [
-            UITextBox("<font color='#FFFFFF' size=4>Game Log</font>", 
-                      pygame.Rect((WINDOW_WIDTH - 600) // 2, WINDOW_HEIGHT - 150, 600, 140), 
+            UITextBox("<font color='#FFFFFF' size=4>Game Log</font>",
+                      pygame.Rect((WINDOW_WIDTH - 600) // 2, WINDOW_HEIGHT - 150, 600, 140),
                       manager, object_id="#log_textbox"),
             UITextBox("<font color='#FFFFFF' size=4>Stats</font>", 
                       pygame.Rect(WINDOW_WIDTH - 300, WINDOW_HEIGHT - 175, 290, 175), 
@@ -3099,20 +3156,13 @@ class GameScreen:
         self.ui_elements.append(self.player_info_label)
         
         y_pos = 200
-        attacks_list = list(game.current_player.attacks.values())
-        self.left_panel_buttons = [
-            UIButton(pygame.Rect(10, y_pos + 40 * i, button_width, 30),
-                     f"{attack['name']} ({attack['damage']} dmg)", manager)
-            for i, attack in enumerate(attacks_list)
-        ]
-        y_pos += 40 * len(self.left_panel_buttons)
-        # Add special attack button
-        self.special_attack_button = UIButton(
-            pygame.Rect(10, y_pos, button_width, 30),
-            f"[Special] {game.current_player.special_attack}",
-            manager
-        )
-        self.left_panel_buttons.append(self.special_attack_button)
+        self.left_panel_buttons = []
+        self.attack_submenu_open = False
+        self.attack_submenu_buttons = []
+        self.special_attack_button = None
+        self.attack_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Attack", manager)
+        self.left_panel_buttons.append(self.attack_button)
+        self.attack_button_y = y_pos
         y_pos += 40
         self.movement_toggle_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Movement", manager)
         self.left_panel_buttons.append(self.movement_toggle_button)
@@ -3222,7 +3272,7 @@ class GameScreen:
         ]
         self.ui_elements.extend(self.right_panel_buttons)
         
-        self.ui_elements[0].set_text("<font color='#FFFFFF' size=4>" + "<br>".join(self.log) + "</font>")
+        self.ui_elements[0].set_text("<font color='#FFFFFF' size=4>" + "<br>".join(reversed(self.log)) + "</font>")
         self.update_turn_label()
         self.show_stats(None)
 
@@ -3248,7 +3298,7 @@ class GameScreen:
             self.log.append(message)
             if len(self.log) > 10:
                 self.log.pop(0)
-            self.ui_elements[0].set_text("<font color='#FFFFFF' size=4>" + "<br>".join(self.log) + "</font>")
+            self.ui_elements[0].set_text("<font color='#FFFFFF' size=4>" + "<br>".join(reversed(self.log)) + "</font>")
 
     def show_stats(self, unit):
         if unit:
@@ -3271,6 +3321,8 @@ class GameScreen:
 
     def rebuild_left_panel(self):
         """Rebuild the left panel UI for the current player (used in multiplayer when turn changes)."""
+        # Close attack submenu if open
+        self._close_attack_submenu()
         # Kill all existing left panel buttons and remove from ui_elements
         for btn in self.left_panel_buttons:
             btn.kill()
@@ -3289,21 +3341,12 @@ class GameScreen:
         )
 
         y_pos = 200
-        attacks_list = list(current_player.attacks.values())
-        self.left_panel_buttons = [
-            UIButton(pygame.Rect(10, y_pos + 40 * i, button_width, 30),
-                     f"{attack['name']} ({attack['damage']} dmg)", manager)
-            for i, attack in enumerate(attacks_list)
-        ]
-        y_pos += 40 * len(self.left_panel_buttons)
-
-        # Add special attack button
-        self.special_attack_button = UIButton(
-            pygame.Rect(10, y_pos, button_width, 30),
-            f"[Special] {current_player.special_attack}",
-            manager
-        )
-        self.left_panel_buttons.append(self.special_attack_button)
+        self.attack_submenu_open = False
+        self.attack_submenu_buttons = []
+        self.special_attack_button = None
+        self.attack_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Attack", manager)
+        self.left_panel_buttons.append(self.attack_button)
+        self.attack_button_y = y_pos
         y_pos += 40
 
         self.movement_toggle_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Movement", manager)
@@ -3772,11 +3815,39 @@ class GameScreen:
 
         return animating
 
+    def _is_click_on_ui(self, pos):
+        """Check if a screen position overlaps any visible UI element."""
+        for el in self.ui_elements:
+            if hasattr(el, 'rect') and el.rect.collidepoint(pos):
+                if hasattr(el, 'visible') and not el.visible:
+                    continue
+                return True
+        return False
+
     def handle_event(self, event):
+        # Always allow right panel buttons (Main Menu, Restart, Settings) even during animation
+        if event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in self.right_panel_buttons:
+            text = event.ui_element.text
+            if text == "Main Menu":
+                game.current_screen = "main_menu"
+                main_menu.initialize_buttons()
+            elif text == "Restart Match":
+                game.current_screen = "character_creation"
+                character_creation_screen.initialize_screen(
+                    level_file=game_screen.current_level_file,
+                    campaign_file=game_screen.campaign_file if game_screen.campaign else None
+                )
+            elif text == "Settings":
+                game.current_screen = "game_settings"
+                game_settings_screen.initialize_screen()
+            return
         if self.animating:
             return
         elif event.type == pygame.MOUSEBUTTONDOWN:
             pos = event.pos
+            # Skip hex grid processing if click is on a UI element
+            if self._is_click_on_ui(pos):
+                return
             hex_pos = self.hex_grid.get_hex_at_pixel(pos[0], pos[1])
             # Check if it's the current player's turn (single-player: "player", multiplayer: "player1" or "player2")
             is_player_turn = self.turn_phase in ("player", "player1", "player2")
@@ -3930,18 +4001,6 @@ class GameScreen:
                                     self.add_to_log(draw_msg)
 
                                 if loc_card:
-                                    # Trigger outcome only if not visited this turn
-                                    if loc_data and not loc_data.get("visited", False):
-                                        outcome_card, outcome_msg = self.hex_grid.trigger_location_outcome(
-                                            hex_pos[0], hex_pos[1]
-                                        )
-                                        if outcome_card:
-                                            party_msg = add_card_to_player(outcome_card)
-                                            if party_msg:
-                                                self.add_to_log(party_msg)
-                                        self.add_to_log(outcome_msg)
-                                        self.hex_grid.mark_location_visited(hex_pos[0], hex_pos[1])
-
                                     # Queue location UI to show after movement animation completes
                                     self.pending_location = {
                                         "card": loc_card,
@@ -3979,6 +4038,10 @@ class GameScreen:
             self.hex_grid.view_offset_x = max(min(self.hex_grid.view_offset_x, max_offset_x), min_offset_x)
             self.hex_grid.view_offset_y = max(min(self.hex_grid.view_offset_y, max_offset_y), min_offset_y)
         elif event.type == pygame.MOUSEWHEEL:
+            # Skip zoom if mouse is over a UI element
+            mx, my = pygame.mouse.get_pos()
+            if self._is_click_on_ui((mx, my)):
+                return
             if event.y > 0:
                 zoom_factor = 1.1
             elif event.y < 0:
@@ -3986,7 +4049,6 @@ class GameScreen:
             else:
                 zoom_factor = 1.0
             if zoom_factor != 1.0:
-                mx, my = pygame.mouse.get_pos()
                 ox, oy = self.hex_grid.view_offset_x, self.hex_grid.view_offset_y
                 s = self.hex_grid.hex_size
                 new_s = s * zoom_factor
@@ -4012,9 +4074,55 @@ class GameScreen:
                 self.hex_grid.view_offset_y = max(min(self.hex_grid.view_offset_y, max_offset_y), min_offset_y)
         elif event.type == pygame_gui.UI_BUTTON_PRESSED:
             is_player_turn = self.turn_phase in ("player", "player1", "player2")
+
+            # Handle attack submenu button clicks
+            if self.attack_submenu_open:
+                for btn, action_type, data in self.attack_submenu_buttons:
+                    if event.ui_element == btn:
+                        current_player = game.current_player
+                        if action_type == "attack" and is_player_turn:
+                            attack_name = data['name']
+                            self.selected_attack = attack_name
+                            self.player_mode = "attack"
+                            self.selected_skill = None
+                            self.hex_grid.selected_hex = None
+                            self.add_to_log(f"Selected attack: {attack_name}")
+                        elif action_type == "special" and is_player_turn:
+                            if current_player.special_attack == "Double Attack":
+                                if current_player.double_attack_active:
+                                    self.add_to_log("Double Attack already active")
+                                elif current_player.action_used:
+                                    self.add_to_log("Action already used this turn")
+                                else:
+                                    message, _ = current_player.use_special_attack(None, self.hex_grid)
+                                    self.add_to_log(message)
+                                    self.player_mode = "movement"
+                            elif current_player.action_used:
+                                self.add_to_log("Action already used this turn")
+                            else:
+                                self.player_mode = "special_attack"
+                                self.selected_attack = None
+                                self.selected_skill = None
+                                self.hex_grid.selected_hex = None
+                                if current_player.special_attack == "Spin Punch":
+                                    self._execute_special_attack(None)
+                                else:
+                                    self.add_to_log(f"Select target for {current_player.special_attack}")
+                        self._close_attack_submenu()
+                        return
+
             if event.ui_element in self.left_panel_buttons:
                 text = event.ui_element.text
-                if text == "Crafting" and is_player_turn:
+                # Close attack submenu when clicking any other left panel button
+                if self.attack_submenu_open and text != "Attack":
+                    self._close_attack_submenu()
+                if text == "Attack" and is_player_turn:
+                    if self.attack_submenu_open:
+                        self._close_attack_submenu()
+                    else:
+                        self._open_attack_submenu()
+                    return
+                elif text == "Crafting" and is_player_turn:
                     game.current_screen = "crafting"
                     crafting_screen.initialize_screen()
                 elif text == "Inventory" and is_player_turn:
@@ -4164,55 +4272,6 @@ class GameScreen:
 
                     skill_button_clicked = skill_button_clicked or tool_button_clicked  # Prevent further processing
 
-                    if not skill_button_clicked:
-                        current_player = game.current_player
-                        # Check if special attack button was clicked
-                        if event.ui_element == self.special_attack_button:
-                            if current_player.special_attack == "Double Attack":
-                                # Warrior's Double Attack - activates a mode, doesn't need targeting
-                                if current_player.double_attack_active:
-                                    self.add_to_log("Double Attack already active")
-                                elif current_player.action_used:
-                                    self.add_to_log("Action already used this turn")
-                                else:
-                                    message, _ = current_player.use_special_attack(None, self.hex_grid)
-                                    self.add_to_log(message)
-                                    self.player_mode = "movement"  # Stay in movement mode, use regular attacks
-                            elif current_player.action_used:
-                                self.add_to_log("Action already used this turn")
-                            else:
-                                self.player_mode = "special_attack"
-                                self.selected_attack = None
-                                self.selected_skill = None
-                                self.hex_grid.selected_hex = None
-                                # For Spin Punch, execute immediately (no target needed)
-                                if current_player.special_attack == "Spin Punch":
-                                    self._execute_special_attack(None)
-                                else:
-                                    self.add_to_log(f"Select target for {current_player.special_attack}")
-                        else:
-                            attack_text = text.split(' (')[0]
-                            if attack_text in [current_player.attacks["projectile"]["name"], current_player.attacks["melee"]["name"]]:
-                                self.selected_attack = attack_text
-                                self.player_mode = "attack"
-                                self.selected_skill = None
-                                self.hex_grid.selected_hex = None
-                                self.add_to_log(f"Selected attack: {attack_text}")
-            elif event.ui_element in self.right_panel_buttons:
-                text = event.ui_element.text
-                if text == "Main Menu":
-                    game.current_screen = "main_menu"
-                    main_menu.initialize_buttons()
-                elif text == "Restart Match":
-                    game.current_screen = "character_creation"
-                    character_creation_screen.initialize_screen(
-                        level_file=game_screen.current_level_file,
-                        campaign_file=game_screen.campaign_file if game_screen.campaign else None
-                    )
-                elif text == "Settings":
-                    game.current_screen = "game_settings"
-                    game_settings_screen.initialize_screen()
-
     def draw(self):
         screen.fill(DARK_INDIGO)
         current_player = game.current_player
@@ -4221,27 +4280,33 @@ class GameScreen:
 
         # Determine attack range based on mode (uses weapon's range pattern)
         attack_range = None
+        attack_type = None
         if is_player_turn and not current_player.action_used:
             if self.selected_attack == current_player.attacks["projectile"]["name"]:
                 # Use player's method for proper range pattern support
                 attack_range = current_player.get_projectile_attack_range(self.hex_grid)
+                attack_type = "projectile"
             elif self.selected_attack == current_player.attacks["melee"]["name"]:
                 attack_range = current_player.get_melee_attack_range(self.hex_grid)
+                attack_type = "melee"
             elif self.player_mode == "special_attack":
                 # Show range for special attacks
                 if current_player.special_attack == "Multi-target Projectile":
                     attack_range = current_player.get_projectile_attack_range(self.hex_grid)
+                    attack_type = "projectile"
                 elif current_player.special_attack == "Double Attack":
                     attack_range = current_player.get_melee_attack_range(self.hex_grid)
+                    attack_type = "melee"
                 elif current_player.special_attack == "Spin Punch":
                     attack_range = current_player.get_melee_attack_range(self.hex_grid)
+                    attack_type = "melee"
 
         # Get targetable units for visual highlighting
         targetable_units = None
         if attack_range:
             targetable_units = self.hex_grid.get_targetable_units(attack_range, "player")
 
-        self.hex_grid.draw(screen, movement_range, attack_range, self.colors, targetable_units)
+        self.hex_grid.draw(screen, movement_range, attack_range, self.colors, targetable_units, attack_type=attack_type)
         for rect in (self.ui_elements[0].rect, self.ui_elements[1].rect if self.ui_elements[1].visible else None, self.ui_elements[2].rect):
             if rect:
                 pygame.draw.rect(screen, GRAY, rect)

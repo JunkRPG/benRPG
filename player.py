@@ -327,7 +327,21 @@ class Player:
         if not attack_line:
             return "Cannot determine attack line", []
 
-        damage = self.attacks["projectile"]["damage"]
+        # Calculate damage - handle ammunition system like normal projectile attacks
+        attack_info = self.attacks.get("projectile", {})
+        requires_ammo = attack_info.get("requires_ammo", False)
+        ammo_card = None
+        ammo_data = {}
+        damage = attack_info.get("damage", 0)
+
+        if requires_ammo:
+            ammo_card = self._get_equipped_ammunition()
+            if not ammo_card:
+                return "No ammunition equipped - cannot fire!", []
+            ammo_data = ammo_card.get_current_data()
+            # ALL damage comes from ammunition
+            damage = int(ammo_data.get("Ammo_Damage", 0))
+
         messages = []
         defeated = []
         hits = 0
@@ -356,6 +370,12 @@ class Player:
         self.action_used = True
         self.attack_flash = True
         self.flash_start = pygame.time.get_ticks()
+
+        # Check ammo runout after successful attack
+        if requires_ammo and ammo_card:
+            runout_msg = self._check_ammo_runout(ammo_card, ammo_data)
+            if runout_msg:
+                messages.append(runout_msg)
 
         result = f"{self.class_name} used Multi-target Projectile! Pierced through: {', '.join(messages)}"
         return result, defeated

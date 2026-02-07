@@ -11,6 +11,8 @@ import os
 import random
 from inventory_card import InventoryCard
 from unit import Unit
+from deck_utils import resolve_deck_path
+from card_utils import load_card
 
 
 class PlaceholderResolver:
@@ -120,7 +122,7 @@ class PlaceholderResolver:
 
         if deck_file:
             # Draw from specific deck
-            deck_path = os.path.join("decks", deck_file)
+            deck_path = resolve_deck_path(deck_file)
             try:
                 with open(deck_path, 'r') as f:
                     deck_data = json.load(f)
@@ -146,15 +148,10 @@ class PlaceholderResolver:
 
     def _load_card(self, card_id):
         """Load a card by ID."""
-        card_file = os.path.join("cards", f"{card_id}.json")
-        try:
-            with open(card_file, 'r') as f:
-                card_data = json.load(f)
-            card_data["id"] = card_id
-            return InventoryCard(card_data)
-        except Exception as e:
-            print(f"Error loading card {card_id}: {e}")
+        card_data = load_card(card_id)
+        if not card_data:
             return None
+        return InventoryCard(card_data)
 
     def _get_spawn_base_position(self, spawn_near, spawn_at, player_position):
         """Get the base position to spawn near/at."""

@@ -8,6 +8,7 @@ import os
 import json
 import tkinter as tk
 from tkinter import filedialog
+from terrain_config import TERRAIN_CONFIG, TERRAIN_TYPES, TERRAIN_COLORS
 
 # Initialize Pygame
 pygame.init()
@@ -32,28 +33,6 @@ LIGHT_GREEN = (144, 238, 144)    # Card-drawing hex border
 YELLOW = (255, 255, 0)           # Selected hex border
 GRAY = (200, 200, 200)           # Default hex border
 ORANGE = (255, 165, 0)           # Location hex border
-
-# Terrain types configuration (must match hexgrid.py)
-# Each terrain has: color, accessible (can units walk on it), blocks_los (does it block line of sight)
-TERRAIN_CONFIG = {
-    "grass": {"color": (76, 153, 0), "accessible": True, "blocks_los": False},
-    "dirt": {"color": (139, 90, 43), "accessible": True, "blocks_los": False},
-    "sand": {"color": (238, 214, 175), "accessible": True, "blocks_los": False},
-    "stone": {"color": (128, 128, 128), "accessible": True, "blocks_los": False},
-    "wood": {"color": (139, 69, 19), "accessible": True, "blocks_los": False},
-    "water": {"color": (30, 144, 255), "accessible": False, "blocks_los": False},
-    "deep_water": {"color": (0, 0, 139), "accessible": False, "blocks_los": False},
-    "lava": {"color": (255, 69, 0), "accessible": False, "blocks_los": False},
-    "mountain": {"color": (105, 105, 105), "accessible": False, "blocks_los": True},
-    "cliff": {"color": (70, 70, 70), "accessible": False, "blocks_los": True},
-    "forest": {"color": (34, 100, 34), "accessible": True, "blocks_los": True},
-    "swamp": {"color": (85, 107, 47), "accessible": True, "blocks_los": False},
-    "ice": {"color": (173, 216, 230), "accessible": True, "blocks_los": False},
-    "void": {"color": (20, 20, 30), "accessible": False, "blocks_los": True},
-}
-
-TERRAIN_TYPES = list(TERRAIN_CONFIG.keys())
-TERRAIN_COLORS = {k: v["color"] for k, v in TERRAIN_CONFIG.items()}
 
 # Grid size limits
 MIN_GRID_SIZE = 5

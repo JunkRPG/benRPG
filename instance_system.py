@@ -6,6 +6,8 @@ Handles random event cards that trigger during gameplay with multiple possible o
 import json
 import random
 import os
+from deck_utils import resolve_deck_path
+from card_utils import load_card
 
 
 class InstanceCard:
@@ -78,13 +80,7 @@ class InstanceManager:
         """Load instance cards from a deck file."""
         self.instance_deck = []
 
-        # Try both deck locations for compatibility
-        if deck_file.startswith("cards") or os.path.sep in deck_file:
-            deck_path = deck_file
-        else:
-            deck_path = os.path.join("cards", "decks", deck_file)
-            if not os.path.exists(deck_path):
-                deck_path = os.path.join("decks", deck_file)
+        deck_path = resolve_deck_path(deck_file)
 
         try:
             with open(deck_path, 'r') as f:
@@ -95,16 +91,12 @@ class InstanceManager:
 
         card_ids = deck_data.get("cards", [])
         for card_id in card_ids:
-            card_file = os.path.join("cards", f"{card_id}.json")
-            try:
-                with open(card_file, 'r') as f:
-                    card_data = json.load(f)
+            card_data = load_card(card_id)
+            if not card_data:
+                continue
 
-                if card_data.get("card_type") == "Instance Card":
-                    card_data["id"] = card_id
-                    self.instance_deck.append(InstanceCard(card_data))
-            except Exception as e:
-                print(f"Error loading instance card {card_id}: {e}")
+            if card_data.get("card_type") == "Instance Card":
+                self.instance_deck.append(InstanceCard(card_data))
 
         print(f"Loaded {len(self.instance_deck)} instance cards from {deck_file}")
         return len(self.instance_deck) > 0
@@ -275,13 +267,8 @@ class InstanceManager:
         from inventory_card import InventoryCard
 
         if deck_file:
-            # Draw from specific deck - try both locations
-            if deck_file.startswith("cards") or os.path.sep in deck_file:
-                deck_path = deck_file
-            else:
-                deck_path = os.path.join("cards", "decks", deck_file)
-                if not os.path.exists(deck_path):
-                    deck_path = os.path.join("decks", deck_file)
+            # Draw from specific deck
+            deck_path = resolve_deck_path(deck_file)
             print(f"[DEBUG] _draw_card: drawing from deck {deck_path}", flush=True)
             card = self.card_manager.draw_from_deck(deck_path)
             if card:
@@ -348,13 +335,7 @@ class InstanceManager:
         from unit import Unit
         from inventory_card import InventoryCard
 
-        # Try both deck locations for compatibility
-        if deck_file.startswith("cards") or os.path.sep in deck_file:
-            deck_path = deck_file
-        else:
-            deck_path = os.path.join("cards", "decks", deck_file)
-            if not os.path.exists(deck_path):
-                deck_path = os.path.join("decks", deck_file)
+        deck_path = resolve_deck_path(deck_file)
 
         spawned = []
         for _ in range(count):

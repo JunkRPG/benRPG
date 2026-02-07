@@ -182,8 +182,23 @@ class HexGrid:
             # Recalculate view offsets based on new grid size
             grid_width = self.cols * self.hex_size * 1.5
             grid_height = self.rows * self.hex_size * 1.732
-            self.view_offset_x = (pygame.display.Info().current_w - grid_width) / 2 if grid_width < pygame.display.Info().current_w else 0
-            self.view_offset_y = (pygame.display.Info().current_h - grid_height) / 2 if grid_height < pygame.display.Info().current_h else 0
+            window_width = pygame.display.Info().current_w
+            window_height = pygame.display.Info().current_h
+            if grid_width < window_width and grid_height < window_height:
+                # Small grid: center the entire grid on screen
+                self.view_offset_x = (window_width - grid_width) / 2
+                self.view_offset_y = (window_height - grid_height) / 2
+            elif player_start:
+                # Large grid: center view on player start position
+                player_row = player_start["row"]
+                player_col = player_start["column"]
+                player_pixel_x = player_col * self.hex_size * 1.5
+                player_pixel_y = player_row * self.hex_size * 1.732 + (player_col % 2) * self.hex_size * 0.866
+                self.view_offset_x = window_width / 2 - player_pixel_x
+                self.view_offset_y = window_height / 2 - player_pixel_y
+            else:
+                self.view_offset_x = 0
+                self.view_offset_y = 0
 
         except Exception as e:
             print(f"Error loading level: {e}")
@@ -630,7 +645,7 @@ class HexGrid:
         total_value = max(1, int(total_value * 1.5))
         return {"type": currency_type, "amount": total_value}
 
-    def trigger_location_outcome(self, row, col):
+    def trigger_location_outcome(self, row, col, card_manager=None):
         """Trigger a weighted random outcome for the location (if not visited this turn)."""
         loc_data = self.location_data.get((row, col))
         if not loc_data or not loc_data.get("card"):
@@ -674,7 +689,14 @@ class HexGrid:
 
         deck_file = selected_outcome.get("deck_file")
         if not deck_file:
-            return None, f"No deck specified for {card_type}"
+            # No deck specified - draw a random card of that type from all available
+            if card_manager:
+                cards = card_manager.get_cards_for_game(card_type=card_type)
+                if cards:
+                    card_data = random.choice(cards)
+                    outcome_card = InventoryCard(card_data)
+                    return outcome_card, f"Found {card_data['data'].get('Name', 'Unknown Item')}"
+            return None, "Nothing found"
 
         deck_path = resolve_deck_path(deck_file)
         if deck_path not in self.deck_data:
@@ -1470,7 +1492,7 @@ class HexGrid:
 
         return targetable
 
-    def draw(self, surface, movement_range=None, attack_range=None, colors=None, targetable_units=None):
+    def draw(self, surface, movement_range=None, attack_range=None, colors=None, targetable_units=None, attack_type=None):
         if colors is None:
             colors = {
                 'BLUE': (0, 0, 255),
@@ -1507,22 +1529,6 @@ class HexGrid:
                         pygame.draw.polygon(dark_overlay, (0, 0, 0, 80), dark_points, 0)
                         hex_surface.blit(dark_overlay, (x - self.hex_size, y - self.hex_size))
 
-                # Draw movement range overlay
-                if movement_range and (row, col) in movement_range:
-                    move_overlay = pygame.Surface((self.hex_size * 2, self.hex_size * 2), pygame.SRCALPHA)
-                    move_points = [(self.hex_size + self.hex_size * math.cos(math.radians(60 * i)),
-                                   self.hex_size + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
-                    pygame.draw.polygon(move_overlay, (0, 100, 255, 100), move_points, 0)
-                    hex_surface.blit(move_overlay, (x - self.hex_size, y - self.hex_size))
-
-                # Draw attack range overlay
-                if attack_range and (row, col) in attack_range:
-                    attack_overlay = pygame.Surface((self.hex_size * 2, self.hex_size * 2), pygame.SRCALPHA)
-                    attack_points = [(self.hex_size + self.hex_size * math.cos(math.radians(60 * i)),
-                                     self.hex_size + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
-                    pygame.draw.polygon(attack_overlay, (255, 0, 0, 80), attack_points, 0)
-                    hex_surface.blit(attack_overlay, (x - self.hex_size, y - self.hex_size))
-
                 # Draw special hex indicators
                 for hex_data in self.card_drawing_hexes:
                     if hex_data["row"] == row and hex_data["column"] == col:
@@ -1547,137 +1553,177 @@ class HexGrid:
                     else:
                         border_color = colors['ORANGE']
                     pygame.draw.polygon(hex_surface, border_color, points, 3)
-
-                    # Draw icon if location is assigned
-                    if loc_data.get("card"):
-                        is_upgraded = loc_data.get("state", 1) == 2
-
-                        if is_spawn_location and has_health:
-                            # Draw tower/fort icon for active enemy spawn locations (red)
-                            icon_color = colors['RED']
-                            tower_size = self.hex_size * 0.3
-                            tower_x, tower_y = x, y
-                            # Tower shape: rectangular base with crenellations on top
-                            base_rect = pygame.Rect(
-                                tower_x - tower_size * 0.4,
-                                tower_y - tower_size * 0.3,
-                                tower_size * 0.8,
-                                tower_size * 0.8
-                            )
-                            pygame.draw.rect(hex_surface, icon_color, base_rect)
-                            # Crenellations (small rectangles on top)
-                            cren_width = tower_size * 0.2
-                            cren_height = tower_size * 0.25
-                            for i in range(3):
-                                cren_rect = pygame.Rect(
-                                    tower_x - tower_size * 0.4 + i * cren_width * 1.5,
-                                    tower_y - tower_size * 0.3 - cren_height,
-                                    cren_width,
-                                    cren_height
-                                )
-                                pygame.draw.rect(hex_surface, icon_color, cren_rect)
-
-                            # Draw health bar below the tower icon
-                            max_health = loc_data.get("max_health", 1)
-                            current_health = loc_data.get("health", 0)
-                            if max_health > 0:
-                                bar_width = self.hex_size * 0.6
-                                bar_height = 4
-                                bar_x = tower_x - bar_width / 2
-                                bar_y = tower_y + tower_size * 0.6
-                                # Background (gray)
-                                pygame.draw.rect(hex_surface, colors['GRAY'],
-                                               (bar_x, bar_y, bar_width, bar_height))
-                                # Health (red)
-                                health_ratio = current_health / max_health
-                                pygame.draw.rect(hex_surface, colors['RED'],
-                                               (bar_x, bar_y, bar_width * health_ratio, bar_height))
-
-                        elif is_npc_spawn and has_npc_health:
-                            # Draw church icon for active NPC spawn locations (blue)
-                            icon_color = colors['BLUE']
-                            church_size = self.hex_size * 0.3
-                            church_x, church_y = x, y
-                            # Church shape: rectangle with pointed steeple on top
-                            # Steeple (triangle)
-                            steeple_points = [
-                                (church_x, church_y - church_size * 1.0),  # Top point
-                                (church_x - church_size * 0.2, church_y - church_size * 0.4),  # Bottom left
-                                (church_x + church_size * 0.2, church_y - church_size * 0.4)   # Bottom right
-                            ]
-                            pygame.draw.polygon(hex_surface, icon_color, steeple_points)
-                            # Church body (rectangle)
-                            body_rect = pygame.Rect(
-                                church_x - church_size * 0.4,
-                                church_y - church_size * 0.4,
-                                church_size * 0.8,
-                                church_size * 0.8
-                            )
-                            pygame.draw.rect(hex_surface, icon_color, body_rect)
-                            # Cross on top (small lines)
-                            cross_color = colors['WHITE']
-                            cross_y = church_y - church_size * 0.85
-                            pygame.draw.line(hex_surface, cross_color,
-                                           (church_x, cross_y - church_size * 0.15),
-                                           (church_x, cross_y + church_size * 0.1), 2)
-                            pygame.draw.line(hex_surface, cross_color,
-                                           (church_x - church_size * 0.1, cross_y),
-                                           (church_x + church_size * 0.1, cross_y), 2)
-
-                            # Draw health bar below the church icon
-                            max_npc_health = loc_data.get("npc_max_health", 1)
-                            current_npc_health = loc_data.get("npc_health", 0)
-                            if max_npc_health > 0:
-                                bar_width = self.hex_size * 0.6
-                                bar_height = 4
-                                bar_x = church_x - bar_width / 2
-                                bar_y = church_y + church_size * 0.6
-                                # Background (gray)
-                                pygame.draw.rect(hex_surface, colors['GRAY'],
-                                               (bar_x, bar_y, bar_width, bar_height))
-                                # Health (blue)
-                                health_ratio = current_npc_health / max_npc_health
-                                pygame.draw.rect(hex_surface, colors['BLUE'],
-                                               (bar_x, bar_y, bar_width * health_ratio, bar_height))
-                        else:
-                            # Draw house icon for regular locations
-                            icon_color = colors['GREEN'] if is_upgraded else colors['ORANGE']
-                            # Simple house shape (triangle roof + rectangle base)
-                            house_size = self.hex_size * 0.3
-                            house_x, house_y = x, y
-                            roof_points = [
-                                (house_x, house_y - house_size * 0.8),  # Top
-                                (house_x - house_size * 0.6, house_y - house_size * 0.2),  # Bottom left
-                                (house_x + house_size * 0.6, house_y - house_size * 0.2)   # Bottom right
-                            ]
-                            base_rect = pygame.Rect(
-                                house_x - house_size * 0.4,
-                                house_y - house_size * 0.2,
-                                house_size * 0.8,
-                                house_size * 0.6
-                            )
-                            pygame.draw.polygon(hex_surface, icon_color, roof_points)
-                            pygame.draw.rect(hex_surface, icon_color, base_rect)
                 if self.selected_hex == (row, col):
                     pygame.draw.polygon(hex_surface, colors['YELLOW'], points, 0)
                 pygame.draw.polygon(hex_surface, colors['GOLDEN_YELLOW'], points, 1)
 
-        # Second pass: Draw location names on top of hexes
+        # Second pass: Draw range rings on top of terrain and hex borders
+        ring_width = max(4, int(self.hex_size * 0.22))
+        for row in range(self.rows):
+            for col in range(self.cols):
+                if movement_range and (row, col) in movement_range:
+                    x, y = self.get_hex_center(row, col)
+                    points = [(x + self.hex_size * math.cos(math.radians(60 * i)),
+                               y + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                    pygame.draw.polygon(hex_surface, (0, 180, 255, 200), points, ring_width)  # Electric blue
+                if attack_range and (row, col) in attack_range:
+                    x, y = self.get_hex_center(row, col)
+                    points = [(x + self.hex_size * math.cos(math.radians(60 * i)),
+                               y + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                    if attack_type == "melee":
+                        ring_color = (255, 69, 0, 220)  # Orange-red
+                    else:
+                        ring_color = (191, 0, 255, 220)  # Neon purple
+                    pygame.draw.polygon(hex_surface, ring_color, points, ring_width)
+
+        # Third pass: Draw location icons and names on top of range rings
         for (row, col), loc_data in self.location_data.items():
+            x, y = self.get_hex_center(row, col)
+            is_spawn_location = loc_data.get("is_spawn_location", False)
+            has_health = loc_data.get("health", 0) > 0
+            is_npc_spawn = loc_data.get("is_npc_spawn_location", False)
+            has_npc_health = loc_data.get("npc_health", 0) > 0
+
             if loc_data.get("card"):
+                # Draw icons for assigned locations
+                is_upgraded = loc_data.get("state", 1) == 2
+
+                if is_spawn_location and has_health:
+                    # Draw tower/fort icon for active enemy spawn locations (red)
+                    icon_color = colors['RED']
+                    tower_size = self.hex_size * 0.3
+                    tower_x, tower_y = x, y
+                    base_rect = pygame.Rect(
+                        tower_x - tower_size * 0.4,
+                        tower_y - tower_size * 0.3,
+                        tower_size * 0.8,
+                        tower_size * 0.8
+                    )
+                    pygame.draw.rect(hex_surface, icon_color, base_rect)
+                    cren_width = tower_size * 0.2
+                    cren_height = tower_size * 0.25
+                    for i in range(3):
+                        cren_rect = pygame.Rect(
+                            tower_x - tower_size * 0.4 + i * cren_width * 1.5,
+                            tower_y - tower_size * 0.3 - cren_height,
+                            cren_width,
+                            cren_height
+                        )
+                        pygame.draw.rect(hex_surface, icon_color, cren_rect)
+                    # Health bar
+                    max_health = loc_data.get("max_health", 1)
+                    current_health = loc_data.get("health", 0)
+                    if max_health > 0:
+                        bar_width = self.hex_size * 0.6
+                        bar_height = 4
+                        bar_x = tower_x - bar_width / 2
+                        bar_y = tower_y + tower_size * 0.6
+                        pygame.draw.rect(hex_surface, colors['GRAY'],
+                                       (bar_x, bar_y, bar_width, bar_height))
+                        health_ratio = current_health / max_health
+                        pygame.draw.rect(hex_surface, colors['RED'],
+                                       (bar_x, bar_y, bar_width * health_ratio, bar_height))
+
+                elif is_npc_spawn and has_npc_health:
+                    # Draw church icon for active NPC spawn locations (blue)
+                    icon_color = colors['BLUE']
+                    church_size = self.hex_size * 0.3
+                    church_x, church_y = x, y
+                    steeple_points = [
+                        (church_x, church_y - church_size * 1.0),
+                        (church_x - church_size * 0.2, church_y - church_size * 0.4),
+                        (church_x + church_size * 0.2, church_y - church_size * 0.4)
+                    ]
+                    pygame.draw.polygon(hex_surface, icon_color, steeple_points)
+                    body_rect = pygame.Rect(
+                        church_x - church_size * 0.4,
+                        church_y - church_size * 0.4,
+                        church_size * 0.8,
+                        church_size * 0.8
+                    )
+                    pygame.draw.rect(hex_surface, icon_color, body_rect)
+                    cross_color = colors['WHITE']
+                    cross_y = church_y - church_size * 0.85
+                    pygame.draw.line(hex_surface, cross_color,
+                                   (church_x, cross_y - church_size * 0.15),
+                                   (church_x, cross_y + church_size * 0.1), 2)
+                    pygame.draw.line(hex_surface, cross_color,
+                                   (church_x - church_size * 0.1, cross_y),
+                                   (church_x + church_size * 0.1, cross_y), 2)
+                    # Health bar
+                    max_npc_health = loc_data.get("npc_max_health", 1)
+                    current_npc_health = loc_data.get("npc_health", 0)
+                    if max_npc_health > 0:
+                        bar_width = self.hex_size * 0.6
+                        bar_height = 4
+                        bar_x = church_x - bar_width / 2
+                        bar_y = church_y + church_size * 0.6
+                        pygame.draw.rect(hex_surface, colors['GRAY'],
+                                       (bar_x, bar_y, bar_width, bar_height))
+                        health_ratio = current_npc_health / max_npc_health
+                        pygame.draw.rect(hex_surface, colors['BLUE'],
+                                       (bar_x, bar_y, bar_width * health_ratio, bar_height))
+                else:
+                    # Draw house icon for regular assigned locations
+                    icon_color = colors['GREEN'] if is_upgraded else colors['ORANGE']
+                    house_size = self.hex_size * 0.3
+                    house_x, house_y = x, y
+                    roof_points = [
+                        (house_x, house_y - house_size * 0.8),
+                        (house_x - house_size * 0.6, house_y - house_size * 0.2),
+                        (house_x + house_size * 0.6, house_y - house_size * 0.2)
+                    ]
+                    base_rect = pygame.Rect(
+                        house_x - house_size * 0.4,
+                        house_y - house_size * 0.2,
+                        house_size * 0.8,
+                        house_size * 0.6
+                    )
+                    pygame.draw.polygon(hex_surface, icon_color, roof_points)
+                    pygame.draw.rect(hex_surface, icon_color, base_rect)
+
+                # Draw location name
                 loc_card = loc_data["card"]
                 loc_name = loc_card.get_current_data().get("Name", "")
                 if loc_name:
-                    x, y = self.get_hex_center(row, col)
                     house_size = self.hex_size * 0.3
                     name_surface = self.font.render(loc_name, True, colors['WHITE'])
                     name_rect = name_surface.get_rect(centerx=x, top=y + house_size * 0.5)
                     hex_surface.blit(name_surface, name_rect)
+            else:
+                # Draw unknown building icon for unassigned locations
+                unknown_color = (210, 180, 100)  # Muted gold/tan
+                house_size = self.hex_size * 0.35  # Slightly larger than regular
+                house_x, house_y = x, y
+                # House silhouette (triangle roof + rectangle base)
+                roof_points = [
+                    (house_x, house_y - house_size * 0.9),
+                    (house_x - house_size * 0.7, house_y - house_size * 0.2),
+                    (house_x + house_size * 0.7, house_y - house_size * 0.2)
+                ]
+                base_rect = pygame.Rect(
+                    house_x - house_size * 0.5,
+                    house_y - house_size * 0.2,
+                    house_size * 1.0,
+                    house_size * 0.7
+                )
+                pygame.draw.polygon(hex_surface, unknown_color, roof_points)
+                pygame.draw.rect(hex_surface, unknown_color, base_rect)
+                # Draw "?" in the center of the building
+                q_font = pygame.font.Font(None, max(14, int(house_size * 1.8)))
+                q_surface = q_font.render("?", True, (60, 40, 20))
+                q_rect = q_surface.get_rect(center=(int(house_x), int(house_y + house_size * 0.05)))
+                hex_surface.blit(q_surface, q_rect)
+
+                # Draw "Unknown Location" label
+                name_surface = self.font.render("Unknown Location", True, unknown_color)
+                name_rect = name_surface.get_rect(centerx=x, top=y + house_size * 0.6)
+                hex_surface.blit(name_surface, name_rect)
 
         # Update pulse time for targeting visuals
         self.pulse_time = pygame.time.get_ticks()
 
-        # Third pass: Draw all units on top of hexes (for proper z-ordering)
+        # Fourth pass: Draw all units on top of hexes (for proper z-ordering)
         # This ensures animating units are visible and don't go under hexes
         # Collect all players (multiplayer mode or single player)
         all_players = self.players if self.players else ([self.player] if self.player else [])
@@ -1707,8 +1753,12 @@ class HexGrid:
                     elif unit.allegiance == "Allied":
                         color = colors['BLUE']
                     else:
-                        color = colors['GRAY']
+                        color = (0, 190, 170)  # Teal for neutral NPCs
                     radius = max(10, int(self.hex_size / 3))
+                    # Draw black outline behind the token
+                    if not isinstance(unit, Player):
+                        pygame.draw.circle(hex_surface, (0, 0, 0),
+                                           (int(pos[0]), int(pos[1])), radius + 2)
                     pygame.draw.circle(hex_surface, colors['WHITE'] if unit.attack_flash else color,
                                        (int(pos[0]), int(pos[1])), radius)
                     health_bar_y = pos[1] - radius - 5  # Position health bar just above the circle

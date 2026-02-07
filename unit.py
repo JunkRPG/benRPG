@@ -34,6 +34,8 @@ class Unit:
         self.damage_time = 0
         # Quest-related: target position for escort quests
         self.quest_target_position = None
+        # Deferred attack (executed after movement animation completes)
+        self.pending_attack = None
         # Path-based animation
         self.animation_path = []  # List of hex positions to animate through
         self.animation_path_index = 0  # Current target in the path
@@ -149,26 +151,24 @@ class Unit:
                                 log.append(msg)
                                 distance_after = grid.hex_distance(self.position, player.position)
                                 if distance_after == 1:
-                                    damage = self.melee_damage
-                                    player.hp -= damage
-                                    player.set_damage_text(damage)
-                                    self.attack_flash = True
-                                    self.flash_start = pygame.time.get_ticks()
-                                    log.append(f"{self.name} attacked {player.class_name} for {damage} damage")
-                                    if player.hp <= 0:
-                                        grid.game_over = True
+                                    # Defer melee attack until after movement animation
+                                    self.pending_attack = {
+                                        "target": player,
+                                        "damage": self.melee_damage,
+                                        "type": "melee",
+                                        "is_player": True
+                                    }
                                 elif (self.projectile_damage > 0 and
                                       1 < distance_after <= self.projectile_range and
                                       grid.is_aligned(self.position, player.position, self.projectile_range) and
                                       grid.has_clear_line_of_sight(self.position, player.position)):
-                                    damage = self.projectile_damage
-                                    player.hp -= damage
-                                    player.set_damage_text(damage)
-                                    self.attack_flash = True
-                                    self.flash_start = pygame.time.get_ticks()
-                                    log.append(f"{self.name} attacked {player.class_name} with projectile for {damage} damage")
-                                    if player.hp <= 0:
-                                        grid.game_over = True
+                                    # Defer projectile attack until after movement animation
+                                    self.pending_attack = {
+                                        "target": player,
+                                        "damage": self.projectile_damage,
+                                        "type": "projectile",
+                                        "is_player": True
+                                    }
                             break
         
         elif self.allegiance == "Allied":
@@ -208,22 +208,24 @@ class Unit:
                                 log.append(msg)
                                 distance_after = grid.hex_distance(self.position, target.position)
                                 if distance_after == 1:
-                                    damage = self.melee_damage
-                                    target.hp -= damage
-                                    target.set_damage_text(damage)
-                                    self.attack_flash = True
-                                    self.flash_start = pygame.time.get_ticks()
-                                    log.append(f"{self.name} attacked {target.name} for {damage} damage")
+                                    # Defer melee attack until after movement animation
+                                    self.pending_attack = {
+                                        "target": target,
+                                        "damage": self.melee_damage,
+                                        "type": "melee",
+                                        "is_player": False
+                                    }
                                 elif (self.projectile_damage > 0 and
                                       1 < distance_after <= self.projectile_range and
                                       grid.is_aligned(self.position, target.position, self.projectile_range) and
                                       grid.has_clear_line_of_sight(self.position, target.position)):
-                                    damage = self.projectile_damage
-                                    target.hp -= damage
-                                    target.set_damage_text(damage)
-                                    self.attack_flash = True
-                                    self.flash_start = pygame.time.get_ticks()
-                                    log.append(f"{self.name} attacked {target.name} with projectile for {damage} damage")
+                                    # Defer projectile attack until after movement animation
+                                    self.pending_attack = {
+                                        "target": target,
+                                        "damage": self.projectile_damage,
+                                        "type": "projectile",
+                                        "is_player": False
+                                    }
                             break
             else:
                 # No hostile units - if we have a quest target, move toward it
@@ -250,6 +252,49 @@ class Unit:
                 if success:
                     log.append(msg)
         
+        return log
+
+    def execute_pending_attack(self, grid):
+        """Execute a deferred attack after movement animation completes.
+        Returns list of log entries."""
+        if not self.pending_attack:
+            return []
+
+        attack = self.pending_attack
+        self.pending_attack = None
+
+        target = attack["target"]
+        damage = attack["damage"]
+        attack_type = attack["type"]
+        is_player = attack.get("is_player", False)
+
+        # Check target is still valid
+        if is_player:
+            if target.hp <= 0:
+                return []
+        else:
+            if target not in grid.units or target.hp <= 0:
+                return []
+
+        target.hp -= damage
+        target.set_damage_text(damage)
+        self.attack_flash = True
+        self.flash_start = pygame.time.get_ticks()
+
+        log = []
+        if is_player:
+            target_name = target.class_name
+        else:
+            target_name = target.name
+
+        if attack_type == "projectile":
+            log.append(f"{self.name} attacked {target_name} with projectile for {damage} damage")
+        else:
+            log.append(f"{self.name} attacked {target_name} for {damage} damage")
+
+        if is_player and target.hp <= 0:
+            grid.game_over = True
+
         return log
 
     def switch_state(self):
