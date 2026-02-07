@@ -1538,5 +1538,68 @@
     "blueprint_subclass": null,
     "states": 2,
     "name": "Roadside Shrine"
+  },
+  "starter_ranger_bow": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Old Bow Limbs"
+  },
+  "starter_ranger_bowstring": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Sinew Bowstring"
+  },
+  "starter_ranger_curved_branch": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Curved Branch"
+  },
+  "starter_tank_sledgehammer_plans": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Sledgehammer Instructions"
+  },
+  "starter_tank_hammer_head": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Old 3 lb Hammer Head"
+  },
+  "starter_tank_branch": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Sturdy Branch"
+  },
+  "starter_warrior_combat_bow": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Combat Bow Frame"
+  },
+  "starter_warrior_bowstring": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Heavy Bowstring"
+  },
+  "starter_warrior_metal_wraps": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Iron Limb Wraps"
   }
 }

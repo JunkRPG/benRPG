@@ -1,0 +1,22 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Sledgehammer Instructions",
+    "Description": "A worn page torn from a blacksmith's manual. Detailed diagrams show how to assemble a proper sledgehammer from a heavy hammer head and a sturdy handle.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "0",
+    "Requirements: Wood": "4",
+    "Requirements: Metal": "6",
+    "2nd_state_Name": "Sledgehammer",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "25",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "0",
+    "2nd_state_Weapon Image": ""
+  }
+}

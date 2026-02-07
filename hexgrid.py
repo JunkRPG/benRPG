@@ -1556,7 +1556,7 @@ class HexGrid:
                     pygame.draw.polygon(hex_surface, border_color, points, 3)
                 if self.selected_hex == (row, col):
                     pygame.draw.polygon(hex_surface, colors['YELLOW'], points, 0)
-                pygame.draw.polygon(hex_surface, colors['GOLDEN_YELLOW'], points, 1)
+                pygame.draw.polygon(hex_surface, colors['WHITE'], points, 1)
 
         # Second pass: Draw range rings on top of terrain and hex borders
         ring_width = max(4, int(self.hex_size * 0.22))

@@ -520,7 +520,7 @@ class CardEditor:
                     self.ui_elements.append(browse)
                 elif field_type == "dropdown":
                     if field == "2nd_state_Type":
-                        options = ["Melee", "Projectile"]
+                        options = ["Melee", "Projectile", "Both"]
                         default = value if value in options else options[0]
                     elif field == "2nd_state_Use_HP":
                         options = HP_OPTIONS
@@ -602,7 +602,7 @@ class CardEditor:
                 field_type = self.get_field_type(field, card_data)
                 if field_type == "dropdown":
                     if field == "2nd_state_Type":
-                        options = ["Melee", "Projectile"]
+                        options = ["Melee", "Projectile", "Both"]
                         default = value if value in options else options[0]
                     elif field == "2nd_state_Use_HP":
                         options = HP_OPTIONS
@@ -1292,7 +1292,7 @@ class CardCreationScreen:
                 if self.selected_subclass == "Junk_to_Weapon":
                     right_fields = [
                         ("2nd_state_Name", "text"),
-                        ("2nd_state_Type", "dropdown", ["Melee", "Projectile"], "Melee"),
+                        ("2nd_state_Type", "dropdown", ["Melee", "Projectile", "Both"], "Melee"),
                         ("2nd_state_Melee Damage", "text"),
                         ("2nd_state_Projectile Damage", "text"),
                         # Range properties for projectile weapons
@@ -1378,7 +1378,7 @@ class CardCreationScreen:
                     ]
                     fields_state_2 = [
                         ("2nd_state_Name", "text"),
-                        ("2nd_state_Type", "dropdown", ["Melee", "Projectile"], "Melee"),
+                        ("2nd_state_Type", "dropdown", ["Melee", "Projectile", "Both"], "Melee"),
                         ("2nd_state_Melee Damage", "text"),
                         ("2nd_state_Projectile Damage", "text"),
                         # Range properties for projectile weapons

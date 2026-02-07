@@ -1,0 +1,14 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Sturdy Branch",
+    "Description": "A thick branch from a hardwood tree. Heavy and straight - would make a solid handle for a tool or weapon.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "0",
+    "Metal Value": "0",
+    "Wood Value": "6",
+    "Price": "2"
+  }
+}

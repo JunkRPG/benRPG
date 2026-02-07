@@ -329,8 +329,8 @@ class LevelEditor:
     def setup_ui(self):
         self.size_label = UILabel(relative_rect=pygame.Rect(10, 10, 260, 20),
                                   text=f"Grid Size ({MIN_GRID_SIZE}-{MAX_GRID_SIZE}):", manager=manager)
-        self.rows_entry = UITextEntryLine(relative_rect=pygame.Rect(10, 32, 80, 30), manager=manager, initial_text="10")
-        self.cols_entry = UITextEntryLine(relative_rect=pygame.Rect(100, 32, 80, 30), manager=manager, initial_text="10")
+        self.cols_entry = UITextEntryLine(relative_rect=pygame.Rect(10, 32, 80, 30), manager=manager, initial_text="10")
+        self.rows_entry = UITextEntryLine(relative_rect=pygame.Rect(100, 32, 80, 30), manager=manager, initial_text="10")
         self.apply_button = UIButton(relative_rect=pygame.Rect(190, 32, 80, 30), text="Apply", manager=manager)
         y_pos = 70
         self.unit_type_dropdown = UIDropDownMenu(options_list=["Enemy", "Boss", "NPC"], starting_option="Enemy", 

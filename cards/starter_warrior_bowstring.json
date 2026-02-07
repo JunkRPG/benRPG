@@ -1,0 +1,14 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Heavy Bowstring",
+    "Description": "A thick, braided cord made from twisted fibers. Strong enough to handle the draw weight of a combat bow.",
+    "Raw Material Value": "1",
+    "Refined Material Value": "4",
+    "Metal Value": "0",
+    "Wood Value": "0",
+    "Price": "3"
+  }
+}

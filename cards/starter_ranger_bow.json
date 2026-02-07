@@ -1,0 +1,32 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Old Bow Limbs",
+    "Description": "A pair of cracked bow limbs salvaged from a ruined camp. With a decent string and some wood to reinforce them, these could make a serviceable shortbow.",
+    "Raw Material Value": "3",
+    "Refined Material Value": "1",
+    "Metal Value": "0",
+    "Wood Value": "6",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "2",
+    "Requirements: Wood": "4",
+    "Requirements: Metal": "0",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Ranger's Shortbow",
+    "2nd_state_Type": "Projectile",
+    "2nd_state_Melee Damage": "3",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Range_Type": "line_of_sight",
+    "2nd_state_Range_Distance": "5",
+    "2nd_state_Include_Position": "false",
+    "2nd_state_Exclude_Adjacent": "false",
+    "2nd_state_Requires_Ammo": "true",
+    "2nd_state_Compatible_Ammo": "Arrow",
+    "2nd_state_range_id": "None",
+    "2nd_state_Weapon Image": ""
+  }
+}

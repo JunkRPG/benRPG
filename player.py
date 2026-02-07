@@ -5,9 +5,36 @@ import random
 
 # Character classes
 CHARACTER_CLASSES = {
-    "Ranger": {"hp": 50, "movement": 5, "projectile_range": 5, "attacks": {"Sling": 8, "Punch": 4}, "special_attack": "Multi-target Projectile"},
-    "Warrior": {"hp": 100, "movement": 4, "projectile_range": 4, "attacks": {"Throw Rock": 6, "Kick": 6}, "special_attack": "Double Attack"},
-    "Tank": {"hp": 150, "movement": 3, "projectile_range": 3, "attacks": {"Spit": 4, "Head-butt": 8}, "special_attack": "Spin Punch"}
+    "Ranger": {
+        "hp": 50, "movement": 5, "projectile_range": 5,
+        "attacks": {"Sling": 8, "Punch": 4},
+        "special_attack": "Multi-target Projectile",
+        "starting_kit": [
+            {"card_id": "starter_ranger_bow", "state": 1},
+            {"card_id": "starter_ranger_bowstring", "state": 1},
+            {"card_id": "starter_ranger_curved_branch", "state": 1}
+        ]
+    },
+    "Warrior": {
+        "hp": 100, "movement": 4, "projectile_range": 4,
+        "attacks": {"Throw Rock": 6, "Kick": 6},
+        "special_attack": "Dual Strike",
+        "starting_kit": [
+            {"card_id": "starter_warrior_combat_bow", "state": 1},
+            {"card_id": "starter_warrior_bowstring", "state": 1},
+            {"card_id": "starter_warrior_metal_wraps", "state": 1}
+        ]
+    },
+    "Tank": {
+        "hp": 150, "movement": 3, "projectile_range": 3,
+        "attacks": {"Spit": 4, "Head-butt": 8},
+        "special_attack": "Spin Punch",
+        "starting_kit": [
+            {"card_id": "starter_tank_sledgehammer_plans", "state": 1},
+            {"card_id": "starter_tank_hammer_head", "state": 1},
+            {"card_id": "starter_tank_branch", "state": 1}
+        ]
+    }
 }
 
 # Animation constants
@@ -31,8 +58,9 @@ class Player:
         self.special_attack = stats["special_attack"]
         self.movement_used = False
         self.action_used = False
-        # Double Attack mode (Warrior special) - allows both melee and projectile in one turn
-        self.double_attack_active = False
+        # Warrior passive: always gets 2 attacks per turn (any combination of melee/projectile)
+        self.warrior_attacks_remaining = 2 if class_name == "Warrior" else 0
+        self.double_attack_active = (class_name == "Warrior")  # Always active for Warriors
         self.double_attack_melee_used = False
         self.double_attack_projectile_used = False
         self.position = (0, 0)
@@ -81,10 +109,8 @@ class Player:
 
         # Check if this attack type can be used
         if self.double_attack_active:
-            # In Double Attack mode, check type-specific flags
-            if is_projectile and self.double_attack_projectile_used:
-                return "", False
-            if is_melee and self.double_attack_melee_used:
+            # Warrior passive: check attacks remaining counter
+            if self.warrior_attacks_remaining <= 0:
                 return "", False
         else:
             # Normal mode - check action_used
@@ -218,14 +244,10 @@ class Player:
         return None
 
     def _mark_attack_used(self, is_projectile):
-        """Mark an attack as used, handling Double Attack mode."""
+        """Mark an attack as used, handling Warrior's passive double attack."""
         if self.double_attack_active:
-            if is_projectile:
-                self.double_attack_projectile_used = True
-            else:
-                self.double_attack_melee_used = True
-            # If both attacks used, mark action as fully used
-            if self.double_attack_melee_used and self.double_attack_projectile_used:
+            self.warrior_attacks_remaining -= 1
+            if self.warrior_attacks_remaining <= 0:
                 self.action_used = True
         else:
             self.action_used = True
@@ -267,8 +289,12 @@ class Player:
         )
 
     def reset_double_attack(self):
-        """Reset Double Attack mode at end of turn."""
-        self.double_attack_active = False
+        """Reset attack state at end of turn. Warriors always have 2 attacks."""
+        if self.class_name == "Warrior":
+            self.double_attack_active = True
+            self.warrior_attacks_remaining = 2
+        else:
+            self.double_attack_active = False
         self.double_attack_melee_used = False
         self.double_attack_projectile_used = False
 
@@ -287,9 +313,9 @@ class Player:
             if self.action_used:
                 return "Action already used this turn", []
             return self._multi_target_projectile(target, grid)
-        elif self.special_attack == "Double Attack":
-            # Double Attack is a mode activation, not a direct attack
-            return self._activate_double_attack()
+        elif self.special_attack == "Dual Strike":
+            # Dual Strike is passive - Warrior always gets 2 attacks per turn
+            return "Dual Strike is a passive ability - attack normally to use both attacks", []
         elif self.special_attack == "Spin Punch":
             if self.action_used:
                 return "Action already used this turn", []
@@ -444,7 +470,40 @@ class Player:
         weapon_data = weapon_card.get_current_data()
         weapon_type = weapon_data.get("Type")
 
-        if weapon_type == "Melee" and "Melee Damage" in weapon_data:
+        if weapon_type == "Both":
+            # Dual-slot weapon (e.g., Combat Bow) - occupies both melee and projectile slots
+            try:
+                # Melee slot
+                melee_damage = int(weapon_data.get("Melee Damage", 0))
+                self.melee_weapon = weapon_card
+                self.attacks["melee"] = {"name": weapon_data["Name"], "damage": melee_damage}
+
+                # Projectile slot
+                self.projectile_weapon = weapon_card
+                self.projectile_range = int(weapon_data.get("Range_Distance", weapon_data.get("Projectile Range", 5)))
+                self.projectile_range_type = weapon_data.get("Range_Type", "line_of_sight")
+                self.projectile_include_pos = str(weapon_data.get("Include_Position", "false")).lower() == "true"
+                self.projectile_exclude_adj = str(weapon_data.get("Exclude_Adjacent", "false")).lower() == "true"
+
+                requires_ammo = str(weapon_data.get("Requires_Ammo", "false")).lower() == "true"
+                if requires_ammo:
+                    self.attacks["projectile"] = {
+                        "name": weapon_data["Name"],
+                        "damage": 0,
+                        "requires_ammo": True,
+                        "compatible_ammo": weapon_data.get("Compatible_Ammo", "")
+                    }
+                else:
+                    proj_damage = int(weapon_data.get("Projectile Damage", 0))
+                    self.attacks["projectile"] = {
+                        "name": weapon_data["Name"],
+                        "damage": proj_damage,
+                        "requires_ammo": False
+                    }
+            except ValueError as e:
+                print(f"Error: Invalid dual-slot weapon data for {weapon_data.get('Name', 'Unknown')}: {e}")
+
+        elif weapon_type == "Melee" and "Melee Damage" in weapon_data:
             try:
                 damage = int(weapon_data["Melee Damage"])
                 self.melee_weapon = weapon_card

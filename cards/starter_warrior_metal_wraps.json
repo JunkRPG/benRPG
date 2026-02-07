@@ -1,0 +1,14 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Iron Limb Wraps",
+    "Description": "Strips of hammered iron meant to reinforce bow limbs for melee combat. What the combat bow needs to hit hard up close.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "0",
+    "Metal Value": "5",
+    "Wood Value": "0",
+    "Price": "3"
+  }
+}

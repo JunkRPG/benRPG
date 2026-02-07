@@ -256,7 +256,7 @@ class InventoryScreen:
                                               manager, container=self.window)
 
         # Weapons (column 3)
-        weapons_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") in ["Melee", "Projectile"]]
+        weapons_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") in ["Melee", "Projectile", "Both"]]
         self.weapons_list = UISelectionList(pygame.Rect(2 * column_width + 10, 60, column_width, column_height - 100),
                                             [card.get_current_data().get("Name", "Unnamed") for card in weapons_cards] or ["No weapons"],
                                             manager, container=self.window)
@@ -377,7 +377,7 @@ class InventoryScreen:
                 self.selected_from_list = "weapons"
                 self.selected_card = next((card for card in game.current_player.inventory
                                           if card.current_state == 2
-                                          and card.get_current_data().get("Type") in ["Melee", "Projectile"]
+                                          and card.get_current_data().get("Type") in ["Melee", "Projectile", "Both"]
                                           and card.get_current_data().get("Name") == clean_name), None)
             elif event.ui_element == self.consumables_list:
                 self.selected_from_list = "consumables"
@@ -2550,6 +2550,8 @@ class GameScreen:
         self.pending_location = None  # {"card": loc_card, "pos": hex_pos, "hex_grid": hex_grid}
         # Pending defeat screen (show after death animation completes)
         self.pending_defeat = False
+        # Pending auto-attack mode (show after movement animation completes)
+        self.pending_auto_attack = None  # "melee" or "projectile"
         # Current location button (when player is standing on a location)
         self.location_button = None
         self.current_location_hex = None  # (row, col) if player is on a location
@@ -2631,7 +2633,22 @@ class GameScreen:
         else:
             self.hex_grid.place_unit(game.player, self.hex_grid.rows // 2, self.hex_grid.cols // 2)
             self.log.append("Started default level.")
-        
+
+        # Load class-specific starter kit
+        from player import CHARACTER_CLASSES
+        starter_kit = CHARACTER_CLASSES.get(game.player.class_name, {}).get("starting_kit", [])
+        for item in starter_kit:
+            card_id = item.get("card_id")
+            card_data = load_card(card_id)
+            if card_data:
+                inv_card = InventoryCard(card_data)
+                if item.get("state", 1) == 2:
+                    inv_card.current_state = 2
+                game.player.inventory.append(inv_card)
+                print(f"Added starter kit item: {inv_card.get_current_data().get('Name', card_id)}")
+            else:
+                print(f"Warning: Starter kit card '{card_id}' not found")
+
         # Store initial state after loading
         self.initial_inventory = game.player.inventory.copy()
         self.initial_melee_weapon = game.player.melee_weapon
@@ -2724,6 +2741,22 @@ class GameScreen:
             self.hex_grid.place_unit(player1, self.hex_grid.rows // 2, self.hex_grid.cols // 2)
             self.hex_grid.place_unit(player2, self.hex_grid.rows // 2 + 1, self.hex_grid.cols // 2)
             self.log.append("Started default level (2-Player).")
+
+        # Load class-specific starter kits for both players
+        from player import CHARACTER_CLASSES
+        for player in game.players:
+            starter_kit = CHARACTER_CLASSES.get(player.class_name, {}).get("starting_kit", [])
+            for item in starter_kit:
+                card_id = item.get("card_id")
+                card_data = load_card(card_id)
+                if card_data:
+                    inv_card = InventoryCard(card_data)
+                    if item.get("state", 1) == 2:
+                        inv_card.current_state = 2
+                    player.inventory.append(inv_card)
+                    print(f"Added starter kit item for {player.name}: {inv_card.get_current_data().get('Name', card_id)}")
+                else:
+                    print(f"Warning: Starter kit card '{card_id}' not found")
 
         # Reset both players
         for player in game.players:
@@ -3140,18 +3173,27 @@ class GameScreen:
         # Position submenu to the right of the Attack button
         x = 10 + button_width + 5
         y = self.attack_button_y
-        attacks_list = list(current_player.attacks.values())
-        for attack in attacks_list:
-            btn = UIButton(pygame.Rect(x, y, button_width, 30),
-                           f"{attack['name']} ({attack['damage']} dmg)", manager)
-            self.attack_submenu_buttons.append((btn, "attack", attack))
-            y += 34
 
-        # Special attack
-        btn = UIButton(pygame.Rect(x, y, button_width, 30),
-                       f"[Special] {current_player.special_attack}", manager)
-        self.attack_submenu_buttons.append((btn, "special", None))
-        self.special_attack_button = btn
+        # Melee first (orange-red outline), then projectile (neon purple outline)
+        attack_order = [
+            ("melee", (255, 69, 0)),      # Orange-red
+            ("projectile", (191, 0, 255))  # Neon purple
+        ]
+        for attack_key, outline_color in attack_order:
+            attack = current_player.attacks.get(attack_key)
+            if attack:
+                btn = UIButton(pygame.Rect(x, y, button_width, 30),
+                               f"{attack['name']} ({attack['damage']} dmg)", manager)
+                btn._outline_color = outline_color
+                self.attack_submenu_buttons.append((btn, "attack", attack))
+                y += 34
+
+        # Special attack (Warrior's Dual Strike is passive - no button needed)
+        if current_player.special_attack != "Dual Strike":
+            btn = UIButton(pygame.Rect(x, y, button_width, 30),
+                           f"[Special] {current_player.special_attack}", manager)
+            self.attack_submenu_buttons.append((btn, "special", None))
+            self.special_attack_button = btn
 
         self.attack_submenu_open = True
 
@@ -3317,11 +3359,9 @@ class GameScreen:
         if game.multiplayer_mode:
             player_label = f"Player {p.player_number}\n"
         info = f"{player_label}Class: {p.class_name}\nHP: {p.hp}/{p.max_hp}\nMovement: {p.movement}\nRange: {p.projectile_range}\nPosition: ({pos[0]}, {pos[1]})\nMelee: {melee}\nProj: {proj}"
-        # Show Double Attack status for Warrior
-        if p.double_attack_active:
-            melee_status = "USED" if p.double_attack_melee_used else "Ready"
-            proj_status = "USED" if p.double_attack_projectile_used else "Ready"
-            info += f"\n[Double Attack]\nMelee: {melee_status}\nProj: {proj_status}"
+        # Show attacks remaining for Warrior (passive dual strike)
+        if p.class_name == "Warrior":
+            info += f"\nAttacks: {p.warrior_attacks_remaining}/2"
         return info
 
     def add_to_log(self, message):
@@ -3955,6 +3995,9 @@ class GameScreen:
                             self.show_stats(None)
                         self.player_info_label.set_text(self.get_player_info())
                         self.selected_attack = None
+                        # Auto-switch to movement mode after action is fully used
+                        if current_player.action_used and not current_player.movement_used:
+                            self.player_mode = "movement"
                 elif self.player_mode == "attack" and self.selected_attack and not unit and self.hex_grid.is_attackable_location(hex_pos[0], hex_pos[1]):
                     # Attack a spawn location
                     message, action_used = self._attack_location(hex_pos, current_player)
@@ -3963,6 +4006,8 @@ class GameScreen:
                     if action_used:
                         self.player_info_label.set_text(self.get_player_info())
                         self.selected_attack = None
+                        if not current_player.movement_used:
+                            self.player_mode = "movement"
                 elif self.player_mode == "skill" and self.selected_skill:
                     # Use skill on target
                     target = unit if unit and isinstance(unit, Unit) else current_player
@@ -4022,7 +4067,7 @@ class GameScreen:
                             self.placement_card = None
                             self.player_mode = "movement"
                             self.initialize_screen()  # Refresh UI
-                elif self.player_mode == "movement" and not current_player.movement_used and not unit:
+                elif not current_player.movement_used and not unit:
                     path = self.hex_grid.find_path(current_player.position, hex_pos)
                     if path and len(path) - 1 <= current_player.movement:
                         success, msg = self.hex_grid.move_unit(current_player, *hex_pos)
@@ -4091,6 +4136,12 @@ class GameScreen:
 
                             self.player_info_label.set_text(self.get_player_info())
                             self.update_location_button()  # Update location button after movement
+                            # Queue auto-attack after movement animation completes
+                            if not current_player.action_used:
+                                if current_player.class_name == "Tank":
+                                    self.pending_auto_attack = "melee"
+                                elif current_player.class_name == "Ranger":
+                                    self.pending_auto_attack = "projectile"
                     else:
                         self.add_to_log("No valid path within movement range")
             elif event.button in (2, 3) and hex_pos:  # Middle mouse (2) or right-click (3) to pan
@@ -4168,16 +4219,7 @@ class GameScreen:
                             self.hex_grid.selected_hex = None
                             self.add_to_log(f"Selected attack: {attack_name}")
                         elif action_type == "special" and is_player_turn:
-                            if current_player.special_attack == "Double Attack":
-                                if current_player.double_attack_active:
-                                    self.add_to_log("Double Attack already active")
-                                elif current_player.action_used:
-                                    self.add_to_log("Action already used this turn")
-                                else:
-                                    message, _ = current_player.use_special_attack(None, self.hex_grid)
-                                    self.add_to_log(message)
-                                    self.player_mode = "movement"
-                            elif current_player.action_used:
+                            if current_player.action_used:
                                 self.add_to_log("Action already used this turn")
                             else:
                                 self.player_mode = "special_attack"
@@ -4356,7 +4398,7 @@ class GameScreen:
         screen.fill(DARK_INDIGO)
         current_player = game.current_player
         is_player_turn = self.turn_phase in ("player", "player1", "player2")
-        movement_range = self.hex_grid.get_valid_moves(current_player.position, current_player.movement) if is_player_turn and self.player_mode == "movement" and not current_player.movement_used else None
+        movement_range = self.hex_grid.get_valid_moves(current_player.position, current_player.movement) if is_player_turn and not current_player.movement_used else None
 
         # Determine attack range based on mode (uses weapon's range pattern)
         attack_range = None
@@ -4374,9 +4416,6 @@ class GameScreen:
                 if current_player.special_attack == "Multi-target Projectile":
                     attack_range = current_player.get_projectile_attack_range(self.hex_grid)
                     attack_type = "projectile"
-                elif current_player.special_attack == "Double Attack":
-                    attack_range = current_player.get_melee_attack_range(self.hex_grid)
-                    attack_type = "melee"
                 elif current_player.special_attack == "Spin Punch":
                     attack_range = current_player.get_melee_attack_range(self.hex_grid)
                     attack_type = "melee"
@@ -4391,7 +4430,19 @@ class GameScreen:
             if rect:
                 pygame.draw.rect(screen, GRAY, rect)
         manager.draw_ui(screen)
+        # Draw colored outlines on attack submenu buttons
+        if self.attack_submenu_open:
+            for btn, _, _ in self.attack_submenu_buttons:
+                if hasattr(btn, '_outline_color'):
+                    pygame.draw.rect(screen, btn._outline_color, btn.rect, 2)
         self.animating = self.check_animations()
+        # Apply pending auto-attack mode after movement animation completes
+        if self.pending_auto_attack and not self.animating:
+            current_player = game.current_player
+            if not current_player.action_used:
+                self.selected_attack = current_player.attacks[self.pending_auto_attack]["name"]
+                self.player_mode = "attack"
+            self.pending_auto_attack = None
         # Check for pending location screen (show after movement animation completes)
         if self.pending_location and not self.animating:
             loc_data = self.pending_location
