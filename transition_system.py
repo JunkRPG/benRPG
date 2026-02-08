@@ -250,6 +250,11 @@ class TransitionManager:
                 return f"Instance event chance set to {int(chance * 100)}%"
             return ""
 
+        elif outcome_type == "spawn_horse":
+            deck = params.get("deck", None)
+            count = params.get("count", 1)
+            return self._spawn_horse_from_stable(hex_grid, deck, count)
+
         return ""
 
     def _spawn_from_edge(self, hex_grid, edge, deck_file, allegiance, count):
@@ -394,6 +399,90 @@ class TransitionManager:
         if spawned:
             return f"Spawned: {', '.join(spawned)}"
         return "Failed to spawn NPCs."
+
+    def _spawn_horse_from_stable(self, hex_grid, deck_file, count):
+        """Spawn horses from horse stables or from map edges as fallback.
+
+        Stables with an assigned NPC spawn allied (state 2) horses.
+        Stables without an assigned NPC spawn neutral (state 1) horses.
+        """
+        from unit import Unit
+
+        if not deck_file:
+            return "No horse deck specified."
+
+        # Find NPC spawn locations that use a horse deck
+        active_npc_locations = hex_grid.get_active_npc_spawn_locations()
+        horse_stables = []
+        if active_npc_locations:
+            for loc_pos, loc_data in active_npc_locations:
+                npc_deck = loc_data.get("npc_spawn_deck", "")
+                if npc_deck and "horse" in npc_deck.lower():
+                    horse_stables.append((loc_pos, loc_data))
+
+        spawned = []
+        for _ in range(count):
+            spawn_pos = None
+            spawn_source = "the wilds"
+            has_assigned_npc = False
+
+            # If horse stables exist, spawn adjacent to a random one
+            if horse_stables:
+                stable_pos, stable_data = random.choice(horse_stables)
+                spawn_pos = self._get_spawn_adjacent_position(hex_grid, stable_pos)
+
+                # Check if stable has an assigned NPC (upgraded)
+                has_assigned_npc = stable_data.get("assigned_npc_id") is not None
+
+                loc_card = stable_data.get("card")
+                spawn_source = loc_card.get_current_data().get("Name", "Horse Stable") if loc_card else "Horse Stable"
+
+            # Fallback to edge spawning if no stables or no adjacent position
+            if not spawn_pos:
+                spawn_pos = hex_grid.get_edge_spawn_position("random")
+                spawn_source = "the wilds"
+                has_assigned_npc = False
+
+            if not spawn_pos:
+                continue
+
+            # Draw card from horse deck
+            deck_path = resolve_deck_path(deck_file)
+            card = self.card_manager.draw_from_deck(deck_path)
+            if not card:
+                continue
+
+            # Create unit from card
+            card_data = card.card_data.copy()
+            if "data" in card_data:
+                card_data["data"] = card_data["data"].copy()
+
+                if has_assigned_npc:
+                    # Stable has NPC caretaker: spawn allied (state 2) horse
+                    card_data["data"]["Allegiance (Hostile, Neutral, Allied)"] = "Allied"
+                else:
+                    # No caretaker: spawn neutral (state 1) horse
+                    card_data["data"]["Allegiance (Hostile, Neutral, Allied)"] = "Neutral"
+
+            unit = Unit(card_data)
+
+            # If stable has NPC, set horse to state 2 (tamed)
+            if has_assigned_npc and hasattr(unit, 'current_state'):
+                unit.current_state = 2
+                # Update stats to state 2 values
+                state2_data = card_data.get("data", {})
+                unit.name = state2_data.get("2nd_State_Name", unit.name)
+                unit.max_hp = int(state2_data.get("2nd_State_Health", unit.max_hp))
+                unit.hp = unit.max_hp
+                unit.movement = int(state2_data.get("2nd_State_Movement", unit.movement))
+                unit.allegiance = "Allied"
+
+            hex_grid.place_unit(unit, *spawn_pos)
+            spawned.append(f"{unit.name} ({spawn_source})")
+
+        if spawned:
+            return f"Spawned: {', '.join(spawned)}"
+        return "No horses appeared."
 
     def _draw_cards(self, card_type, deck_file, count, player):
         """Draw cards to player inventory."""

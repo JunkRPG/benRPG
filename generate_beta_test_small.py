@@ -62,7 +62,7 @@ for pos in list(pond_hexes):
 
 player_start = (10, 5)
 assigned_locations = [(7, 6), (16, 5), (4, 10), (5, 34), (12, 38), (18, 34), (21, 39)]
-deck_locations = [(2, 8), (4, 20), (7, 30), (9, 37), (11, 13), (13, 22), (15, 32), (17, 10), (19, 25), (20, 15), (22, 35), (22, 7)]
+deck_locations = [(2, 8), (4, 20), (7, 30), (9, 37), (11, 13), (13, 22), (15, 32), (17, 10), (19, 25), (20, 15), (22, 35), (22, 7), (3, 30), (8, 18), (16, 38), (21, 20)]
 
 protected_positions = set()
 protected_positions.add(player_start)
@@ -336,7 +336,8 @@ for loc in assigned_location_data:
 
 deck_location_positions = [
     (2, 8), (4, 20), (7, 30), (9, 37), (11, 13), (13, 22),
-    (15, 32), (17, 10), (19, 25), (20, 15), (22, 35), (22, 7)
+    (15, 32), (17, 10), (19, 25), (20, 15), (22, 35), (22, 7),
+    (3, 30), (8, 18), (16, 38), (21, 20)
 ]
 
 for r, c in deck_location_positions:
@@ -386,7 +387,7 @@ with open(output_path, "w", encoding="utf-8") as fout:
 
 print(f"Level file written to: {output_path}")
 print(f"Grid size: {ROWS} rows x {COLS} columns = {ROWS * COLS} hexes")
-print(f"Location hexes: {len(location_hexes)} (7 assigned + 12 deck-based)")
+print(f"Location hexes: {len(location_hexes)} (7 assigned + {len(deck_location_positions)} deck-based)")
 wk = "water"
 mk = "mountain"
 print(f"Pond hexes (water): {terrain_counts.get(wk, 0)}")

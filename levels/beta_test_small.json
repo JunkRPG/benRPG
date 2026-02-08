@@ -1,50 +1,6 @@
 {
-  "grid": {
-    "rows": 24,
-    "columns": 42
-  },
-  "player_start": {
-    "row": 10,
-    "column": 5
-  },
-  "starting_inventory": [
-    {
-      "card_id": "example_hunting_bow",
-      "state": 2
-    },
-    {
-      "card_id": "example_arrow_quiver",
-      "state": 2
-    },
-    {
-      "card_id": "example_tool_belt",
-      "state": 2
-    },
-    {
-      "card_id": "example_steel_arrows",
-      "state": 1
-    },
-    {
-      "card_id": "example_sniper_crossbow",
-      "state": 1
-    },
-    {
-      "card_id": "example_crossbow_bolts",
-      "state": 1
-    },
-    {
-      "card_id": "beta_junk_healing_herbs",
-      "state": 2
-    },
-    {
-      "card_id": "revival_smelling_salts",
-      "state": 2
-    },
-    {
-      "card_id": "revival_phoenix_dust",
-      "state": 2
-    }
-  ],
+  "grid_rows": 24,
+  "grid_cols": 42,
   "terrain": [
     [
       "cliff",
@@ -209,7 +165,7 @@
       "grass",
       "stone",
       "grass",
-      "forest",
+      "grass",
       "forest",
       "grass",
       "stone",
@@ -789,7 +745,7 @@
       "grass",
       "forest",
       "forest",
-      "forest",
+      "grass",
       "stone",
       "forest",
       "cliff"
@@ -1103,9 +1059,49 @@
       "cliff"
     ]
   ],
-  "inaccessible_hexes": [],
+  "player_start": {
+    "row": 10,
+    "col": 5
+  },
+  "starting_inventory": [
+    {
+      "card_id": "example_hunting_bow",
+      "state": 2
+    },
+    {
+      "card_id": "example_arrow_quiver",
+      "state": 2
+    },
+    {
+      "card_id": "example_tool_belt",
+      "state": 2
+    },
+    {
+      "card_id": "example_steel_arrows",
+      "state": 1
+    },
+    {
+      "card_id": "example_sniper_crossbow",
+      "state": 1
+    },
+    {
+      "card_id": "example_crossbow_bolts",
+      "state": 1
+    },
+    {
+      "card_id": "beta_junk_healing_herbs",
+      "state": 2
+    },
+    {
+      "card_id": "revival_smelling_salts",
+      "state": 2
+    },
+    {
+      "card_id": "revival_phoenix_dust",
+      "state": 2
+    }
+  ],
   "units": [],
-  "card_drawing_hexes": [],
   "location_hexes": [
     {
       "row": 7,
@@ -1315,6 +1311,53 @@
       "shop_inventory": [],
       "turns_since_cycle": 0,
       "visited_this_turn": false
+    },
+    {
+      "row": 3,
+      "column": 30,
+      "location_deck_file": "beta_location_deck.json",
+      "assigned_location_card_id": null,
+      "assigned_npc_card_id": null,
+      "location_state": 1,
+      "shop_inventory": [],
+      "turns_since_cycle": 0,
+      "visited_this_turn": false
+    },
+    {
+      "row": 8,
+      "column": 18,
+      "location_deck_file": "beta_location_deck.json",
+      "assigned_location_card_id": null,
+      "assigned_npc_card_id": null,
+      "location_state": 1,
+      "shop_inventory": [],
+      "turns_since_cycle": 0,
+      "visited_this_turn": false
+    },
+    {
+      "row": 16,
+      "column": 38,
+      "location_deck_file": "beta_location_deck.json",
+      "assigned_location_card_id": null,
+      "assigned_npc_card_id": null,
+      "location_state": 1,
+      "shop_inventory": [],
+      "turns_since_cycle": 0,
+      "visited_this_turn": false
+    },
+    {
+      "row": 21,
+      "column": 20,
+      "location_deck_file": "beta_location_deck.json",
+      "assigned_location_card_id": null,
+      "assigned_npc_card_id": null,
+      "location_state": 1,
+      "shop_inventory": [],
+      "turns_since_cycle": 0,
+      "visited_this_turn": false
     }
-  ]
+  ],
+  "inaccessible_hexes": [],
+  "card_drawing_hexes": [],
+  "obstacles": []
 }

@@ -1,0 +1,25 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Location_Plan",
+  "states": 2,
+  "data": {
+    "Name": "Horse Stable Blueprint",
+    "Description": "Plans for a small horse stable. Requires an allied NPC to manage it.",
+    "Requirements_NPC_Type": "Allied",
+    "Requirements_Gems": "",
+    "Requirements_Materials": "{\"Wood\": 8, \"Metal\": 4}",
+    "Background Image": "",
+    "2nd_state_Name": "Small Horse Stable",
+    "2nd_state_Description": "A modest but sturdy stable where horses can be sheltered and bred.",
+    "2nd_state_Outcomes": "[]",
+    "2nd_state_Choices": "[{\"name\":\"Check Stalls\",\"action\":\"draw_card\",\"costs_action\":true}]",
+    "2nd_state_Shop_Deck": "",
+    "2nd_state_Shop_Size": "0",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "",
+    "2nd_state_Is_NPC_Spawn_Location": "true",
+    "2nd_state_NPC_Health": "25",
+    "2nd_state_NPC_Spawn_Deck": "decks/beta_horse_deck.json",
+    "2nd_state_Location Image File Path": ""
+  }
+}
