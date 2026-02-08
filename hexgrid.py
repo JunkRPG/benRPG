@@ -55,9 +55,13 @@ class HexGrid:
         try:
             with open(level_file, 'r') as f:
                 level_data = json.load(f)
-            # Set grid dimensions from the level file
-            self.rows = level_data["grid"]["rows"]
-            self.cols = level_data["grid"]["columns"]
+            # Set grid dimensions from the level file (support both formats)
+            if "grid" in level_data:
+                self.rows = level_data["grid"]["rows"]
+                self.cols = level_data["grid"]["columns"]
+            else:
+                self.rows = level_data.get("grid_rows", self.rows)
+                self.cols = level_data.get("grid_cols", self.cols)
             self.hex_size = level_data.get("hex_size", 30)  # Default to 30 if not specified
             # Rebuild the grid with the new dimensions
             self.grid = [[{"unit": None, "accessible": True, "terrain": "grass"} for _ in range(self.cols)] for _ in range(self.rows)]
@@ -83,7 +87,8 @@ class HexGrid:
             # Place the player at the specified start position
             player_start = level_data.get("player_start")
             if player_start and player:
-                self.place_unit(player, player_start["row"], player_start["column"])
+                start_col = player_start.get("column", player_start.get("col", 0))
+                self.place_unit(player, player_start["row"], start_col)
             elif player:
                 # Fallback to center if no player_start is specified
                 self.place_unit(player, self.rows // 2, self.cols // 2)
@@ -195,7 +200,7 @@ class HexGrid:
             elif player_start:
                 # Large grid: center view on player start position
                 player_row = player_start["row"]
-                player_col = player_start["column"]
+                player_col = player_start.get("column", player_start.get("col", 0))
                 player_pixel_x = player_col * self.hex_size * 1.5
                 player_pixel_y = player_row * self.hex_size * 1.732 + (player_col % 2) * self.hex_size * 0.866
                 self.view_offset_x = window_width / 2 - player_pixel_x
