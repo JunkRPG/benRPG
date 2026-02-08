@@ -21,6 +21,7 @@ from instance_system import InstanceManager
 from transition_system import TransitionManager
 from deck_utils import resolve_deck_path
 from card_utils import load_card, load_card_index
+from terrain_config import TERRAIN_CONFIG
 from save_system import SaveManager
 
 # Initialize Pygame and Pygame-GUI
@@ -3866,9 +3867,36 @@ class GameScreen:
             if self.log_mini_label:
                 self.log_mini_label.set_text(f"<font color='#CCCCCC' size=3>{message}</font>")
 
-    def show_stats(self, unit):
+    def _get_terrain_info(self, hex_pos):
+        """Build terrain info string for the given hex position."""
+        row, col = hex_pos
+        cell = self.hex_grid.grid[row][col]
+        terrain_type = cell.get("terrain", "grass")
+        terrain_name = terrain_type.replace("_", " ").title()
+        config = TERRAIN_CONFIG.get(terrain_type, TERRAIN_CONFIG["grass"])
+        walkable = "Yes" if config["accessible"] else "No"
+        blocks_los = "Yes" if config["blocks_los"] else "No"
+        lines = [
+            "--- Terrain ---",
+            f"Type: {terrain_name}",
+            f"Walkable: {walkable}",
+            f"Blocks LOS: {blocks_los}",
+        ]
+        loc_data = self.hex_grid.location_data.get(hex_pos)
+        if loc_data and loc_data.get("card"):
+            loc_name = loc_data["card"].card_data.get("Name", "Unknown")
+            lines.append(f"Location: {loc_name}")
+        return "\n".join(lines)
+
+    def show_stats(self, unit, hex_pos=None):
+        parts = []
         if unit:
-            self.ui_elements[1].set_text("<font color='#FFFFFF' size=4>" + unit.get_stats().replace('\n', '<br>') + "</font>")
+            parts.append(unit.get_stats())
+        if hex_pos:
+            parts.append(self._get_terrain_info(hex_pos))
+        if parts:
+            text = "\n".join(parts)
+            self.ui_elements[1].set_text("<font color='#FFFFFF' size=4>" + text.replace('\n', '<br>') + "</font>")
             self.ui_elements[1].show()
         else:
             self.ui_elements[1].hide()
@@ -4506,7 +4534,7 @@ class GameScreen:
             if event.button == 1 and hex_pos and is_player_turn:
                 self.hex_grid.selected_hex = hex_pos
                 unit = self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"]
-                self.show_stats(unit)
+                self.show_stats(unit, hex_pos)
                 current_player = game.current_player
                 # Auto-detect attack type if clicking on an enemy in range (skip in recruit/skill modes)
                 if not self.selected_attack and not current_player.action_used and unit and isinstance(unit, Unit) and self.player_mode not in ("recruit", "skill"):
