@@ -4531,7 +4531,8 @@ class GameScreen:
                                     hit_pos = hit_unit.position
                                     if hit_pos:
                                         self.hex_grid.grid[hit_pos[0]][hit_pos[1]]["unit"] = None
-                                    self.hex_grid.units.remove(hit_unit)
+                                    if hit_unit in self.hex_grid.units:
+                                        self.hex_grid.units.remove(hit_unit)
                                     self.add_to_log(f"{hit_unit.name} defeated")
                                     self.card_manager.track_card_usage(hit_unit.card_id, {"action": "defeated", "screen": "game"})
                                     quest_results = game.current_quest_manager.update("unit_death", {"unit": hit_unit}, self.hex_grid, current_player)
