@@ -1,5 +1,12 @@
 {
-  "deck_name": "Horse Deck",
+  "deck_name": "Mount Deck",
   "back_image": null,
-  "cards": ["beta_npc_horse"]
+  "cards": [
+    "beta_npc_horse",
+    "beta_npc_war_bear",
+    "beta_npc_bull_moose",
+    "beta_npc_draft_horse",
+    "beta_npc_swift_pony",
+    "beta_npc_giant_hawk"
+  ]
 }

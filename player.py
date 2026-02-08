@@ -118,9 +118,31 @@ class Player:
                 return max(self.movement, mount_movement)
         return self.movement
 
-    def attack(self, enemy, attack_name, grid):
+    def get_mount_melee_bonus(self, party):
+        """Return bonus melee damage from a Mount in the party (e.g. War Bear)."""
+        for card in party:
+            data = card.get_current_data()
+            if data.get("Special Skill") == "Mount":
+                return int(data.get("Mount_Melee_Damage", 0) or 0)
+        return 0
+
+    def get_mount_range_bonus(self, party):
+        """Return bonus projectile range from a Mount in the party (e.g. Giant Hawk)."""
+        for card in party:
+            data = card.get_current_data()
+            if data.get("Special Skill") == "Mount":
+                return int(data.get("Mount_Projectile_Range", 0) or 0)
+        return 0
+
+    def get_effective_projectile_range(self, party):
+        """Return projectile range including mount bonus."""
+        return self.projectile_range + self.get_mount_range_bonus(party)
+
+    def attack(self, enemy, attack_name, grid, party=None):
         is_projectile = attack_name == self.attacks["projectile"]["name"]
         is_melee = attack_name == self.attacks["melee"]["name"]
+        if party is None:
+            party = []
 
         # Check if this attack type can be used
         if self.double_attack_active:
@@ -133,9 +155,9 @@ class Player:
                 return "", False
 
         if is_projectile:
-            return self._execute_projectile_attack(enemy, attack_name, grid)
+            return self._execute_projectile_attack(enemy, attack_name, grid, party)
         elif is_melee:
-            damage = self.attacks["melee"]["damage"]
+            damage = self.attacks["melee"]["damage"] + self.get_mount_melee_bonus(party)
             distance = grid.hex_distance(self.position, enemy.position)
             if distance == 1:
                 enemy.hp -= damage
@@ -146,12 +168,14 @@ class Player:
                 return f"{self.class_name} used {attack_name} on {enemy.name} for {damage} damage", enemy.hp <= 0
         return "", False
 
-    def _execute_projectile_attack(self, enemy, attack_name, grid):
+    def _execute_projectile_attack(self, enemy, attack_name, grid, party=None):
         """Execute a projectile attack, handling ammunition requirements.
 
         For piercing projectile (Ranger), returns (message, list_of_hit_units) where
         each entry is (unit, damage, defeated). For non-piercing, returns (message, defeated_bool).
         """
+        if party is None:
+            party = []
         weapon_data = self.projectile_weapon.get_current_data() if self.projectile_weapon else {}
         attack_info = self.attacks.get("projectile", {})
         requires_ammo = attack_info.get("requires_ammo", False)
@@ -182,15 +206,18 @@ class Player:
             # ALL damage comes from ammunition
             damage = int(ammo_data.get("Ammo_Damage", 0))
 
+        # Calculate effective range with mount bonus
+        effective_range = self.projectile_range + self.get_mount_range_bonus(party)
+
         # Use the unified range system to check if target is valid
-        if not self._is_valid_projectile_target(enemy.position, grid):
+        if not self._is_valid_projectile_target(enemy.position, grid, effective_range):
             # Provide more specific error messages
             distance = grid.hex_distance(self.position, enemy.position)
             if self.projectile_exclude_adj and distance == 1:
                 return "Target too close for this weapon", False
             elif distance < 2 and self.projectile_range_type == "line_of_sight":
                 return "Target too close for projectile attack", False
-            elif distance > self.projectile_range:
+            elif distance > effective_range:
                 return "Target out of range", False
             else:
                 return "Target not in valid range pattern", False
@@ -296,13 +323,15 @@ class Player:
 
         return None
 
-    def _is_valid_projectile_target(self, target_pos, grid):
+    def _is_valid_projectile_target(self, target_pos, grid, effective_range=None):
         """Check if target position is valid for projectile attack based on range type."""
+        if effective_range is None:
+            effective_range = self.projectile_range
         # Use the grid's calculate_range method for full pattern support
         return grid.is_in_range(
             self.position,
             target_pos,
-            self.projectile_range,
+            effective_range,
             self.projectile_range_type,
             self.projectile_include_pos,
             self.projectile_exclude_adj,
@@ -338,19 +367,21 @@ class Player:
         else:
             self.action_used = True
 
-    def get_projectile_attack_range(self, grid):
+    def get_projectile_attack_range(self, grid, party=None):
         """
         Get the set of valid hexes for projectile attack based on equipped weapon's range pattern.
 
         Args:
             grid: The HexGrid instance
+            party: Optional party list for mount range bonuses
 
         Returns:
             set: Set of (row, col) positions that can be targeted
         """
+        effective_range = self.projectile_range + self.get_mount_range_bonus(party or [])
         return grid.calculate_range(
             self.position,
-            self.projectile_range,
+            effective_range,
             self.projectile_range_type,
             self.projectile_include_pos,
             self.projectile_exclude_adj,

@@ -4455,7 +4455,7 @@ class GameScreen:
                 # Auto-detect attack type if clicking on an enemy in range (skip in recruit/skill modes)
                 if not self.selected_attack and not current_player.action_used and unit and isinstance(unit, Unit) and self.player_mode not in ("recruit", "skill"):
                     melee_range = current_player.get_melee_attack_range(self.hex_grid)
-                    proj_range = current_player.get_projectile_attack_range(self.hex_grid)
+                    proj_range = current_player.get_projectile_attack_range(self.hex_grid, game.current_party)
                     if melee_range and hex_pos in melee_range:
                         self.selected_attack = current_player.attacks["melee"]["name"]
                         self.player_mode = "attack"
@@ -4463,7 +4463,7 @@ class GameScreen:
                         self.selected_attack = current_player.attacks["projectile"]["name"]
                         self.player_mode = "attack"
                 if self.player_mode == "attack" and self.selected_attack and unit and isinstance(unit, Unit):
-                    message, result = current_player.attack(unit, self.selected_attack, self.hex_grid)
+                    message, result = current_player.attack(unit, self.selected_attack, self.hex_grid, game.current_party)
                     self.add_to_log(message)
                     if message:
                         # Handle piercing attack (returns list of hit units)
@@ -4505,7 +4505,7 @@ class GameScreen:
                 elif not unit and not current_player.action_used and self.hex_grid.is_attackable_location(hex_pos[0], hex_pos[1]) and not self.selected_attack:
                     # Auto-detect attack type for spawn location
                     melee_range = current_player.get_melee_attack_range(self.hex_grid)
-                    proj_range = current_player.get_projectile_attack_range(self.hex_grid)
+                    proj_range = current_player.get_projectile_attack_range(self.hex_grid, game.current_party)
                     if melee_range and hex_pos in melee_range:
                         self.selected_attack = current_player.attacks["melee"]["name"]
                         self.player_mode = "attack"
@@ -4970,7 +4970,7 @@ class GameScreen:
             melee_range = current_player.get_melee_attack_range(self.hex_grid)
             if melee_range:
                 attack_ranges.append({"range": melee_range, "color": (255, 69, 0, 220), "outline": (139, 0, 0, 220), "inset": 0.75})
-            proj_range = current_player.get_projectile_attack_range(self.hex_grid)
+            proj_range = current_player.get_projectile_attack_range(self.hex_grid, game.current_party)
             if proj_range:
                 attack_ranges.append({"range": proj_range, "color": (191, 0, 255, 220), "outline": (75, 0, 130, 220), "inset": 0.55})
 

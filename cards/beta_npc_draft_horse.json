@@ -1,0 +1,28 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Stray Draft Horse",
+    "Health": "35",
+    "Movement": "5",
+    "Melee Damage": "6",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Neutral",
+    "Special Skill": "Mount",
+    "Mount_Movement": "10",
+    "Background Image File Path": "",
+    "NPC Image File Path": "",
+    "2nd_State_Name": "Draft Horse",
+    "2nd_State_Health": "45",
+    "2nd_State_Movement": "7",
+    "2nd_State_Melee Damage": "8",
+    "2nd_State_Projectile Damage": "0",
+    "2nd_State_Projectile Range": "0",
+    "2nd_State_Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "2nd_State_Special Skill": "Mount",
+    "2nd_State_Mount_Movement": "10",
+    "2nd_State_NPC Image File Path": ""
+  }
+}

@@ -1665,6 +1665,41 @@
     "states": 2,
     "name": "Wild Horse"
   },
+  "beta_npc_war_bear": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Wild Bear"
+  },
+  "beta_npc_bull_moose": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Wild Moose"
+  },
+  "beta_npc_draft_horse": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Stray Draft Horse"
+  },
+  "beta_npc_swift_pony": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Wild Pony"
+  },
+  "beta_npc_giant_hawk": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Giant Hawk"
+  },
   "beta_location_horse_stable": {
     "type": "Location Card",
     "subclass": null,

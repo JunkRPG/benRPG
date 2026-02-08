@@ -1,0 +1,30 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Giant Hawk",
+    "Health": "20",
+    "Movement": "6",
+    "Melee Damage": "10",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Neutral",
+    "Special Skill": "Mount",
+    "Mount_Movement": "7",
+    "Mount_Projectile_Range": "3",
+    "Background Image File Path": "",
+    "NPC Image File Path": "",
+    "2nd_State_Name": "Tamed Giant Hawk",
+    "2nd_State_Health": "25",
+    "2nd_State_Movement": "8",
+    "2nd_State_Melee Damage": "12",
+    "2nd_State_Projectile Damage": "0",
+    "2nd_State_Projectile Range": "0",
+    "2nd_State_Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "2nd_State_Special Skill": "Mount",
+    "2nd_State_Mount_Movement": "7",
+    "2nd_State_Mount_Projectile_Range": "3",
+    "2nd_State_NPC Image File Path": ""
+  }
+}
