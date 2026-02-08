@@ -1481,6 +1481,24 @@ class HexGrid:
         if distance < 0:
             return set()
 
+        # Support comma-separated multi-patterns (e.g. "line_of_sight,mist_shadow")
+        if "," in pattern:
+            combined = set()
+            for sub_pattern in pattern.split(","):
+                sub_pattern = sub_pattern.strip()
+                if sub_pattern:
+                    combined |= self.calculate_range(pos, distance, sub_pattern,
+                                                     include_pos=False, exclude_adj=False, piercing=piercing)
+            # Apply modifiers once on the combined set
+            if include_pos:
+                combined.add(pos)
+            elif pos in combined:
+                combined.remove(pos)
+            if exclude_adj:
+                adjacent = set(self.get_adjacent_hexes(*pos))
+                combined -= adjacent
+            return combined
+
         range_set = set()
 
         if pattern == "line_of_sight":

@@ -1,0 +1,32 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Ancient War Horn Parts",
+    "Description": "Fragments of a war horn that once shattered castle walls. Still resonates with power.",
+    "Raw Material Value": "5",
+    "Refined Material Value": "3",
+    "Metal Value": "3",
+    "Wood Value": "2",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "3",
+    "Requirements: Refined Materials": "2",
+    "Requirements: Wood": "2",
+    "Requirements: Metal": "1",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "War Horn of Ruin",
+    "2nd_state_Type": "Projectile",
+    "2nd_state_Melee Damage": "3",
+    "2nd_state_Projectile Damage": "10",
+    "2nd_state_Range_Type": "line_of_sight,mist_shadow,perimeter",
+    "2nd_state_Range_Distance": "6",
+    "2nd_state_Include_Position": "false",
+    "2nd_state_Exclude_Adjacent": "false",
+    "2nd_state_Requires_Ammo": "false",
+    "2nd_state_Compatible_Ammo": "",
+    "2nd_state_range_id": "None",
+    "2nd_state_Weapon Image": ""
+  }
+}

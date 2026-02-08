@@ -1,0 +1,32 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Rusted Ballista Parts",
+    "Description": "Heavy ballista components that could be assembled into a siege weapon.",
+    "Raw Material Value": "5",
+    "Refined Material Value": "3",
+    "Metal Value": "4",
+    "Wood Value": "3",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "3",
+    "Requirements: Refined Materials": "2",
+    "Requirements: Wood": "2",
+    "Requirements: Metal": "1",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Siege Ballista",
+    "2nd_state_Type": "Projectile",
+    "2nd_state_Melee Damage": "2",
+    "2nd_state_Projectile Damage": "10",
+    "2nd_state_Range_Type": "line_of_sight,perimeter",
+    "2nd_state_Range_Distance": "7",
+    "2nd_state_Include_Position": "false",
+    "2nd_state_Exclude_Adjacent": "false",
+    "2nd_state_Requires_Ammo": "false",
+    "2nd_state_Compatible_Ammo": "",
+    "2nd_state_range_id": "None",
+    "2nd_state_Weapon Image": ""
+  }
+}

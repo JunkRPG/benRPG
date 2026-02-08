@@ -1,0 +1,32 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Broken Void Harpoon",
+    "Description": "A harpoon that tears through shadow and strikes at the edge of reality.",
+    "Raw Material Value": "4",
+    "Refined Material Value": "2",
+    "Metal Value": "3",
+    "Wood Value": "2",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "1",
+    "Requirements: Metal": "1",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Void Harpoon",
+    "2nd_state_Type": "Projectile",
+    "2nd_state_Melee Damage": "3",
+    "2nd_state_Projectile Damage": "9",
+    "2nd_state_Range_Type": "mist_shadow,perimeter",
+    "2nd_state_Range_Distance": "6",
+    "2nd_state_Include_Position": "false",
+    "2nd_state_Exclude_Adjacent": "false",
+    "2nd_state_Requires_Ammo": "false",
+    "2nd_state_Compatible_Ammo": "",
+    "2nd_state_range_id": "None",
+    "2nd_state_Weapon Image": ""
+  }
+}

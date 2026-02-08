@@ -2203,5 +2203,117 @@
     "blueprint_subclass": null,
     "states": 2,
     "name": "Example Hunt Quest"
+  },
+  "test_weapon_wraith_staff": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Cursed Shadow Rod"
+  },
+  "test_weapon_shadow_longbow": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Cracked Shadow Bow"
+  },
+  "test_weapon_siege_ballista": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rusted Ballista Parts"
+  },
+  "test_weapon_void_harpoon": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Broken Void Harpoon"
+  },
+  "test_weapon_arcane_repeater": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Cracked Arcane Lens"
+  },
+  "test_weapon_storm_lance": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Shattered Storm Lance"
+  },
+  "test_weapon_phantom_longrifle": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rusted Signal Launcher"
+  },
+  "test_weapon_pulse_cannon": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Cracked Resonance Tube"
+  },
+  "test_weapon_shadow_pulsar": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Warped Shadow Gem"
+  },
+  "test_weapon_void_resonator": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Dark Tuning Fork"
+  },
+  "test_weapon_ring_caster": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Fractured Ring Stone"
+  },
+  "test_weapon_coil_launcher": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Bent Coil Spring"
+  },
+  "test_weapon_harmonic_bell": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Fused Bell Shards"
+  },
+  "test_weapon_prism_staff": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Shattered Prism Rod"
+  },
+  "test_weapon_war_horn": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Ancient War Horn Parts"
+  },
+  "test_weapon_ether_cannon": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Twisted Ether Conduit"
   }
 }
