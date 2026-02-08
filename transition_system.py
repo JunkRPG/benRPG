@@ -255,6 +255,11 @@ class TransitionManager:
             count = params.get("count", 1)
             return self._spawn_horse_from_stable(hex_grid, deck, count)
 
+        elif outcome_type == "spawn_wild_mount":
+            deck = params.get("deck", None)
+            count = params.get("count", 1)
+            return self._spawn_wild_mount(hex_grid, deck, count)
+
         return ""
 
     def _spawn_from_edge(self, hex_grid, edge, deck_file, allegiance, count):
@@ -483,6 +488,37 @@ class TransitionManager:
         if spawned:
             return f"Spawned: {', '.join(spawned)}"
         return "No horses appeared."
+
+    def _spawn_wild_mount(self, hex_grid, deck_file, count):
+        """Spawn wild mount animals at random positions anywhere on the map."""
+        from unit import Unit
+
+        if not deck_file:
+            return "No wild mount deck specified."
+
+        spawned = []
+        for _ in range(count):
+            spawn_pos = hex_grid.get_random_spawn_position()
+            if not spawn_pos:
+                continue
+
+            deck_path = resolve_deck_path(deck_file)
+            card = self.card_manager.draw_from_deck(deck_path)
+            if not card:
+                continue
+
+            card_data = card.card_data.copy()
+            if "data" in card_data:
+                card_data["data"] = card_data["data"].copy()
+                card_data["data"]["Allegiance (Hostile, Neutral, Allied)"] = "Neutral"
+
+            unit = Unit(card_data)
+            hex_grid.place_unit(unit, *spawn_pos)
+            spawned.append(unit.name)
+
+        if spawned:
+            return f"A wild creature appears: {', '.join(spawned)}"
+        return "No wild animals appeared."
 
     def _draw_cards(self, card_type, deck_file, count, player):
         """Draw cards to player inventory."""

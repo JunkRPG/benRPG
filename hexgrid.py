@@ -1249,6 +1249,17 @@ class HexGrid:
         cell = self.grid[row][col]
         return cell.get("unit") is None and cell.get("accessible", True)
 
+    def get_random_spawn_position(self):
+        """Get a random empty, accessible position anywhere on the map."""
+        candidates = []
+        for row in range(self.rows):
+            for col in range(self.cols):
+                if self._is_valid_spawn(row, col):
+                    candidates.append((row, col))
+        if candidates:
+            return random.choice(candidates)
+        return None
+
     def get_edge_positions(self, edge):
         """Get all positions on a specific edge of the map."""
         positions = []
