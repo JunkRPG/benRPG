@@ -8,7 +8,7 @@ CHARACTER_CLASSES = {
     "Ranger": {
         "hp": 50, "movement": 5, "projectile_range": 5,
         "attacks": {"Sling": 8, "Punch": 4},
-        "special_attack": "Multi-target Projectile",
+        "special_attack": "Piercing Shot",
         "starting_kit": [
             {"card_id": "starter_ranger_bow", "state": 1},
             {"card_id": "starter_ranger_bowstring", "state": 1},
@@ -22,7 +22,8 @@ CHARACTER_CLASSES = {
         "starting_kit": [
             {"card_id": "starter_warrior_combat_bow", "state": 1},
             {"card_id": "starter_warrior_bowstring", "state": 1},
-            {"card_id": "starter_warrior_metal_wraps", "state": 1}
+            {"card_id": "starter_warrior_metal_wraps", "state": 1},
+            {"card_id": "starter_warrior_arrows", "state": 2}
         ]
     },
     "Tank": {
@@ -91,6 +92,8 @@ class Player:
         self.projectile_range_type = "line_of_sight"  # Pattern: line_of_sight, area_effect, echo, perimeter
         self.projectile_include_pos = False           # Include caster's hex in range
         self.projectile_exclude_adj = False           # Exclude adjacent hexes (for sniper-type weapons)
+        # Ranger passive: piercing projectile shots go through units
+        self.piercing_projectile = (class_name == "Ranger")
 
         # Multiplayer attributes
         self.player_number = 1  # 1 or 2 (for multiplayer mode)
@@ -132,7 +135,11 @@ class Player:
         return "", False
 
     def _execute_projectile_attack(self, enemy, attack_name, grid):
-        """Execute a projectile attack, handling ammunition requirements."""
+        """Execute a projectile attack, handling ammunition requirements.
+
+        For piercing projectile (Ranger), returns (message, list_of_hit_units) where
+        each entry is (unit, damage, defeated). For non-piercing, returns (message, defeated_bool).
+        """
         weapon_data = self.projectile_weapon.get_current_data() if self.projectile_weapon else {}
         attack_info = self.attacks.get("projectile", {})
         requires_ammo = attack_info.get("requires_ammo", False)
@@ -176,7 +183,11 @@ class Player:
             else:
                 return "Target not in valid range pattern", False
 
-        # Execute the attack
+        # Piercing projectile: hit all entities along the line up to and including the target
+        if self.piercing_projectile and self.projectile_range_type == "line_of_sight":
+            return self._execute_piercing_attack(enemy, attack_name, damage, ammo_card, ammo_data, requires_ammo, grid)
+
+        # Standard single-target attack
         enemy.hp -= damage
         enemy.set_damage_text(damage)
         self._mark_attack_used(is_projectile=True)
@@ -193,6 +204,68 @@ class Player:
                 base_msg += f" {runout_msg}"
 
         return base_msg, killed
+
+    def _execute_piercing_attack(self, primary_target, attack_name, damage, ammo_card, ammo_data, requires_ammo, grid):
+        """Ranger piercing shot: hits all entities along the line from player to clicked target."""
+        from hexgrid import DIRECTIONS
+
+        player_row, player_col = self.position
+        target_row, target_col = primary_target.position
+
+        # Find the direction line that contains the target
+        attack_line = []
+        for direction in DIRECTIONS:
+            line = grid.get_line(player_row, player_col, direction, self.projectile_range)
+            if (target_row, target_col) in line:
+                attack_line = line
+                break
+
+        if not attack_line:
+            return "Cannot determine attack line", False
+
+        # Collect all entities along the line up to and including the clicked target
+        hit_units = []
+        messages = []
+        for hex_pos in attack_line:
+            row, col = hex_pos
+            if not (0 <= row < grid.rows and 0 <= col < grid.cols):
+                continue
+            # Stop if we've passed the clicked target
+            target_dist = grid.hex_distance(self.position, primary_target.position)
+            hex_dist = grid.hex_distance(self.position, hex_pos)
+            if hex_dist > target_dist:
+                break
+            unit = grid.grid[row][col].get("unit")
+            if unit and hasattr(unit, 'hp') and unit.hp > 0:
+                unit.hp -= damage
+                unit.set_damage_text(damage)
+                unit.attack_flash = True
+                unit.flash_start = pygame.time.get_ticks()
+                defeated = unit.hp <= 0
+                hit_units.append((unit, damage, defeated))
+                messages.append(f"{unit.name} ({damage} dmg{'- defeated' if defeated else ''})")
+
+        if not hit_units:
+            return "No targets hit", False
+
+        self._mark_attack_used(is_projectile=True)
+        self.attack_flash = True
+        self.flash_start = pygame.time.get_ticks()
+
+        # Handle ammunition runout
+        ammo_msg = ""
+        if requires_ammo and ammo_card:
+            runout_msg = self._check_ammo_runout(ammo_card, ammo_data)
+            if runout_msg:
+                ammo_msg = f" {runout_msg}"
+
+        if len(hit_units) == 1:
+            unit, dmg, killed = hit_units[0]
+            base_msg = f"{self.class_name} used {attack_name} on {unit.name} for {dmg} damage{ammo_msg}"
+            return base_msg, hit_units
+        else:
+            base_msg = f"{self.class_name} piercing shot! Hit: {', '.join(messages)}{ammo_msg}"
+            return base_msg, hit_units
 
     def _get_equipped_ammunition(self):
         """Find equipped ammunition card from tool slots."""
@@ -220,7 +293,8 @@ class Player:
             self.projectile_range,
             self.projectile_range_type,
             self.projectile_include_pos,
-            self.projectile_exclude_adj
+            self.projectile_exclude_adj,
+            piercing=self.piercing_projectile
         )
 
     def _check_ammo_runout(self, ammo_card, ammo_data):
@@ -267,7 +341,8 @@ class Player:
             self.projectile_range,
             self.projectile_range_type,
             self.projectile_include_pos,
-            self.projectile_exclude_adj
+            self.projectile_exclude_adj,
+            piercing=self.piercing_projectile
         )
 
     def get_melee_attack_range(self, grid):
@@ -790,6 +865,9 @@ class Player:
                 # Check if this is a ranged tool with a specified target
                 effect_range = int(tool_data.get("Effect_Range_Distance", 0) or 0)
 
+                # Check if this is a revival item
+                is_revival = str(tool_data.get("Revival", "false")).lower() == "true"
+
                 if effect_range > 0 and target and grid and target != self:
                     # Validate target is in range
                     range_type = tool_data.get("Effect_Range_Type", "line_of_sight")
@@ -802,12 +880,21 @@ class Player:
                     else:
                         return False, f"Target is not in range for {tool_name}"
 
+                # Block non-revival items from targeting dead players
+                if heal_target.hp <= 0 and not is_revival:
+                    return False, f"{tool_name} cannot be used on a defeated player"
+
                 if hp_change > 0:
+                    was_dead = heal_target.hp <= 0
                     old_hp = heal_target.hp
                     max_hp = heal_target.max_hp if hasattr(heal_target, 'max_hp') else heal_target.hp + hp_change
                     heal_target.hp = min(max_hp, heal_target.hp + hp_change)
                     actual_heal = heal_target.hp - old_hp
                     self.action_used = True
+
+                    # Clear death log flag if revived
+                    if was_dead and heal_target.hp > 0 and hasattr(heal_target, '_death_logged'):
+                        heal_target._death_logged = False
 
                     # Check for revert chance (consumable may revert to document form)
                     revert_chance = int(tool_data.get("Revert_Chance", 0) or 0)
@@ -823,8 +910,12 @@ class Player:
                         if slot_index == 0:
                             self.equipped_tool = None
 
+                        if was_dead and heal_target.hp > 0:
+                            return True, f"Used {tool_name}: REVIVED {target_name}! (+{actual_heal} HP). Item reverted to materials!"
                         return True, f"Used {tool_name} on {target_name}: +{actual_heal} HP. Item reverted to document form!"
 
+                    if was_dead and heal_target.hp > 0:
+                        return True, f"Used {tool_name}: REVIVED {target_name}! (+{actual_heal} HP, now at {heal_target.hp})"
                     return True, f"Used {tool_name} on {target_name}: +{actual_heal} HP ({old_hp} -> {heal_target.hp})"
                 elif hp_change < 0:
                     heal_target.hp = max(0, heal_target.hp + hp_change)
