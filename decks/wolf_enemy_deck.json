@@ -1,0 +1,15 @@
+{
+  "name": "wolf_enemy_deck",
+  "cards": [
+    "dire_wolf",
+    "feral_wolf",
+    "arctic_wolf",
+    "hungry_wolf",
+    "feral_wolf_2",
+    "arctic_wolf_2",
+    "blood_wolf",
+    "mangy_wolf",
+    "feral_wolf_3",
+    "mangy_wolf_2"
+  ]
+}

@@ -1860,5 +1860,320 @@
     "blueprint_subclass": "Blueprint_to_Consumable_Item",
     "states": 2,
     "name": "Field Study: Emergency Medicine"
+  },
+  "dire_wolf": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Dire Wolf"
+  },
+  "feral_wolf": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Feral Wolf"
+  },
+  "arctic_wolf": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Arctic Wolf"
+  },
+  "hungry_wolf": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Hungry Wolf"
+  },
+  "feral_wolf_2": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Feral Wolf 2"
+  },
+  "arctic_wolf_2": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Arctic Wolf 2"
+  },
+  "blood_wolf": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Blood Wolf"
+  },
+  "mangy_wolf": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Mangy Wolf"
+  },
+  "feral_wolf_3": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Feral Wolf 3"
+  },
+  "mangy_wolf_2": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Mangy Wolf 2"
+  },
+  "baker_marta": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Baker Marta"
+  },
+  "old_fisherman_pete": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Old Fisherman Pete"
+  },
+  "seamstress_vera": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Seamstress Vera"
+  },
+  "cooper_the_barrel_maker": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Cooper the Barrel Maker"
+  },
+  "shepherd_angus": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Shepherd Angus"
+  },
+  "miller_s_daughter": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Miller's Daughter"
+  },
+  "cobbler_finn": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Cobbler Finn"
+  },
+  "apothecary_nadia": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Apothecary Nadia"
+  },
+  "candle_maker_sol": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Candle Maker Sol"
+  },
+  "tanner_bryce": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Tanner Bryce"
+  },
+  "weaver_elise": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Weaver Elise"
+  },
+  "potter_clem": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Potter Clem"
+  },
+  "beekeeper_wren": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Beekeeper Wren"
+  },
+  "farrier_doyle": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Farrier Doyle"
+  },
+  "glassblower_thea": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Glassblower Thea"
+  },
+  "bent_nails": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Bent Nails"
+  },
+  "stripped_wire": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Stripped Wire"
+  },
+  "crumbled_brick": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Crumbled Brick"
+  },
+  "torn_canvas": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Torn Canvas"
+  },
+  "chipped_flint": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Chipped Flint"
+  },
+  "snapped_hinge": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Snapped Hinge"
+  },
+  "corroded_pipe_fitting": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Corroded Pipe Fitting"
+  },
+  "splintered_dowel": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Splintered Dowel"
+  },
+  "cracked_ceramic": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Cracked Ceramic"
+  },
+  "stained_glass_shard": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Stained Glass Shard"
+  },
+  "worn_belt_buckle": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Worn Belt Buckle"
+  },
+  "rusted_spring": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Rusted Spring"
+  },
+  "frayed_twine_ball": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Frayed Twine Ball"
+  },
+  "dented_tin_cup": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Dented Tin Cup"
+  },
+  "charred_wood_chunk": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Charred Wood Chunk"
+  },
+  "broken_cog": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Broken Cog"
+  },
+  "warped_plank": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Warped Plank"
+  },
+  "salvaged_rivet": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Salvaged Rivet"
+  },
+  "mossy_stone": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Mossy Stone"
+  },
+  "dried_hide_scrap": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Dried Hide Scrap"
   }
 }

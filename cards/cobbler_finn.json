@@ -1,0 +1,15 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Cobbler Finn",
+    "Health": "15",
+    "Movement": "4",
+    "Melee Damage": "1",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance": "Neutral"
+  }
+}

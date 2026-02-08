@@ -1,0 +1,12 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Charred Wood Chunk",
+    "Description": "Found in the rubble.",
+    "Raw Material Value": "2",
+    "Price": "1"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "junk_materials_deck",
+  "cards": [
+    "bent_nails",
+    "stripped_wire",
+    "crumbled_brick",
+    "torn_canvas",
+    "chipped_flint",
+    "snapped_hinge",
+    "corroded_pipe_fitting",
+    "splintered_dowel",
+    "cracked_ceramic",
+    "stained_glass_shard",
+    "worn_belt_buckle",
+    "rusted_spring",
+    "frayed_twine_ball",
+    "dented_tin_cup",
+    "charred_wood_chunk",
+    "broken_cog",
+    "warped_plank",
+    "salvaged_rivet",
+    "mossy_stone",
+    "dried_hide_scrap"
+  ]
+}

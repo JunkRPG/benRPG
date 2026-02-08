@@ -1,0 +1,20 @@
+{
+  "name": "villager_npc_deck",
+  "cards": [
+    "baker_marta",
+    "old_fisherman_pete",
+    "seamstress_vera",
+    "cooper_the_barrel_maker",
+    "shepherd_angus",
+    "miller_s_daughter",
+    "cobbler_finn",
+    "apothecary_nadia",
+    "candle_maker_sol",
+    "tanner_bryce",
+    "weaver_elise",
+    "potter_clem",
+    "beekeeper_wren",
+    "farrier_doyle",
+    "glassblower_thea"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Mangy Wolf",
+    "Health": "25",
+    "Movement": "5",
+    "Melee Damage": "7",
+    "Projectile Damage": "0",
+    "Projectile Range": "0"
+  }
+}

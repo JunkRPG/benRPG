@@ -1,0 +1,14 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Feral Wolf",
+    "Health": "22",
+    "Movement": "4",
+    "Melee Damage": "6",
+    "Projectile Damage": "0",
+    "Projectile Range": "0"
+  }
+}

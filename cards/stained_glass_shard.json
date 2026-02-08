@@ -1,0 +1,12 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Stained Glass Shard",
+    "Description": "Could be repurposed.",
+    "Raw Material Value": "1",
+    "Price": "4"
+  }
+}

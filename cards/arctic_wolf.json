@@ -1,0 +1,14 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Arctic Wolf",
+    "Health": "17",
+    "Movement": "6",
+    "Melee Damage": "11",
+    "Projectile Damage": "0",
+    "Projectile Range": "0"
+  }
+}
