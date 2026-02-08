@@ -212,6 +212,7 @@ class SaveManager:
                 "position": list(unit.position) if unit.position else None,
                 "allegiance": unit.allegiance,
                 "quest_target_position": list(unit.quest_target_position) if unit.quest_target_position else None,
+                "quest_movement_priority": unit.quest_movement_priority if unit.quest_target_position else None,
                 "name": unit.name,
                 "movement": unit.movement,
                 "melee_damage": unit.melee_damage,
@@ -555,6 +556,7 @@ class SaveManager:
                 quest_target = unit_info.get("quest_target_position")
                 if quest_target:
                     unit.quest_target_position = tuple(quest_target)
+                    unit.quest_movement_priority = unit_info.get("quest_movement_priority", "rush")
                 garrison_target = unit_info.get("garrison_target_location")
                 if garrison_target:
                     unit.garrison_target_location = tuple(garrison_target)

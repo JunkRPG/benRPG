@@ -276,7 +276,8 @@ class ActiveQuest:
 
                 if unit and location_pos:
                     unit.quest_target_position = location_pos
-                    print(f"Set quest target for {unit.name}: {location_pos}")
+                    unit.quest_movement_priority = params.get("priority", "rush")
+                    print(f"Set quest target for {unit.name}: {location_pos} (priority: {unit.quest_movement_priority})")
 
     def get_display_name(self):
         """Return quest name with placeholders filled."""

@@ -38,6 +38,9 @@ class Unit:
         self.damage_time = 0
         # Quest-related: target position for escort quests
         self.quest_target_position = None
+        # Quest movement priority: "rush" (head to destination, fight only if adjacent/blocking)
+        # or "fight_first" (clear all enemies before moving to destination)
+        self.quest_movement_priority = "rush"
         # Garrison target: location pos to pathfind to for garrison assignment
         self.garrison_target_location = None
         # Passthrough defense messages collected during movement animation
@@ -215,92 +218,21 @@ class Unit:
 
         elif self.allegiance == "Allied":
             hostile_units = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0]
-            if hostile_units:
-                target = min(hostile_units, key=lambda u: grid.hex_distance(self.position, u.position))
-                distance = grid.hex_distance(self.position, target.position)
-                melee_possible = distance == 1
-                projectile_possible = (self.projectile_damage > 0 and
-                                       1 < distance <= self.projectile_range and
-                                       grid.is_aligned(self.position, target.position, self.projectile_range) and
-                                       grid.has_clear_line_of_sight(self.position, target.position))
-                if projectile_possible:
-                    damage = self.projectile_damage
-                    target.hp -= damage
-                    target.set_damage_text(damage)  # Set damage feedback for hostile unit
-                    self.attack_flash = True
-                    self.flash_start = pygame.time.get_ticks()
-                    log.append(f"{self.name} attacked {target.name} with projectile for {damage} damage")
-                    return log
-                elif melee_possible:
-                    damage = self.melee_damage
-                    target.hp -= damage
-                    target.set_damage_text(damage)
-                    self.attack_flash = True
-                    self.flash_start = pygame.time.get_ticks()
-                    log.append(f"{self.name} attacked {target.name} for {damage} damage")
-                    return log
-                path = grid.find_path(self.position, target.position)
-                if path and len(path) > 1:
-                    max_steps = min(self.movement, len(path) - 1)
-                    for steps in range(max_steps, 0, -1):
-                        new_pos = path[steps]
-                        if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                            success, msg = grid.move_unit(self, *new_pos)
-                            if success:
-                                log.append(msg)
-                                distance_after = grid.hex_distance(self.position, target.position)
-                                if distance_after == 1:
-                                    # Defer melee attack until after movement animation
-                                    self.pending_attack = {
-                                        "target": target,
-                                        "damage": self.melee_damage,
-                                        "type": "melee",
-                                        "is_player": False
-                                    }
-                                elif (self.projectile_damage > 0 and
-                                      1 < distance_after <= self.projectile_range and
-                                      grid.is_aligned(self.position, target.position, self.projectile_range) and
-                                      grid.has_clear_line_of_sight(self.position, target.position)):
-                                    # Defer projectile attack until after movement animation
-                                    self.pending_attack = {
-                                        "target": target,
-                                        "damage": self.projectile_damage,
-                                        "type": "projectile",
-                                        "is_player": False
-                                    }
-                            break
+
+            # Determine behavior based on quest target and movement priority
+            use_rush = (self.quest_target_position and
+                        self.quest_movement_priority == "rush" and
+                        hostile_units)
+
+            if use_rush:
+                # Rush mode: prioritize reaching destination, only fight adjacent/in-range threats
+                log = self._allied_rush_turn(grid, hostile_units)
+            elif hostile_units:
+                # Fight first (default combat): chase and attack enemies
+                log = self._allied_fight_turn(grid, hostile_units)
             else:
-                # No hostile units - if we have a quest target, move toward it
-                if self.quest_target_position:
-                    distance_to_target = grid.hex_distance(self.position, self.quest_target_position)
-                    if distance_to_target > 0:
-                        path = grid.find_path(self.position, self.quest_target_position)
-                        if path and len(path) > 1:
-                            max_steps = min(self.movement, len(path) - 1)
-                            for steps in range(max_steps, 0, -1):
-                                new_pos = path[steps]
-                                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                                    success, msg = grid.move_unit(self, *new_pos)
-                                    if success:
-                                        log.append(f"{self.name} moves toward destination")
-                                    break
-                # Garrison target: pathfind to assigned defensive location
-                elif self.garrison_target_location:
-                    distance_to_garrison = grid.hex_distance(self.position, self.garrison_target_location)
-                    if distance_to_garrison <= 1:
-                        # Close enough - will be picked up by game screen
-                        log.append(f"{self.name} arrived at garrison location")
-                    elif distance_to_garrison > 0:
-                        path = grid.find_path(self.position, self.garrison_target_location)
-                        if path and len(path) > 1:
-                            max_steps = min(self.movement, len(path) - 1)
-                            for steps in range(max_steps, 0, -1):
-                                new_pos = path[steps]
-                                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                                    success, msg = grid.move_unit(self, *new_pos)
-                                    if success:
-                                        log.append(f"{self.name} moves toward garrison")
-                                    break
+                # No enemies: move toward quest target, garrison, or idle
+                log = self._allied_idle_turn(grid)
 
         elif self.allegiance == "Neutral":
             neighbors = grid.get_neighbors(*self.position)
@@ -311,6 +243,156 @@ class Unit:
                 if success:
                     log.append(msg)
         
+        return log
+
+    def _allied_rush_turn(self, grid, hostile_units):
+        """Rush mode: NPC prioritizes reaching quest_target_position.
+        Attacks adjacent enemies or enemies in projectile range, but otherwise
+        moves toward the destination instead of chasing enemies."""
+        log = []
+
+        # 1. Check for adjacent enemies - can't ignore something right next to you
+        adjacent_enemies = [u for u in hostile_units if grid.hex_distance(self.position, u.position) == 1]
+        if adjacent_enemies:
+            target = random.choice(adjacent_enemies)
+            damage = self.melee_damage
+            target.hp -= damage
+            target.set_damage_text(damage)
+            self.attack_flash = True
+            self.flash_start = pygame.time.get_ticks()
+            log.append(f"{self.name} attacked {target.name} for {damage} damage")
+            return log
+
+        # 2. Check for enemies in projectile range - shoot them opportunistically
+        if self.projectile_damage > 0:
+            in_range_enemies = [u for u in hostile_units if
+                                1 < grid.hex_distance(self.position, u.position) <= self.projectile_range and
+                                grid.is_aligned(self.position, u.position, self.projectile_range) and
+                                grid.has_clear_line_of_sight(self.position, u.position)]
+            if in_range_enemies:
+                target = min(in_range_enemies, key=lambda u: grid.hex_distance(self.position, u.position))
+                damage = self.projectile_damage
+                target.hp -= damage
+                target.set_damage_text(damage)
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks()
+                log.append(f"{self.name} attacked {target.name} with projectile for {damage} damage")
+                return log
+
+        # 3. Move toward quest target destination
+        distance_to_target = grid.hex_distance(self.position, self.quest_target_position)
+        if distance_to_target > 0:
+            path = grid.find_path(self.position, self.quest_target_position)
+            if path and len(path) > 1:
+                max_steps = min(self.movement, len(path) - 1)
+                for steps in range(max_steps, 0, -1):
+                    new_pos = path[steps]
+                    if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                        success, msg = grid.move_unit(self, *new_pos)
+                        if success:
+                            log.append(f"{self.name} moves toward destination")
+                            # 4. After moving, check if now adjacent to an enemy - defer melee
+                            for enemy in hostile_units:
+                                if enemy.hp > 0 and grid.hex_distance(self.position, enemy.position) == 1:
+                                    self.pending_attack = {
+                                        "target": enemy,
+                                        "damage": self.melee_damage,
+                                        "type": "melee",
+                                        "is_player": False
+                                    }
+                                    break
+                        break
+
+        return log
+
+    def _allied_fight_turn(self, grid, hostile_units):
+        """Fight mode: NPC chases and attacks the nearest hostile unit.
+        This is the standard Allied combat behavior."""
+        log = []
+        target = min(hostile_units, key=lambda u: grid.hex_distance(self.position, u.position))
+        distance = grid.hex_distance(self.position, target.position)
+        melee_possible = distance == 1
+        projectile_possible = (self.projectile_damage > 0 and
+                               1 < distance <= self.projectile_range and
+                               grid.is_aligned(self.position, target.position, self.projectile_range) and
+                               grid.has_clear_line_of_sight(self.position, target.position))
+        if projectile_possible:
+            damage = self.projectile_damage
+            target.hp -= damage
+            target.set_damage_text(damage)
+            self.attack_flash = True
+            self.flash_start = pygame.time.get_ticks()
+            log.append(f"{self.name} attacked {target.name} with projectile for {damage} damage")
+            return log
+        elif melee_possible:
+            damage = self.melee_damage
+            target.hp -= damage
+            target.set_damage_text(damage)
+            self.attack_flash = True
+            self.flash_start = pygame.time.get_ticks()
+            log.append(f"{self.name} attacked {target.name} for {damage} damage")
+            return log
+        path = grid.find_path(self.position, target.position)
+        if path and len(path) > 1:
+            max_steps = min(self.movement, len(path) - 1)
+            for steps in range(max_steps, 0, -1):
+                new_pos = path[steps]
+                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                    success, msg = grid.move_unit(self, *new_pos)
+                    if success:
+                        log.append(msg)
+                        distance_after = grid.hex_distance(self.position, target.position)
+                        if distance_after == 1:
+                            self.pending_attack = {
+                                "target": target,
+                                "damage": self.melee_damage,
+                                "type": "melee",
+                                "is_player": False
+                            }
+                        elif (self.projectile_damage > 0 and
+                              1 < distance_after <= self.projectile_range and
+                              grid.is_aligned(self.position, target.position, self.projectile_range) and
+                              grid.has_clear_line_of_sight(self.position, target.position)):
+                            self.pending_attack = {
+                                "target": target,
+                                "damage": self.projectile_damage,
+                                "type": "projectile",
+                                "is_player": False
+                            }
+                    break
+        return log
+
+    def _allied_idle_turn(self, grid):
+        """Idle mode: no enemies. Move toward quest target, garrison, or do nothing."""
+        log = []
+        if self.quest_target_position:
+            distance_to_target = grid.hex_distance(self.position, self.quest_target_position)
+            if distance_to_target > 0:
+                path = grid.find_path(self.position, self.quest_target_position)
+                if path and len(path) > 1:
+                    max_steps = min(self.movement, len(path) - 1)
+                    for steps in range(max_steps, 0, -1):
+                        new_pos = path[steps]
+                        if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                            success, msg = grid.move_unit(self, *new_pos)
+                            if success:
+                                log.append(f"{self.name} moves toward destination")
+                            break
+        elif self.garrison_target_location:
+            distance_to_garrison = grid.hex_distance(self.position, self.garrison_target_location)
+            if distance_to_garrison <= 1:
+                log.append(f"{self.name} arrived at garrison location")
+            elif distance_to_garrison > 0:
+                path = grid.find_path(self.position, self.garrison_target_location)
+                if path and len(path) > 1:
+                    max_steps = min(self.movement, len(path) - 1)
+                    for steps in range(max_steps, 0, -1):
+                        new_pos = path[steps]
+                        if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                            success, msg = grid.move_unit(self, *new_pos)
+                            if success:
+                                log.append(f"{self.name} moves toward garrison")
+                            break
         return log
 
     def execute_pending_attack(self, grid):
