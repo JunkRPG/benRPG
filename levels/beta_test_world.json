@@ -35,6 +35,14 @@
     {
       "card_id": "beta_junk_healing_herbs",
       "state": 2
+    },
+    {
+      "card_id": "revival_smelling_salts",
+      "state": 2
+    },
+    {
+      "card_id": "revival_phoenix_dust",
+      "state": 2
     }
   ],
   "terrain": [

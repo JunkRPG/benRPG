@@ -1,0 +1,18 @@
+{
+  "card_type": "Boss Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Brood Mother",
+    "Health": "60",
+    "Movement": "2",
+    "Melee Damage": "10",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Hostile",
+    "Special Skill": "Summon Minion",
+    "Spawn_Deck": "beta_enemy_deck.json",
+    "Background Image File Path": "",
+    "Boss Image File Path": ""
+  }
+}

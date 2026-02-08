@@ -1,0 +1,33 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Glowing Ember Residue",
+    "Description": "Strange luminous dust that radiates warmth. Legends say it can bring back the fallen.",
+    "Raw Material Value": "3",
+    "Refined Material Value": "1",
+    "Metal Value": "0",
+    "Wood Value": "0",
+    "Price": "15",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "3",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "",
+    "Requirements: Metal": "",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Phoenix Dust",
+    "2nd_state_Type": "Consumable",
+    "2nd_state_Subtype": "Revival",
+    "2nd_state_Item Image": "",
+    "2nd_state_Use_HP": "+50HP",
+    "2nd_state_Revival": "true",
+    "2nd_state_Effect_Range_Type": "area_effect",
+    "2nd_state_Effect_Range_Distance": "2",
+    "2nd_state_Effect_Include_Position": "false",
+    "2nd_state_Effect_Exclude_Adjacent": "false",
+    "2nd_state_Revert_Chance": "100",
+    "2nd_state_Use_Placeholder": ["TBD", "TBD"]
+  }
+}

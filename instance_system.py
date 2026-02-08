@@ -64,6 +64,7 @@ class InstanceManager:
         self.instance_deck = []  # Available instance cards
         self.trigger_chance = 0.0  # Instances are triggered by cards/locations, not randomly
         self.pending_instance = None  # Card waiting for resolution
+        self.pending_instance_player = None  # Player affected by pending instance
         self.pending_outcome = None  # Outcome waiting for resolution
         self.pending_choice = None  # Player choice waiting for input
         self.last_result_text = ""  # Last outcome result for display
@@ -147,6 +148,7 @@ class InstanceManager:
         print(f"[DEBUG] resolve_instance: apply_outcome returned: {result_text[:50] if result_text else 'None'}...", flush=True)
         self.last_result_text = result_text
         self.pending_instance = None
+        self.pending_instance_player = None
         self.pending_outcome = None
 
         print("[DEBUG] resolve_instance END", flush=True)
@@ -385,6 +387,7 @@ class InstanceManager:
     def clear_pending(self):
         """Clear all pending state."""
         self.pending_instance = None
+        self.pending_instance_player = None
         self.pending_outcome = None
         self.pending_choice = None
 

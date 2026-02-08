@@ -1601,5 +1601,61 @@
     "blueprint_subclass": null,
     "states": 1,
     "name": "Iron Limb Wraps"
+  },
+  "revival_smelling_salts": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Pungent Herbs"
+  },
+  "revival_phoenix_dust": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Glowing Ember Residue"
+  },
+  "revival_medic_manual": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Tool",
+    "states": 2,
+    "name": "Battlefield Medic Manual"
+  },
+  "beta_boss_shadow_alpha": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Shadow Alpha"
+  },
+  "beta_boss_iron_sentinel": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Iron Sentinel"
+  },
+  "beta_boss_brood_mother": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Brood Mother"
+  },
+  "beta_boss_bandit_warlord": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Bandit Warlord"
+  },
+  "beta_boss_hollow_knight": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Hollow Knight"
   }
 }

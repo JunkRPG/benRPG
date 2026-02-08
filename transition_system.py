@@ -199,10 +199,17 @@ class TransitionManager:
             if self.instance_manager and self.instance_manager.instance_deck:
                 instance_card = random.choice(self.instance_manager.instance_deck)
                 self.instance_manager.pending_instance = instance_card
+                self.instance_manager.pending_instance_player = player
                 return f"Instance event triggered: {instance_card.name}"
             return "No instance cards available."
 
         elif outcome_type == "spawn_enemy":
+            edge = params.get("edge", "random")
+            deck = params.get("deck", None)
+            count = params.get("count", 1)
+            return self._spawn_from_edge(hex_grid, edge, deck, "Hostile", count)
+
+        elif outcome_type == "spawn_boss":
             edge = params.get("edge", "random")
             deck = params.get("deck", None)
             count = params.get("count", 1)

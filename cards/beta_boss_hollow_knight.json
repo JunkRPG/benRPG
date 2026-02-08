@@ -1,0 +1,17 @@
+{
+  "card_type": "Boss Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "The Hollow Knight",
+    "Health": "75",
+    "Movement": "4",
+    "Melee Damage": "22",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Hostile",
+    "Special Skill": "Life Drain",
+    "Background Image File Path": "",
+    "Boss Image File Path": ""
+  }
+}

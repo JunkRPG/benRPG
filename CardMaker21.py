@@ -1507,6 +1507,8 @@ class CardCreationScreen:
                 self.max_scroll = max(0, total_form_height - WINDOW_HEIGHT)
             elif self.card_type == "Document Card" and self.selected_subclass == "Location_Plan":
                 # Document/Location compound type: State 1 is Document (plan), State 2 is Location
+                SPAWN_LOCATION_OPTIONS_LP = ["false", "true"]
+                RANGE_TYPE_OPTIONS_LP = ["area_effect", "line_of_sight", "melee", "perimeter", "echo", "multi_echo", "mist_shadow"]
                 fields_state_1 = [
                     ("Name", "text"),
                     ("Description", "text"),
@@ -1525,6 +1527,30 @@ class CardCreationScreen:
                     ("2nd_state_Shop_Size", "text"),
                     ("2nd_state_Shop_Currency", "dropdown", CURRENCY_TYPES, "metal"),
                     ("2nd_state_Shop_Cycle_Turns", "text"),
+                    # Defense Attack 1 fields (state 2)
+                    ("2nd_state_Defense_Enabled", "dropdown", SPAWN_LOCATION_OPTIONS_LP, "false"),
+                    ("2nd_state_Defense_Requires_NPC", "dropdown", SPAWN_LOCATION_OPTIONS_LP, "false"),
+                    ("2nd_state_Defense_Damage", "text"),
+                    ("2nd_state_Defense_Range_Type", "dropdown", RANGE_TYPE_OPTIONS_LP, "area_effect"),
+                    ("2nd_state_Defense_Range_Distance", "text"),
+                    ("2nd_state_Defense_Include_Position", "dropdown", SPAWN_LOCATION_OPTIONS_LP, "false"),
+                    ("2nd_state_Defense_Exclude_Adjacent", "dropdown", SPAWN_LOCATION_OPTIONS_LP, "false"),
+                    ("2nd_state_Defense_Passthrough_Chance", "text"),
+                    ("2nd_state_Defense_Color_R", "text"),
+                    ("2nd_state_Defense_Color_G", "text"),
+                    ("2nd_state_Defense_Color_B", "text"),
+                    # Defense Attack 2 fields (state 2, secondary)
+                    ("2nd_state_Defense2_Enabled", "dropdown", SPAWN_LOCATION_OPTIONS_LP, "false"),
+                    ("2nd_state_Defense2_Requires_NPC", "dropdown", SPAWN_LOCATION_OPTIONS_LP, "false"),
+                    ("2nd_state_Defense2_Damage", "text"),
+                    ("2nd_state_Defense2_Range_Type", "dropdown", RANGE_TYPE_OPTIONS_LP, "area_effect"),
+                    ("2nd_state_Defense2_Range_Distance", "text"),
+                    ("2nd_state_Defense2_Include_Position", "dropdown", SPAWN_LOCATION_OPTIONS_LP, "false"),
+                    ("2nd_state_Defense2_Exclude_Adjacent", "dropdown", SPAWN_LOCATION_OPTIONS_LP, "false"),
+                    ("2nd_state_Defense2_Passthrough_Chance", "text"),
+                    ("2nd_state_Defense2_Color_R", "text"),
+                    ("2nd_state_Defense2_Color_G", "text"),
+                    ("2nd_state_Defense2_Color_B", "text"),
                     ("2nd_state_Location Image File Path", "file"),
                 ]
 
@@ -1904,6 +1930,7 @@ class CardCreationScreen:
                 # Location cards now support 1 or 2 states (Location/Location)
                 # Spawn location options
                 SPAWN_LOCATION_OPTIONS = ["false", "true"]
+                RANGE_TYPE_OPTIONS = ["area_effect", "line_of_sight", "melee", "perimeter", "echo", "multi_echo", "mist_shadow"]
                 # State 1 fields (left column)
                 left_fields = [
                     ("Name", "text"),
@@ -1920,6 +1947,30 @@ class CardCreationScreen:
                     ("Is_NPC_Spawn_Location", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),  # NPC spawn location (church)
                     ("NPC_Health", "text"),  # Health for NPC spawn locations (can be destroyed by enemies)
                     ("NPC_Spawn_Deck", "text"),  # Deck file for spawning NPCs
+                    # Defense Attack 1 fields
+                    ("Defense_Enabled", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                    ("Defense_Requires_NPC", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                    ("Defense_Damage", "text"),
+                    ("Defense_Range_Type", "dropdown", RANGE_TYPE_OPTIONS, "area_effect"),
+                    ("Defense_Range_Distance", "text"),
+                    ("Defense_Include_Position", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                    ("Defense_Exclude_Adjacent", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                    ("Defense_Passthrough_Chance", "text"),
+                    ("Defense_Color_R", "text"),
+                    ("Defense_Color_G", "text"),
+                    ("Defense_Color_B", "text"),
+                    # Defense Attack 2 fields (secondary)
+                    ("Defense2_Enabled", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                    ("Defense2_Requires_NPC", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                    ("Defense2_Damage", "text"),
+                    ("Defense2_Range_Type", "dropdown", RANGE_TYPE_OPTIONS, "area_effect"),
+                    ("Defense2_Range_Distance", "text"),
+                    ("Defense2_Include_Position", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                    ("Defense2_Exclude_Adjacent", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                    ("Defense2_Passthrough_Chance", "text"),
+                    ("Defense2_Color_R", "text"),
+                    ("Defense2_Color_G", "text"),
+                    ("Defense2_Color_B", "text"),
                     ("Background Image File Path", "file"),
                     ("Location Image File Path", "file")
                 ]
@@ -1947,6 +1998,30 @@ class CardCreationScreen:
                         ("2nd_state_Is_NPC_Spawn_Location", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),  # Usually false for ruins
                         ("2nd_state_NPC_Health", "text"),  # Usually 0 for ruins
                         ("2nd_state_NPC_Spawn_Deck", "text"),  # Usually empty for ruins
+                        # Defense Attack 1 fields (state 2)
+                        ("2nd_state_Defense_Enabled", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                        ("2nd_state_Defense_Requires_NPC", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                        ("2nd_state_Defense_Damage", "text"),
+                        ("2nd_state_Defense_Range_Type", "dropdown", RANGE_TYPE_OPTIONS, "area_effect"),
+                        ("2nd_state_Defense_Range_Distance", "text"),
+                        ("2nd_state_Defense_Include_Position", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                        ("2nd_state_Defense_Exclude_Adjacent", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                        ("2nd_state_Defense_Passthrough_Chance", "text"),
+                        ("2nd_state_Defense_Color_R", "text"),
+                        ("2nd_state_Defense_Color_G", "text"),
+                        ("2nd_state_Defense_Color_B", "text"),
+                        # Defense Attack 2 fields (state 2, secondary)
+                        ("2nd_state_Defense2_Enabled", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                        ("2nd_state_Defense2_Requires_NPC", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                        ("2nd_state_Defense2_Damage", "text"),
+                        ("2nd_state_Defense2_Range_Type", "dropdown", RANGE_TYPE_OPTIONS, "area_effect"),
+                        ("2nd_state_Defense2_Range_Distance", "text"),
+                        ("2nd_state_Defense2_Include_Position", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                        ("2nd_state_Defense2_Exclude_Adjacent", "dropdown", SPAWN_LOCATION_OPTIONS, "false"),
+                        ("2nd_state_Defense2_Passthrough_Chance", "text"),
+                        ("2nd_state_Defense2_Color_R", "text"),
+                        ("2nd_state_Defense2_Color_G", "text"),
+                        ("2nd_state_Defense2_Color_B", "text"),
                         ("2nd_state_Location Image File Path", "file")
                     ]
 

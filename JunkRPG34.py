@@ -3973,6 +3973,9 @@ class GameScreen:
         is_projectile = self.selected_attack == player.attacks["projectile"]["name"]
         is_melee = self.selected_attack == player.attacks["melee"]["name"]
 
+        ammo_card = None
+        runout_check = False
+
         if is_melee:
             # Melee attack - must be adjacent
             distance = self.hex_grid.hex_distance(player.position, hex_pos)

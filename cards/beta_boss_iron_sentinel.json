@@ -1,0 +1,17 @@
+{
+  "card_type": "Boss Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Iron Sentinel",
+    "Health": "100",
+    "Movement": "3",
+    "Melee Damage": "25",
+    "Projectile Damage": "10",
+    "Projectile Range": "3",
+    "Allegiance (Hostile, Neutral, Allied)": "Hostile",
+    "Special Skill": "",
+    "Background Image File Path": "",
+    "Boss Image File Path": ""
+  }
+}

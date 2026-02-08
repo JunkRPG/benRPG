@@ -1,0 +1,11 @@
+{
+  "deck_name": "Beta Boss Enemies",
+  "back_image": null,
+  "cards": [
+    "beta_boss_shadow_alpha",
+    "beta_boss_iron_sentinel",
+    "beta_boss_brood_mother",
+    "beta_boss_bandit_warlord",
+    "beta_boss_hollow_knight"
+  ]
+}
