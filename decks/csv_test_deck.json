@@ -1,0 +1,9 @@
+{
+  "name": "csv_test_deck",
+  "cards": [
+    "example_wolf",
+    "example_villager",
+    "example_broken_sword",
+    "example_hunt_quest"
+  ]
+}

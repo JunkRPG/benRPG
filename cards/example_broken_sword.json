@@ -1,0 +1,15 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "blueprint_subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Example Broken Sword",
+    "Description": "A bent blade",
+    "Raw Material Value": "1",
+    "Price": "3",
+    "2nd_state_Name": "Repaired Sword",
+    "2nd_state_Type": "Weapon",
+    "2nd_state_Melee Damage": "12"
+  }
+}

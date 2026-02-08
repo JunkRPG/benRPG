@@ -1,0 +1,14 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Example Villager",
+    "Health": "10",
+    "Movement": "3",
+    "Melee Damage": "2",
+    "Projectile Damage": "0",
+    "Allegiance": "Neutral"
+  }
+}

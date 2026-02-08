@@ -1,0 +1,15 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Hunt",
+  "blueprint_subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Example Hunt Quest",
+    "Template_Text": "Defeat [Enemy1] near [Location1].",
+    "Placeholders": "[{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"player\"}]",
+    "Success_Conditions": "[{\"type\":\"unit_death\",\"params\":{\"unit\":\"Enemy1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\"}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "2nd_state_Name": "Quest Complete"
+  }
+}

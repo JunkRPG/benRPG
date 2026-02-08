@@ -2175,5 +2175,33 @@
     "blueprint_subclass": null,
     "states": 1,
     "name": "Dried Hide Scrap"
+  },
+  "example_wolf": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Example Wolf"
+  },
+  "example_villager": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Example Villager"
+  },
+  "example_broken_sword": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Example Broken Sword"
+  },
+  "example_hunt_quest": {
+    "type": "Quest Card",
+    "subclass": "Hunt",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Example Hunt Quest"
   }
 }
