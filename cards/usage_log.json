@@ -7767,6 +7767,13 @@
           3
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-08T09:27:08.853391",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "Herbalist Survivor": [
@@ -43950,6 +43957,28 @@
           10
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-07T22:24:23.773463",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          4,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-08T09:20:41.406136",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          11,
+          13
+        ]
+      }
     }
   ],
   "beta_location_rusty_anchor": [
@@ -44029,6 +44058,28 @@
           22
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-07T22:24:03.175043",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-08T09:23:24.456726",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          22,
+          35
+        ]
+      }
     }
   ],
   "beta_enemy_forest_archer": [
@@ -44048,6 +44099,20 @@
     },
     {
       "timestamp": "2026-02-03T21:09:14.044209",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-07T22:28:13.158670",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-08T08:57:21.346149",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -44131,6 +44196,28 @@
           7
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-07T22:27:56.042905",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          3,
+          30
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-08T11:07:43.374921",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          11,
+          13
+        ]
+      }
     }
   ],
   "beta_enemy_hungry_wolf": [
@@ -44157,6 +44244,13 @@
     },
     {
       "timestamp": "2026-02-07T22:04:29.722810",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-08T09:22:18.457931",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -44295,6 +44389,17 @@
           13
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-08T09:23:36.531178",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          15,
+          32
+        ]
+      }
     }
   ],
   "beta_enemy_funny_tumbleweed": [
@@ -44420,6 +44525,17 @@
           25
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-07T22:13:45.531051",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          8
+        ]
+      }
     }
   ],
   "beta_location_hollowed_tree": [
@@ -44508,6 +44624,17 @@
         "position": [
           15,
           32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-08T08:54:18.104345",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          11,
+          13
         ]
       }
     }
@@ -44632,11 +44759,25 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-08T09:24:36.700554",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "beta_enemy_funny_garbage": [
     {
       "timestamp": "2026-02-06T20:25:15.003047",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-08T13:06:22.378766",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -44653,6 +44794,13 @@
     },
     {
       "timestamp": "2026-02-07T01:31:48.305299",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-07T22:27:43.415431",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -44714,6 +44862,13 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-08T09:01:13.308797",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "beta_enemy_corrupted_guard": [
@@ -44723,11 +44878,49 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-08T08:59:44.854659",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "beta_npc_funny_farmer": [
     {
       "timestamp": "2026-02-07T23:20:18.939959",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    }
+  ],
+  "beta_location_horse_stable": [
+    {
+      "timestamp": "2026-02-07T22:25:03.590085",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          7,
+          30
+        ]
+      }
+    }
+  ],
+  "beta_enemy_shadow_stalker": [
+    {
+      "timestamp": "2026-02-07T22:27:44.589802",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    }
+  ],
+  "beta_npc_funny_child": [
+    {
+      "timestamp": "2026-02-08T09:00:19.623620",
       "context": {
         "action": "defeated",
         "screen": "game"

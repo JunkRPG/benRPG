@@ -21,6 +21,7 @@
     "2nd_state_Type": "Tool",
     "2nd_state_Subtype": "Building",
     "2nd_state_Use": "Required for building locations",
+    "2nd_state_Tool_Action": "Build",
     "2nd_state_Tool Image": ""
   }
 }

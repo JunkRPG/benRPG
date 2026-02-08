@@ -307,7 +307,7 @@ class Player:
             return base_msg, hit_units
 
     def _get_equipped_ammunition(self):
-        """Find equipped ammunition card from tool slots."""
+        """Find equipped ammunition card from tool slots or accessory slot."""
         # Check multi-slot system first
         for tool in self.equipped_tools:
             if tool:
@@ -320,6 +320,12 @@ class Player:
             tool_data = self.equipped_tool.get_current_data()
             if tool_data.get("Type") == "Ammunition":
                 return self.equipped_tool
+
+        # Check accessory slot (quivers can be equipped as accessories)
+        if self.equipped_accessory:
+            acc_data = self.equipped_accessory.get_current_data()
+            if acc_data.get("Type") == "Ammunition":
+                return self.equipped_accessory
 
         return None
 
@@ -352,6 +358,8 @@ class Player:
                 self.equipped_tools[idx] = None
             elif ammo_card == self.equipped_tool:
                 self.equipped_tool = None
+            elif ammo_card == self.equipped_accessory:
+                self.equipped_accessory = None
 
             self.inventory.append(ammo_card)
             return "Your ammunition has run out!"
@@ -709,7 +717,8 @@ class Player:
         is_valid = (card_type in valid_types or
                     card_subclass == "Consumable" or
                     card_data.get("Use_HP") or
-                    card_data.get("Ammo_Damage"))
+                    card_data.get("Ammo_Damage") or
+                    card_data.get("Tool_Action"))
 
         if not is_valid:
             return "Cannot equip this item as a tool"
@@ -777,6 +786,24 @@ class Player:
 
         return f"Unequipped tool: {name}"
 
+    def get_tool_action(self):
+        """
+        Returns the Tool_Action string and card from the first equipped tool that has one.
+
+        Returns:
+            tuple: (action_name, tool_card) or (None, None) if no tool has an action
+        """
+        for tool in self.equipped_tools:
+            if tool:
+                action = tool.get_current_data().get("Tool_Action")
+                if action:
+                    return action, tool
+        if self.equipped_tool:
+            action = self.equipped_tool.get_current_data().get("Tool_Action")
+            if action:
+                return action, self.equipped_tool
+        return None, None
+
     # ===== ACCESSORY/TOOL BELT METHODS =====
 
     def equip_accessory(self, card):
@@ -794,7 +821,7 @@ class Player:
         card_type = card_data.get("Type", "")
 
         # Check if this is a valid accessory
-        valid_accessory_types = ["Tool_Belt", "Accessory", "Belt", "Pouch"]
+        valid_accessory_types = ["Tool_Belt", "Accessory", "Belt", "Pouch", "Ammunition"]
         if card_type not in valid_accessory_types:
             return "This item cannot be equipped as an accessory"
 
