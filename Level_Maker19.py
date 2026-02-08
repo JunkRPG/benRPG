@@ -236,6 +236,9 @@ class LevelEditor:
         os.makedirs("levels", exist_ok=True)
         self.is_panning = False
         self.last_mouse_pos = None
+        self.paint_mode = False
+        self.is_painting = False
+        self.last_painted_hex = None
 
     def load_decks(self):
         self.deck_files = []
@@ -371,6 +374,9 @@ class LevelEditor:
         y_pos += 40
         self.toggle_inaccessible_button = UIButton(relative_rect=pygame.Rect(WINDOW_WIDTH - 200, y_pos, 190, 30),
                                                    text="Toggle Inaccessible", manager=manager)
+        y_pos += 40
+        self.paint_mode_button = UIButton(relative_rect=pygame.Rect(WINDOW_WIDTH - 200, y_pos, 190, 30),
+                                          text="Paint Mode: OFF", manager=manager)
 
         # Location hex UI elements (left panel, below unit placement)
         left_y_pos = 340
@@ -454,6 +460,18 @@ class LevelEditor:
                     return
         self.card_list.set_item_list(["Select a deck first"])
 
+    def apply_terrain_to_hex(self, row, col, terrain_name):
+        """Apply a terrain type to a hex, updating accessibility and removing entities if impassable."""
+        self.terrain[row][col] = terrain_name
+        terrain_accessible = TERRAIN_CONFIG.get(terrain_name, {}).get("accessible", True)
+        if not terrain_accessible:
+            self.accessible[row][col] = False
+            if self.player_start == (row, col):
+                self.player_start = None
+            self.units = [u for u in self.units if u["position"] != (row, col)]
+        else:
+            self.accessible[row][col] = True
+
     def handle_event(self, event):
         # Process UI events first
         ui_consumed_event = manager.process_events(event)
@@ -466,14 +484,33 @@ class LevelEditor:
                 if hex_pos:
                     self.selected_hex = hex_pos
                     self.update_info_label()
+                    if self.paint_mode:
+                        selected_terrain = self.terrain_list.get_single_selection()
+                        if selected_terrain:
+                            self.apply_terrain_to_hex(hex_pos[0], hex_pos[1], selected_terrain)
+                            self.update_info_label()
+                            self.is_painting = True
+                            self.last_painted_hex = hex_pos
             elif event.button == 2:  # Middle click to start panning
                 self.is_panning = True
                 self.last_mouse_pos = event.pos
         elif event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 2:  # Middle click release to stop panning
+            if event.button == 1:  # Left click release to stop painting
+                self.is_painting = False
+                self.last_painted_hex = None
+            elif event.button == 2:  # Middle click release to stop panning
                 self.is_panning = False
                 self.last_mouse_pos = None
         elif event.type == pygame.MOUSEMOTION:
+            if self.is_painting and self.paint_mode:
+                hex_pos = self.grid.get_hex_at_pixel(event.pos[0], event.pos[1])
+                if hex_pos and hex_pos != self.last_painted_hex:
+                    selected_terrain = self.terrain_list.get_single_selection()
+                    if selected_terrain:
+                        self.apply_terrain_to_hex(hex_pos[0], hex_pos[1], selected_terrain)
+                        self.selected_hex = hex_pos
+                        self.last_painted_hex = hex_pos
+                        self.update_info_label()
             if self.is_panning and self.last_mouse_pos:  # Pan the grid
                 current_pos = event.pos
                 dx = current_pos[0] - self.last_mouse_pos[0]
@@ -606,22 +643,11 @@ class LevelEditor:
                 selected_terrain = self.terrain_list.get_single_selection()
                 if selected_terrain:
                     row, col = self.selected_hex
-                    self.terrain[row][col] = selected_terrain
-                    # Automatically update accessibility based on terrain type
+                    self.apply_terrain_to_hex(row, col, selected_terrain)
                     terrain_accessible = TERRAIN_CONFIG.get(selected_terrain, {}).get("accessible", True)
                     if not terrain_accessible:
-                        self.accessible[row][col] = False
-                        # Remove player start if on this hex
-                        if self.player_start == self.selected_hex:
-                            self.player_start = None
-                            self.status_label.set_text(f"Set terrain to {selected_terrain} (removed player start)")
-                        else:
-                            self.status_label.set_text(f"Set terrain to {selected_terrain} (impassable)")
-                        # Remove units on this hex
-                        self.units = [u for u in self.units if u["position"] != self.selected_hex]
+                        self.status_label.set_text(f"Set terrain to {selected_terrain} (impassable)")
                     else:
-                        # Restore accessibility if terrain is passable (unless manually blocked)
-                        self.accessible[row][col] = True
                         self.status_label.set_text(f"Set terrain to {selected_terrain}")
                     self.update_info_label()
                 else:
@@ -636,6 +662,10 @@ class LevelEditor:
                 self.accessible[row][col] = not self.accessible[row][col]
                 self.update_info_label()
                 self.status_label.set_text(f"Toggled accessibility at {self.selected_hex}")
+            elif event.ui_element == self.paint_mode_button:
+                self.paint_mode = not self.paint_mode
+                self.paint_mode_button.set_text(f"Paint Mode: {'ON' if self.paint_mode else 'OFF'}")
+                self.status_label.set_text(f"Paint mode {'enabled' if self.paint_mode else 'disabled'}")
             elif event.ui_element == self.place_unit_button and self.selected_hex:
                 if not self.accessible[self.selected_hex[0]][self.selected_hex[1]]:
                     self.status_label.set_text("Cannot place unit on inaccessible hex")
