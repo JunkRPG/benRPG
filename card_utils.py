@@ -7,6 +7,8 @@ and invalid JSON gracefully instead of crashing.
 
 import os
 import json
+import re
+import uuid
 
 # The directory where card files are stored
 CARDS_DIR = "cards"
@@ -186,6 +188,7 @@ JSON_FIELDS = {
     "Failure_Conditions",
     "Rewards",
     "Upgrade_Material_Cost",
+    "Chain_Config",
 }
 
 # Valid values for weapon/ammunition system fields
@@ -294,7 +297,7 @@ def validate_card_json_fields(card_data):
 
     # Fields that should be objects
     object_fields = {
-        "Rewards", "Upgrade_Material_Cost"
+        "Rewards", "Upgrade_Material_Cost", "Chain_Config"
     }
 
     for field_name in array_fields:
@@ -332,6 +335,7 @@ def get_json_field_help(field_name):
         "Failure_Conditions": '[{"type": "player_death"}]',
         "Rewards": '{"experience": 100, "cards": ["reward_card_id"]}',
         "Upgrade_Material_Cost": '{"metal": 10, "wood": 5}',
+        "Chain_Config": '{"on_success": {"mode": "auto_activate", "quest_card_id": "card_id_here", "quest_deck": null, "inherit_placeholders": ["NPC1"], "message": "A new quest begins..."}, "on_failure": {"mode": "none"}}',
     }
     return examples.get(field_name, "[]")
 
@@ -515,3 +519,79 @@ def validate_all_card_fields(card_data):
     all_errors.extend(errors)
 
     return len(all_errors) == 0, all_errors
+
+
+# ========== CARD SAVE UTILITIES ==========
+
+def _name_to_id(name):
+    """Convert a card name to a filesystem-safe ID string."""
+    card_id = name.lower().strip()
+    card_id = re.sub(r'[^a-z0-9]+', '_', card_id)
+    card_id = card_id.strip('_')
+    return card_id
+
+
+def save_card_to_file(card_data, card_id=None, use_name_as_id=False):
+    """
+    Save card data to a JSON file in the cards/ directory.
+
+    Args:
+        card_data: Dictionary with card data (must have "data" key with "Name")
+        card_id: Explicit card ID. If None, generated from name or UUID.
+        use_name_as_id: If True and card_id is None, derive ID from card name.
+
+    Returns:
+        Tuple of (card_id, filepath) on success, or (None, error_message) on failure.
+    """
+    os.makedirs(CARDS_DIR, exist_ok=True)
+
+    if card_id is None:
+        name = card_data.get("data", {}).get("Name", "")
+        if use_name_as_id and name:
+            card_id = _name_to_id(name)
+        else:
+            card_id = str(uuid.uuid4())
+
+    filepath = os.path.join(CARDS_DIR, f"{card_id}.json")
+
+    # Check for collision
+    if os.path.exists(filepath):
+        return None, f"Card file already exists: {filepath}"
+
+    try:
+        with open(filepath, 'w') as f:
+            json.dump(card_data, f, indent=2)
+        return card_id, filepath
+    except Exception as e:
+        return None, f"Failed to save card: {e}"
+
+
+def add_to_card_index(card_id, card_data):
+    """
+    Add a single card entry to card_index.json.
+
+    Args:
+        card_id: The card identifier
+        card_data: Dictionary with card data
+
+    Returns:
+        True on success, False on failure
+    """
+    index = load_card_index(silent=True)
+
+    data = card_data.get("data", {})
+    index[card_id] = {
+        "type": card_data.get("card_type", ""),
+        "subclass": card_data.get("subclass", None),
+        "blueprint_subclass": card_data.get("blueprint_subclass", None),
+        "states": card_data.get("states", 1),
+        "name": data.get("Name", "")
+    }
+
+    try:
+        with open(CARD_INDEX_FILE, 'w') as f:
+            json.dump(index, f, indent=2)
+        return True
+    except Exception as e:
+        print(f"Error updating card index: {e}")
+        return False

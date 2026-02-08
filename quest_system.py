@@ -224,12 +224,22 @@ class ActiveQuest:
         self.is_complete = False
         self.is_failed = False
 
-    def initialize(self):
-        """Resolve placeholders and spawn units."""
+    def initialize(self, inherited_context=None):
+        """Resolve placeholders and spawn units.
+
+        Args:
+            inherited_context: Optional dict of pre-resolved placeholder data
+                               carried forward from a previous quest in a chain.
+        """
         quest_data = self.quest_card.get_current_data()
         placeholders_json = quest_data.get("Placeholders", "[]")
 
         self.resolver = PlaceholderResolver(self.card_manager, self.hex_grid)
+
+        # Pre-seed resolver with inherited placeholder data from chain
+        if inherited_context:
+            self.resolver.resolved.update(inherited_context)
+
         self.resolver.resolve_placeholders(placeholders_json, self.player.position)
 
         # Track spawned units and locations
@@ -464,6 +474,47 @@ class ActiveQuest:
                         # Remove from tracked units since they're now at a location
                         del self.tracked_units[unit_placeholder]
 
+    def get_chain_config(self):
+        """Parse and return Chain_Config from quest card data, or None."""
+        quest_data = self.quest_card.get_current_data()
+        chain_json = quest_data.get("Chain_Config", "")
+        if not chain_json or chain_json.strip() == "":
+            return None
+        try:
+            config = json.loads(chain_json) if isinstance(chain_json, str) else chain_json
+            if isinstance(config, dict):
+                return config
+        except json.JSONDecodeError:
+            print(f"Warning: Invalid Chain_Config JSON in quest {self.get_display_name()}")
+        return None
+
+    def get_inherited_context(self, placeholder_ids):
+        """Extract resolved placeholder data for specified IDs to carry forward.
+
+        For on_failure chains, only carries name/position (units may be dead).
+        For on_success chains, carries full data including living units.
+
+        Args:
+            placeholder_ids: List of placeholder ID strings to inherit
+
+        Returns:
+            dict mapping placeholder IDs to resolved data
+        """
+        if not self.resolver or not placeholder_ids:
+            return {}
+
+        context = {}
+        for pid in placeholder_ids:
+            if pid in self.resolver.resolved:
+                source = self.resolver.resolved[pid]
+                context[pid] = {
+                    "cards": source.get("cards", []),
+                    "unit": source.get("unit"),
+                    "position": source.get("position"),
+                    "name": source.get("name", "Unknown")
+                }
+        return context
+
     def cleanup(self):
         """Remove spawned units on failure."""
         for placeholder_id, unit in self.tracked_units.items():
@@ -486,6 +537,9 @@ class QuestManager:
         # Track NPCs animating to their destinations after quest completion
         # Each entry: {"unit": Unit, "location_pos": (row, col), "hex_grid": HexGrid}
         self.pending_arrivals = []
+        # Pending chain quest to be handled by game loop
+        # {"quest_card": InventoryCard, "mode": str, "message": str, "inherited_context": dict}
+        self.pending_chain = None
 
     def can_accept_quest(self):
         """Check if player can accept another quest."""
@@ -535,7 +589,7 @@ class QuestManager:
         return results
 
     def _complete_quest(self, quest, player):
-        """Handle quest completion: grant rewards, flip card, start NPC animations to locations."""
+        """Handle quest completion: grant rewards, flip card, start NPC animations to locations, process chain."""
         self.active_quests.remove(quest)
         self.completed_quests.append(quest)
 
@@ -552,13 +606,121 @@ class QuestManager:
         if quest.quest_card.states == 2:
             quest.quest_card.toggle_state()
 
+        # Process quest chain on success
+        chain_config = quest.get_chain_config()
+        if chain_config:
+            on_success = chain_config.get("on_success")
+            if on_success and on_success.get("mode", "none") != "none":
+                inherited = quest.get_inherited_context(on_success.get("inherit_placeholders", []))
+                self._process_chain_branch(on_success, inherited)
+
     def _fail_quest(self, quest):
-        """Handle quest failure: cleanup spawned units."""
+        """Handle quest failure: cleanup spawned units, process chain."""
         self.active_quests.remove(quest)
         self.failed_quests.append(quest)
 
+        # Process quest chain on failure (before cleanup, so we can read context)
+        chain_config = quest.get_chain_config()
+        if chain_config:
+            on_failure = chain_config.get("on_failure")
+            if on_failure and on_failure.get("mode", "none") != "none":
+                # For failure chains, inherit names/positions only (units may be dead)
+                inherited_ids = on_failure.get("inherit_placeholders", [])
+                inherited = {}
+                if quest.resolver and inherited_ids:
+                    for pid in inherited_ids:
+                        if pid in quest.resolver.resolved:
+                            source = quest.resolver.resolved[pid]
+                            inherited[pid] = {
+                                "cards": source.get("cards", []),
+                                "unit": None,  # Don't inherit potentially dead units
+                                "position": source.get("position"),
+                                "name": source.get("name", "Unknown")
+                            }
+                self._process_chain_branch(on_failure, inherited)
+
         # Cleanup spawned units
         quest.cleanup()
+
+    def _process_chain_branch(self, branch_config, inherited_context):
+        """Store a chain quest for the game loop to handle.
+
+        Args:
+            branch_config: Dict with mode, quest_card_id, quest_deck, message
+            inherited_context: Pre-resolved placeholder data to carry forward
+        """
+        mode = branch_config.get("mode", "none")
+        if mode == "none":
+            return
+
+        quest_card_id = branch_config.get("quest_card_id")
+        quest_deck = branch_config.get("quest_deck")
+        message = branch_config.get("message", "")
+
+        quest_card = self._load_chain_quest(quest_card_id, quest_deck)
+        if not quest_card:
+            print(f"Warning: Could not load chain quest (id={quest_card_id}, deck={quest_deck})")
+            return
+
+        self.pending_chain = {
+            "quest_card": quest_card,
+            "mode": mode,
+            "message": message,
+            "inherited_context": inherited_context
+        }
+
+    def _load_chain_quest(self, quest_card_id, quest_deck):
+        """Load a quest card by ID or draw from a deck.
+
+        Returns:
+            InventoryCard or None
+        """
+        from inventory_card import InventoryCard
+
+        if quest_card_id:
+            card_data = load_card(quest_card_id)
+            if card_data:
+                return InventoryCard(card_data)
+            return None
+
+        if quest_deck:
+            deck_path = resolve_deck_path(quest_deck)
+            try:
+                with open(deck_path, 'r') as f:
+                    deck_data = json.load(f)
+                card_ids = deck_data.get("cards", [])
+                if card_ids:
+                    selected_id = random.choice(card_ids)
+                    card_data = load_card(selected_id)
+                    if card_data:
+                        return InventoryCard(card_data)
+            except Exception as e:
+                print(f"Error loading chain quest from deck {quest_deck}: {e}")
+
+        return None
+
+    def get_pending_chain(self):
+        """Return and clear the pending chain quest. Called by game loop."""
+        chain = self.pending_chain
+        self.pending_chain = None
+        return chain
+
+    def activate_chain_quest(self, quest_card, hex_grid, player, inherited_context=None):
+        """Activate a quest with inherited context from a chain.
+
+        Returns: (success, message)
+        """
+        if not self.can_accept_quest():
+            return False, "Quest log is full (max 5 active quests)"
+
+        quest = ActiveQuest(quest_card, hex_grid, player, self.card_manager)
+        success = quest.initialize(inherited_context=inherited_context)
+
+        if success:
+            self.active_quests.append(quest)
+            return True, f"Quest accepted: {quest.get_display_name()}"
+        else:
+            return False, "Failed to initialize chain quest"
 
     def abandon_quest(self, quest):
         """Abandon an active quest."""

@@ -1,0 +1,22 @@
+{
+  "template_name": "Wolf Pack",
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 1,
+  "count": 20,
+  "naming": {
+    "mode": "prefix_list",
+    "base_name": "Wolf",
+    "prefixes": ["Hungry", "Dire", "Shadow", "Feral", "Rabid", "Grizzled", "Mangy", "Timber", "Arctic", "Blood"]
+  },
+  "fields": {
+    "Health": {"min": 15, "max": 30, "type": "int"},
+    "Movement": {"min": 4, "max": 6, "type": "int"},
+    "Melee Damage": {"min": 5, "max": 15, "type": "int"},
+    "Projectile Damage": {"value": "0", "type": "fixed"},
+    "Projectile Range": {"value": "0", "type": "fixed"}
+  },
+  "state2_fields": {},
+  "deck": "wolf_enemy_deck"
+}

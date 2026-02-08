@@ -1,0 +1,32 @@
+{
+  "template_name": "Scavenged Materials",
+  "card_type": "Junk Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 1,
+  "count": 20,
+  "naming": {
+    "mode": "name_list",
+    "base_name": "Junk",
+    "names": [
+      "Bent Nails", "Stripped Wire", "Crumbled Brick",
+      "Torn Canvas", "Chipped Flint", "Snapped Hinge",
+      "Corroded Pipe Fitting", "Splintered Dowel", "Cracked Ceramic",
+      "Stained Glass Shard", "Worn Belt Buckle", "Rusted Spring",
+      "Frayed Twine Ball", "Dented Tin Cup", "Charred Wood Chunk",
+      "Broken Cog", "Warped Plank", "Salvaged Rivet",
+      "Mossy Stone", "Dried Hide Scrap"
+    ]
+  },
+  "fields": {
+    "Description": {"type": "choice", "options": [
+      "Found in the rubble.", "Might be useful for something.",
+      "Seen better days.", "Could be repurposed.",
+      "Not worth much on its own.", "Heavy but solid."
+    ]},
+    "Raw Material Value": {"min": 1, "max": 3, "type": "int"},
+    "Price": {"min": 1, "max": 5, "type": "int"}
+  },
+  "state2_fields": {},
+  "deck": "junk_materials_deck"
+}

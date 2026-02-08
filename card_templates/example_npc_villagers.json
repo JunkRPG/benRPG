@@ -1,0 +1,29 @@
+{
+  "template_name": "Village Folk",
+  "card_type": "NPC Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 1,
+  "count": 15,
+  "naming": {
+    "mode": "name_list",
+    "base_name": "Villager",
+    "names": [
+      "Baker Marta", "Old Fisherman Pete", "Seamstress Vera",
+      "Cooper the Barrel Maker", "Shepherd Angus", "Miller's Daughter",
+      "Cobbler Finn", "Apothecary Nadia", "Candle Maker Sol",
+      "Tanner Bryce", "Weaver Elise", "Potter Clem",
+      "Beekeeper Wren", "Farrier Doyle", "Glassblower Thea"
+    ]
+  },
+  "fields": {
+    "Health": {"min": 8, "max": 15, "type": "int"},
+    "Movement": {"min": 3, "max": 4, "type": "int"},
+    "Melee Damage": {"min": 1, "max": 4, "type": "int"},
+    "Projectile Damage": {"value": "0", "type": "fixed"},
+    "Projectile Range": {"value": "0", "type": "fixed"},
+    "Allegiance": {"value": "Neutral", "type": "fixed"}
+  },
+  "state2_fields": {},
+  "deck": "villager_npc_deck"
+}

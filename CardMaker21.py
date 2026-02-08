@@ -1763,6 +1763,7 @@ class CardCreationScreen:
                     ("Success_Conditions", "text"),  # JSON array
                     ("Failure_Conditions", "text"),  # JSON array
                     ("Rewards", "text"),  # JSON object
+                    ("Chain_Config", "text"),  # JSON object
                 ]
                 # Right column: State 2 fields (completed quest)
                 right_fields = [

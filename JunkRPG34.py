@@ -3361,6 +3361,7 @@ class GameScreen:
             quest_results = game.current_quest_manager.update("turn_end", {}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
                 self.add_to_log(msg)
+            self._handle_quest_chain()
 
             if self.check_level_completion():
                 # Autosave before level transition
@@ -3498,6 +3499,7 @@ class GameScreen:
             )
             for quest, result, qmsg in quest_results:
                 self.add_to_log(qmsg)
+            self._handle_quest_chain()
 
         self.player_info_label.set_text(self.get_player_info())
         self.waiting_for_animation = True
@@ -3517,6 +3519,7 @@ class GameScreen:
             quest_results = game.current_quest_manager.update("unit_death", {"unit": dead_unit}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
                 self.add_to_log(msg)
+            self._handle_quest_chain()
 
         # Check for game over
         if game.multiplayer_mode:
@@ -3531,6 +3534,7 @@ class GameScreen:
                 quest_results = game.current_quest_manager.update("player_death", {}, self.hex_grid, game.current_player)
                 for quest, result, msg in quest_results:
                     self.add_to_log(msg)
+                self._handle_quest_chain()
                 self.turn_queue.clear()
                 self.pending_defeat = True
                 return True
@@ -3539,6 +3543,7 @@ class GameScreen:
             quest_results = game.current_quest_manager.update("player_death", {}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
                 self.add_to_log(msg)
+            self._handle_quest_chain()
             self.turn_queue.clear()
             self.pending_defeat = True
             return True
@@ -3804,6 +3809,53 @@ class GameScreen:
             info += f"\nAttacks: {p.warrior_attacks_remaining}/2"
         return info
 
+    def _handle_quest_chain(self):
+        """Check for pending quest chain and handle by mode (auto_activate or offer)."""
+        chain = game.current_quest_manager.get_pending_chain()
+        if not chain:
+            return
+
+        quest_card = chain["quest_card"]
+        mode = chain["mode"]
+        message = chain.get("message", "")
+        inherited_context = chain.get("inherited_context", {})
+
+        if mode == "auto_activate":
+            success, msg = game.current_quest_manager.activate_chain_quest(
+                quest_card, self.hex_grid, game.current_player, inherited_context
+            )
+            if message:
+                self.add_to_log(message)
+            self.add_to_log(msg)
+        elif mode == "offer":
+            # Store chain data for the callback
+            self._pending_chain_offer = {
+                "quest_card": quest_card,
+                "inherited_context": inherited_context,
+                "message": message
+            }
+            offer_text = message if message else "A new quest awaits. Accept?"
+            confirmation_screen.initialize_screen(
+                offer_text, ["Accept", "Decline"],
+                self._handle_chain_offer_response
+            )
+            self.active_screen = "confirmation"
+
+    def _handle_chain_offer_response(self, choice):
+        """Callback for quest chain offer confirmation."""
+        self.active_screen = "game"
+        if choice == "Accept" and hasattr(self, '_pending_chain_offer'):
+            offer = self._pending_chain_offer
+            success, msg = game.current_quest_manager.activate_chain_quest(
+                offer["quest_card"], self.hex_grid, game.current_player,
+                offer.get("inherited_context", {})
+            )
+            self.add_to_log(msg)
+        else:
+            self.add_to_log("Quest chain declined.")
+        if hasattr(self, '_pending_chain_offer'):
+            del self._pending_chain_offer
+
     def add_to_log(self, message):
         if message:
             self.log.append(message)
@@ -3966,6 +4018,7 @@ class GameScreen:
             quest_results = game.current_quest_manager.update("unit_death", {"unit": defeated_unit}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
                 self.add_to_log(msg)
+            self._handle_quest_chain()
 
         if defeated_units:
             self.update_quest_button()
@@ -4133,6 +4186,7 @@ class GameScreen:
             quest_results = game.current_quest_manager.update("turn_end", {}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
                 self.add_to_log(msg)
+            self._handle_quest_chain()
 
             # Check level completion (only matters for campaigns)
             level_complete = self.check_level_completion()
@@ -4188,6 +4242,7 @@ class GameScreen:
         quest_results = game.current_quest_manager.update("turn_end", {}, self.hex_grid, game.current_player)
         for quest, result, msg in quest_results:
             self.add_to_log(msg)
+        self._handle_quest_chain()
 
         # Check level completion (only matters for campaigns)
         if self.check_level_completion():
@@ -4292,6 +4347,7 @@ class GameScreen:
                 quest_results = game.current_quest_manager.update("unit_death", {"unit": dead_unit}, self.hex_grid, game.current_player)
                 for quest, result, msg in quest_results:
                     self.add_to_log(msg)
+                self._handle_quest_chain()
             self.player_info_label.set_text(self.get_player_info())
 
         self.advance_turn()
@@ -4481,6 +4537,7 @@ class GameScreen:
                                     quest_results = game.current_quest_manager.update("unit_death", {"unit": hit_unit}, self.hex_grid, current_player)
                                     for quest, qresult, msg in quest_results:
                                         self.add_to_log(msg)
+                                    self._handle_quest_chain()
                             self.update_quest_button()
                             self.show_stats(None)
                         else:
@@ -4495,6 +4552,7 @@ class GameScreen:
                                 quest_results = game.current_quest_manager.update("unit_death", {"unit": unit}, self.hex_grid, current_player)
                                 for quest, qresult, msg in quest_results:
                                     self.add_to_log(msg)
+                                self._handle_quest_chain()
                                 self.update_quest_button()
                                 self.show_stats(None)
                         self.player_info_label.set_text(self.get_player_info())
@@ -4539,6 +4597,7 @@ class GameScreen:
                             quest_results = game.current_quest_manager.update("unit_death", {"unit": unit}, self.hex_grid, current_player)
                             for quest, result, msg in quest_results:
                                 self.add_to_log(msg)
+                            self._handle_quest_chain()
                             self.update_quest_button()
                             self.show_stats(None)
                     self.player_info_label.set_text(self.get_player_info())
@@ -4596,6 +4655,7 @@ class GameScreen:
                             )
                             for quest, result, qmsg in quest_results:
                                 self.add_to_log(qmsg)
+                            self._handle_quest_chain()
                             # Draw card if applicable
                             card, card_msg = self.hex_grid.draw_card(hex_pos[0], hex_pos[1], self.card_manager)
                             if card:

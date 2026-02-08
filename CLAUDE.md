@@ -69,6 +69,10 @@ All apps launch fullscreen. Press ESC to exit.
 - **PlaceholderResolver** - Draws cards, spawns units, fills template text
 - **ActiveQuest** - Tracks spawned units/locations, checks success/failure conditions
 - Condition types: `unit_death`, `player_death`, `unit_reaches_location`, `turn_limit`, `enemy_defeated`
+- **Quest Chains**: Quest cards can define `Chain_Config` JSON to trigger follow-up quests on success/failure
+  - Modes: `auto_activate` (immediate), `offer` (player chooses Accept/Decline), `none`
+  - `inherit_placeholders` carries resolved NPCs/locations forward to the next quest
+  - Chain config stored as JSON string in card data (like Outcomes/Rewards)
 
 ### Instance System (`instance_system.py`)
 Random events with weighted probability outcomes:
@@ -211,6 +215,8 @@ Uses (row, col) offset coordinates with 6 directional adjacency. HexGrid class h
 3. **CampaignMaker** → Link levels into campaigns with deck config (saved to `campaigns/*.json`)
 4. **RangeViewer** → Test attack/effect ranges (7 patterns: Line of Sight, Melee, Area Effect, Echo, Multi Echo, Perimeter, Mist/Shadow)
 5. **JunkRPG** → Play and test
+6. **csv_card_importer.py** → Bulk import cards from CSV (`--dry-run`, `--deck`, `--use-name-as-id`, `--generate-template`)
+7. **card_template_generator.py** → Generate card variants from JSON templates in `card_templates/` (`--count`, `--seed`, `--deck`, `--dry-run`)
 
 ## Gotchas
 
@@ -220,7 +226,7 @@ Uses (row, col) offset coordinates with 6 directional adjacency. HexGrid class h
 - Use `card_utils.load_card()` for safe card loading (returns None on missing files instead of crashing)
 - `card_index.json` must be updated when adding cards for discovery
 - Cards store nested JSON as strings (e.g., `Outcomes`, `Placeholders`) - CardMaker validates JSON before saving, parse with `json.loads()` at runtime
-- JSON fields validated by CardMaker: `Outcomes`, `Choices`, `Placeholders`, `Success_Conditions`, `Failure_Conditions`, `Rewards`, `Upgrade_Material_Cost`
+- JSON fields validated by CardMaker: `Outcomes`, `Choices`, `Placeholders`, `Success_Conditions`, `Failure_Conditions`, `Rewards`, `Upgrade_Material_Cost`, `Chain_Config`
 - Supports 2-player local multiplayer mode
 - Game supports both old campaign format (`levels` array) and new format (`stages` array with deck_config)
 - Weapon cards with `Requires_Ammo: true` deal 0 damage without equipped ammunition
