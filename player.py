@@ -110,11 +110,12 @@ class Player:
         self.image_scale_factor = 1.2
 
     def get_effective_movement(self, party):
-        """Return movement, boosted to 10 if a Mount is in the party."""
+        """Return movement, boosted by Mount_Movement if a Mount is in the party."""
         for card in party:
             data = card.get_current_data()
-            if data.get("Special Skill") == "Mount" or data.get("2nd_State_Special Skill") == "Mount":
-                return max(self.movement, 10)
+            if data.get("Special Skill") == "Mount":
+                mount_movement = int(data.get("Mount_Movement", 10) or 10)
+                return max(self.movement, mount_movement)
         return self.movement
 
     def attack(self, enemy, attack_name, grid):
