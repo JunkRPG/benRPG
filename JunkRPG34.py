@@ -218,6 +218,7 @@ class InventoryScreen:
         self.equip_tool_button = None
         self.equip_accessory_button = None  # For tool belts and accessories
         self.browse_cards_button = None  # Creative mode: browse all cards
+        self.read_guide_button = None  # For reading Guide documents
         self.info_text = None
         self.close_button = None
         self.selected_card = None
@@ -251,11 +252,15 @@ class InventoryScreen:
                                          manager, container=self.window)
         self.use_junk_button = UIButton(pygame.Rect(10, 565, column_width, 35), "Use Item", manager, container=self.window)
 
-        # Documents (column 2)
-        documents_cards = [card for card in game.current_player.inventory if card.current_state == 1 and card.card_data["card_type"] == "Document Card"]
-        self.documents_list = UISelectionList(pygame.Rect(column_width + 10, 60, column_width, column_height),
+        # Documents (column 2) - include Guide cards in both states
+        documents_cards = [card for card in game.current_player.inventory
+                          if card.card_data["card_type"] == "Document Card"
+                          and (card.current_state == 1 or card.card_data.get("subclass") == "Guide")]
+        self.documents_list = UISelectionList(pygame.Rect(column_width + 10, 60, column_width, column_height - 45),
                                               [card.get_current_data().get("Name", "Unnamed") for card in documents_cards] or ["No documents"],
                                               manager, container=self.window)
+        self.read_guide_button = UIButton(pygame.Rect(column_width + 10, column_height + 20, column_width, 35),
+                                          "Read Guide", manager, container=self.window)
 
         # Weapons (column 3)
         weapons_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") in ["Melee", "Projectile", "Both"]]
@@ -357,6 +362,15 @@ class InventoryScreen:
                         self.info_text.set_text("<font color='#FF0000'>Select a tool belt or accessory to equip</font>")
                 else:
                     self.info_text.set_text("<font color='#FF0000'>Select a tool belt or accessory to equip</font>")
+            elif self.read_guide_button and event.ui_element == self.read_guide_button:
+                # Read Guide document to learn a blueprint
+                if self.selected_card and self.selected_from_list == "documents" and self.selected_card.card_data.get("subclass") == "Guide":
+                    message = game.current_player.read_guide(self.selected_card, game.card_manager)
+                    self.info_text.set_text(f"<font color='#00FFFF'>{message}</font>")
+                    game_screen.add_to_log(message)
+                    self.initialize_screen()
+                else:
+                    self.info_text.set_text("<font color='#FF0000'>Select a Guide document to read</font>")
 
         elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
             selected_name = event.text
@@ -372,8 +386,8 @@ class InventoryScreen:
             elif event.ui_element == self.documents_list:
                 self.selected_from_list = "documents"
                 self.selected_card = next((card for card in game.current_player.inventory
-                                          if card.current_state == 1
-                                          and card.card_data["card_type"] == "Document Card"
+                                          if card.card_data["card_type"] == "Document Card"
+                                          and (card.current_state == 1 or card.card_data.get("subclass") == "Guide")
                                           and card.get_current_data().get("Name") == clean_name), None)
             elif event.ui_element == self.weapons_list:
                 self.selected_from_list = "weapons"
@@ -4569,7 +4583,8 @@ class GameScreen:
                             self.initialize_screen()  # Refresh UI
                 elif not current_player.movement_used and not unit:
                     path = self.hex_grid.find_path(current_player.position, hex_pos)
-                    if path and len(path) - 1 <= current_player.movement:
+                    effective_movement = current_player.get_effective_movement(game.current_party)
+                    if path and len(path) - 1 <= effective_movement:
                         success, msg = self.hex_grid.move_unit(current_player, *hex_pos)
                         if success:
                             self.add_to_log(msg)
@@ -4924,7 +4939,8 @@ class GameScreen:
         # Check animation state early so range displays are accurate this frame
         self.animating = self.check_animations()
         player_alive = current_player.hp > 0
-        movement_range = self.hex_grid.get_valid_moves(current_player.position, current_player.movement) if is_player_turn and player_alive and not current_player.movement_used and not self.animating else None
+        effective_movement = current_player.get_effective_movement(game.current_party)
+        movement_range = self.hex_grid.get_valid_moves(current_player.position, effective_movement) if is_player_turn and player_alive and not current_player.movement_used and not self.animating else None
 
         # Build list of all available attack ranges to display simultaneously
         attack_ranges = []

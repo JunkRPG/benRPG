@@ -1,0 +1,22 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Field Study: Shield Work",
+    "Description": "Blueprints for reinforcing a wooden shield with iron bands and rivets.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "",
+    "Requirements: Refined Materials": "",
+    "Requirements: Wood": "1",
+    "Requirements: Metal": "5",
+    "2nd_state_Name": "Iron Buckler",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "12",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "0",
+    "2nd_state_Weapon Image": ""
+  }
+}

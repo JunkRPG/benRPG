@@ -1,0 +1,23 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Bright Idea: Leaf Bandage",
+    "Description": "A diagram showing how to wrap healing herbs in large leaves to make a poultice.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "",
+    "Requirements: Wood": "",
+    "Requirements: Metal": "",
+    "2nd_state_Name": "Herbal Bandage",
+    "2nd_state_Type": "Consumable",
+    "2nd_state_Subtype": "Healing",
+    "2nd_state_Item Image": "",
+    "2nd_state_Use_HP": "+10HP",
+    "2nd_state_Revert_Chance": "40",
+    "2nd_state_Use_Placeholder": "TBD"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Bright Idea: Rock Sling",
+    "Description": "Instructions for crafting a simple sling from rope and leather scraps. Fling rocks at your problems.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "",
+    "Requirements: Wood": "1",
+    "Requirements: Metal": "",
+    "2nd_state_Name": "Rock Sling",
+    "2nd_state_Type": "Projectile",
+    "2nd_state_Melee Damage": "0",
+    "2nd_state_Projectile Damage": "6",
+    "2nd_state_Projectile Range": "3",
+    "2nd_state_Range_Type": "line_of_sight",
+    "2nd_state_Range_Distance": "3",
+    "2nd_state_Include_Position": "false",
+    "2nd_state_Exclude_Adjacent": "false",
+    "2nd_state_Requires_Ammo": "false",
+    "2nd_state_Weapon Image": ""
+  }
+}

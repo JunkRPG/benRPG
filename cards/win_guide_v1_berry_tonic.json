@@ -1,0 +1,23 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Bright Idea: Berry Juice",
+    "Description": "A recipe for squeezing wild berries into a restorative drink.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "1",
+    "Requirements: Refined Materials": "",
+    "Requirements: Wood": "",
+    "Requirements: Metal": "",
+    "2nd_state_Name": "Berry Tonic",
+    "2nd_state_Type": "Consumable",
+    "2nd_state_Subtype": "Healing",
+    "2nd_state_Item Image": "",
+    "2nd_state_Use_HP": "+8HP",
+    "2nd_state_Revert_Chance": "50",
+    "2nd_state_Use_Placeholder": "TBD"
+  }
+}

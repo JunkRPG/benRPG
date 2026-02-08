@@ -1,0 +1,28 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Field Study: Emergency Medicine",
+    "Description": "Comprehensive instructions for assembling a field medic kit capable of reviving fallen allies.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "3",
+    "Requirements: Refined Materials": "2",
+    "Requirements: Wood": "",
+    "Requirements: Metal": "1",
+    "2nd_state_Name": "Field Medic Kit",
+    "2nd_state_Type": "Consumable",
+    "2nd_state_Subtype": "Revival",
+    "2nd_state_Item Image": "",
+    "2nd_state_Use_HP": "+25HP",
+    "2nd_state_Revival": "true",
+    "2nd_state_Effect_Range_Type": "area_effect",
+    "2nd_state_Effect_Range_Distance": "1",
+    "2nd_state_Effect_Include_Position": "false",
+    "2nd_state_Effect_Exclude_Adjacent": "false",
+    "2nd_state_Revert_Chance": "60",
+    "2nd_state_Use_Placeholder": "TBD"
+  }
+}

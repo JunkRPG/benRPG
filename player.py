@@ -12,7 +12,8 @@ CHARACTER_CLASSES = {
         "starting_kit": [
             {"card_id": "starter_ranger_bow", "state": 1},
             {"card_id": "starter_ranger_bowstring", "state": 1},
-            {"card_id": "starter_ranger_curved_branch", "state": 1}
+            {"card_id": "starter_ranger_curved_branch", "state": 1},
+            {"card_id": "win_guide", "state": 1}
         ]
     },
     "Warrior": {
@@ -23,7 +24,8 @@ CHARACTER_CLASSES = {
             {"card_id": "starter_warrior_combat_bow", "state": 1},
             {"card_id": "starter_warrior_bowstring", "state": 1},
             {"card_id": "starter_warrior_metal_wraps", "state": 1},
-            {"card_id": "starter_warrior_arrows", "state": 2}
+            {"card_id": "starter_warrior_arrows", "state": 2},
+            {"card_id": "win_guide", "state": 1}
         ]
     },
     "Tank": {
@@ -33,7 +35,8 @@ CHARACTER_CLASSES = {
         "starting_kit": [
             {"card_id": "starter_tank_sledgehammer_plans", "state": 1},
             {"card_id": "starter_tank_hammer_head", "state": 1},
-            {"card_id": "starter_tank_branch", "state": 1}
+            {"card_id": "starter_tank_branch", "state": 1},
+            {"card_id": "win_guide", "state": 1}
         ]
     }
 }
@@ -105,6 +108,14 @@ class Player:
             print("Player image not found, using default circle")
             self.image = None
         self.image_scale_factor = 1.2
+
+    def get_effective_movement(self, party):
+        """Return movement, boosted to 10 if a Mount is in the party."""
+        for card in party:
+            data = card.get_current_data()
+            if data.get("Special Skill") == "Mount" or data.get("2nd_State_Special Skill") == "Mount":
+                return max(self.movement, 10)
+        return self.movement
 
     def attack(self, enemy, attack_name, grid):
         is_projectile = attack_name == self.attacks["projectile"]["name"]
@@ -1098,6 +1109,91 @@ class Player:
             # Failed search
             self.action_used = True
             return False, f"Searched but found nothing. (Used {card_name}, rolled {roll} vs {success_chance}%)", None
+
+    def read_guide(self, guide_card, card_manager):
+        """
+        Read a Guide document to learn a blueprint. Costs the player's action.
+
+        Args:
+            guide_card: The Guide InventoryCard to read
+            card_manager: The CardManager instance for loading cards
+
+        Returns:
+            str: Result message
+        """
+        import json
+
+        if self.action_used:
+            return "Action already used this turn"
+
+        if guide_card.card_data.get("subclass") != "Guide":
+            return "This is not a guide"
+
+        current_data = guide_card.get_current_data()
+        deck_path = current_data.get("Guide_Deck", "")
+        draw_chance = int(current_data.get("Guide_Draw_Chance", 50) or 50)
+
+        if not deck_path:
+            return "Guide has no associated deck"
+
+        # Load the deck file
+        try:
+            from deck_utils import resolve_deck_path
+            resolved_path = resolve_deck_path(deck_path)
+            with open(resolved_path, 'r') as f:
+                deck_data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            return f"Could not load guide deck: {e}"
+
+        all_card_ids = deck_data.get("cards", [])
+        if not all_card_ids:
+            return "Guide deck is empty"
+
+        # Filter out already-drawn cards (no duplicates)
+        available_ids = [cid for cid in all_card_ids if cid not in guide_card.guide_drawn_ids]
+
+        if not available_ids:
+            return "You have already mastered this volume"
+
+        # Costs action regardless of success
+        self.action_used = True
+
+        # Roll against draw chance
+        roll = random.randint(1, 100)
+        if roll > draw_chance:
+            remaining = len(available_ids)
+            return f"You studied the guide but didn't learn anything new. ({remaining} pages remain)"
+
+        # Success - draw a random card from available
+        drawn_id = random.choice(available_ids)
+        guide_card.guide_drawn_ids.append(drawn_id)
+
+        # Load the drawn card and add to inventory
+        from card_utils import load_card
+        from inventory_card import InventoryCard
+        card_data = load_card(drawn_id)
+        if not card_data:
+            return f"Error: Could not load blueprint card '{drawn_id}'"
+
+        new_card = InventoryCard(card_data)
+        new_card.current_state = 1  # Blueprint state
+        self.inventory.append(new_card)
+
+        drawn_name = new_card.get_current_data().get("Name", "Unknown Blueprint")
+        remaining = len(all_card_ids) - len(guide_card.guide_drawn_ids)
+
+        # Check if this volume is complete
+        if remaining <= 0:
+            if guide_card.current_state == 1:
+                # Vol. I complete - flip to Vol. II
+                guide_card.guide_drawn_ids = []
+                guide_card.current_state = 2
+                return f"Learned: {drawn_name}! Vol. I complete - guide upgraded to Vol. II!"
+            else:
+                # Vol. II complete - guide fully mastered
+                return f"Learned: {drawn_name}! You have fully mastered the WIN Guide!"
+
+        return f"Learned: {drawn_name}! ({remaining} pages remain)"
 
     def get_location_plans(self):
         """Get all Location_Plan documents in inventory that are still in state 1."""

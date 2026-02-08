@@ -1,0 +1,22 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Field Study: Leather Craft",
+    "Description": "Patterns for stitching together a proper leather tool belt with multiple pouches.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "2",
+    "Requirements: Wood": "",
+    "Requirements: Metal": "",
+    "2nd_state_Name": "Leather Tool Belt",
+    "2nd_state_Type": "Tool_Belt",
+    "2nd_state_Subtype": "Belt",
+    "2nd_state_Extra_Tool_Slots": "2",
+    "2nd_state_Use": "Equip to accessory slot to gain extra tool slots",
+    "2nd_state_Tool Image": ""
+  }
+}

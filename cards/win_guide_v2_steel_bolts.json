@@ -1,0 +1,26 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Field Study: Bolt Making",
+    "Description": "Technical drawings for crafting crossbow bolts with hardened steel tips.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "",
+    "Requirements: Refined Materials": "",
+    "Requirements: Wood": "1",
+    "Requirements: Metal": "2",
+    "2nd_state_Name": "Steel Bolts",
+    "2nd_state_Type": "Ammunition",
+    "2nd_state_Item Image": "",
+    "2nd_state_Use_HP": "+0HP",
+    "2nd_state_Revert_Chance": "0",
+    "2nd_state_Ammo_Type": "Bolt",
+    "2nd_state_Ammo_Damage": "10",
+    "2nd_state_Runout_Chance": "15",
+    "2nd_state_Compatible_Weapons": "Hand Crossbow, Sniper Crossbow",
+    "2nd_state_Use_Placeholder": "TBD"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Field Study: Healing Compounds",
+    "Description": "A recipe for distilling raw herbs into a concentrated healing potion.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "",
+    "Requirements: Metal": "",
+    "2nd_state_Name": "Healing Potion",
+    "2nd_state_Type": "Consumable",
+    "2nd_state_Subtype": "Healing",
+    "2nd_state_Item Image": "",
+    "2nd_state_Use_HP": "+20HP",
+    "2nd_state_Revert_Chance": "30",
+    "2nd_state_Use_Placeholder": "TBD"
+  }
+}

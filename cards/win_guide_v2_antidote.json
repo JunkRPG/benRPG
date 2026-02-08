@@ -1,0 +1,23 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Field Study: Antidote Brewing",
+    "Description": "A formula for brewing an antidote from refined herbs and minerals.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "",
+    "Requirements: Metal": "",
+    "2nd_state_Name": "Antidote Vial",
+    "2nd_state_Type": "Consumable",
+    "2nd_state_Subtype": "Healing",
+    "2nd_state_Item Image": "",
+    "2nd_state_Use_HP": "+15HP",
+    "2nd_state_Revert_Chance": "25",
+    "2nd_state_Use_Placeholder": "TBD"
+  }
+}

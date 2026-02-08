@@ -1,0 +1,28 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Field Study: Bow Craft",
+    "Description": "Plans for constructing a compact shortbow from flexible wood and cord.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "",
+    "Requirements: Wood": "3",
+    "Requirements: Metal": "",
+    "2nd_state_Name": "Shortbow",
+    "2nd_state_Type": "Projectile",
+    "2nd_state_Melee Damage": "0",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "4",
+    "2nd_state_Range_Type": "line_of_sight",
+    "2nd_state_Range_Distance": "4",
+    "2nd_state_Include_Position": "false",
+    "2nd_state_Exclude_Adjacent": "false",
+    "2nd_state_Requires_Ammo": "true",
+    "2nd_state_Compatible_Ammo": "Arrow",
+    "2nd_state_Weapon Image": ""
+  }
+}

@@ -5,6 +5,7 @@ class InventoryCard:
         self.card_data = card_data
         self.states = card_data.get("states", 1)
         self.current_state = 1 if self.states >= 1 else None
+        self.guide_drawn_ids = []  # Track card IDs drawn from Guide decks
         # Flip animation attributes
         self.flip_animation_active = False
         self.flip_progress = 0.0  # 0 to 1

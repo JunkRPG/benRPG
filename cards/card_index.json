@@ -1657,5 +1657,173 @@
     "blueprint_subclass": null,
     "states": 1,
     "name": "The Hollow Knight"
+  },
+  "beta_npc_horse": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Wild Horse"
+  },
+  "beta_location_horse_stable": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Abandoned Horse Stable"
+  },
+  "beta_location_plan_horse_stable": {
+    "type": "Document Card",
+    "subclass": "Location_Plan",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Horse Stable Blueprint"
+  },
+  "win_guide": {
+    "type": "Document Card",
+    "subclass": "Guide",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "WIN Guide Vol. I"
+  },
+  "win_guide_v1_pointy_stick": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Bright Idea: Pointy Stick"
+  },
+  "win_guide_v1_rock_sling": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Bright Idea: Rock Sling"
+  },
+  "win_guide_v1_leaf_bandage": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Consumable_Item",
+    "states": 2,
+    "name": "Bright Idea: Leaf Bandage"
+  },
+  "win_guide_v1_throwing_stones": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Consumable_Item",
+    "states": 2,
+    "name": "Bright Idea: Throwing Stones"
+  },
+  "win_guide_v1_wooden_buckler": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Bright Idea: Wooden Shield"
+  },
+  "win_guide_v1_makeshift_belt": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Tool",
+    "states": 2,
+    "name": "Bright Idea: Pocket Belt"
+  },
+  "win_guide_v1_rock_hammer": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Tool",
+    "states": 2,
+    "name": "Bright Idea: Smash Rock"
+  },
+  "win_guide_v1_berry_tonic": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Consumable_Item",
+    "states": 2,
+    "name": "Bright Idea: Berry Juice"
+  },
+  "win_guide_v1_bone_arrows": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Consumable_Item",
+    "states": 2,
+    "name": "Bright Idea: Bone Tips"
+  },
+  "win_guide_v1_rope_snare": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Tool",
+    "states": 2,
+    "name": "Bright Idea: Snare Trap"
+  },
+  "win_guide_v2_iron_sword": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Field Study: Blade Forging"
+  },
+  "win_guide_v2_shortbow": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Field Study: Bow Craft"
+  },
+  "win_guide_v2_healing_potion": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Consumable_Item",
+    "states": 2,
+    "name": "Field Study: Healing Compounds"
+  },
+  "win_guide_v2_iron_buckler": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Field Study: Shield Work"
+  },
+  "win_guide_v2_steel_bolts": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Consumable_Item",
+    "states": 2,
+    "name": "Field Study: Bolt Making"
+  },
+  "win_guide_v2_leather_belt": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Tool",
+    "states": 2,
+    "name": "Field Study: Leather Craft"
+  },
+  "win_guide_v2_reinforced_hammer": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Tool",
+    "states": 2,
+    "name": "Field Study: Tool Smithing"
+  },
+  "win_guide_v2_antidote": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Consumable_Item",
+    "states": 2,
+    "name": "Field Study: Antidote Brewing"
+  },
+  "win_guide_v2_steel_arrows": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Consumable_Item",
+    "states": 2,
+    "name": "Field Study: Arrow Fletching"
+  },
+  "win_guide_v2_medic_kit": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Consumable_Item",
+    "states": 2,
+    "name": "Field Study: Emergency Medicine"
   }
 }

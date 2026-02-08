@@ -1,0 +1,21 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Bright Idea: Smash Rock",
+    "Description": "Instructions for lashing a heavy rock to a stick to make a crude hammer.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "1",
+    "Requirements: Refined Materials": "",
+    "Requirements: Wood": "",
+    "Requirements: Metal": "1",
+    "2nd_state_Name": "Rock Hammer",
+    "2nd_state_Type": "Tool",
+    "2nd_state_Subtype": "Building",
+    "2nd_state_Use": "Required for building locations",
+    "2nd_state_Tool Image": ""
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Field Study: Blade Forging",
+    "Description": "Detailed forging instructions for a short iron blade. Requires a proper anvil and materials.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "",
+    "Requirements: Refined Materials": "",
+    "Requirements: Wood": "2",
+    "Requirements: Metal": "4",
+    "2nd_state_Name": "Iron Short Sword",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "16",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "0",
+    "2nd_state_Weapon Image": ""
+  }
+}

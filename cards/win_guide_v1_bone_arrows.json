@@ -1,0 +1,26 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Bright Idea: Bone Tips",
+    "Description": "A guide to carving bone fragments into serviceable arrowheads.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "1",
+    "Requirements: Refined Materials": "",
+    "Requirements: Wood": "1",
+    "Requirements: Metal": "",
+    "2nd_state_Name": "Bone Arrows",
+    "2nd_state_Type": "Ammunition",
+    "2nd_state_Item Image": "",
+    "2nd_state_Use_HP": "+0HP",
+    "2nd_state_Revert_Chance": "0",
+    "2nd_state_Ammo_Type": "Arrow",
+    "2nd_state_Ammo_Damage": "6",
+    "2nd_state_Runout_Chance": "25",
+    "2nd_state_Compatible_Weapons": "Hunting Bow, Shortbow",
+    "2nd_state_Use_Placeholder": "TBD"
+  }
+}

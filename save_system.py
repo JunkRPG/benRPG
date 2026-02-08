@@ -170,10 +170,13 @@ class SaveManager:
         """Serialize an InventoryCard to a minimal dict."""
         if not card:
             return None
-        return {
+        data = {
             "card_id": card.card_data.get("id", ""),
             "current_state": card.current_state,
         }
+        if hasattr(card, 'guide_drawn_ids') and card.guide_drawn_ids:
+            data["guide_drawn_ids"] = card.guide_drawn_ids
+        return data
 
     def _serialize_card_ref(self, card):
         """Serialize a reference to a card (for matching against inventory on load)."""
@@ -507,6 +510,8 @@ class SaveManager:
             return None
         inv_card = InventoryCard(card_data)
         inv_card.current_state = card_ref.get("current_state", 1)
+        if "guide_drawn_ids" in card_ref:
+            inv_card.guide_drawn_ids = card_ref["guide_drawn_ids"]
         return inv_card
 
     def _find_card_in_list(self, card_list, card_ref):

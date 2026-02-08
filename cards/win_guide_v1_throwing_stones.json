@@ -1,0 +1,26 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Bright Idea: Throwing Stones",
+    "Description": "Notes on selecting and shaping rocks for use as sling ammunition.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "",
+    "Requirements: Wood": "",
+    "Requirements: Metal": "",
+    "2nd_state_Name": "Throwing Stones",
+    "2nd_state_Type": "Ammunition",
+    "2nd_state_Item Image": "",
+    "2nd_state_Use_HP": "+0HP",
+    "2nd_state_Revert_Chance": "0",
+    "2nd_state_Ammo_Type": "Stone",
+    "2nd_state_Ammo_Damage": "4",
+    "2nd_state_Runout_Chance": "20",
+    "2nd_state_Compatible_Weapons": "Rock Sling",
+    "2nd_state_Use_Placeholder": "TBD"
+  }
+}

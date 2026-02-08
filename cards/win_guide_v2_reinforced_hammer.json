@@ -1,0 +1,21 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Field Study: Tool Smithing",
+    "Description": "Diagrams for forging a reinforced hammer with a proper iron head and bound handle.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "",
+    "Requirements: Refined Materials": "",
+    "Requirements: Wood": "2",
+    "Requirements: Metal": "3",
+    "2nd_state_Name": "Reinforced Hammer",
+    "2nd_state_Type": "Tool",
+    "2nd_state_Subtype": "Building",
+    "2nd_state_Use": "Required for building locations",
+    "2nd_state_Tool Image": ""
+  }
+}

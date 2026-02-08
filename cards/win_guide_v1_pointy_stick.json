@@ -1,0 +1,22 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Bright Idea: Pointy Stick",
+    "Description": "A rough sketch showing how to sharpen a branch into a stabbing weapon. Simple but effective.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "1",
+    "Requirements: Refined Materials": "",
+    "Requirements: Wood": "2",
+    "Requirements: Metal": "",
+    "2nd_state_Name": "Sharpened Stick",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "8",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "0",
+    "2nd_state_Weapon Image": ""
+  }
+}
