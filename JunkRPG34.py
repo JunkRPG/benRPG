@@ -2660,7 +2660,6 @@ class GameScreen:
         self.hex_grid = None
         self.ui_elements = []
         self.left_panel_buttons = []
-        self.right_panel_buttons = []
         self.selected_unit = None
         self.card_manager = None
         self.log = []
@@ -3780,17 +3779,6 @@ class GameScreen:
 
         self.ui_elements.extend(self.left_panel_buttons)
         
-        # Right panel now only has remaining controls
-        right_button_width = 150
-        right_panel_x = WINDOW_WIDTH - right_button_width - 10
-        y_pos = 60
-        right_controls = ["Main Menu", "Restart Match", "Save Game", "Settings"]
-        self.right_panel_buttons = [
-            UIButton(pygame.Rect(right_panel_x, y_pos + 40 * i, right_button_width, 30), control, manager) 
-            for i, control in enumerate(right_controls)
-        ]
-        self.ui_elements.extend(self.right_panel_buttons)
-        
         self.ui_elements[0].set_text("<font color='#FFFFFF' size=4>" + "<br>".join(reversed(self.log)) + "</font>")
         self.update_turn_label()
         self.show_stats(None)
@@ -4494,32 +4482,10 @@ class GameScreen:
         return False
 
     def handle_event(self, event):
-        # Always allow right panel buttons (Main Menu, Restart, Settings) even during animation
-        if event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element in self.right_panel_buttons:
-            text = event.ui_element.text
-            if text == "Main Menu":
-                game.current_screen = "main_menu"
-                main_menu.initialize_buttons()
-            elif text == "Restart Match":
-                game.current_screen = "confirmation"
-                confirmation_screen.initialize_screen(
-                    "Are you sure you want to restart?",
-                    options=["Yes", "No"],
-                    callback=self._handle_restart_confirm
-                )
-            elif text == "Save Game":
-                is_player_turn = self.turn_phase in ("player", "player1", "player2")
-                if is_player_turn:
-                    success, result = self.save_manager.save_game(game, self, save_type="manual", save_label="Manual Save")
-                    if success:
-                        self.add_to_log("Game saved.")
-                    else:
-                        self.add_to_log(f"Save failed: {result}")
-                else:
-                    self.add_to_log("Can only save during your turn.")
-            elif text == "Settings":
-                game.current_screen = "game_settings"
-                game_settings_screen.initialize_screen()
+        # ESC opens pause menu
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            game.current_screen = "pause_menu"
+            pause_menu_screen.initialize_screen()
             return
         if self.animating:
             return
@@ -5510,6 +5476,129 @@ class TransitionEventScreen:
 
 
 # ConfirmationScreen class
+class PauseMenuScreen:
+    """In-game pause menu with Continue, Save, Load, Restart, Settings, Main Menu, Quit."""
+
+    def __init__(self):
+        self.ui_elements = []
+        self.buttons = {}
+
+    def initialize_screen(self):
+        manager.clear_and_reset()
+        self.ui_elements = []
+        self.buttons = {}
+
+        # Title
+        self.ui_elements.append(
+            UILabel(pygame.Rect(0, 80, WINDOW_WIDTH, 60), "Paused", manager,
+                    anchors={'centerx': 'centerx'})
+        )
+
+        # Centered column of buttons
+        btn_width = 200
+        btn_height = 50
+        btn_spacing = 70
+        button_labels = [
+            "Continue", "Save Game", "Load Game",
+            "Restart Level", "Settings", "Main Menu", "Quit Game"
+        ]
+        total_height = len(button_labels) * btn_spacing
+        start_y = (WINDOW_HEIGHT - total_height) // 2 + 30
+        btn_x = (WINDOW_WIDTH - btn_width) // 2
+
+        for i, label in enumerate(button_labels):
+            btn = UIButton(
+                pygame.Rect(btn_x, start_y + i * btn_spacing, btn_width, btn_height),
+                label, manager
+            )
+            self.buttons[label] = btn
+            self.ui_elements.append(btn)
+
+    def handle_event(self, event):
+        # ESC returns to game (same as Continue)
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            game.current_screen = "game"
+            game_screen.initialize_screen()
+            return
+
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            text = event.ui_element.text
+            if text == "Continue":
+                game.current_screen = "game"
+                game_screen.initialize_screen()
+            elif text == "Save Game":
+                is_player_turn = game_screen.turn_phase in ("player", "player1", "player2")
+                if is_player_turn:
+                    success, result = game_screen.save_manager.save_game(
+                        game, game_screen, save_type="manual", save_label="Manual Save"
+                    )
+                    msg = "Game saved successfully." if success else f"Save failed: {result}"
+                    game.current_screen = "confirmation"
+                    confirmation_screen.initialize_screen(msg, options=["OK"],
+                        callback=lambda _: self._return_to_pause())
+                else:
+                    game.current_screen = "confirmation"
+                    confirmation_screen.initialize_screen(
+                        "Can only save during your turn.", options=["OK"],
+                        callback=lambda _: self._return_to_pause())
+            elif text == "Load Game":
+                game.current_screen = "confirmation"
+                confirmation_screen.initialize_screen(
+                    "Unsaved progress will be lost. Continue?",
+                    options=["Yes", "No"],
+                    callback=self._handle_load_confirm)
+            elif text == "Restart Level":
+                game.current_screen = "confirmation"
+                confirmation_screen.initialize_screen(
+                    "Are you sure you want to restart?",
+                    options=["Yes", "No"],
+                    callback=game_screen._handle_restart_confirm)
+            elif text == "Settings":
+                game.current_screen = "game_settings"
+                game_settings_screen.initialize_screen()
+            elif text == "Main Menu":
+                game.current_screen = "confirmation"
+                confirmation_screen.initialize_screen(
+                    "Return to main menu? Unsaved progress will be lost.",
+                    options=["Yes", "No"],
+                    callback=self._handle_main_menu_confirm)
+            elif text == "Quit Game":
+                game.current_screen = "confirmation"
+                confirmation_screen.initialize_screen(
+                    "Are you sure you want to quit?",
+                    options=["Yes", "No"],
+                    callback=self._handle_quit_confirm)
+
+    def _return_to_pause(self):
+        game.current_screen = "pause_menu"
+        self.initialize_screen()
+
+    def _handle_load_confirm(self, choice):
+        if choice == "Yes":
+            game.current_screen = "save_load"
+            save_load_screen.initialize_screen(mode="load")
+        else:
+            self._return_to_pause()
+
+    def _handle_main_menu_confirm(self, choice):
+        if choice == "Yes":
+            game.current_screen = "main_menu"
+            main_menu.initialize_buttons()
+        else:
+            self._return_to_pause()
+
+    def _handle_quit_confirm(self, choice):
+        if choice == "Yes":
+            pygame.quit()
+            sys.exit()
+        else:
+            self._return_to_pause()
+
+    def draw(self):
+        screen.fill(DARK_INDIGO)
+        manager.draw_ui(screen)
+
+
 class ConfirmationScreen:
     """A simple centered screen with a message and option buttons. Accepts a callback."""
 
@@ -6052,6 +6141,7 @@ class Game:
             "instance_event": instance_event_screen,
             "transition_event": transition_event_screen,
             "card_browser": card_browser_screen,
+            "pause_menu": pause_menu_screen,
             "confirmation": confirmation_screen,
             "save_load": save_load_screen
         }
@@ -6128,6 +6218,7 @@ recruitment_screen = RecruitmentScreen()
 party_screen = PartyScreen()
 skills_screen = SkillsScreen()
 quest_screen = QuestScreen()
+pause_menu_screen = PauseMenuScreen()
 confirmation_screen = ConfirmationScreen()
 save_load_screen = SaveLoadScreen()
 defeat_screen = DefeatScreen()
@@ -6158,7 +6249,7 @@ while running:
     time_delta = clock.tick(60) / 1000.0
     game.reset_frame_flags()  # Reset per-frame state (like screen change detection)
     for e in event.get():
-        if e.type == pygame.QUIT or (e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE):
+        if e.type == pygame.QUIT:
             running = False
         game.handle_event(e)
         manager.process_events(e)
