@@ -155,7 +155,10 @@ class HexGrid:
                     "npc_health": 0,
                     "npc_max_health": 0,
                     "is_npc_spawn_location": False,
-                    "npc_spawn_deck": None
+                    "npc_spawn_deck": None,
+                    # Defensive location fields
+                    "defenses": [],
+                    "garrison_npcs": []
                 }
                 # Load pre-assigned location card if specified
                 if loc_hex.get("assigned_location_card_id"):
@@ -331,6 +334,44 @@ class HexGrid:
         loc_data["npc_health"] = npc_health
         loc_data["npc_max_health"] = npc_health
         loc_data["npc_spawn_deck"] = npc_spawn_deck if npc_spawn_deck else None
+
+        # Parse defense data (up to 2 attack definitions)
+        loc_data["defenses"] = []
+        for prefix in ["Defense_", "Defense2_"]:
+            state_prefix = "2nd_state_" if state == 2 else ""
+            enabled = str(data.get(f"{state_prefix}{prefix}Enabled", "false")).lower() == "true"
+            if not enabled:
+                continue
+            try:
+                damage = int(data.get(f"{state_prefix}{prefix}Damage", 0) or 0)
+            except (ValueError, TypeError):
+                damage = 0
+            try:
+                range_distance = int(data.get(f"{state_prefix}{prefix}Range_Distance", 0) or 0)
+            except (ValueError, TypeError):
+                range_distance = 0
+            try:
+                passthrough = int(data.get(f"{state_prefix}{prefix}Passthrough_Chance", 0) or 0)
+            except (ValueError, TypeError):
+                passthrough = 0
+            try:
+                color_r = int(data.get(f"{state_prefix}{prefix}Color_R", 255) or 255)
+                color_g = int(data.get(f"{state_prefix}{prefix}Color_G", 165) or 165)
+                color_b = int(data.get(f"{state_prefix}{prefix}Color_B", 0) or 0)
+            except (ValueError, TypeError):
+                color_r, color_g, color_b = 255, 165, 0
+            defense = {
+                "requires_npc": str(data.get(f"{state_prefix}{prefix}Requires_NPC", "false")).lower() == "true",
+                "damage": damage,
+                "range_type": data.get(f"{state_prefix}{prefix}Range_Type", "area_effect"),
+                "range_distance": range_distance,
+                "include_position": str(data.get(f"{state_prefix}{prefix}Include_Position", "false")).lower() == "true",
+                "exclude_adjacent": str(data.get(f"{state_prefix}{prefix}Exclude_Adjacent", "false")).lower() == "true",
+                "passthrough_chance": passthrough,
+                "color": (color_r, color_g, color_b)
+            }
+            if defense["damage"] > 0 and defense["range_distance"] > 0:
+                loc_data["defenses"].append(defense)
 
     # ========== SPAWN LOCATION METHODS ==========
 
@@ -757,6 +798,25 @@ class HexGrid:
         # Refresh shop with new state's shop deck
         self._initialize_shop(row, col)
 
+        # Re-parse state 2 spawn/defense data
+        self._init_spawn_location_data((row, col), card.card_data, 2)
+
+        # Auto-garrison the upgrading NPC if this is a defensive location
+        defenses = loc_data.get("defenses", [])
+        has_npc_defense = any(d.get("requires_npc") for d in defenses)
+        if has_npc_defense and npc_card:
+            npc_data_obj = npc_card.get_current_data() if hasattr(npc_card, 'get_current_data') else npc_card
+            garrison_entry = {
+                "id": npc_card.card_data.get("id") if hasattr(npc_card, 'card_data') else npc_data_obj.get("id", ""),
+                "name": npc_data_obj.get("Name", npc_data_obj.get("name", "Unknown")),
+                "hp": int(npc_data_obj.get("Health", npc_data_obj.get("hp", 10))),
+                "max_hp": int(npc_data_obj.get("Health", npc_data_obj.get("max_hp", 10))),
+                "melee_damage": int(npc_data_obj.get("Melee Damage", npc_data_obj.get("melee_damage", 0))),
+                "projectile_damage": int(npc_data_obj.get("Projectile Damage", npc_data_obj.get("projectile_damage", 0))),
+                "allegiance": npc_data_obj.get("Allegiance (Hostile, Neutral, Allied)", npc_data_obj.get("allegiance", "Allied"))
+            }
+            loc_data["garrison_npcs"].append(garrison_entry)
+
         new_name = card.get_current_data().get("Name", "Upgraded Location")
         return True, f"Location upgraded to {new_name}"
 
@@ -823,6 +883,85 @@ class HexGrid:
 
         npc_data = available.pop(npc_index)
         return npc_data, f"{npc_data['name']} joined your party"
+
+    def garrison_npc_to_location(self, npc_data, location_pos):
+        """Add an NPC data dict to a location's garrison (max 3).
+        Args:
+            npc_data: dict with id, name, hp, max_hp, melee_damage, etc.
+            location_pos: (row, col) tuple
+        Returns: (success, message)
+        """
+        loc_data = self.location_data.get(location_pos)
+        if not loc_data:
+            return False, "No location at that position"
+        garrison = loc_data.get("garrison_npcs", [])
+        if len(garrison) >= 3:
+            return False, "Garrison is full (max 3)"
+        garrison.append(npc_data)
+        loc_data["garrison_npcs"] = garrison
+        return True, f"{npc_data.get('name', 'NPC')} garrisoned at location"
+
+    def garrison_map_npc_to_location(self, unit, location_pos):
+        """Remove an allied Unit from the map and add to a location's garrison.
+        Args:
+            unit: The Unit object to garrison
+            location_pos: (row, col) tuple
+        Returns: (success, message)
+        """
+        loc_data = self.location_data.get(location_pos)
+        if not loc_data:
+            return False, "No location at that position"
+        garrison = loc_data.get("garrison_npcs", [])
+        if len(garrison) >= 3:
+            return False, "Garrison is full (max 3)"
+
+        # Stop any animations
+        unit.animating = False
+        unit.target_pos = None
+
+        # Remove unit from map
+        if unit.position:
+            self.grid[unit.position[0]][unit.position[1]]["unit"] = None
+        if unit in self.units:
+            self.units.remove(unit)
+
+        # Create NPC data dict from unit
+        npc_data = {
+            "id": unit.card_id,
+            "name": unit.name,
+            "hp": unit.hp,
+            "max_hp": unit.max_hp,
+            "melee_damage": unit.melee_damage,
+            "projectile_damage": unit.projectile_damage,
+            "allegiance": unit.allegiance
+        }
+        garrison.append(npc_data)
+        loc_data["garrison_npcs"] = garrison
+        return True, f"{unit.name} garrisoned at location"
+
+    def get_active_defensive_locations(self):
+        """Return list of (pos, loc_data) for locations in state 2 with garrison NPCs
+        and at least one requires_npc defense."""
+        result = []
+        for pos, loc_data in self.location_data.items():
+            if loc_data.get("state", 1) != 2:
+                continue
+            garrison = loc_data.get("garrison_npcs", [])
+            if not garrison:
+                continue
+            defenses = loc_data.get("defenses", [])
+            if any(d.get("requires_npc") for d in defenses):
+                result.append((pos, loc_data))
+        return result
+
+    def get_all_defensive_locations(self):
+        """Return list of (pos, loc_data) for all locations with any defense definitions."""
+        result = []
+        for pos, loc_data in self.location_data.items():
+            defenses = loc_data.get("defenses", [])
+            if defenses:
+                result.append((pos, loc_data))
+        return result
 
     def get_shop_inventory(self, row, col):
         """Get the current shop inventory for a location."""
@@ -1027,7 +1166,10 @@ class HexGrid:
             "npc_health": 0,
             "npc_max_health": 0,
             "is_npc_spawn_location": False,
-            "npc_spawn_deck": None
+            "npc_spawn_deck": None,
+            # Defensive location fields
+            "defenses": [],
+            "garrison_npcs": []
         }
 
         # Initialize shop if defined in card
@@ -1165,14 +1307,16 @@ class HexGrid:
                 return line[:idx + 1]
         return []
 
-    def has_clear_line_of_sight(self, start_pos, target_pos):
+    def has_clear_line_of_sight(self, start_pos, target_pos, ignore_units=False):
         start_row, start_col = start_pos
         end_row, end_col = target_pos
         line = self.get_line_between(start_row, start_col, end_row, end_col)
         if not line:
             return False
         for row, col in line[1:-1]:
-            if self.grid[row][col]["unit"] is not None or not self.grid[row][col]["accessible"]:
+            if not self.grid[row][col]["accessible"]:
+                return False
+            if not ignore_units and self.grid[row][col]["unit"] is not None:
                 return False
         return True
 
@@ -1279,7 +1423,7 @@ class HexGrid:
                     return pos
         return None
 
-    def get_attack_range(self, start, range_limit, is_projectile=False):
+    def get_attack_range(self, start, range_limit, is_projectile=False, piercing=False):
         if is_projectile:
             attack_hexes = set()
             row, col = start
@@ -1287,14 +1431,14 @@ class HexGrid:
                 line = self.get_line(row, col, dir, range_limit)
                 for hex_pos in line:
                     distance = self.hex_distance(start, hex_pos)
-                    if 1 < distance <= range_limit and self.has_clear_line_of_sight(start, hex_pos):
+                    if 1 < distance <= range_limit and self.has_clear_line_of_sight(start, hex_pos, ignore_units=piercing):
                         attack_hexes.add(hex_pos)
             return attack_hexes
         else:
             # For melee, get all adjacent hexes (including those with units)
             return set(self.get_adjacent_hexes(*start))
 
-    def calculate_range(self, pos, distance, pattern, include_pos=False, exclude_adj=False):
+    def calculate_range(self, pos, distance, pattern, include_pos=False, exclude_adj=False, piercing=False):
         """
         Calculate range hexes based on pattern type and modifiers.
 
@@ -1313,6 +1457,7 @@ class HexGrid:
             pattern: Pattern type string
             include_pos: Include caster's hex in range
             exclude_adj: Exclude adjacent hexes from range
+            piercing: If True, line of sight ignores units (for piercing shots)
 
         Returns:
             set: Set of (row, col) positions in range
@@ -1323,7 +1468,7 @@ class HexGrid:
         range_set = set()
 
         if pattern == "line_of_sight":
-            range_set = self.get_attack_range(pos, distance, is_projectile=True)
+            range_set = self.get_attack_range(pos, distance, is_projectile=True, piercing=piercing)
 
         elif pattern == "melee":
             range_set = self.get_attack_range(pos, distance, is_projectile=False)
@@ -1443,7 +1588,7 @@ class HexGrid:
 
         return range_set
 
-    def is_in_range(self, attacker_pos, target_pos, distance, pattern, include_pos=False, exclude_adj=False):
+    def is_in_range(self, attacker_pos, target_pos, distance, pattern, include_pos=False, exclude_adj=False, piercing=False):
         """
         Check if a target position is within attack range using specified pattern.
 
@@ -1454,11 +1599,12 @@ class HexGrid:
             pattern: Pattern type string
             include_pos: Include caster's hex in range
             exclude_adj: Exclude adjacent hexes from range
+            piercing: If True, line of sight ignores units
 
         Returns:
             bool: True if target is in range
         """
-        range_set = self.calculate_range(attacker_pos, distance, pattern, include_pos, exclude_adj)
+        range_set = self.calculate_range(attacker_pos, distance, pattern, include_pos, exclude_adj, piercing=piercing)
         return target_pos in range_set
 
     def get_targetable_units(self, attack_range, attacker_allegiance="player"):
@@ -1493,7 +1639,7 @@ class HexGrid:
 
         return targetable
 
-    def draw(self, surface, movement_range=None, attack_range=None, colors=None, targetable_units=None, attack_type=None):
+    def draw(self, surface, movement_range=None, attack_ranges=None, colors=None, targetable_units=None):
         if colors is None:
             colors = {
                 'BLUE': (0, 0, 255),
@@ -1555,7 +1701,7 @@ class HexGrid:
                         border_color = colors['ORANGE']
                     pygame.draw.polygon(hex_surface, border_color, points, 3)
                 if self.selected_hex == (row, col):
-                    pygame.draw.polygon(hex_surface, colors['YELLOW'], points, 0)
+                    pygame.draw.polygon(hex_surface, (255, 255, 0, 100), points, 0)
                 pygame.draw.polygon(hex_surface, colors['WHITE'], points, 1)
 
         # Second pass: Draw range rings on top of terrain and hex borders
@@ -1564,18 +1710,39 @@ class HexGrid:
             for col in range(self.cols):
                 if movement_range and (row, col) in movement_range:
                     x, y = self.get_hex_center(row, col)
+                    half_ring = ring_width // 2
+                    move_outline = (0, 0, 120, 220)  # Dark blue
+                    # Outer outline
+                    outer_points = [(x + (self.hex_size + half_ring) * math.cos(math.radians(60 * i)),
+                                     y + (self.hex_size + half_ring) * math.sin(math.radians(60 * i))) for i in range(6)]
+                    pygame.draw.polygon(hex_surface, move_outline, outer_points, 1)
+                    # Color ring
                     points = [(x + self.hex_size * math.cos(math.radians(60 * i)),
                                y + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
                     pygame.draw.polygon(hex_surface, (0, 180, 255, 200), points, ring_width)  # Electric blue
-                if attack_range and (row, col) in attack_range:
-                    x, y = self.get_hex_center(row, col)
-                    points = [(x + self.hex_size * math.cos(math.radians(60 * i)),
-                               y + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
-                    if attack_type == "melee":
-                        ring_color = (255, 69, 0, 220)  # Orange-red
-                    else:
-                        ring_color = (191, 0, 255, 220)  # Neon purple
-                    pygame.draw.polygon(hex_surface, ring_color, points, ring_width)
+                    # Inner outline
+                    inner_points = [(x + (self.hex_size - half_ring) * math.cos(math.radians(60 * i)),
+                                     y + (self.hex_size - half_ring) * math.sin(math.radians(60 * i))) for i in range(6)]
+                    pygame.draw.polygon(hex_surface, move_outline, inner_points, 1)
+                if attack_ranges:
+                    for ar in attack_ranges:
+                        if (row, col) in ar["range"]:
+                            x, y = self.get_hex_center(row, col)
+                            inset_size = self.hex_size * ar["inset"]
+                            half_ring = ring_width // 2
+                            outline_color = ar.get("outline", (0, 0, 0, 220))
+                            # Outer outline
+                            outer_points = [(x + (inset_size + half_ring) * math.cos(math.radians(60 * i)),
+                                             y + (inset_size + half_ring) * math.sin(math.radians(60 * i))) for i in range(6)]
+                            pygame.draw.polygon(hex_surface, outline_color, outer_points, 1)
+                            # Color ring
+                            points = [(x + inset_size * math.cos(math.radians(60 * i)),
+                                       y + inset_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                            pygame.draw.polygon(hex_surface, ar["color"], points, ring_width)
+                            # Inner outline
+                            inner_points = [(x + (inset_size - half_ring) * math.cos(math.radians(60 * i)),
+                                             y + (inset_size - half_ring) * math.sin(math.radians(60 * i))) for i in range(6)]
+                            pygame.draw.polygon(hex_surface, outline_color, inner_points, 1)
 
         # Third pass: Draw location icons and names on top of range rings
         for (row, col), loc_data in self.location_data.items():
@@ -1691,6 +1858,20 @@ class HexGrid:
                     name_surface = self.font.render(loc_name, True, colors['WHITE'])
                     name_rect = name_surface.get_rect(centerx=x, top=y + house_size * 0.5)
                     hex_surface.blit(name_surface, name_rect)
+
+                # Draw garrison indicator (small green circle with count)
+                garrison = loc_data.get("garrison_npcs", [])
+                if garrison:
+                    g_count = len(garrison)
+                    g_radius = max(6, int(self.hex_size * 0.15))
+                    g_x = int(x + self.hex_size * 0.45)
+                    g_y = int(y - self.hex_size * 0.45)
+                    pygame.draw.circle(hex_surface, (0, 180, 0), (g_x, g_y), g_radius)
+                    pygame.draw.circle(hex_surface, colors['WHITE'], (g_x, g_y), g_radius, 1)
+                    g_font = pygame.font.Font(None, max(10, g_radius * 2))
+                    g_text = g_font.render(str(g_count), True, colors['WHITE'])
+                    g_rect = g_text.get_rect(center=(g_x, g_y))
+                    hex_surface.blit(g_text, g_rect)
             else:
                 # Draw unknown building icon for unassigned locations
                 unknown_color = (210, 180, 100)  # Muted gold/tan
@@ -1765,18 +1946,28 @@ class HexGrid:
                                            (ring_radius + 2, ring_radius + 2), ring_radius, 2)
                         hex_surface.blit(glow_surf, (int(pos[0]) - ring_radius - 2, int(pos[1]) - ring_radius - 2))
 
+                # Check if this is a dead player (for grayed-out rendering)
+                is_dead_player = isinstance(unit, Player) and unit.hp <= 0
+
                 if isinstance(unit, Player) and unit.image:
                     scale_factor = (self.hex_size * 1.5 * unit.image_scale_factor) / unit.image.get_height()
                     scaled_image = pygame.transform.scale(unit.image,
                                                          (int(unit.image.get_width() * scale_factor),
                                                           int(unit.image.get_height() * scale_factor)))
+                    if is_dead_player:
+                        # Gray out the image for dead players
+                        scaled_image = scaled_image.copy()
+                        scaled_image.set_alpha(80)
                     image_rect = scaled_image.get_rect(center=(int(pos[0]), int(pos[1])))
                     hex_surface.blit(scaled_image, image_rect)
                     health_bar_y = image_rect.top - 5
                 else:
                     # Use player's custom color if available (multiplayer), otherwise default colors
                     if isinstance(unit, Player):
-                        color = unit.player_color if hasattr(unit, 'player_color') else colors['GREEN']
+                        if is_dead_player:
+                            color = (100, 100, 100)  # Gray for dead players
+                        else:
+                            color = unit.player_color if hasattr(unit, 'player_color') else colors['GREEN']
                     elif unit.allegiance == "Hostile":
                         color = colors['RED']
                     elif unit.allegiance == "Allied":
@@ -1823,5 +2014,15 @@ class HexGrid:
                         damage_rect = damage_surface.get_rect(centerx=pos[0], bottom=text_rect.top - 2)
                         hex_surface.blit(damage_surface, damage_rect)
                 unit.draw_health_bar(hex_surface, (pos[0], health_bar_y))
+
+                # Draw defeated X marker for dead players
+                if is_dead_player:
+                    x_radius = max(8, int(self.hex_size / 4))
+                    cx, cy = int(pos[0]), int(pos[1])
+                    x_surf = pygame.Surface((x_radius * 2 + 4, x_radius * 2 + 4), pygame.SRCALPHA)
+                    xc = x_radius + 2
+                    pygame.draw.line(x_surf, (255, 0, 0, 200), (xc - x_radius, xc - x_radius), (xc + x_radius, xc + x_radius), 3)
+                    pygame.draw.line(x_surf, (255, 0, 0, 200), (xc - x_radius, xc + x_radius), (xc + x_radius, xc - x_radius), 3)
+                    hex_surface.blit(x_surf, (cx - xc, cy - xc))
 
         surface.blit(hex_surface, (0, 0))

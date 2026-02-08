@@ -21,6 +21,7 @@ from instance_system import InstanceManager
 from transition_system import TransitionManager
 from deck_utils import resolve_deck_path
 from card_utils import load_card, load_card_index
+from save_system import SaveManager
 
 # Initialize Pygame and Pygame-GUI
 pygame.init()
@@ -57,6 +58,7 @@ ATTACK_FLASH_DURATION = 500
 os.makedirs("cards", exist_ok=True)
 os.makedirs("levels", exist_ok=True)
 os.makedirs("campaigns", exist_ok=True)
+os.makedirs("saves", exist_ok=True)
 INDEX_FILE = "cards/card_index.json"
 if not os.path.exists(INDEX_FILE):
     with open(INDEX_FILE, 'w') as f:
@@ -64,7 +66,7 @@ if not os.path.exists(INDEX_FILE):
 
 # Character classes
 CHARACTER_CLASSES = {
-    "Ranger": {"hp": 50, "movement": 5, "projectile_range": 5, "attacks": {"Sling": 8, "Punch": 4}, "special_attack": "Multi-target Projectile"},
+    "Ranger": {"hp": 50, "movement": 5, "projectile_range": 5, "attacks": {"Sling": 8, "Punch": 4}, "special_attack": "Piercing Shot"},
     "Warrior": {"hp": 100, "movement": 4, "projectile_range": 4, "attacks": {"Throw Rock": 6, "Kick": 6}, "special_attack": "Double Attack"},
     "Tank": {"hp": 150, "movement": 3, "projectile_range": 3, "attacks": {"Spit": 4, "Head-butt": 8}, "special_attack": "Spin Punch"}
 }
@@ -479,6 +481,12 @@ class LocationScreen:
         self.accept_quest_button = None
         self.selected_quest_index = None
         self.quest_deck_file = None
+        # Garrison system
+        self.garrison_panel_visible = False
+        self.garrison_list = None
+        self.garrison_npc_list = None
+        self.garrison_button = None
+        self.garrison_map_button = None
 
     def initialize_screen(self, location_card, hex_pos, hex_grid):
         self.location_card = location_card
@@ -665,6 +673,68 @@ class LocationScreen:
                 pygame.Rect(790, recruit_y + 190, 380, 35), "Recruit to Party", manager, container=self.window
             )
 
+        # Garrison panel (right side, for defensive locations in state 2)
+        self.garrison_panel_visible = False
+        self.garrison_list = None
+        self.garrison_npc_list = None
+        self.garrison_button = None
+        self.garrison_map_button = None
+
+        loc_data_dict = hex_grid.location_data.get(hex_pos)
+        defenses = loc_data_dict.get("defenses", []) if loc_data_dict else []
+        has_npc_defense = any(d.get("requires_npc") for d in defenses)
+        if location_card.current_state == 2 and has_npc_defense:
+            self.garrison_panel_visible = True
+            garrison = loc_data_dict.get("garrison_npcs", [])
+            garrison_y = 130
+            # Position below upgrade/recruit panels if they exist
+            if self.upgrade_panel_visible:
+                garrison_y = 460
+            if self.recruit_panel_visible:
+                garrison_y = max(garrison_y, 460 if self.upgrade_panel_visible else 360)
+
+            pygame_gui.elements.UILabel(
+                pygame.Rect(790, garrison_y, 380, 25),
+                f"Garrison ({len(garrison)}/3):", manager, container=self.window
+            )
+
+            # Current garrison members
+            garrison_names = [f"{g.get('name', 'Unknown')} (HP: {g.get('hp', 0)}/{g.get('max_hp', 0)})" for g in garrison]
+
+            # Party NPCs available to garrison
+            party_npc_names = []
+            self._garrison_party_npcs = []
+            for card in game.current_party:
+                card_data = card.get_current_data()
+                allegiance = card_data.get("Allegiance (Hostile, Neutral, Allied)", "")
+                if "Allied" in allegiance:
+                    name = card_data.get("Name", "Unknown")
+                    party_npc_names.append(f"[PARTY] {name}")
+                    self._garrison_party_npcs.append(card)
+
+            # On-map allied units available to garrison
+            self._garrison_map_units = []
+            for unit in hex_grid.units:
+                if unit.allegiance == "Allied":
+                    party_npc_names.append(f"[MAP] {unit.name}")
+                    self._garrison_map_units.append(unit)
+
+            all_items = garrison_names + (["---"] if garrison_names and party_npc_names else []) + party_npc_names
+            if not all_items:
+                all_items = ["No NPCs available"]
+
+            self.garrison_npc_list = pygame_gui.elements.UISelectionList(
+                pygame.Rect(790, garrison_y + 30, 380, 180),
+                all_items,
+                manager, container=self.window
+            )
+
+            if len(garrison) < 3 and party_npc_names:
+                self.garrison_button = pygame_gui.elements.UIButton(
+                    pygame.Rect(790, garrison_y + 220, 380, 35),
+                    "Garrison NPC", manager, container=self.window
+                )
+
         # Quest selection panel (shows when view_quests action is used)
         self.quest_list = None
         self.quest_details_text = None
@@ -739,6 +809,11 @@ class LocationScreen:
             # Handle NPC recruitment
             if self.recruit_panel_visible and event.ui_element == self.recruit_button:
                 self.recruit_npc()
+                return
+
+            # Handle garrison NPC button
+            if self.garrison_panel_visible and self.garrison_button and event.ui_element == self.garrison_button:
+                self.garrison_npc()
                 return
 
             # Handle quest acceptance
@@ -1083,6 +1158,62 @@ class LocationScreen:
             self.initialize_screen(new_card, self.hex_pos, self.hex_grid)
         else:
             self.info_text.set_text(f"<font color='#FF0000'>{msg}</font>")
+
+    def garrison_npc(self):
+        """Garrison a party or map NPC at this defensive location."""
+        if not self.garrison_npc_list:
+            return
+
+        selection = self.garrison_npc_list.get_single_selection()
+        if not selection or selection in ("No NPCs available", "---"):
+            self.info_text.set_text("<font color='#FF0000'>Select an NPC to garrison!</font>")
+            return
+
+        if selection.startswith("[PARTY] "):
+            npc_name = selection[8:]  # Strip "[PARTY] "
+            npc_card = None
+            for card in self._garrison_party_npcs:
+                if card.get_current_data().get("Name") == npc_name:
+                    npc_card = card
+                    break
+            if not npc_card:
+                self.info_text.set_text("<font color='#FF0000'>NPC not found in party!</font>")
+                return
+            # Create garrison data from party card
+            card_data = npc_card.get_current_data()
+            garrison_entry = {
+                "id": npc_card.card_data.get("id", ""),
+                "name": card_data.get("Name", "Unknown"),
+                "hp": int(card_data.get("Health", 10)),
+                "max_hp": int(card_data.get("Health", 10)),
+                "melee_damage": int(card_data.get("Melee Damage", 0)),
+                "projectile_damage": int(card_data.get("Projectile Damage", 0)),
+                "allegiance": card_data.get("Allegiance (Hostile, Neutral, Allied)", "Allied")
+            }
+            success, msg = self.hex_grid.garrison_npc_to_location(garrison_entry, self.hex_pos)
+            if success:
+                game.current_party.remove(npc_card)
+                game_screen.add_to_log(msg)
+                self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
+                new_card = self.hex_grid.get_location_card(self.hex_pos[0], self.hex_pos[1])
+                self.initialize_screen(new_card, self.hex_pos, self.hex_grid)
+            else:
+                self.info_text.set_text(f"<font color='#FF0000'>{msg}</font>")
+
+        elif selection.startswith("[MAP] "):
+            unit_name = selection[6:]  # Strip "[MAP] "
+            target_unit = None
+            for unit in self._garrison_map_units:
+                if unit.name == unit_name:
+                    target_unit = unit
+                    break
+            if not target_unit:
+                self.info_text.set_text("<font color='#FF0000'>Unit not found on map!</font>")
+                return
+            # Set garrison target so unit pathfinds there on its turn
+            target_unit.garrison_target_location = self.hex_pos
+            self.info_text.set_text(f"<font color='#00FF00'>{unit_name} will move to garrison this location</font>")
+            game_screen.add_to_log(f"{unit_name} ordered to garrison location")
 
     def recruit_npc(self):
         """Recruit an NPC from the location to the player's party."""
@@ -2273,22 +2404,25 @@ class MainMenu:
 
     def initialize_buttons(self):
         manager.clear_and_reset()
+        btn_x = (WINDOW_WIDTH - 200) // 2
         self.ui_elements = [
             UILabel(pygame.Rect(0, 50, WINDOW_WIDTH, 50), "Hex-Grid RPG", manager, object_id="#title_label", anchors={'centerx': 'centerx'}),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 200, 200, 50), "New Campaign", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 270, 200, 50), "Load Campaign", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 340, 200, 50), "Load Level", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 410, 200, 50), "2-Player Local", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 480, 200, 50), "Settings", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 550, 200, 50), "Quit", manager)
+            UIButton(pygame.Rect(btn_x, 200, 200, 50), "New Campaign", manager),
+            UIButton(pygame.Rect(btn_x, 270, 200, 50), "Load Campaign", manager),
+            UIButton(pygame.Rect(btn_x, 340, 200, 50), "Load Level", manager),
+            UIButton(pygame.Rect(btn_x, 410, 200, 50), "Load Game", manager),
+            UIButton(pygame.Rect(btn_x, 480, 200, 50), "2-Player Local", manager),
+            UIButton(pygame.Rect(btn_x, 550, 200, 50), "Settings", manager),
+            UIButton(pygame.Rect(btn_x, 620, 200, 50), "Quit", manager)
         ]
 
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.ui_elements[1]:  # New Campaign
+            text = event.ui_element.text
+            if text == "New Campaign":
                 game.current_screen = "character_creation"
                 character_creation_screen.initialize_screen()
-            elif event.ui_element == self.ui_elements[2]:  # Load Campaign
+            elif text == "Load Campaign":
                 root = tk.Tk()
                 root.withdraw()
                 file_path = filedialog.askopenfilename(initialdir="campaigns", filetypes=[("JSON files", "*.json")])
@@ -2298,7 +2432,7 @@ class MainMenu:
                     character_creation_screen.initialize_screen(campaign_file=file_path)
                 else:
                     print("No campaign file selected")
-            elif event.ui_element == self.ui_elements[3]:  # Load Level
+            elif text == "Load Level":
                 root = tk.Tk()
                 root.withdraw()
                 file_path = filedialog.askopenfilename(initialdir="levels", filetypes=[("JSON files", "*.json")])
@@ -2308,13 +2442,16 @@ class MainMenu:
                     player_count_screen.initialize_screen(level_file=file_path)
                 else:
                     print("No level file selected")
-            elif event.ui_element == self.ui_elements[4]:  # 2-Player Local
+            elif text == "Load Game":
+                game.current_screen = "save_load"
+                save_load_screen.initialize_screen(mode="load")
+            elif text == "2-Player Local":
                 game.current_screen = "multiplayer_character_creation"
                 multiplayer_character_creation_screen.initialize_screen()
-            elif event.ui_element == self.ui_elements[5]:  # Settings
+            elif text == "Settings":
                 game.current_screen = "settings"
                 settings_screen.initialize_screen()
-            elif event.ui_element == self.ui_elements[6]:  # Quit
+            elif text == "Quit":
                 pygame.quit()
                 sys.exit()
 
@@ -2512,6 +2649,9 @@ class GameScreen:
         self.selected_unit = None
         self.card_manager = None
         self.log = []
+        self.log_minimized = True  # Log starts minimized
+        self.log_toggle_button = None
+        self.log_mini_label = None  # Single-line minimized log
         self.is_player_turn = True
         self.selected_attack = None
         self.turn_phase = "player"
@@ -2550,16 +2690,16 @@ class GameScreen:
         self.pending_location = None  # {"card": loc_card, "pos": hex_pos, "hex_grid": hex_grid}
         # Pending defeat screen (show after death animation completes)
         self.pending_defeat = False
-        # Pending auto-attack mode (show after movement animation completes)
-        self.pending_auto_attack = None  # "melee" or "projectile"
-        # Current location button (when player is standing on a location)
-        self.location_button = None
         self.current_location_hex = None  # (row, col) if player is on a location
         # Building/placement mode
         self.placement_mode = False
         self.placement_card = None  # The location card being placed
         # Multiplayer transition target cycle: 0=P1, 1=P2, 2=Both
         self.transition_target_cycle = 0
+        # Turn cycle counter for autosave timing
+        self.turn_cycle_count = 0
+        # Save manager
+        self.save_manager = SaveManager()
         self.colors = {
             'BLUE': BLUE,
             'DARK_RED_ALPHA': DARK_RED_ALPHA,
@@ -2592,7 +2732,6 @@ class GameScreen:
         self.waiting_for_animation = False
         self.pending_location = None
         self.pending_defeat = False
-        self.location_button = None
         self.current_location_hex = None
         self.transition_target_cycle = 0
         # Reset party
@@ -2677,7 +2816,10 @@ class GameScreen:
         
         self.hex_grid.active_turn_unit = game.player
         self.game_started = True
+        self.turn_cycle_count = 0
         self.initialize_screen()
+        # Autosave at level start
+        self.save_manager.save_game(game, self, save_type="autosave", save_label="Level Start")
 
     def start_new_game_multiplayer(self, level_file=None):
         """Start a new multiplayer game with two players."""
@@ -2696,7 +2838,6 @@ class GameScreen:
         self.waiting_for_animation = False
         self.pending_location = None
         self.pending_defeat = False
-        self.location_button = None
         self.current_location_hex = None
         self.transition_target_cycle = 0
 
@@ -2775,7 +2916,10 @@ class GameScreen:
 
         self.hex_grid.active_turn_unit = game.players[0]
         self.game_started = True
+        self.turn_cycle_count = 0
         self.initialize_screen()
+        # Autosave at level start
+        self.save_manager.save_game(game, self, save_type="autosave", save_label="Level Start")
 
     def load_campaign_level(self):
         """Load the current campaign level and configure decks based on stage settings."""
@@ -2853,6 +2997,187 @@ class GameScreen:
                 self.current_junk_deck = deck_path
                 self.log.append(f"Loaded junk deck: {os.path.basename(deck_path)}")
 
+    def _handle_delete_prev_saves(self, choice):
+        """Callback for the level transition save deletion confirmation."""
+        prev_level = getattr(self, '_pending_delete_level_saves', None)
+        if choice == "Yes" and prev_level:
+            deleted = self.save_manager.delete_saves_for_level(prev_level)
+            self.add_to_log(f"Deleted {deleted} save(s) from previous level.")
+        self._pending_delete_level_saves = None
+        game.current_screen = "game"
+        self.initialize_screen()
+
+    def _handle_restart_confirm(self, choice):
+        """Callback for 'Are you sure you want to restart?' confirmation."""
+        if choice == "Yes":
+            game.current_screen = "confirmation"
+            confirmation_screen.initialize_screen(
+                "Where would you like to restart from?",
+                options=["Beginning of Level", "Choose a Save", "Cancel"],
+                callback=self._handle_restart_choice
+            )
+        else:
+            game.current_screen = "game"
+            self.initialize_screen()
+
+    def _handle_restart_choice(self, choice):
+        """Callback for restart options."""
+        if choice == "Beginning of Level":
+            # Find the most recent "Level Start" autosave for current level
+            save_info = self.save_manager.get_latest_level_start_save(self.current_level_file)
+            if save_info:
+                save_data = self.save_manager.load_save_file(save_info["filepath"])
+                if save_data:
+                    game.current_screen = "game"
+                    self.load_from_save(save_data)
+                    return
+            # Fallback: full restart via character creation
+            game.current_screen = "character_creation"
+            character_creation_screen.initialize_screen(
+                level_file=self.current_level_file,
+                campaign_file=self.campaign_file if self.campaign else None
+            )
+        elif choice == "Choose a Save":
+            game.current_screen = "save_load"
+            save_load_screen.initialize_screen(mode="load")
+        else:
+            # Cancel
+            game.current_screen = "game"
+            self.initialize_screen()
+
+    def load_from_save(self, save_data):
+        """Rebuild the entire game state from a save data dict. Parallel to start_new_game()."""
+        from quest_system import QuestManager
+        from instance_system import InstanceManager
+        from transition_system import TransitionManager
+
+        # Rebuild player(s)
+        multiplayer = save_data.get("multiplayer_mode", False)
+        game.multiplayer_mode = multiplayer
+        game.game_mode = save_data.get("game_mode", "survival")
+
+        if multiplayer and "players" in save_data:
+            game.players = [self.save_manager.rebuild_player(pd) for pd in save_data["players"]]
+            game.current_player_index = save_data.get("current_player_index", 0)
+            game.player = game.players[0]
+        else:
+            game.player = self.save_manager.rebuild_player(save_data["player"])
+            game.players = []
+            game.current_player_index = 0
+
+        # Restore party
+        game.party = []
+        for card_ref in save_data.get("party", []):
+            card = self.save_manager._rebuild_inventory_card(card_ref)
+            if card:
+                game.party.append(card)
+
+        # Set up level/campaign info
+        self.current_level_file = save_data.get("level_file")
+        self.campaign_file = save_data.get("campaign_file")
+        self.current_level_idx = save_data.get("current_level_idx", 0)
+        self.campaign = save_data.get("campaign")
+
+        # Restore game screen state
+        gs = save_data.get("game_screen", {})
+        self.turn_phase = gs.get("turn_phase", "player")
+        self.log = gs.get("log", [])
+        self.transition_target_cycle = gs.get("transition_target_cycle", 0)
+        self.turn_cycle_count = gs.get("turn_cycle_count", 0)
+        self.player_class = gs.get("player_class")
+
+        # Create hex grid and load level terrain
+        self.hex_grid = HexGrid(16, 24, 30, WINDOW_WIDTH, WINDOW_HEIGHT)
+        if multiplayer:
+            self.hex_grid.players = game.players
+
+        # Load level file to get terrain, but we'll clear the auto-loaded units
+        if self.current_level_file:
+            try:
+                self.hex_grid.load_level(self.current_level_file, self.card_manager, game.player)
+            except Exception as e:
+                print(f"Error loading level for save restore: {e}")
+        elif self.campaign_file and self.campaign:
+            try:
+                self.load_campaign_level()
+            except Exception as e:
+                print(f"Error loading campaign level for save restore: {e}")
+
+        # Clear auto-loaded units and player placement from level load
+        for unit in list(self.hex_grid.units):
+            if unit.position:
+                self.hex_grid.grid[unit.position[0]][unit.position[1]]["unit"] = None
+        self.hex_grid.units.clear()
+        # Clear player from grid (will re-place from save data)
+        if game.player and game.player.position:
+            r, c = game.player.position
+            if 0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols:
+                self.hex_grid.grid[r][c]["unit"] = None
+
+        # Place player(s) from save
+        if multiplayer:
+            for p in game.players:
+                pos = save_data["players"][game.players.index(p)].get("position")
+                if pos:
+                    self.hex_grid.place_unit(p, pos[0], pos[1])
+            self.hex_grid.player = game.players[0]
+        else:
+            pos = save_data["player"].get("position")
+            if pos:
+                self.hex_grid.place_unit(game.player, pos[0], pos[1])
+
+        # Rebuild saved units
+        self.save_manager.rebuild_units(save_data.get("units", []), self.hex_grid)
+
+        # Overlay saved location data
+        if save_data.get("location_data"):
+            self.save_manager.rebuild_location_data(save_data["location_data"], self.hex_grid)
+
+        # Restore card_drawing_hexes state
+        if "card_drawing_hexes" in save_data:
+            self.hex_grid.card_drawing_hexes = save_data["card_drawing_hexes"]
+
+        # Reset managers
+        game.quest_manager = QuestManager(self.card_manager)
+        game.instance_manager = InstanceManager(self.card_manager, self.hex_grid)
+        game.transition_manager = TransitionManager(self.card_manager, game.instance_manager)
+
+        # Rebuild managers from save
+        if save_data.get("quest_manager"):
+            self.save_manager.rebuild_quest_manager(
+                save_data["quest_manager"], game.quest_manager,
+                self.hex_grid, game.player, self.card_manager
+            )
+        if save_data.get("instance_manager"):
+            self.save_manager.rebuild_instance_manager(
+                save_data["instance_manager"], game.instance_manager
+            )
+        if save_data.get("transition_manager"):
+            self.save_manager.rebuild_transition_manager(
+                save_data["transition_manager"], game.transition_manager
+            )
+
+        # Reset transient state
+        self.turn_queue = []
+        self.current_acting_unit = None
+        self.waiting_for_animation = False
+        self.pending_location = None
+        self.pending_defeat = False
+        self.current_location_hex = None
+        self.is_player_turn = self.turn_phase in ("player", "player1", "player2")
+        self.hex_grid.game_over = False
+
+        # Set active turn unit
+        if multiplayer:
+            idx = game.current_player_index
+            self.hex_grid.active_turn_unit = game.players[idx] if idx < len(game.players) else game.players[0]
+        else:
+            self.hex_grid.active_turn_unit = game.player
+
+        self.game_started = True
+        self.initialize_screen()
+        self.add_to_log("Game loaded from save.")
+
     def check_level_completion(self):
         """Check if the current level's completion conditions are met."""
         # Support both old format (campaign["levels"]) and new format (campaign["stages"])
@@ -2919,6 +3244,37 @@ class GameScreen:
         # Default: defeat all enemies
         return len([u for u in self.hex_grid.units if u.allegiance == "Hostile"]) == 0
 
+    def _setup_multiplayer_player_phase(self):
+        """Set up the correct player phase, skipping dead players."""
+        if game.players[0].hp > 0:
+            self.turn_phase = "player1"
+            game.current_player_index = 0
+            self.hex_grid.active_turn_unit = game.players[0]
+        elif game.players[1].hp > 0:
+            self.turn_phase = "player2"
+            game.current_player_index = 1
+            self.hex_grid.active_turn_unit = game.players[1]
+        else:
+            # Both dead - fallback
+            self.turn_phase = "player1"
+            game.current_player_index = 0
+            self.hex_grid.active_turn_unit = game.players[0]
+        self.rebuild_left_panel()
+
+    def _start_player_turn(self):
+        """Reset UI state and center camera on the current active player."""
+        self.player_mode = "movement"
+        self.selected_attack = None
+        self._close_attack_submenu()
+        # Center camera on the active player
+        current_player = game.current_player
+        if current_player and current_player.position:
+            row, col = current_player.position
+            pixel_x = col * self.hex_grid.hex_size * 1.5
+            pixel_y = row * self.hex_grid.hex_size * 1.732 + (col % 2) * self.hex_grid.hex_size * 0.866
+            self.hex_grid.view_offset_x = WINDOW_WIDTH / 2 - pixel_x
+            self.hex_grid.view_offset_y = WINDOW_HEIGHT / 2 - pixel_y
+
     def advance_turn(self):
         if self.turn_phase == "player":
             # Single-player mode: Apply Turn_End passives before ending player turn
@@ -2938,14 +3294,21 @@ class GameScreen:
             player1.movement_used = player1.action_used = False
             player1.reset_double_attack()
             # Switch to Player 2's turn
-            game.current_player_index = 1
-            self.turn_phase = "player2"
-            self.is_player_turn = True
-            self.hex_grid.active_turn_unit = game.players[1]
-            self.rebuild_left_panel()
-            # Apply Turn_Start passives for player 2
-            for msg in game.players[1].apply_passive_skills(self.hex_grid, "Turn_Start"):
-                self.add_to_log(msg)
+            player2 = game.players[1]
+            if player2.hp <= 0:
+                # Player 2 is dead, skip to allied phase
+                self.turn_phase = "allied"
+                self.execute_turn("Allied")
+            else:
+                game.current_player_index = 1
+                self.turn_phase = "player2"
+                self.is_player_turn = True
+                self.hex_grid.active_turn_unit = player2
+                self.rebuild_left_panel()
+                self._start_player_turn()
+                # Apply Turn_Start passives for player 2
+                for msg in player2.apply_passive_skills(self.hex_grid, "Turn_Start"):
+                    self.add_to_log(msg)
         elif self.turn_phase == "player2":
             # Multiplayer: End Player 2's turn
             player2 = game.players[1]
@@ -2964,23 +3327,34 @@ class GameScreen:
             self.turn_phase = "hostile"
             self.execute_turn("Hostile")
         elif self.turn_phase == "hostile":
+            # Clear passthrough defense cache and move to location defense phase
+            self._clear_defense_range_cache()
+            self.turn_phase = "location_defense"
+            self.hex_grid.active_turn_unit = None
+            self.update_turn_label()
+            self.process_location_defense_turn()
+        elif self.turn_phase == "location_defense":
             # Move to transition phase
             self.turn_phase = "transition"
-            self.hex_grid.active_turn_unit = None
             self.update_turn_label()  # Show "World Events" immediately
             self.process_transition_turn()
         elif self.turn_phase == "transition":
             # End of turn cycle - process location shop cycles
             self.hex_grid.on_turn_end()
+            # Increment turn cycle counter
+            self.turn_cycle_count += 1
             # Notify quest system of turn end
             quest_results = game.current_quest_manager.update("turn_end", {}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
                 self.add_to_log(msg)
 
             if self.check_level_completion():
+                # Autosave before level transition
+                self.save_manager.save_game(game, self, save_type="autosave", save_label="Level Complete")
                 self.current_level_idx += 1
                 stages = self.campaign.get("stages") or self.campaign.get("levels", []) if self.campaign else []
                 if self.campaign and self.current_level_idx < len(stages):
+                    prev_level_file = self.current_level_file
                     self.load_campaign_level()
                     if game.multiplayer_mode:
                         self.turn_phase = "player1"
@@ -2991,6 +3365,18 @@ class GameScreen:
                         self.turn_phase = "player"
                         self.hex_grid.active_turn_unit = game.player
                     self.is_player_turn = True
+                    self._start_player_turn()
+                    # Autosave at new level start
+                    self.turn_cycle_count = 0
+                    self.save_manager.save_game(game, self, save_type="autosave", save_label="Level Start")
+                    # Show confirmation about deleting previous level saves
+                    self._pending_delete_level_saves = prev_level_file
+                    game.current_screen = "confirmation"
+                    confirmation_screen.initialize_screen(
+                        "New autosave created for this level.\nDelete save data from the previous level?",
+                        options=["Yes", "No"],
+                        callback=self._handle_delete_prev_saves
+                    )
                 else:
                     self.add_to_log("Campaign Completed!")
                     game.current_screen = "main_menu"
@@ -2998,33 +3384,59 @@ class GameScreen:
             else:
                 # Start new turn cycle
                 if game.multiplayer_mode:
-                    self.turn_phase = "player1"
-                    game.current_player_index = 0
-                    self.hex_grid.active_turn_unit = game.players[0]
-                    self.rebuild_left_panel()
+                    self._setup_multiplayer_player_phase()
                 else:
                     self.turn_phase = "player"
                     self.hex_grid.active_turn_unit = game.player
                 self.is_player_turn = True
+                self._start_player_turn()
                 # Reset location visits for new turn
                 self.hex_grid.reset_location_visits()
-
-                # NOTE: Instance events are NOT randomly triggered each turn.
-                # They are triggered by: transition cards, quest cards, hex spaces, or locations.
-                # The check_trigger() method is only for future use by those systems.
 
                 # Apply Turn_Start passives at start of player turn
                 current_player = game.current_player
                 for msg in current_player.apply_passive_skills(self.hex_grid, "Turn_Start"):
                     self.add_to_log(msg)
+
+                # Periodic autosave every 5 turn cycles
+                if self.turn_cycle_count > 0 and self.turn_cycle_count % 5 == 0:
+                    self.save_manager.save_game(game, self, save_type="autosave", save_label=f"Turn {self.turn_cycle_count}")
         self.update_turn_label()
         self.animating = self.check_animations()
 
+    def _cache_defense_ranges(self):
+        """Pre-cache defense ranges for passthrough checks during hostile movement."""
+        for pos, loc_data in self.hex_grid.location_data.items():
+            if loc_data.get("state", 1) != 2:
+                continue
+            garrison = loc_data.get("garrison_npcs", [])
+            if not garrison:
+                continue
+            for defense in loc_data.get("defenses", []):
+                if not defense.get("requires_npc") or defense.get("passthrough_chance", 0) <= 0:
+                    continue
+                defense["_cached_range"] = self.hex_grid.calculate_range(
+                    pos, defense["range_distance"], defense["range_type"],
+                    defense.get("include_position", False), defense.get("exclude_adjacent", False)
+                )
+
+    def _clear_defense_range_cache(self):
+        """Clear cached defense ranges after hostile turn."""
+        for pos, loc_data in self.hex_grid.location_data.items():
+            for defense in loc_data.get("defenses", []):
+                defense.pop("_cached_range", None)
+
     def execute_turn(self, allegiance):
         """Queue units of the given allegiance to take their turns consecutively."""
+        # Cache defense ranges at start of hostile turn for passthrough performance
+        if allegiance == "Hostile":
+            self._cache_defense_ranges()
+
         units_to_process = [unit for unit in self.hex_grid.units if unit.allegiance == allegiance]
         if not units_to_process:
             # No units of this allegiance - immediately advance to next phase
+            if allegiance == "Hostile":
+                self._clear_defense_range_cache()
             self.advance_turn()
             return
         for unit in units_to_process:
@@ -3094,12 +3506,13 @@ class GameScreen:
 
         # Check for game over
         if game.multiplayer_mode:
+            # Log player deaths only once (when HP first reaches 0)
+            for i, p in enumerate(game.players):
+                if p.hp <= 0 and not getattr(p, '_death_logged', False):
+                    self.add_to_log(f"Player {i+1} ({p.class_name}) has fallen!")
+                    p._death_logged = True
+            # Only defeat if ALL players are dead
             all_dead = all(p.hp <= 0 for p in game.players)
-            any_dead = any(p.hp <= 0 for p in game.players)
-            if any_dead:
-                for i, p in enumerate(game.players):
-                    if p.hp <= 0:
-                        self.add_to_log(f"Player {i+1} ({p.class_name}) defeated!")
             if all_dead:
                 quest_results = game.current_quest_manager.update("player_death", {}, self.hex_grid, game.current_player)
                 for quest, result, msg in quest_results:
@@ -3154,6 +3567,27 @@ class GameScreen:
             self.last_action_time = pygame.time.get_ticks()
             return
 
+        # Check if allied unit reached garrison target after movement
+        if self.current_acting_unit and getattr(self.current_acting_unit, 'garrison_target_location', None):
+            unit = self.current_acting_unit
+            garrison_pos = unit.garrison_target_location
+            if unit.position and self.hex_grid.hex_distance(unit.position, garrison_pos) <= 1:
+                success, msg = self.hex_grid.garrison_map_npc_to_location(unit, garrison_pos)
+                if success:
+                    self.add_to_log(msg)
+                    self.current_acting_unit = None
+
+        # Log any passthrough defense messages from hostile movement
+        if self.current_acting_unit and getattr(self.current_acting_unit, 'passthrough_messages', None):
+            for msg in self.current_acting_unit.passthrough_messages:
+                self.add_to_log(msg)
+            self.current_acting_unit.passthrough_messages.clear()
+            # Check if passthrough killed the unit
+            if self.current_acting_unit and self.current_acting_unit.hp <= 0:
+                if self._post_attack_processing(self.current_acting_unit):
+                    return
+                self.player_info_label.set_text(self.get_player_info())
+
         # Check if enough time has passed since last action
         current_time = pygame.time.get_ticks()
         if current_time - self.last_action_time < self.turn_action_delay:
@@ -3188,8 +3622,8 @@ class GameScreen:
                 self.attack_submenu_buttons.append((btn, "attack", attack))
                 y += 34
 
-        # Special attack (Warrior's Dual Strike is passive - no button needed)
-        if current_player.special_attack != "Dual Strike":
+        # Special attack (Warrior's Dual Strike and Ranger's Piercing Shot are passive - no button needed)
+        if current_player.special_attack not in ("Dual Strike", "Piercing Shot"):
             btn = UIButton(pygame.Rect(x, y, button_width, 30),
                            f"[Special] {current_player.special_attack}", manager)
             self.attack_submenu_buttons.append((btn, "special", None))
@@ -3211,13 +3645,27 @@ class GameScreen:
             UITextBox("<font color='#FFFFFF' size=4>Game Log</font>",
                       pygame.Rect((WINDOW_WIDTH - 600) // 2, WINDOW_HEIGHT - 150, 600, 140),
                       manager, object_id="#log_textbox"),
-            UITextBox("<font color='#FFFFFF' size=4>Stats</font>", 
-                      pygame.Rect(WINDOW_WIDTH - 300, WINDOW_HEIGHT - 175, 290, 175), 
+            UITextBox("<font color='#FFFFFF' size=4>Stats</font>",
+                      pygame.Rect(WINDOW_WIDTH - 300, WINDOW_HEIGHT - 175, 290, 175),
                       manager, object_id="#stats_panel", visible=False),
-            UITextBox("<font color='#FFFFFF' size=4>Player's Turn</font>", 
-                      pygame.Rect((WINDOW_WIDTH - 200) // 2, 10, 200, 30), 
+            UITextBox("<font color='#FFFFFF' size=4>Player's Turn</font>",
+                      pygame.Rect((WINDOW_WIDTH - 200) // 2, 10, 200, 30),
                       manager, object_id="#turn_label")
         ]
+        # Minimized log: toggle button on left + single line at bottom
+        log_x = (WINDOW_WIDTH - 600) // 2
+        self.log_toggle_button = UIButton(
+            pygame.Rect(log_x, WINDOW_HEIGHT - 30, 30, 28),
+            "^", manager
+        )
+        self.log_mini_label = UITextBox(
+            "<font color='#CCCCCC' size=3></font>",
+            pygame.Rect(log_x + 32, WINDOW_HEIGHT - 30, 568, 28),
+            manager
+        )
+        # Start minimized
+        self.log_minimized = True
+        self.ui_elements[0].hide()
         
         left_panel_width = WINDOW_WIDTH // 4
         button_width = (left_panel_width - 20) // 2
@@ -3305,32 +3753,10 @@ class GameScreen:
             self.left_panel_buttons.append(self.tool_button)
             y_pos += 40
 
-        # Move "Draw Card" and "End Turn" below skills, with spacing
+        # End Turn button below skills, with spacing
         y_pos += 20  # Add extra spacing to avoid overlap
-        self.draw_card_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Draw Card", manager)
-        self.left_panel_buttons.append(self.draw_card_button)
-        y_pos += 40
         self.end_turn_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "End Turn", manager)
         self.left_panel_buttons.append(self.end_turn_button)
-
-        # Check if player is on a location hex and add location button
-        self.location_button = None
-        self.current_location_hex = None
-        if game.current_player and game.current_player.position:
-            player_row, player_col = game.current_player.position
-            if self.hex_grid.is_location_hex(player_row, player_col):
-                loc_data = self.hex_grid.location_data.get((player_row, player_col))
-                if loc_data and loc_data.get("card"):
-                    loc_card = loc_data["card"]
-                    loc_name = loc_card.get_current_data().get("Name", "Location")
-                    self.current_location_hex = (player_row, player_col)
-                    y_pos += 50  # Extra spacing before location button
-                    self.location_button = UIButton(
-                        pygame.Rect(10, y_pos, button_width, 35),
-                        f"[{loc_name}]",
-                        manager
-                    )
-                    self.left_panel_buttons.append(self.location_button)
 
         self.ui_elements.extend(self.left_panel_buttons)
         
@@ -3338,7 +3764,7 @@ class GameScreen:
         right_button_width = 150
         right_panel_x = WINDOW_WIDTH - right_button_width - 10
         y_pos = 60
-        right_controls = ["Main Menu", "Restart Match", "Settings"]
+        right_controls = ["Main Menu", "Restart Match", "Save Game", "Settings"]
         self.right_panel_buttons = [
             UIButton(pygame.Rect(right_panel_x, y_pos + 40 * i, right_button_width, 30), control, manager) 
             for i, control in enumerate(right_controls)
@@ -3370,6 +3796,9 @@ class GameScreen:
             if len(self.log) > 10:
                 self.log.pop(0)
             self.ui_elements[0].set_text("<font color='#FFFFFF' size=4>" + "<br>".join(reversed(self.log)) + "</font>")
+            # Update minimized label with latest entry
+            if self.log_mini_label:
+                self.log_mini_label.set_text(f"<font color='#CCCCCC' size=3>{message}</font>")
 
     def show_stats(self, unit):
         if unit:
@@ -3393,6 +3822,7 @@ class GameScreen:
                 "allied": "Allied Turn",
                 "neutral": "Neutral Turn",
                 "hostile": "Enemies' Turn",
+                "location_defense": "Location Defense",
                 "transition": "World Events"
             }
             label = phases.get(self.turn_phase, "Unknown")
@@ -3496,32 +3926,10 @@ class GameScreen:
             self.left_panel_buttons.append(self.tool_button)
             y_pos += 40
 
-        # Draw Card and End Turn buttons
+        # End Turn button
         y_pos += 20
-        self.draw_card_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Draw Card", manager)
-        self.left_panel_buttons.append(self.draw_card_button)
-        y_pos += 40
         self.end_turn_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "End Turn", manager)
         self.left_panel_buttons.append(self.end_turn_button)
-
-        # Check if player is on a location hex
-        self.location_button = None
-        self.current_location_hex = None
-        if current_player and current_player.position:
-            player_row, player_col = current_player.position
-            if self.hex_grid.is_location_hex(player_row, player_col):
-                loc_data = self.hex_grid.location_data.get((player_row, player_col))
-                if loc_data and loc_data.get("card"):
-                    loc_card = loc_data["card"]
-                    loc_name = loc_card.get_current_data().get("Name", "Location")
-                    self.current_location_hex = (player_row, player_col)
-                    y_pos += 50
-                    self.location_button = UIButton(
-                        pygame.Rect(10, y_pos, button_width, 35),
-                        f"[{loc_name}]",
-                        manager
-                    )
-                    self.left_panel_buttons.append(self.location_button)
 
         self.ui_elements.extend(self.left_panel_buttons)
         self.update_turn_label()
@@ -3621,38 +4029,6 @@ class GameScreen:
         else:
             return message, False
 
-    def update_location_button(self):
-        """Update the location button based on player's current position."""
-        # Remove old location button if it exists
-        if self.location_button:
-            self.location_button.kill()
-            if self.location_button in self.left_panel_buttons:
-                self.left_panel_buttons.remove(self.location_button)
-            if self.location_button in self.ui_elements:
-                self.ui_elements.remove(self.location_button)
-            self.location_button = None
-            self.current_location_hex = None
-
-        # Check if player is now on a location hex
-        if game.current_player and game.current_player.position:
-            player_row, player_col = game.current_player.position
-            if self.hex_grid.is_location_hex(player_row, player_col):
-                loc_data = self.hex_grid.location_data.get((player_row, player_col))
-                if loc_data and loc_data.get("card"):
-                    loc_card = loc_data["card"]
-                    loc_name = loc_card.get_current_data().get("Name", "Location")
-                    self.current_location_hex = (player_row, player_col)
-                    # Find y position after end turn button
-                    button_width = (WINDOW_WIDTH // 4 - 20) // 2
-                    y_pos = self.end_turn_button.rect.bottom + 20 if self.end_turn_button else 500
-                    self.location_button = UIButton(
-                        pygame.Rect(10, y_pos, button_width, 35),
-                        f"[{loc_name}]",
-                        manager
-                    )
-                    self.left_panel_buttons.append(self.location_button)
-                    self.ui_elements.append(self.location_button)
-
     def update_quest_button(self):
         """Update the quest button text to reflect current quest count."""
         if hasattr(self, 'quest_button') and self.quest_button:
@@ -3685,20 +4061,25 @@ class GameScreen:
         movement = unit.movement if hasattr(unit, 'movement') else 3
         return hp_component + melee + ranged + movement + 5
 
-    def show_instance_event(self, instance_card):
+    def show_instance_event(self, instance_card, target_player=None):
         """Show an instance event and switch to instance event screen."""
         import sys
         print(f"[DEBUG] show_instance_event START for {instance_card.name}", flush=True)
+
+        # Use provided target player, or fall back to stored pending player, then current player
+        if target_player is None:
+            target_player = game.instance_manager.pending_instance_player or game.current_player
+        print(f"[DEBUG] show_instance_event: target_player={target_player.name if target_player else 'None'}", flush=True)
 
         # Update hex_grid reference in instance manager
         game.instance_manager.set_hex_grid(self.hex_grid)
         print("[DEBUG] show_instance_event: set hex_grid", flush=True)
 
-        # Resolve the instance and get outcome
+        # Resolve the instance and get outcome using the correct target player
         print("[DEBUG] show_instance_event: calling resolve_instance...", flush=True)
         try:
             outcome_text, needs_choice = game.instance_manager.resolve_instance(
-                instance_card, self.hex_grid, game.player
+                instance_card, self.hex_grid, target_player
             )
             print(f"[DEBUG] show_instance_event: resolve_instance returned, needs_choice={needs_choice}", flush=True)
         except Exception as e:
@@ -3714,7 +4095,9 @@ class GameScreen:
         print(f"[DEBUG] show_instance_event: current_screen is now {game._current_screen}", flush=True)
 
         print("[DEBUG] show_instance_event: calling instance_event_screen.initialize_screen...", flush=True)
-        instance_event_screen.initialize_screen(instance_card, outcome_text, needs_choice)
+        # Determine target player name for display
+        target_name = target_player.name if target_player and target_player.name else "Player"
+        instance_event_screen.initialize_screen(instance_card, outcome_text, needs_choice, target_name, target_player)
         print("[DEBUG] show_instance_event: initialize_screen completed", flush=True)
 
         # Log the event
@@ -3755,17 +4138,15 @@ class GameScreen:
                     main_menu.initialize_buttons()
                     return
 
-            # Move to player phase (or player1 in multiplayer)
+            # Move to player phase (or first living player in multiplayer)
             if game.multiplayer_mode:
-                self.turn_phase = "player1"
-                game.current_player_index = 0
-                self.hex_grid.active_turn_unit = game.players[0]
-                self.rebuild_left_panel()
+                self._setup_multiplayer_player_phase()
             else:
                 self.turn_phase = "player"
                 self.hex_grid.active_turn_unit = game.player
             self.is_player_turn = True
             self.hex_grid.reset_location_visits()
+            self._start_player_turn()
             print("[DEBUG] Moved to player phase")
 
         # Apply Turn_Start passives
@@ -3806,23 +4187,22 @@ class GameScreen:
                     self.turn_phase = "player"
                     self.hex_grid.active_turn_unit = game.player
                 self.is_player_turn = True
+                self._start_player_turn()
             else:
                 self.add_to_log("Campaign Completed!")
                 game.current_screen = "main_menu"
                 main_menu.initialize_buttons()
                 return
 
-        # Advance to player phase (or player1 in multiplayer)
+        # Advance to player phase (or first living player in multiplayer)
         if game.multiplayer_mode:
-            self.turn_phase = "player1"
-            game.current_player_index = 0
-            self.hex_grid.active_turn_unit = game.players[0]
-            self.rebuild_left_panel()
+            self._setup_multiplayer_player_phase()
         else:
             self.turn_phase = "player"
             self.hex_grid.active_turn_unit = game.player
         self.is_player_turn = True
         self.hex_grid.reset_location_visits()
+        self._start_player_turn()
 
         # Apply Turn_Start passives at start of player turn
         for msg in game.current_player.apply_passive_skills(self.hex_grid, "Turn_Start"):
@@ -3830,6 +4210,74 @@ class GameScreen:
 
         self.update_turn_label()
         self.animating = self.check_animations()
+
+    def process_location_defense_turn(self):
+        """Process defensive location attacks against hostile units."""
+        active_locations = self.hex_grid.get_active_defensive_locations()
+        if not active_locations:
+            self.advance_turn()
+            return
+
+        attacks_fired = False
+        for pos, loc_data in active_locations:
+            garrison = loc_data.get("garrison_npcs", [])
+            num_garrison = len(garrison)
+            if num_garrison == 0:
+                continue
+
+            for defense in loc_data.get("defenses", []):
+                if not defense.get("requires_npc"):
+                    continue
+                damage = defense.get("damage", 0)
+                if damage <= 0:
+                    continue
+
+                # Calculate range for this defense
+                d_range = self.hex_grid.calculate_range(
+                    pos, defense["range_distance"], defense["range_type"],
+                    defense.get("include_position", False), defense.get("exclude_adjacent", False)
+                )
+
+                # Find hostile units in range
+                hostiles_in_range = []
+                for hex_pos in d_range:
+                    r, c = hex_pos
+                    if 0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols:
+                        unit = self.hex_grid.grid[r][c].get("unit")
+                        if unit and hasattr(unit, 'allegiance') and unit.allegiance == "Hostile" and unit.hp > 0:
+                            hostiles_in_range.append(unit)
+
+                if not hostiles_in_range:
+                    continue
+
+                # Fire N attacks (N = garrison count), each at a random hostile
+                loc_name = loc_data.get("card").get_current_data().get("Name", "Defense") if loc_data.get("card") else "Defense"
+                for _ in range(num_garrison):
+                    # Re-filter alive hostiles each shot
+                    alive = [u for u in hostiles_in_range if u.hp > 0]
+                    if not alive:
+                        break
+                    target = random.choice(alive)
+                    target.hp -= damage
+                    target.set_damage_text(damage)
+                    self.add_to_log(f"{loc_name} defense hits {target.name} for {damage} damage")
+                    attacks_fired = True
+
+        # Process deaths from defense attacks
+        if attacks_fired:
+            dead_units = [u for u in self.hex_grid.units if u.hp <= 0]
+            for dead_unit in dead_units:
+                if dead_unit.position:
+                    self.hex_grid.grid[dead_unit.position[0]][dead_unit.position[1]]["unit"] = None
+                self.hex_grid.units.remove(dead_unit)
+                self.add_to_log(f"{dead_unit.name} defeated")
+                self.card_manager.track_card_usage(dead_unit.card_id, {"action": "defeated", "screen": "game"})
+                quest_results = game.current_quest_manager.update("unit_death", {"unit": dead_unit}, self.hex_grid, game.current_player)
+                for quest, result, msg in quest_results:
+                    self.add_to_log(msg)
+            self.player_info_label.set_text(self.get_player_info())
+
+        self.advance_turn()
 
     def process_transition_turn(self):
         """Process the transition card's turn in the cycle."""
@@ -3952,11 +4400,22 @@ class GameScreen:
                 game.current_screen = "main_menu"
                 main_menu.initialize_buttons()
             elif text == "Restart Match":
-                game.current_screen = "character_creation"
-                character_creation_screen.initialize_screen(
-                    level_file=game_screen.current_level_file,
-                    campaign_file=game_screen.campaign_file if game_screen.campaign else None
+                game.current_screen = "confirmation"
+                confirmation_screen.initialize_screen(
+                    "Are you sure you want to restart?",
+                    options=["Yes", "No"],
+                    callback=self._handle_restart_confirm
                 )
+            elif text == "Save Game":
+                is_player_turn = self.turn_phase in ("player", "player1", "player2")
+                if is_player_turn:
+                    success, result = self.save_manager.save_game(game, self, save_type="manual", save_label="Manual Save")
+                    if success:
+                        self.add_to_log("Game saved.")
+                    else:
+                        self.add_to_log(f"Save failed: {result}")
+                else:
+                    self.add_to_log("Can only save during your turn.")
             elif text == "Settings":
                 game.current_screen = "game_settings"
                 game_settings_screen.initialize_screen()
@@ -3976,29 +4435,67 @@ class GameScreen:
                 unit = self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"]
                 self.show_stats(unit)
                 current_player = game.current_player
+                # Auto-detect attack type if clicking on an enemy in range (skip in recruit/skill modes)
+                if not self.selected_attack and not current_player.action_used and unit and isinstance(unit, Unit) and self.player_mode not in ("recruit", "skill"):
+                    melee_range = current_player.get_melee_attack_range(self.hex_grid)
+                    proj_range = current_player.get_projectile_attack_range(self.hex_grid)
+                    if melee_range and hex_pos in melee_range:
+                        self.selected_attack = current_player.attacks["melee"]["name"]
+                        self.player_mode = "attack"
+                    elif proj_range and hex_pos in proj_range:
+                        self.selected_attack = current_player.attacks["projectile"]["name"]
+                        self.player_mode = "attack"
                 if self.player_mode == "attack" and self.selected_attack and unit and isinstance(unit, Unit):
-                    message, defeated = current_player.attack(unit, self.selected_attack, self.hex_grid)
+                    message, result = current_player.attack(unit, self.selected_attack, self.hex_grid)
                     self.add_to_log(message)
                     if message:
-                        unit.attack_flash = True
-                        unit.flash_start = pygame.time.get_ticks()
-                        if defeated:
-                            self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = None
-                            self.hex_grid.units.remove(unit)
-                            self.add_to_log(f"{unit.name} defeated")
-                            self.card_manager.track_card_usage(unit.card_id, {"action": "defeated", "screen": "game"})
-                            # Notify quest system of unit death
-                            quest_results = game.current_quest_manager.update("unit_death", {"unit": unit}, self.hex_grid, current_player)
-                            for quest, result, msg in quest_results:
-                                self.add_to_log(msg)
+                        # Handle piercing attack (returns list of hit units)
+                        if isinstance(result, list):
+                            for hit_unit, hit_dmg, hit_defeated in result:
+                                hit_unit.attack_flash = True
+                                hit_unit.flash_start = pygame.time.get_ticks()
+                                if hit_defeated:
+                                    hit_pos = hit_unit.position
+                                    if hit_pos:
+                                        self.hex_grid.grid[hit_pos[0]][hit_pos[1]]["unit"] = None
+                                    self.hex_grid.units.remove(hit_unit)
+                                    self.add_to_log(f"{hit_unit.name} defeated")
+                                    self.card_manager.track_card_usage(hit_unit.card_id, {"action": "defeated", "screen": "game"})
+                                    quest_results = game.current_quest_manager.update("unit_death", {"unit": hit_unit}, self.hex_grid, current_player)
+                                    for quest, qresult, msg in quest_results:
+                                        self.add_to_log(msg)
                             self.update_quest_button()
                             self.show_stats(None)
+                        else:
+                            # Standard single-target attack
+                            unit.attack_flash = True
+                            unit.flash_start = pygame.time.get_ticks()
+                            if result:
+                                self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = None
+                                self.hex_grid.units.remove(unit)
+                                self.add_to_log(f"{unit.name} defeated")
+                                self.card_manager.track_card_usage(unit.card_id, {"action": "defeated", "screen": "game"})
+                                quest_results = game.current_quest_manager.update("unit_death", {"unit": unit}, self.hex_grid, current_player)
+                                for quest, qresult, msg in quest_results:
+                                    self.add_to_log(msg)
+                                self.update_quest_button()
+                                self.show_stats(None)
                         self.player_info_label.set_text(self.get_player_info())
                         self.selected_attack = None
                         # Auto-switch to movement mode after action is fully used
                         if current_player.action_used and not current_player.movement_used:
                             self.player_mode = "movement"
-                elif self.player_mode == "attack" and self.selected_attack and not unit and self.hex_grid.is_attackable_location(hex_pos[0], hex_pos[1]):
+                elif not unit and not current_player.action_used and self.hex_grid.is_attackable_location(hex_pos[0], hex_pos[1]) and not self.selected_attack:
+                    # Auto-detect attack type for spawn location
+                    melee_range = current_player.get_melee_attack_range(self.hex_grid)
+                    proj_range = current_player.get_projectile_attack_range(self.hex_grid)
+                    if melee_range and hex_pos in melee_range:
+                        self.selected_attack = current_player.attacks["melee"]["name"]
+                        self.player_mode = "attack"
+                    elif proj_range and hex_pos in proj_range:
+                        self.selected_attack = current_player.attacks["projectile"]["name"]
+                        self.player_mode = "attack"
+                if self.player_mode == "attack" and self.selected_attack and not unit and self.hex_grid.is_attackable_location(hex_pos[0], hex_pos[1]):
                     # Attack a spawn location
                     message, action_used = self._attack_location(hex_pos, current_player)
                     if message:
@@ -4135,13 +4632,6 @@ class GameScreen:
                                     # Don't show immediately - will show after animation in draw()
 
                             self.player_info_label.set_text(self.get_player_info())
-                            self.update_location_button()  # Update location button after movement
-                            # Queue auto-attack after movement animation completes
-                            if not current_player.action_used:
-                                if current_player.class_name == "Tank":
-                                    self.pending_auto_attack = "melee"
-                                elif current_player.class_name == "Ranger":
-                                    self.pending_auto_attack = "projectile"
                     else:
                         self.add_to_log("No valid path within movement range")
             elif event.button in (2, 3) and hex_pos:  # Middle mouse (2) or right-click (3) to pan
@@ -4204,6 +4694,22 @@ class GameScreen:
                 self.hex_grid.view_offset_x = max(min(self.hex_grid.view_offset_x, max_offset_x), min_offset_x)
                 self.hex_grid.view_offset_y = max(min(self.hex_grid.view_offset_y, max_offset_y), min_offset_y)
         elif event.type == pygame_gui.UI_BUTTON_PRESSED:
+            # Handle log toggle
+            if event.ui_element == self.log_toggle_button:
+                self.log_minimized = not self.log_minimized
+                log_x = (WINDOW_WIDTH - 600) // 2
+                if self.log_minimized:
+                    self.ui_elements[0].hide()
+                    self.log_mini_label.show()
+                    self.log_toggle_button.set_text("^")
+                    self.log_toggle_button.set_relative_position((log_x, WINDOW_HEIGHT - 30))
+                else:
+                    self.ui_elements[0].show()
+                    self.log_mini_label.hide()
+                    self.log_toggle_button.set_text("v")
+                    self.log_toggle_button.set_relative_position((log_x, WINDOW_HEIGHT - 150))
+                return
+
             is_player_turn = self.turn_phase in ("player", "player1", "player2")
 
             # Handle attack submenu button clicks
@@ -4333,24 +4839,10 @@ class GameScreen:
                             else:
                                 for m in missing:
                                     self.add_to_log(f"Missing: {m}")
-                elif self.location_button and event.ui_element == self.location_button and is_player_turn:
-                    # Reopen location screen
-                    if self.current_location_hex:
-                        loc_data = self.hex_grid.location_data.get(self.current_location_hex)
-                        if loc_data and loc_data.get("card"):
-                            game.current_screen = "location"
-                            location_screen.initialize_screen(loc_data["card"], self.current_location_hex, self.hex_grid)
                 elif text == "Movement" and is_player_turn:
                     self.player_mode = "movement"
                     self.selected_attack = None
                     self.add_to_log("Switched to movement mode")
-                elif text == "Draw Card" and is_player_turn and self.hex_grid.selected_hex:
-                    card, msg = self.hex_grid.draw_card(*self.hex_grid.selected_hex, self.card_manager)
-                    if card:
-                        party_msg = add_card_to_player(card)
-                        if party_msg:
-                            self.add_to_log(party_msg)
-                    self.add_to_log(msg)
                 elif text == "End Turn" and is_player_turn:
                     self.advance_turn()
                 elif is_player_turn:
@@ -4376,17 +4868,45 @@ class GameScreen:
                         # Check multi-slot tool buttons
                         for btn, slot_idx in self.tool_buttons:
                             if event.ui_element == btn:
-                                success, message = game.current_player.use_tool(slot_idx)
+                                current_player = game.current_player
+                                # Check if this is a revival tool - auto-target dead ally
+                                tool = current_player.get_tool_in_slot(slot_idx)
+                                target = None
+                                if tool:
+                                    tool_data = tool.get_current_data()
+                                    is_revival = str(tool_data.get("Revival", "false")).lower() == "true"
+                                    if is_revival and game.multiplayer_mode:
+                                        # Find dead player to revive
+                                        for p in game.players:
+                                            if p is not current_player and p.hp <= 0 and p.position:
+                                                target = p
+                                                break
+                                        if not target:
+                                            self.add_to_log("No fallen ally to revive")
+                                            tool_button_clicked = True
+                                            break
+                                success, message = current_player.use_tool(slot_idx, target=target, grid=self.hex_grid)
                                 self.add_to_log(message)
                                 if success:
                                     self.player_info_label.set_text(self.get_player_info())
-                                    self._refresh_left_panel()  # Refresh to update tool buttons
+                                    self.rebuild_left_panel()  # Refresh to update tool buttons
                                 tool_button_clicked = True
                                 break
 
                         # Fallback to legacy single tool button
                         if not tool_button_clicked and self.tool_button and event.ui_element == self.tool_button:
-                            success, message = game.current_player.use_tool()
+                            current_player = game.current_player
+                            target = None
+                            tool = current_player.get_tool_in_slot(0)
+                            if tool:
+                                tool_data = tool.get_current_data()
+                                is_revival = str(tool_data.get("Revival", "false")).lower() == "true"
+                                if is_revival and game.multiplayer_mode:
+                                    for p in game.players:
+                                        if p is not current_player and p.hp <= 0 and p.position:
+                                            target = p
+                                            break
+                            success, message = current_player.use_tool(0, target=target, grid=self.hex_grid)
                             self.add_to_log(message)
                             if success:
                                 self.player_info_label.set_text(self.get_player_info())
@@ -4398,35 +4918,60 @@ class GameScreen:
         screen.fill(DARK_INDIGO)
         current_player = game.current_player
         is_player_turn = self.turn_phase in ("player", "player1", "player2")
-        movement_range = self.hex_grid.get_valid_moves(current_player.position, current_player.movement) if is_player_turn and not current_player.movement_used else None
+        # Check animation state early so range displays are accurate this frame
+        self.animating = self.check_animations()
+        player_alive = current_player.hp > 0
+        movement_range = self.hex_grid.get_valid_moves(current_player.position, current_player.movement) if is_player_turn and player_alive and not current_player.movement_used and not self.animating else None
 
-        # Determine attack range based on mode (uses weapon's range pattern)
-        attack_range = None
-        attack_type = None
-        if is_player_turn and not current_player.action_used:
-            if self.selected_attack == current_player.attacks["projectile"]["name"]:
-                # Use player's method for proper range pattern support
-                attack_range = current_player.get_projectile_attack_range(self.hex_grid)
-                attack_type = "projectile"
-            elif self.selected_attack == current_player.attacks["melee"]["name"]:
-                attack_range = current_player.get_melee_attack_range(self.hex_grid)
-                attack_type = "melee"
-            elif self.player_mode == "special_attack":
-                # Show range for special attacks
-                if current_player.special_attack == "Multi-target Projectile":
-                    attack_range = current_player.get_projectile_attack_range(self.hex_grid)
-                    attack_type = "projectile"
-                elif current_player.special_attack == "Spin Punch":
-                    attack_range = current_player.get_melee_attack_range(self.hex_grid)
-                    attack_type = "melee"
+        # Build list of all available attack ranges to display simultaneously
+        attack_ranges = []
 
-        # Get targetable units for visual highlighting
+        # Always-visible defense range rings for defensive locations
+        for def_pos, def_loc in self.hex_grid.get_all_defensive_locations():
+            garrison = def_loc.get("garrison_npcs", [])
+            is_manned = len(garrison) > 0 and def_loc.get("state", 1) == 2
+            for defense in def_loc.get("defenses", []):
+                if not defense.get("requires_npc"):
+                    continue
+                d_range = self.hex_grid.calculate_range(
+                    def_pos, defense["range_distance"], defense["range_type"],
+                    defense.get("include_position", False), defense.get("exclude_adjacent", False)
+                )
+                if d_range:
+                    r, g, b = defense.get("color", (255, 165, 0))
+                    alpha = 140 if is_manned else 60
+                    attack_ranges.append({
+                        "range": d_range,
+                        "color": (r, g, b, alpha),
+                        "outline": (max(0, r - 60), max(0, g - 60), max(0, b - 60), alpha),
+                        "inset": 0.40
+                    })
+
+        if is_player_turn and player_alive and not current_player.action_used and not self.animating and self.player_mode != "recruit":
+            melee_range = current_player.get_melee_attack_range(self.hex_grid)
+            if melee_range:
+                attack_ranges.append({"range": melee_range, "color": (255, 69, 0, 220), "outline": (139, 0, 0, 220), "inset": 0.75})
+            proj_range = current_player.get_projectile_attack_range(self.hex_grid)
+            if proj_range:
+                attack_ranges.append({"range": proj_range, "color": (191, 0, 255, 220), "outline": (75, 0, 130, 220), "inset": 0.55})
+
+        # In recruit mode, show white rings around recruitable adjacent NPCs
+        if is_player_turn and self.player_mode == "recruit":
+            adjacent_neutrals = self._get_adjacent_neutral_npcs()
+            recruit_hexes = {npc_unit.position for npc_unit in adjacent_neutrals if npc_unit.position}
+            if recruit_hexes:
+                attack_ranges.append({"range": recruit_hexes, "color": (255, 255, 255, 220), "outline": (180, 180, 180, 220), "inset": 0.75})
+
+        # Get targetable units for visual highlighting from all attack ranges
         targetable_units = None
-        if attack_range:
-            targetable_units = self.hex_grid.get_targetable_units(attack_range, "player")
+        all_attack_hexes = set()
+        for ar in attack_ranges:
+            all_attack_hexes |= ar["range"]
+        if all_attack_hexes:
+            targetable_units = self.hex_grid.get_targetable_units(all_attack_hexes, "player")
 
-        self.hex_grid.draw(screen, movement_range, attack_range, self.colors, targetable_units, attack_type=attack_type)
-        for rect in (self.ui_elements[0].rect, self.ui_elements[1].rect if self.ui_elements[1].visible else None, self.ui_elements[2].rect):
+        self.hex_grid.draw(screen, movement_range, attack_ranges, self.colors, targetable_units)
+        for rect in (self.ui_elements[0].rect if not self.log_minimized else None, self.ui_elements[1].rect if self.ui_elements[1].visible else None, self.ui_elements[2].rect):
             if rect:
                 pygame.draw.rect(screen, GRAY, rect)
         manager.draw_ui(screen)
@@ -4436,13 +4981,6 @@ class GameScreen:
                 if hasattr(btn, '_outline_color'):
                     pygame.draw.rect(screen, btn._outline_color, btn.rect, 2)
         self.animating = self.check_animations()
-        # Apply pending auto-attack mode after movement animation completes
-        if self.pending_auto_attack and not self.animating:
-            current_player = game.current_player
-            if not current_player.action_used:
-                self.selected_attack = current_player.attacks[self.pending_auto_attack]["name"]
-                self.player_mode = "attack"
-            self.pending_auto_attack = None
         # Check for pending location screen (show after movement animation completes)
         if self.pending_location and not self.animating:
             loc_data = self.pending_location
@@ -4494,48 +5032,69 @@ class InstanceEventScreen:
         self.continue_button = None
         self.needs_choice = False
         self.closing = False  # Prevent event processing after close starts
+        self.target_player = None  # Player affected by this instance
 
-    def initialize_screen(self, instance_card, outcome_text, needs_choice=False):
+    def initialize_screen(self, instance_card, outcome_text, needs_choice=False, target_name="", target_player=None):
         """Display the event and its outcome."""
         manager.clear_and_reset()
         self.instance_card = instance_card
         self.outcome_text = outcome_text
         self.needs_choice = needs_choice
+        self.target_name = target_name
+        self.target_player = target_player  # Store affected player for choice resolution
         self.choice_buttons = []
         self.ui_elements = []
         self.closing = False  # Reset closing flag when screen opens
 
+        # Target player label
+        y_pos = 20
+        if target_name:
+            if game.multiplayer_mode and len(game.players) >= 2 and target_name == (game.players[1].name or "Player 2"):
+                label_color = "#4488FF"  # Blue for P2
+            else:
+                label_color = "#44FF44"  # Green for P1
+            target_text = f"<font color='{label_color}' size=4.5><b>Affecting: {target_name}</b></font>"
+            target_box = UITextBox(
+                target_text,
+                pygame.Rect((WINDOW_WIDTH - 500) // 2, y_pos, 500, 40),
+                manager
+            )
+            self.ui_elements.append(target_box)
+            y_pos += 45
+
         # Title
         title_label = UILabel(
-            pygame.Rect(0, 50, WINDOW_WIDTH, 50),
+            pygame.Rect(0, y_pos, WINDOW_WIDTH, 50),
             f"EVENT: {instance_card.name}",
             manager,
             anchors={'centerx': 'centerx'}
         )
         self.ui_elements.append(title_label)
+        y_pos += 55
 
         # Description box
         desc_text = f"<font color='#FFFFFF' size=4>{instance_card.description}</font>"
         desc_box = UITextBox(
             desc_text,
-            pygame.Rect((WINDOW_WIDTH - 600) // 2, 120, 600, 100),
+            pygame.Rect((WINDOW_WIDTH - 600) // 2, y_pos, 600, 100),
             manager
         )
         self.ui_elements.append(desc_box)
+        y_pos += 110
 
         # Outcome text box
         outcome_display = f"<font color='#FFFF00' size=4>{outcome_text}</font>"
         outcome_box = UITextBox(
             outcome_display,
-            pygame.Rect((WINDOW_WIDTH - 600) // 2, 240, 600, 150),
+            pygame.Rect((WINDOW_WIDTH - 600) // 2, y_pos, 600, 150),
             manager
         )
         self.ui_elements.append(outcome_box)
+        y_pos += 160
 
         if needs_choice:
             # Show choice buttons
             self.choices = game.instance_manager.get_pending_choices()
-            y_pos = 420
             for i, choice in enumerate(self.choices):
                 choice_name = choice.get("name", f"Choice {i+1}")
                 risk = choice.get("risk", 0)
@@ -4551,7 +5110,7 @@ class InstanceEventScreen:
         else:
             # Show continue button
             self.continue_button = UIButton(
-                pygame.Rect((WINDOW_WIDTH - 200) // 2, 450, 200, 50),
+                pygame.Rect((WINDOW_WIDTH - 200) // 2, y_pos, 200, 50),
                 "Continue",
                 manager
             )
@@ -4599,7 +5158,7 @@ class InstanceEventScreen:
             # Check for choice buttons
             for i, btn in enumerate(self.choice_buttons):
                 if event.ui_element == btn:
-                    result = game.instance_manager.resolve_player_choice(i, game_screen.hex_grid, game.current_player)
+                    result = game.instance_manager.resolve_player_choice(i, game_screen.hex_grid, self.target_player or game.current_player)
                     self.show_result(result)
                     return
 
@@ -4656,101 +5215,146 @@ class TransitionEventScreen:
 
         # Title - Card name and state
         state_text = " (Night)" if transition_card.current_state == 2 else " (Day)" if transition_card.states == 2 else ""
-        title_label = UILabel(
-            pygame.Rect(0, 20, WINDOW_WIDTH, 40),
-            f"WORLD EVENT: {transition_card.get_current_name()}{state_text}",
-            manager,
-            anchors={'centerx': 'centerx'}
-        )
-        self.ui_elements.append(title_label)
+        is_survival = game.game_mode != "creative"
 
-        # Show target player label in multiplayer
-        if target_label:
-            if target_label == "Both Players":
-                label_color = "#FFD700"  # Gold
-            elif game.multiplayer_mode and len(game.players) >= 2 and target_label == (game.players[1].name or "Player 2"):
-                label_color = "#4488FF"  # Blue for P2
-            else:
-                label_color = "#44FF44"  # Green for P1
-            target_text = f"<font color='{label_color}' size=4><b>Affecting: {target_label}</b></font>"
-            target_box = UITextBox(
-                target_text,
-                pygame.Rect((WINDOW_WIDTH - 400) // 2, 55, 400, 35),
+        if is_survival:
+            # Survival mode: larger fonts throughout
+            title_text = f"<font color='#FFFFFF' size=5.5><b>WORLD EVENT: {transition_card.get_current_name()}{state_text}</b></font>"
+            title_box = UITextBox(
+                title_text,
+                pygame.Rect((WINDOW_WIDTH - 800) // 2, 20, 800, 50),
                 manager
             )
-            self.ui_elements.append(target_box)
+            self.ui_elements.append(title_box)
 
-        # Description
-        desc_y = 95 if target_label else 60
-        desc_text = f"<font color='#AAAAAA' size=3>{transition_card.get_current_description()}</font>"
-        desc_box = UITextBox(
-            desc_text,
-            pygame.Rect((WINDOW_WIDTH - 700) // 2, desc_y, 700, 50),
-            manager
-        )
-        self.ui_elements.append(desc_box)
+            if target_label:
+                if target_label == "Both Players":
+                    label_color = "#FFD700"
+                elif game.multiplayer_mode and len(game.players) >= 2 and target_label == (game.players[1].name or "Player 2"):
+                    label_color = "#4488FF"
+                else:
+                    label_color = "#44FF44"
+                target_text = f"<font color='{label_color}' size=5><b>Affecting: {target_label}</b></font>"
+                target_box = UITextBox(
+                    target_text,
+                    pygame.Rect((WINDOW_WIDTH - 500) // 2, 70, 500, 45),
+                    manager
+                )
+                self.ui_elements.append(target_box)
 
-        # Outcomes list header
-        outcomes_header = UILabel(
-            pygame.Rect((WINDOW_WIDTH - 700) // 2, desc_y + 55, 700, 25),
-            "Possible Outcomes:",
-            manager
-        )
-        self.ui_elements.append(outcomes_header)
-
-        # Build outcomes display - show all outcomes with the selected one highlighted
-        y_pos = desc_y + 85
-        for i, outcome in enumerate(all_outcomes):
-            prob = outcome.get("probability", 0)
-            prob_pct = int(prob * 100)
-            outcome_type = outcome.get("type", "none")
-            outcome_text = outcome.get("text", "Something happens...")
-
-            # Determine if this is the selected outcome
-            is_selected = (i == selected_index)
-
-            # Color based on selection
-            if is_selected:
-                color = "#00FF00"  # Green for selected
-                prefix = ">>> "
-                suffix = " <<<"
-            else:
-                color = "#888888"  # Gray for not selected
-                prefix = "    "
-                suffix = ""
-
-            # Format the outcome line
-            type_display = outcome_type.replace("_", " ").title()
-            line_text = f"<font color='{color}' size=3>{prefix}[{prob_pct}%] {type_display}: {outcome_text}{suffix}</font>"
-
-            outcome_box = UITextBox(
-                line_text,
-                pygame.Rect((WINDOW_WIDTH - 700) // 2, y_pos, 700, 35),
+            desc_y = 125 if target_label else 80
+            desc_text = f"<font color='#AAAAAA' size=4.5>{transition_card.get_current_description()}</font>"
+            desc_box = UITextBox(
+                desc_text,
+                pygame.Rect((WINDOW_WIDTH - 800) // 2, desc_y, 800, 80),
                 manager
             )
-            self.ui_elements.append(outcome_box)
-            y_pos += 38
+            self.ui_elements.append(desc_box)
+        else:
+            # Creative mode: original compact fonts
+            title_label = UILabel(
+                pygame.Rect(0, 20, WINDOW_WIDTH, 40),
+                f"WORLD EVENT: {transition_card.get_current_name()}{state_text}",
+                manager,
+                anchors={'centerx': 'centerx'}
+            )
+            self.ui_elements.append(title_label)
+
+            if target_label:
+                if target_label == "Both Players":
+                    label_color = "#FFD700"
+                elif game.multiplayer_mode and len(game.players) >= 2 and target_label == (game.players[1].name or "Player 2"):
+                    label_color = "#4488FF"
+                else:
+                    label_color = "#44FF44"
+                target_text = f"<font color='{label_color}' size=4><b>Affecting: {target_label}</b></font>"
+                target_box = UITextBox(
+                    target_text,
+                    pygame.Rect((WINDOW_WIDTH - 400) // 2, 55, 400, 35),
+                    manager
+                )
+                self.ui_elements.append(target_box)
+
+            desc_y = 95 if target_label else 60
+            desc_text = f"<font color='#AAAAAA' size=3>{transition_card.get_current_description()}</font>"
+            desc_box = UITextBox(
+                desc_text,
+                pygame.Rect((WINDOW_WIDTH - 700) // 2, desc_y, 700, 50),
+                manager
+            )
+            self.ui_elements.append(desc_box)
+
+        if game.game_mode == "creative":
+            # Creative mode: show all outcomes with probabilities
+            outcomes_header = UILabel(
+                pygame.Rect((WINDOW_WIDTH - 700) // 2, desc_y + 55, 700, 25),
+                "Possible Outcomes:",
+                manager
+            )
+            self.ui_elements.append(outcomes_header)
+
+            y_pos = desc_y + 85
+            for i, outcome in enumerate(all_outcomes):
+                prob = outcome.get("probability", 0)
+                prob_pct = int(prob * 100)
+                outcome_type = outcome.get("type", "none")
+                outcome_text = outcome.get("text", "Something happens...")
+
+                is_selected = (i == selected_index)
+
+                if is_selected:
+                    color = "#00FF00"
+                    prefix = ">>> "
+                    suffix = " <<<"
+                else:
+                    color = "#888888"
+                    prefix = "    "
+                    suffix = ""
+
+                type_display = outcome_type.replace("_", " ").title()
+                line_text = f"<font color='{color}' size=3>{prefix}[{prob_pct}%] {type_display}: {outcome_text}{suffix}</font>"
+
+                outcome_box = UITextBox(
+                    line_text,
+                    pygame.Rect((WINDOW_WIDTH - 700) // 2, y_pos, 700, 35),
+                    manager
+                )
+                self.ui_elements.append(outcome_box)
+                y_pos += 38
+
+            y_pos += 20
+        else:
+            # Survival mode: only show the selected outcome
+            y_pos = desc_y + 55
 
         # Result section
-        y_pos += 20
-        result_header = UILabel(
-            pygame.Rect((WINDOW_WIDTH - 700) // 2, y_pos, 700, 25),
-            "Result:",
-            manager
-        )
-        self.ui_elements.append(result_header)
-
-        y_pos += 30
-        result_display = f"<font color='#FFFF00' size=4>{self.result_text}</font>"
-        result_box = UITextBox(
-            result_display,
-            pygame.Rect((WINDOW_WIDTH - 700) // 2, y_pos, 700, 80),
-            manager
-        )
-        self.ui_elements.append(result_box)
-
-        # OK button
-        y_pos += 100
+        if game.game_mode == "creative":
+            result_header = UILabel(
+                pygame.Rect((WINDOW_WIDTH - 700) // 2, y_pos, 700, 25),
+                "Result:",
+                manager
+            )
+            self.ui_elements.append(result_header)
+            y_pos += 30
+            result_display = f"<font color='#FFFF00' size=4>{self.result_text}</font>"
+            result_box = UITextBox(
+                result_display,
+                pygame.Rect((WINDOW_WIDTH - 700) // 2, y_pos, 700, 80),
+                manager
+            )
+            self.ui_elements.append(result_box)
+            y_pos += 100
+        else:
+            # Survival mode: larger, centered result with more breathing room
+            y_pos += 20
+            result_display = f"<font color='#FFFF00' size=5.5><b>{self.result_text}</b></font>"
+            result_box = UITextBox(
+                result_display,
+                pygame.Rect((WINDOW_WIDTH - 800) // 2, y_pos, 800, 200),
+                manager
+            )
+            self.ui_elements.append(result_box)
+            y_pos += 220
         self.ok_button = UIButton(
             pygame.Rect((WINDOW_WIDTH - 150) // 2, y_pos, 150, 45),
             "OK",
@@ -4776,8 +5380,9 @@ class TransitionEventScreen:
         # This avoids rapidly switching game -> instance_event
         if game.instance_manager.pending_instance:
             instance_card = game.instance_manager.pending_instance
-            print(f"[DEBUG] Found pending instance: {instance_card.name}, calling show_instance_event")
-            game_screen.show_instance_event(instance_card)
+            target_player = game.instance_manager.pending_instance_player
+            print(f"[DEBUG] Found pending instance: {instance_card.name}, target_player={target_player.name if target_player else 'None'}, calling show_instance_event")
+            game_screen.show_instance_event(instance_card, target_player)
             print(f"[DEBUG] After show_instance_event, current_screen={game._current_screen}")
             return
 
@@ -4796,34 +5401,244 @@ class TransitionEventScreen:
         manager.draw_ui(screen)
 
 
+# ConfirmationScreen class
+class ConfirmationScreen:
+    """A simple centered screen with a message and option buttons. Accepts a callback."""
+
+    def __init__(self):
+        self.ui_elements = []
+        self.option_buttons = []
+        self.callback = None
+
+    def initialize_screen(self, message, options=None, callback=None):
+        """
+        Args:
+            message: Text to display
+            options: List of button labels (e.g. ["Yes", "No"])
+            callback: Function called with the chosen option text
+        """
+        if options is None:
+            options = ["OK"]
+        self.callback = callback
+        manager.clear_and_reset()
+        self.ui_elements = []
+        self.option_buttons = []
+
+        # Message
+        msg_width = min(600, WINDOW_WIDTH - 100)
+        msg_height = 80
+        msg_x = (WINDOW_WIDTH - msg_width) // 2
+        msg_y = WINDOW_HEIGHT // 3
+        self.ui_elements.append(
+            UITextBox(f"<font color='#FFFFFF' size=4>{message}</font>",
+                      pygame.Rect(msg_x, msg_y, msg_width, msg_height), manager)
+        )
+
+        # Option buttons
+        btn_width = 180
+        total_width = len(options) * btn_width + (len(options) - 1) * 20
+        start_x = (WINDOW_WIDTH - total_width) // 2
+        btn_y = msg_y + msg_height + 30
+
+        for i, option_text in enumerate(options):
+            btn = UIButton(
+                pygame.Rect(start_x + i * (btn_width + 20), btn_y, btn_width, 50),
+                option_text, manager
+            )
+            self.option_buttons.append(btn)
+            self.ui_elements.append(btn)
+
+    def handle_event(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            for btn in self.option_buttons:
+                if event.ui_element == btn:
+                    if self.callback:
+                        self.callback(btn.text)
+                    return
+
+    def draw(self):
+        screen.fill(DARK_INDIGO)
+        manager.draw_ui(screen)
+
+
+# SaveLoadScreen class
+class SaveLoadScreen:
+    """Full screen for browsing, loading, and deleting saves."""
+
+    def __init__(self):
+        self.ui_elements = []
+        self.save_list = None
+        self.detail_box = None
+        self.load_button = None
+        self.delete_button = None
+        self.back_button = None
+        self.mode = "load"  # "load" or "save"
+        self.saves = []
+        self.selected_index = -1
+        self.save_manager = SaveManager()
+
+    def initialize_screen(self, mode="load"):
+        self.mode = mode
+        self.selected_index = -1
+        manager.clear_and_reset()
+        self.ui_elements = []
+
+        title_text = "Load Game" if mode == "load" else "Save Game"
+        self.ui_elements.append(
+            UILabel(pygame.Rect(0, 30, WINDOW_WIDTH, 50), title_text,
+                    manager, anchors={'centerx': 'centerx'})
+        )
+
+        # Refresh saves list
+        self.saves = self.save_manager.get_all_saves()
+        display_items = [self.save_manager.format_save_display(s) for s in self.saves]
+
+        # Save list
+        list_width = WINDOW_WIDTH // 2
+        list_height = WINDOW_HEIGHT - 250
+        list_x = (WINDOW_WIDTH - list_width - 320) // 2
+        list_y = 90
+
+        self.save_list = UISelectionList(
+            pygame.Rect(list_x, list_y, list_width, list_height),
+            display_items, manager,
+            allow_multi_select=False
+        )
+        self.ui_elements.append(self.save_list)
+
+        # Detail box
+        detail_x = list_x + list_width + 20
+        detail_width = 300
+        self.detail_box = UITextBox(
+            "<font color='#AAAAAA'>Select a save to view details.</font>",
+            pygame.Rect(detail_x, list_y, detail_width, list_height - 60),
+            manager
+        )
+        self.ui_elements.append(self.detail_box)
+
+        # Buttons at bottom
+        btn_y = list_y + list_height + 15
+        btn_width = 150
+
+        self.load_button = UIButton(
+            pygame.Rect(list_x, btn_y, btn_width, 45),
+            "Load", manager
+        )
+        self.ui_elements.append(self.load_button)
+
+        self.delete_button = UIButton(
+            pygame.Rect(list_x + btn_width + 20, btn_y, btn_width, 45),
+            "Delete", manager
+        )
+        self.ui_elements.append(self.delete_button)
+
+        self.back_button = UIButton(
+            pygame.Rect(list_x + (btn_width + 20) * 2, btn_y, btn_width, 45),
+            "Back", manager
+        )
+        self.ui_elements.append(self.back_button)
+
+    def handle_event(self, event):
+        if event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
+            if event.ui_element == self.save_list:
+                selected_text = event.text
+                # Find the index
+                display_items = [self.save_manager.format_save_display(s) for s in self.saves]
+                if selected_text in display_items:
+                    self.selected_index = display_items.index(selected_text)
+                    # Show details
+                    details = self.save_manager.format_save_details(self.saves[self.selected_index])
+                    self.detail_box.set_text(f"<font color='#FFFFFF'>{details}</font>")
+                else:
+                    self.selected_index = -1
+
+        elif event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.back_button:
+                # Return to wherever we came from
+                if game_screen.game_started:
+                    game.current_screen = "game"
+                    game_screen.initialize_screen()
+                else:
+                    game.current_screen = "main_menu"
+                    main_menu.initialize_buttons()
+
+            elif event.ui_element == self.load_button:
+                if self.selected_index >= 0 and self.selected_index < len(self.saves):
+                    save_info = self.saves[self.selected_index]
+                    save_data = self.save_manager.load_save_file(save_info["filepath"])
+                    if save_data:
+                        game.current_screen = "game"
+                        game_screen.load_from_save(save_data)
+
+            elif event.ui_element == self.delete_button:
+                if self.selected_index >= 0 and self.selected_index < len(self.saves):
+                    save_info = self.saves[self.selected_index]
+                    self.save_manager.delete_save(save_info["filepath"])
+                    # Refresh
+                    self.initialize_screen(mode=self.mode)
+
+    def draw(self):
+        screen.fill(DARK_INDIGO)
+        manager.draw_ui(screen)
+
+
 # DefeatScreen class
 class DefeatScreen:
     def __init__(self):
         self.ui_elements = []
+        self.load_save_button = None
         self.humorous_messages = [
             "You got smoked like a cheap cigar!",
-            "Looks like you’re the weakest link—goodbye!",
+            "Looks like you're the weakest link—goodbye!",
             "Defeated? Even the tutorial boss is laughing!",
-            "You’ve been sent to the respawn realm!"
+            "You've been sent to the respawn realm!"
         ]
 
     def initialize_screen(self):
         manager.clear_and_reset()
         message = random.choice(self.humorous_messages)
+        btn_x = (WINDOW_WIDTH - 200) // 2
+        btn_y = WINDOW_HEIGHT // 2
+
         self.ui_elements = [
             UILabel(pygame.Rect(0, WINDOW_HEIGHT // 4, WINDOW_WIDTH, 50), message, manager, anchors={'centerx': 'centerx'}),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, WINDOW_HEIGHT // 2, 200, 50), "Restart Level", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, WINDOW_HEIGHT // 2 + 70, 200, 50), "Main Menu", manager)
         ]
+
+        # "Load Last Save" button (above Restart Level)
+        save_mgr = SaveManager()
+        latest_save = save_mgr.get_most_recent_save()
+        if latest_save:
+            self.load_save_button = UIButton(
+                pygame.Rect(btn_x, btn_y, 200, 50), "Load Last Save", manager
+            )
+            self.ui_elements.append(self.load_save_button)
+            btn_y += 70
+        else:
+            self.load_save_button = None
+
+        restart_btn = UIButton(pygame.Rect(btn_x, btn_y, 200, 50), "Restart Level", manager)
+        self.ui_elements.append(restart_btn)
+        btn_y += 70
+        menu_btn = UIButton(pygame.Rect(btn_x, btn_y, 200, 50), "Main Menu", manager)
+        self.ui_elements.append(menu_btn)
 
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.ui_elements[1]:  # Restart Level
+            text = event.ui_element.text
+            if text == "Load Last Save":
+                save_mgr = SaveManager()
+                latest_save = save_mgr.get_most_recent_save()
+                if latest_save:
+                    save_data = save_mgr.load_save_file(latest_save["filepath"])
+                    if save_data:
+                        game.current_screen = "game"
+                        game_screen.load_from_save(save_data)
+            elif text == "Restart Level":
                 game.current_screen = "game"
-                game_screen.start_new_game(level_file=game_screen.current_level_file, 
+                game_screen.start_new_game(level_file=game_screen.current_level_file,
                                            campaign_file=game_screen.campaign_file if game_screen.campaign else None)
                 game_screen.initialize_screen()
-            elif event.ui_element == self.ui_elements[2]:  # Main Menu
+            elif text == "Main Menu":
                 game.current_screen = "main_menu"
                 main_menu.initialize_buttons()
 
@@ -5128,7 +5943,9 @@ class Game:
             "defeat": defeat_screen,
             "instance_event": instance_event_screen,
             "transition_event": transition_event_screen,
-            "card_browser": card_browser_screen
+            "card_browser": card_browser_screen,
+            "confirmation": confirmation_screen,
+            "save_load": save_load_screen
         }
         game_screen.set_card_manager(self.card_manager)
 
@@ -5203,6 +6020,8 @@ recruitment_screen = RecruitmentScreen()
 party_screen = PartyScreen()
 skills_screen = SkillsScreen()
 quest_screen = QuestScreen()
+confirmation_screen = ConfirmationScreen()
+save_load_screen = SaveLoadScreen()
 defeat_screen = DefeatScreen()
 instance_event_screen = InstanceEventScreen()
 transition_event_screen = TransitionEventScreen()

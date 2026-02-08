@@ -1,6 +1,9 @@
 import pygame
 import math
 import random
+import json
+from deck_utils import resolve_deck_path
+from card_utils import load_card
 
 # Animation constants
 MOVE_SPEED = 5
@@ -19,6 +22,7 @@ class Unit:
         self.projectile_range = int(card_data["data"].get("Projectile Range", 0))
         self.allegiance = card_data["data"].get("Allegiance (Hostile, Neutral, Allied)", "Hostile")
         self.special_skill = card_data["data"].get("Special Skill", None)
+        self.spawn_deck = card_data["data"].get("Spawn_Deck", None)
         self.position = None
         self.card_type = card_data["card_type"]
         self.states = card_data.get("states", 1)
@@ -34,6 +38,10 @@ class Unit:
         self.damage_time = 0
         # Quest-related: target position for escort quests
         self.quest_target_position = None
+        # Garrison target: location pos to pathfind to for garrison assignment
+        self.garrison_target_location = None
+        # Passthrough defense messages collected during movement animation
+        self.passthrough_messages = []
         # Deferred attack (executed after movement animation completes)
         self.pending_attack = None
         # Path-based animation
@@ -73,8 +81,15 @@ class Unit:
                 self.attack_flash = True
                 self.flash_start = pygame.time.get_ticks()
                 log.append(f"{self.name} attacked {player.class_name} for {damage} damage")
+                if self.special_skill == "Life Drain":
+                    heal = damage // 2
+                    self.hp = min(self.hp + heal, self.max_hp)
+                    log.append(f"{self.name} drained {heal} HP!")
                 if player.hp <= 0:
-                    grid.game_over = True  # Signal game over
+                    # Only game over if ALL players are dead (multiplayer support)
+                    all_players = grid.players if grid.players else [grid.player]
+                    if all(p.hp <= 0 for p in all_players):
+                        grid.game_over = True
                 return log
             elif projectile_possible_player:
                 damage = self.projectile_damage
@@ -84,7 +99,9 @@ class Unit:
                 self.flash_start = pygame.time.get_ticks()
                 log.append(f"{self.name} attacked {player.class_name} with projectile for {damage} damage")
                 if player.hp <= 0:
-                    grid.game_over = True
+                    all_players = grid.players if grid.players else [grid.player]
+                    if all(p.hp <= 0 for p in all_players):
+                        grid.game_over = True
                 return log
             else:
                 allied_units = [u for u in grid.units if u.allegiance == "Allied" and u.hp > 0]
@@ -97,6 +114,10 @@ class Unit:
                     self.attack_flash = True
                     self.flash_start = pygame.time.get_ticks()
                     log.append(f"{self.name} attacked {target.name} for {damage} damage")
+                    if self.special_skill == "Life Drain":
+                        heal = damage // 2
+                        self.hp = min(self.hp + heal, self.max_hp)
+                        log.append(f"{self.name} drained {heal} HP!")
                     return log
                 
                 allied_projectile = [u for u in allied_units if
@@ -170,7 +191,28 @@ class Unit:
                                         "is_player": True
                                     }
                             break
-        
+
+                # Boss ability: Summon Minion when no other action taken
+                if not log and self.special_skill == "Summon Minion" and self.spawn_deck:
+                    neighbors = grid.get_neighbors(*self.position)
+                    empty = [p for p in neighbors if grid.grid[p[0]][p[1]]["unit"] is None]
+                    if empty:
+                        deck_path = resolve_deck_path(self.spawn_deck)
+                        try:
+                            with open(deck_path) as f:
+                                deck_data = json.load(f)
+                            card_ids = deck_data.get("cards", [])
+                            if card_ids:
+                                card_id = random.choice(card_ids)
+                                card_data = load_card(card_id)
+                                if card_data:
+                                    minion = Unit(card_data)
+                                    spawn_pos = random.choice(empty)
+                                    grid.place_unit(minion, *spawn_pos)
+                                    log.append(f"{self.name} summoned {minion.name}!")
+                        except Exception:
+                            pass
+
         elif self.allegiance == "Allied":
             hostile_units = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0]
             if hostile_units:
@@ -242,6 +284,23 @@ class Unit:
                                     if success:
                                         log.append(f"{self.name} moves toward destination")
                                     break
+                # Garrison target: pathfind to assigned defensive location
+                elif self.garrison_target_location:
+                    distance_to_garrison = grid.hex_distance(self.position, self.garrison_target_location)
+                    if distance_to_garrison <= 1:
+                        # Close enough - will be picked up by game screen
+                        log.append(f"{self.name} arrived at garrison location")
+                    elif distance_to_garrison > 0:
+                        path = grid.find_path(self.position, self.garrison_target_location)
+                        if path and len(path) > 1:
+                            max_steps = min(self.movement, len(path) - 1)
+                            for steps in range(max_steps, 0, -1):
+                                new_pos = path[steps]
+                                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                                    success, msg = grid.move_unit(self, *new_pos)
+                                    if success:
+                                        log.append(f"{self.name} moves toward garrison")
+                                    break
 
         elif self.allegiance == "Neutral":
             neighbors = grid.get_neighbors(*self.position)
@@ -291,9 +350,16 @@ class Unit:
             log.append(f"{self.name} attacked {target_name} with projectile for {damage} damage")
         else:
             log.append(f"{self.name} attacked {target_name} for {damage} damage")
+            if self.special_skill == "Life Drain":
+                heal = damage // 2
+                self.hp = min(self.hp + heal, self.max_hp)
+                log.append(f"{self.name} drained {heal} HP!")
 
         if is_player and target.hp <= 0:
-            grid.game_over = True
+            # Only game over if ALL players are dead (multiplayer support)
+            all_players = grid.players if grid.players else [grid.player]
+            if all(p.hp <= 0 for p in all_players):
+                grid.game_over = True
 
         return log
 
@@ -371,6 +437,10 @@ class Unit:
                 self.render_pos = (target_x, target_y)
                 self.animation_path_index += 1
 
+                # Check passthrough defenses when hostile unit enters a new hex
+                if self.allegiance == "Hostile":
+                    self._check_passthrough_defenses(grid, target_hex)
+
                 # Check if we've completed the path
                 if self.animation_path_index >= len(self.animation_path):
                     self.render_pos = None
@@ -386,6 +456,46 @@ class Unit:
             self.attack_flash = False
         if self.damage_text and pygame.time.get_ticks() - self.damage_time > DAMAGE_TEXT_DURATION:
             self.damage_text = None  # Clear damage text after duration
+
+    def _check_passthrough_defenses(self, grid, current_hex):
+        """Check if this hostile unit passes through any active defensive location ranges.
+        Deals half damage on successful hit based on passthrough_chance."""
+        for pos, loc_data in grid.location_data.items():
+            if loc_data.get("state", 1) != 2:
+                continue
+            garrison = loc_data.get("garrison_npcs", [])
+            if not garrison:
+                continue
+            for defense in loc_data.get("defenses", []):
+                if not defense.get("requires_npc"):
+                    continue
+                passthrough_chance = defense.get("passthrough_chance", 0)
+                if passthrough_chance <= 0:
+                    continue
+                damage = defense.get("damage", 0)
+                if damage <= 0:
+                    continue
+
+                # Use cached range if available, otherwise calculate
+                cache_key = "_cached_range"
+                cached = defense.get(cache_key)
+                if cached is None:
+                    cached = grid.calculate_range(
+                        pos, defense["range_distance"], defense["range_type"],
+                        defense.get("include_position", False), defense.get("exclude_adjacent", False)
+                    )
+                    defense[cache_key] = cached
+
+                if current_hex in cached:
+                    # Roll passthrough chance
+                    if random.randint(1, 100) <= passthrough_chance:
+                        pt_damage = max(1, damage // 2)
+                        self.hp -= pt_damage
+                        self.set_damage_text(pt_damage)
+                        loc_name = loc_data.get("card").get_current_data().get("Name", "Defense") if loc_data.get("card") else "Defense"
+                        self.passthrough_messages.append(
+                            f"{loc_name} passthrough hits {self.name} for {pt_damage} damage"
+                        )
 
     def draw_health_bar(self, surface, pos):
         if self.hp > 0:
