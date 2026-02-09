@@ -21,7 +21,7 @@ from instance_system import InstanceManager
 from transition_system import TransitionManager
 from deck_utils import resolve_deck_path
 from card_utils import load_card, load_card_index
-from terrain_config import TERRAIN_CONFIG
+from terrain_config import TERRAIN_CONFIG, get_terrain_color
 from save_system import SaveManager
 
 # Initialize Pygame and Pygame-GUI
@@ -3461,6 +3461,35 @@ class MainMenu:
 
     def draw(self):
         screen.fill(DARK_INDIGO)
+        # Decorative background hex pattern
+        hex_s = 40
+        pat_color = (30, 30, 70)
+        for pr in range(0, WINDOW_HEIGHT + hex_s * 2, int(hex_s * 1.732)):
+            for pc in range(0, WINDOW_WIDTH + hex_s * 2, int(hex_s * 1.5)):
+                offset = hex_s * 0.866 if (pc // int(hex_s * 1.5)) % 2 else 0
+                pts = [(pc + hex_s * math.cos(math.radians(60 * i)),
+                        pr + offset + hex_s * math.sin(math.radians(60 * i))) for i in range(6)]
+                pygame.draw.polygon(screen, pat_color, pts, 1)
+        # Styled title
+        title_font = pygame.font.Font(None, 80)
+        subtitle_font = pygame.font.Font(None, 28)
+        title_text = "Hex-Grid RPG"
+        shadow = title_font.render(title_text, True, (10, 10, 30))
+        title = title_font.render(title_text, True, (200, 180, 120))
+        tr = title.get_rect(centerx=WINDOW_WIDTH // 2, y=50)
+        screen.blit(shadow, tr.move(3, 3))
+        screen.blit(title, tr)
+        # Decorative line under title
+        line_y = tr.bottom + 10
+        pygame.draw.line(screen, (120, 100, 60), (WINDOW_WIDTH // 2 - 140, line_y), (WINDOW_WIDTH // 2 + 140, line_y), 1)
+        # Subtitle
+        sub = subtitle_font.render("A Card-Based Tactical Adventure", True, (120, 120, 160))
+        sr = sub.get_rect(centerx=WINDOW_WIDTH // 2, y=line_y + 8)
+        screen.blit(sub, sr)
+        # Version text
+        ver_font = pygame.font.Font(None, 18)
+        ver = ver_font.render("v0.34", True, (80, 80, 110))
+        screen.blit(ver, (WINDOW_WIDTH - 60, WINDOW_HEIGHT - 30))
         manager.draw_ui(screen)
 
 # Character Creation screen (updated to accept campaign_file)
@@ -3693,6 +3722,7 @@ class GameScreen:
         self.pending_location = None  # {"card": loc_card, "pos": hex_pos, "hex_grid": hex_grid}
         # Pending defeat screen (show after death animation completes)
         self.pending_defeat = False
+        self.defeat_notifications = []  # [(name, timestamp), ...]
         self.current_location_hex = None  # (row, col) if player is on a location
         # Building/placement mode
         self.placement_mode = False
@@ -3704,11 +3734,28 @@ class GameScreen:
         # Save manager
         self.save_manager = SaveManager()
         # Equipment toolbar (bottom of screen)
-        self.equip_toolbar_buttons = []    # 5 UIButtons for Melee/Proj/Tool/Action/Acc slots
+        self.equip_toolbar_buttons = []    # 6 UIButtons for Melee/Proj/Acc/Tool/Action/Items slots
         self.equip_action_tool = None      # Reference to the equipped tool providing the current action
         self.equip_popup_open = False      # Whether a popup is showing
         self.equip_popup_slot = None       # "melee"/"projectile"/"tool"/"accessory"
         self.equip_popup_buttons = []      # List of (UIButton, slot_type, data) tuples
+        # Items button / consumable targeting mode
+        self.selected_item = None          # Consumable card selected for use
+        self.item_targeting_mode = False   # Whether in item targeting mode
+        # Action choice popup (shown when multiple actions available on a unit)
+        self.action_choice_open = False
+        self.action_choice_buttons = []    # List of (button, action_type, data) tuples
+        self.action_choice_target = None   # The unit being targeted
+        # Right panel layout (computed in initialize_screen)
+        self.rp_width = 234
+        self.rp_pad = 10
+        self.rp_x = 0
+        self.rp_inner_w = 0
+        self.rp_pi_y = 0
+        self.rp_stats_y = 0
+        self.rp_menu_y = 0
+        self.rp_height = 0
+        self.rp_header_font = pygame.font.SysFont("Arial", 13, bold=True)
         self.colors = {
             'BLUE': BLUE,
             'DARK_RED_ALPHA': DARK_RED_ALPHA,
@@ -3722,6 +3769,39 @@ class GameScreen:
             'PURPLE': PURPLE,  # Added for linked level hexes
             'ORANGE': ORANGE   # Added for location hexes
         }
+
+    def add_defeat_notification(self, name):
+        self.defeat_notifications.append((name, pygame.time.get_ticks()))
+
+    def draw_defeat_notifications(self):
+        now = pygame.time.get_ticks()
+        self.defeat_notifications = [(n, t) for n, t in self.defeat_notifications if now - t < 3000]
+        if not self.defeat_notifications:
+            return
+        font = pygame.font.SysFont("Arial", 36, bold=True)
+        shadow_font = pygame.font.SysFont("Arial", 36, bold=True)
+        cx = WINDOW_WIDTH // 2
+        start_y = WINDOW_HEIGHT // 3
+        for i, (name, timestamp) in enumerate(self.defeat_notifications):
+            elapsed = now - timestamp
+            alpha = 255 if elapsed < 2000 else max(0, 255 - int(255 * (elapsed - 2000) / 1000))
+            # Upward drift: float up 30px over the full duration
+            drift_y = int(30 * elapsed / 3000)
+            text = f"{name} defeated!"
+            text_surf = font.render(text, True, (255, 215, 0))
+            shadow_surf = shadow_font.render(text, True, (0, 0, 0))
+            tw, th = text_surf.get_size()
+            bw, bh = tw + 40, th + 20
+            by = start_y + i * (bh + 10) - drift_y
+            banner = pygame.Surface((bw, bh), pygame.SRCALPHA)
+            # Dark background with subtle border
+            banner.fill((10, 10, 30, min(alpha, 200)))
+            pygame.draw.rect(banner, (58, 58, 92, min(alpha, 160)), (0, 0, bw, bh), 1)
+            # Text shadow then gold text
+            banner.blit(shadow_surf, (22, 12))
+            banner.blit(text_surf, (20, 10))
+            banner.set_alpha(alpha)
+            screen.blit(banner, (cx - bw // 2, by))
 
     def set_card_manager(self, card_manager):
         self.card_manager = card_manager
@@ -3741,8 +3821,14 @@ class GameScreen:
         self.waiting_for_animation = False
         self.pending_location = None
         self.pending_defeat = False
+        self.defeat_notifications = []
         self.current_location_hex = None
         self.transition_target_cycle = 0
+        self.selected_item = None
+        self.item_targeting_mode = False
+        self.action_choice_open = False
+        self.action_choice_buttons = []
+        self.action_choice_target = None
         # Reset party
         game.party = []
         # Reset quest manager
@@ -4224,7 +4310,7 @@ class GameScreen:
             elif comp_type == "reach_location":
                 if target:
                     # Check if player is at a location hex with the target name
-                    player_pos = (game.player.row, game.player.col)
+                    player_pos = game.current_player.position if game.current_player else (0, 0)
                     for loc_hex in self.hex_grid.location_hexes:
                         if (loc_hex["row"], loc_hex["column"]) == player_pos:
                             loc_card = loc_hex.get("assigned_location_card")
@@ -4285,6 +4371,7 @@ class GameScreen:
             self.hex_grid.view_offset_y = WINDOW_HEIGHT / 2 - pixel_y
 
     def advance_turn(self):
+        self._close_action_choice_popup()
         if self.turn_phase == "player":
             # Single-player mode: Apply Turn_End passives before ending player turn
             for msg in game.player.apply_passive_skills(self.hex_grid, "Turn_End"):
@@ -4510,6 +4597,7 @@ class GameScreen:
                 self.hex_grid.grid[dead_unit.position[0]][dead_unit.position[1]]["unit"] = None
             self.hex_grid.units.remove(dead_unit)
             self.add_to_log(f"{dead_unit.name} defeated")
+            self.add_defeat_notification(dead_unit.name)
             self.card_manager.track_card_usage(dead_unit.card_id, {"action": "defeated", "screen": "game"})
             quest_results = game.current_quest_manager.update("unit_death", {"unit": dead_unit}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
@@ -4522,6 +4610,7 @@ class GameScreen:
             for i, p in enumerate(game.players):
                 if p.hp <= 0 and not getattr(p, '_death_logged', False):
                     self.add_to_log(f"Player {i+1} ({p.class_name}) has fallen!")
+                    self.add_defeat_notification(f"Player {i+1} ({p.class_name})")
                     p._death_logged = True
             # Only defeat if ALL players are dead
             all_dead = all(p.hp <= 0 for p in game.players)
@@ -4535,6 +4624,7 @@ class GameScreen:
                 return True
         elif isinstance(self.hex_grid.player, Player) and self.hex_grid.player.hp <= 0:
             self.add_to_log("Player defeated!")
+            self.add_defeat_notification("Player")
             quest_results = game.current_quest_manager.update("player_death", {}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
                 self.add_to_log(msg)
@@ -4655,12 +4745,34 @@ class GameScreen:
 
     def initialize_screen(self):
         manager.clear_and_reset()
+        # Compute right panel geometry
+        rp_w = self.rp_width  # 234
+        rp_pad = self.rp_pad  # 10
+        rp_x = WINDOW_WIDTH - rp_w
+        rp_inner_w = rp_w - 2 * rp_pad  # 214
+        toolbar_clearance = 60
+        section_header_h = 20
+        player_info_h = 155
+        stats_h = 175
+
+        pi_y = section_header_h + 4  # Below "Player" label
+        stats_y = pi_y + player_info_h + rp_pad + section_header_h + 4
+        menu_y = stats_y + stats_h + rp_pad
+
+        # Store for draw()
+        self.rp_x = rp_x
+        self.rp_inner_w = rp_inner_w
+        self.rp_pi_y = pi_y
+        self.rp_stats_y = stats_y
+        self.rp_menu_y = menu_y
+        self.rp_height = WINDOW_HEIGHT - toolbar_clearance
+
         self.ui_elements = [
             UITextBox("<font color='#FFFFFF' size=4>Game Log</font>",
                       pygame.Rect((WINDOW_WIDTH - 600) // 2, 45, 600, 140),
                       manager, object_id="#log_textbox"),
             UITextBox("<font color='#FFFFFF' size=4>Stats</font>",
-                      pygame.Rect(WINDOW_WIDTH - 300, WINDOW_HEIGHT - 175, 290, 175),
+                      pygame.Rect(rp_x + rp_pad, stats_y, rp_inner_w, stats_h),
                       manager, object_id="#stats_panel", visible=False),
             UITextBox("<font color='#FFFFFF' size=4>Player's Turn</font>",
                       pygame.Rect((WINDOW_WIDTH - 200) // 2, 10, 200, 30),
@@ -4680,33 +4792,39 @@ class GameScreen:
         # Start minimized
         self.log_minimized = True
         self.ui_elements[0].hide()
-        
+
         left_panel_width = WINDOW_WIDTH // 4
         button_width = (left_panel_width - 20) // 2
         self.player_info_label = UITextBox(
-            f"<font color='#FFFFFF'>{self.get_player_info().replace('\n', '<br>')}</font>",
-            pygame.Rect(10, 0, button_width + 10, 188),
-            manager
+            self.get_player_info(),
+            pygame.Rect(rp_x + rp_pad, pi_y, rp_inner_w, player_info_h),
+            manager, object_id="#right_panel_info"
         )
         self.ui_elements.append(self.player_info_label)
         
+        # Menu button inside the right panel
+        self.menu_button = UIButton(
+            pygame.Rect(rp_x + rp_pad, menu_y, rp_inner_w, 30), "Menu", manager)
+        self.ui_elements.append(self.menu_button)
+
         y_pos = 200
         self.left_panel_buttons = []
         self.attack_submenu_open = False
         self.attack_submenu_buttons = []
         self.special_attack_button = None
-        self.menu_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Menu", manager)
-        self.left_panel_buttons.append(self.menu_button)
-        y_pos += 40
-        self.recruit_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Recruit NPC", manager)
-        self.left_panel_buttons.append(self.recruit_button)
-        y_pos += 40
-        self.search_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Search", manager)
-        self.left_panel_buttons.append(self.search_button)
+        self.selected_item = None
+        self.item_targeting_mode = False
+        self.action_choice_open = False
+        self.action_choice_buttons = []
+        self.action_choice_target = None
+
+        # Tool buttons no longer needed on left panel (handled by bottom toolbar)
+        self.tool_buttons = []
+        self.tool_button = None
 
         # Add equipped skill buttons
         self.skill_buttons = []
-        y_pos += 40
+        y_pos = 200
         for skill_card in game.current_player.equipped_skills:
             skill_data = skill_card.get_current_data()
             skill_name = skill_data.get("Name", "Unknown")
@@ -4717,40 +4835,8 @@ class GameScreen:
             self.left_panel_buttons.append(btn)
             y_pos += 40
 
-        # Add equipped tool buttons (multi-slot support)
-        self.tool_buttons = []  # List of (button, slot_index) tuples
-        self.tool_button = None  # Legacy single button (for backwards compatibility)
-
-        # Check multi-slot system first
-        if game.current_player.equipped_tools:
-            for slot_idx, tool in enumerate(game.current_player.equipped_tools):
-                if tool:
-                    tool_data = tool.get_current_data()
-                    tool_name = tool_data.get("Name", "Tool")
-                    effect_text = game.current_player.get_tool_effect_text(slot_idx)
-                    slot_label = f"[{slot_idx + 1}] " if game.current_player.tool_slots > 1 else ""
-                    btn_text = f"Use {slot_label}{tool_name} {effect_text}".strip()
-                    btn = UIButton(pygame.Rect(10, y_pos, button_width, 30), btn_text, manager)
-                    self.tool_buttons.append((btn, slot_idx))
-                    self.left_panel_buttons.append(btn)
-                    y_pos += 35
-        # Fallback to legacy single slot
-        elif game.current_player.equipped_tool:
-            tool_data = game.current_player.equipped_tool.get_current_data()
-            tool_name = tool_data.get("Name", "Tool")
-            effect_text = game.current_player.get_tool_effect_text()
-            btn_text = f"Use {tool_name} {effect_text}".strip()
-            self.tool_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), btn_text, manager)
-            self.left_panel_buttons.append(self.tool_button)
-            y_pos += 40
-
-        # End Turn button below skills, with spacing
-        y_pos += 20  # Add extra spacing to avoid overlap
-        self.end_turn_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "End Turn", manager)
-        self.left_panel_buttons.append(self.end_turn_button)
-
         self.ui_elements.extend(self.left_panel_buttons)
-        
+
         self.ui_elements[0].set_text("<font color='#FFFFFF' size=4>" + "<br>".join(reversed(self.log)) + "</font>")
         self.update_turn_label()
         self.show_stats(None)
@@ -4759,15 +4845,28 @@ class GameScreen:
     def get_player_info(self):
         p = game.current_player
         pos = p.position
-        # Add player label in multiplayer mode
-        player_label = ""
+        # Color-coded HP based on health percentage
+        hp_ratio = p.hp / p.max_hp if p.max_hp > 0 else 0
+        if hp_ratio > 0.6:
+            hp_color = "#66DD66"  # Green
+        elif hp_ratio > 0.3:
+            hp_color = "#DDDD44"  # Yellow
+        else:
+            hp_color = "#DD4444"  # Red
+        # Build HTML formatted info
+        lines = []
         if game.multiplayer_mode:
-            player_label = f"Player {p.player_number}\n"
-        info = f"{player_label}Class: {p.class_name}\nHP: {p.hp}/{p.max_hp}\nMovement: {p.movement}\nRange: {p.projectile_range}\nPosition: ({pos[0]}, {pos[1]})"
-        # Show attacks remaining for Warrior (passive dual strike)
+            lines.append(f"<font color='#AAAAFF'>Player {p.player_number}</font>")
+        lines.append(f"<font color='#FFD700'>{p.class_name}</font>")
+        lines.append(f"<font color='#999999'>HP:</font> <font color='{hp_color}'>{p.hp}/{p.max_hp}</font>")
+        mv_color = "#888888" if p.movement_used else "#CCCCDD"
+        lines.append(f"<font color='#999999'>Move:</font> <font color='{mv_color}'>{p.movement}</font>")
+        lines.append(f"<font color='#999999'>Range:</font> <font color='#CCCCDD'>{p.projectile_range}</font>")
+        act_color = "#888888" if p.action_used else "#CCCCDD"
+        lines.append(f"<font color='#999999'>Action:</font> <font color='{act_color}'>{'Used' if p.action_used else 'Ready'}</font>")
         if p.class_name == "Warrior":
-            info += f"\nAttacks: {p.warrior_attacks_remaining}/2"
-        return info
+            lines.append(f"<font color='#999999'>Attacks:</font> <font color='#CCCCDD'>{p.warrior_attacks_remaining}/2</font>")
+        return "<br>".join(lines)
 
     def _handle_quest_chain(self):
         """Check for pending quest chain and handle by mode (auto_activate or offer)."""
@@ -4816,15 +4915,39 @@ class GameScreen:
         if hasattr(self, '_pending_chain_offer'):
             del self._pending_chain_offer
 
+    def _get_log_color(self, message):
+        """Return an HTML color based on message content."""
+        msg = message.lower()
+        if "defeated" in msg or "damage" in msg or "hit" in msg or "attack" in msg:
+            return "#FF7766"  # Red for combat
+        if "quest" in msg or "reward" in msg or "chain" in msg:
+            return "#FFD700"  # Gold for quests
+        if "[recruit]" in msg or "recruit" in msg:
+            return "#44DDBB"  # Teal for recruitment
+        if "moved" in msg or "path" in msg:
+            return "#88BBFF"  # Blue for movement
+        if "drew" in msg or "found" in msg or "item" in msg or "card" in msg:
+            return "#88DD88"  # Green for loot/items
+        if "skill" in msg or "cooldown" in msg or "heal" in msg:
+            return "#CC99FF"  # Purple for skills
+        if "spawn" in msg or "weather" in msg or "event" in msg:
+            return "#FFAA55"  # Orange for world events
+        return "#CCCCDD"  # Default light gray
+
     def add_to_log(self, message):
         if message:
             self.log.append(message)
             if len(self.log) > 10:
                 self.log.pop(0)
-            self.ui_elements[0].set_text("<font color='#FFFFFF' size=4>" + "<br>".join(reversed(self.log)) + "</font>")
+            colored_lines = []
+            for msg in reversed(self.log):
+                color = self._get_log_color(msg)
+                colored_lines.append(f"<font color='{color}'>{msg}</font>")
+            self.ui_elements[0].set_text("<font size=4>" + "<br>".join(colored_lines) + "</font>")
             # Update minimized label with latest entry
             if self.log_mini_label:
-                self.log_mini_label.set_text(f"<font color='#CCCCCC' size=3>{message}</font>")
+                color = self._get_log_color(message)
+                self.log_mini_label.set_text(f"<font color='{color}' size=3>{message}</font>")
 
     def _get_terrain_info(self, hex_pos):
         """Build terrain info string for the given hex position."""
@@ -4848,38 +4971,102 @@ class GameScreen:
         return "\n".join(lines)
 
     def show_stats(self, unit, hex_pos=None):
-        parts = []
+        html_parts = []
         if unit:
-            parts.append(unit.get_stats())
+            html_parts.append(self._format_unit_stats_html(unit))
         if hex_pos:
-            parts.append(self._get_terrain_info(hex_pos))
-        if parts:
-            text = "\n".join(parts)
-            self.ui_elements[1].set_text("<font color='#FFFFFF' size=4>" + text.replace('\n', '<br>') + "</font>")
+            html_parts.append(self._format_terrain_html(hex_pos))
+        if html_parts:
+            self.ui_elements[1].set_text("<br>".join(html_parts))
             self.ui_elements[1].show()
         else:
             self.ui_elements[1].hide()
+
+    def _format_unit_stats_html(self, unit):
+        """Format unit stats as color-coded HTML."""
+        lines = []
+        # Name colored by allegiance
+        if hasattr(unit, 'allegiance'):
+            name_colors = {"Hostile": "#FF6644", "Allied": "#4488FF", "Neutral": "#44DDBB"}
+            nc = name_colors.get(unit.allegiance, "#FFFFFF")
+        else:
+            nc = "#66DD66"
+        name = unit.name if hasattr(unit, 'name') else "Unknown"
+        lines.append(f"<font color='{nc}'><b>{name}</b></font>")
+        # HP with color
+        hp_ratio = unit.hp / unit.max_hp if unit.max_hp > 0 else 0
+        if hp_ratio > 0.6:
+            hc = "#66DD66"
+        elif hp_ratio > 0.3:
+            hc = "#DDDD44"
+        else:
+            hc = "#DD4444"
+        lines.append(f"<font color='#999999'>HP:</font> <font color='{hc}'>{unit.hp}/{unit.max_hp}</font>")
+        lines.append(f"<font color='#999999'>Move:</font> <font color='#CCCCDD'>{unit.movement}</font>")
+        # Handle Player (attacks dict) vs Unit (melee_damage attribute)
+        if hasattr(unit, 'attacks') and isinstance(unit.attacks, dict):
+            melee_dmg = unit.attacks.get("melee", {}).get("damage", 0)
+            proj_info = unit.attacks.get("projectile", {})
+            proj_dmg = proj_info.get("damage", 0)
+            proj_rng = proj_info.get("range", 0)
+        else:
+            melee_dmg = getattr(unit, 'melee_damage', 0)
+            proj_dmg = getattr(unit, 'projectile_damage', 0)
+            proj_rng = getattr(unit, 'projectile_range', 0)
+        lines.append(f"<font color='#999999'>Melee:</font> <font color='#FF9966'>{melee_dmg}</font>")
+        if proj_dmg > 0:
+            lines.append(f"<font color='#999999'>Proj:</font> <font color='#BB88FF'>{proj_dmg}</font>  <font color='#999999'>Rng:</font> <font color='#CCCCDD'>{proj_rng}</font>")
+        if hasattr(unit, 'allegiance'):
+            lines.append(f"<font color='#999999'>Allegiance:</font> <font color='{nc}'>{unit.allegiance}</font>")
+        if hasattr(unit, 'special_skill') and unit.special_skill:
+            lines.append(f"<font color='#CC99FF'>{unit.special_skill}</font>")
+        return "<br>".join(lines)
+
+    def _format_terrain_html(self, hex_pos):
+        """Format terrain info as color-coded HTML."""
+        row, col = hex_pos
+        cell = self.hex_grid.grid[row][col]
+        terrain_type = cell.get("terrain", "grass")
+        terrain_name = terrain_type.replace("_", " ").title()
+        config = TERRAIN_CONFIG.get(terrain_type, TERRAIN_CONFIG["grass"])
+        walkable = config["accessible"]
+        blocks_los = config["blocks_los"]
+        lines = [f"<font color='#777799'>--- Terrain ---</font>"]
+        lines.append(f"<font color='#999999'>Type:</font> <font color='#CCCCDD'>{terrain_name}</font>")
+        wc = "#66DD66" if walkable else "#DD4444"
+        lines.append(f"<font color='#999999'>Walkable:</font> <font color='{wc}'>{'Yes' if walkable else 'No'}</font>")
+        lc = "#DD4444" if blocks_los else "#66DD66"
+        lines.append(f"<font color='#999999'>Blocks LOS:</font> <font color='{lc}'>{'Yes' if blocks_los else 'No'}</font>")
+        loc_data = self.hex_grid.location_data.get(hex_pos)
+        if loc_data and loc_data.get("card"):
+            loc_name = loc_data["card"].card_data.get("Name", "Unknown")
+            lines.append(f"<font color='#FFAA33'>{loc_name}</font>")
+        return "<br>".join(lines)
 
     def update_turn_label(self):
         if self.turn_phase == "player" and game.player:
             player_name = game.player.name if hasattr(game.player, 'name') and game.player.name else "Player"
             label = f"{player_name}'s Turn"
+            color = "#66DD66"  # Green for player
         elif self.turn_phase == "player1" and game.multiplayer_mode and len(game.players) > 0:
             player_name = game.players[0].name if hasattr(game.players[0], 'name') and game.players[0].name else "Player 1"
             label = f"{player_name}'s Turn"
+            color = "#66DD66"
         elif self.turn_phase == "player2" and game.multiplayer_mode and len(game.players) > 1:
             player_name = game.players[1].name if hasattr(game.players[1], 'name') and game.players[1].name else "Player 2"
             label = f"{player_name}'s Turn"
+            color = "#6688FF"  # Blue for player 2
         else:
             phases = {
-                "allied": "Allied Turn",
-                "neutral": "Neutral Turn",
-                "hostile": "Enemies' Turn",
-                "location_defense": "Location Defense",
-                "transition": "World Events"
+                "allied": ("Allied Turn", "#44AAFF"),
+                "neutral": ("Neutral Turn", "#00CCAA"),
+                "hostile": ("Enemies' Turn", "#FF6644"),
+                "location_defense": ("Location Defense", "#FFAA33"),
+                "transition": ("World Events", "#CC88FF")
             }
-            label = phases.get(self.turn_phase, "Unknown")
-        self.ui_elements[2].set_text(f"<font color='#FFFFFF' size=4>{label}</font>")
+            label, color = phases.get(self.turn_phase, ("Unknown", "#FFFFFF"))
+        turn_num = self.turn_cycle_count + 1
+        self.ui_elements[2].set_text(f"<font color='{color}' size=4>{label}</font> <font color='#8888AA' size=3>Turn {turn_num}</font>")
 
     def rebuild_left_panel(self):
         """Rebuild the left panel UI for the current player (used in multiplayer when turn changes)."""
@@ -4899,25 +5086,31 @@ class GameScreen:
 
         # Update player info label
         self.player_info_label.set_text(
-            f"<font color='#FFFFFF'>{self.get_player_info().replace(chr(10), '<br>')}</font>"
+            self.get_player_info()
         )
+
+        # Rebuild menu button in right panel
+        if self.menu_button:
+            self.menu_button.kill()
+            if self.menu_button in self.ui_elements:
+                self.ui_elements.remove(self.menu_button)
+        self.menu_button = UIButton(
+            pygame.Rect(self.rp_x + self.rp_pad, self.rp_menu_y, self.rp_inner_w, 30),
+            "Menu", manager)
+        self.ui_elements.append(self.menu_button)
 
         y_pos = 200
         self.attack_submenu_open = False
         self.attack_submenu_buttons = []
         self.special_attack_button = None
-        self.menu_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Menu", manager)
-        self.left_panel_buttons.append(self.menu_button)
-        y_pos += 40
-        self.recruit_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Recruit NPC", manager)
-        self.left_panel_buttons.append(self.recruit_button)
-        y_pos += 40
-        self.search_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Search", manager)
-        self.left_panel_buttons.append(self.search_button)
+
+        # Tool buttons no longer needed on left panel (handled by bottom toolbar)
+        self.tool_buttons = []
+        self.tool_button = None
 
         # Add equipped skill buttons
         self.skill_buttons = []
-        y_pos += 40
+        y_pos = 200
         for skill_card in current_player.equipped_skills:
             skill_data = skill_card.get_current_data()
             skill_name = skill_data.get("Name", "Unknown")
@@ -4928,44 +5121,12 @@ class GameScreen:
             self.left_panel_buttons.append(btn)
             y_pos += 40
 
-        # Add equipped tool buttons (multi-slot support)
-        self.tool_buttons = []  # List of (button, slot_index) tuples
-        self.tool_button = None  # Legacy single button (for backwards compatibility)
-
-        # Check multi-slot system first
-        if current_player.equipped_tools:
-            for slot_idx, tool in enumerate(current_player.equipped_tools):
-                if tool:
-                    tool_data = tool.get_current_data()
-                    tool_name = tool_data.get("Name", "Tool")
-                    effect_text = current_player.get_tool_effect_text(slot_idx)
-                    slot_label = f"[{slot_idx + 1}] " if current_player.tool_slots > 1 else ""
-                    btn_text = f"Use {slot_label}{tool_name} {effect_text}".strip()
-                    btn = UIButton(pygame.Rect(10, y_pos, button_width, 30), btn_text, manager)
-                    self.tool_buttons.append((btn, slot_idx))
-                    self.left_panel_buttons.append(btn)
-                    y_pos += 35
-        # Fallback to legacy single slot
-        elif current_player.equipped_tool:
-            tool_data = current_player.equipped_tool.get_current_data()
-            tool_name = tool_data.get("Name", "Tool")
-            effect_text = current_player.get_tool_effect_text()
-            btn_text = f"Use {tool_name} {effect_text}".strip()
-            self.tool_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), btn_text, manager)
-            self.left_panel_buttons.append(self.tool_button)
-            y_pos += 40
-
-        # End Turn button
-        y_pos += 20
-        self.end_turn_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "End Turn", manager)
-        self.left_panel_buttons.append(self.end_turn_button)
-
         self.ui_elements.extend(self.left_panel_buttons)
         self.update_turn_label()
         self._create_equipment_toolbar()
 
     def _create_equipment_toolbar(self):
-        """Create 5 equipment slot buttons at the bottom of the screen."""
+        """Create 7 bottom toolbar buttons (6 equipment + End Turn)."""
         self._close_equip_popup()
         # Kill existing toolbar buttons
         for btn in self.equip_toolbar_buttons:
@@ -4973,11 +5134,18 @@ class GameScreen:
             if btn in self.ui_elements:
                 self.ui_elements.remove(btn)
         self.equip_toolbar_buttons = []
+        # Kill existing end turn button if it exists
+        if hasattr(self, 'end_turn_button') and self.end_turn_button:
+            self.end_turn_button.kill()
+            if self.end_turn_button in self.ui_elements:
+                self.ui_elements.remove(self.end_turn_button)
+            if self.end_turn_button in self.left_panel_buttons:
+                self.left_panel_buttons.remove(self.end_turn_button)
 
         p = game.current_player
-        btn_w, btn_h = 200, 40
-        gap = 10
-        total_w = btn_w * 5 + gap * 4
+        btn_w, btn_h = 180, 40
+        gap = 8
+        total_w = btn_w * 7 + gap * 6
         start_x = (WINDOW_WIDTH - total_w) // 2
         y = WINDOW_HEIGHT - 50
 
@@ -5003,8 +5171,8 @@ class GameScreen:
         elif p.equipped_tool:
             tool_names.append(p.equipped_tool.get_current_data().get("Name", "?"))
         tool_label = ", ".join(tool_names) if tool_names else "---"
-        if len(tool_label) > 24:
-            tool_label = tool_label[:21] + "..."
+        if len(tool_label) > 20:
+            tool_label = tool_label[:17] + "..."
         # Action button label - shows Tool_Action from first equipped tool that has one
         action_label = "---"
         self.equip_action_tool = None
@@ -5018,12 +5186,17 @@ class GameScreen:
         else:
             acc_name = "---"
 
-        labels = [f"Melee: {melee_name}", f"Proj: {proj_name}", f"Acc: {acc_name}", f"Tool: {tool_label}", f"Action: {action_label}"]
+        labels = [f"Melee: {melee_name}", f"Proj: {proj_name}", f"Acc: {acc_name}", f"Tool: {tool_label}", f"Action: {action_label}", "Items"]
         for i, label in enumerate(labels):
             bx = start_x + i * (btn_w + gap)
             btn = UIButton(pygame.Rect(bx, y, btn_w, btn_h), label, manager)
             self.equip_toolbar_buttons.append(btn)
             self.ui_elements.append(btn)
+
+        # End Turn as 7th button in the same row
+        end_x = start_x + 6 * (btn_w + gap)
+        self.end_turn_button = UIButton(pygame.Rect(end_x, y, btn_w, btn_h), "End Turn", manager)
+        self.ui_elements.append(self.end_turn_button)
 
     # ===== TOOL ACTION SYSTEM =====
 
@@ -5040,6 +5213,8 @@ class GameScreen:
             self._handle_build_action(current_player)
         elif action_name == "Read":
             self._handle_read_action(current_player, action_tool)
+        elif action_name == "Search":
+            self._handle_search_action(current_player)
         else:
             self._handle_generic_tool_action(current_player, action_name)
 
@@ -5081,6 +5256,23 @@ class GameScreen:
         self.add_to_log(message)
         self.player_info_label.set_text(self.get_player_info())
         self._create_equipment_toolbar()
+
+    def _handle_search_action(self, current_player):
+        """Handle the Search tool action for Scavenger's Kit."""
+        if current_player.action_used:
+            self.add_to_log("Action already used this turn")
+            return
+        player_pos = current_player.position
+        terrain = self.hex_grid.grid[player_pos[0]][player_pos[1]].get("terrain", "grass")
+        location_name = None
+        loc_data = self.hex_grid.location_data.get(player_pos)
+        if loc_data and loc_data.get("card"):
+            location_name = loc_data["card"].get_current_data().get("Name", "")
+        success, message, flipped_card = current_player.search(terrain, location_name)
+        self.add_to_log(message)
+        if success:
+            self.player_info_label.set_text(self.get_player_info())
+            self.initialize_screen()
 
     def _handle_generic_tool_action(self, current_player, action_name):
         """Handle generic tool actions (Dig, Prune, etc.) that flip Searchable cards."""
@@ -5180,11 +5372,97 @@ class GameScreen:
         if os.path.exists(filepath):
             os.remove(filepath)
 
+    # ===== ITEMS BUTTON SYSTEM =====
+
+    def _handle_items_click(self):
+        """Handle click on the Items toolbar button. Opens popup of usable consumables from inventory."""
+        # If already in item targeting mode, cancel it
+        if self.item_targeting_mode:
+            self.selected_item = None
+            self.item_targeting_mode = False
+            self.player_mode = "movement"
+            self.add_to_log("Item use cancelled")
+            self._close_equip_popup()
+            return
+
+        # If a popup is already open for items, close it
+        if self.equip_popup_open and self.equip_popup_slot == "items":
+            self._close_equip_popup()
+            return
+
+        self._close_equip_popup()
+        p = game.current_player
+
+        if p.action_used:
+            self.add_to_log("Action already used this turn")
+            return
+
+        # Get the Items button (index 5)
+        if len(self.equip_toolbar_buttons) < 6:
+            return
+        slot_btn = self.equip_toolbar_buttons[5]
+
+        items = []
+        # Gather equipped cards to exclude
+        equipped_cards = set()
+        if p.melee_weapon:
+            equipped_cards.add(id(p.melee_weapon))
+        if p.projectile_weapon:
+            equipped_cards.add(id(p.projectile_weapon))
+        if p.equipped_accessory:
+            equipped_cards.add(id(p.equipped_accessory))
+        for t in p.equipped_tools:
+            if t:
+                equipped_cards.add(id(t))
+        if p.equipped_tool:
+            equipped_cards.add(id(p.equipped_tool))
+
+        for card in p.inventory:
+            if id(card) in equipped_cards:
+                continue
+            if card.current_state != 2:
+                continue
+            cdata = card.get_current_data()
+            ctype = cdata.get("Type", "")
+            hp_effect = cdata.get("Use_HP", "")
+            # Include consumables and any card with Use_HP, but exclude ammunition
+            if ctype == "Ammunition":
+                continue
+            if ctype == "Consumable" or hp_effect:
+                name = cdata.get("Name", "???")
+                label = f"{name} ({hp_effect})" if hp_effect else name
+                items.append((label, card))
+
+        if not items:
+            items.append(("(No consumables)", None))
+
+        # Cap at 10 items
+        items = items[:10]
+
+        # Build popup buttons stacking upward from just above the slot button
+        popup_y = slot_btn.rect.y - 5
+        btn_w = slot_btn.rect.width
+        self.equip_popup_buttons = []
+        for label, data in reversed(items):
+            popup_y -= 34
+            btn = UIButton(pygame.Rect(slot_btn.rect.x, popup_y, btn_w, 30), label, manager)
+            self.equip_popup_buttons.append((btn, "items", data))
+            self.ui_elements.append(btn)
+
+        self.equip_popup_open = True
+        self.equip_popup_slot = "items"
+
     # ===== EQUIPMENT POPUP SYSTEM =====
 
     def _open_equip_popup(self, slot_type):
         """Open a popup menu above the clicked equipment slot."""
         self._close_equip_popup()
+        self._close_action_choice_popup()
+        # Cancel item targeting mode when opening other popups
+        if self.item_targeting_mode:
+            self.selected_item = None
+            self.item_targeting_mode = False
+            self.player_mode = "movement"
         p = game.current_player
         slot_idx_map = {"melee": 0, "projectile": 1, "accessory": 2, "tool": 3}
         btn_idx = slot_idx_map[slot_type]
@@ -5232,7 +5510,9 @@ class GameScreen:
                     already_equipped = True
                 if already_equipped:
                     continue
-                if ctype in ("Consumable", "Tool", "Ammunition") or cdata.get("Use_HP") or cdata.get("Ammo_Damage") or cdata.get("Tool_Action"):
+                if ctype in ("Ammunition", "Consumable"):
+                    continue
+                if ctype == "Tool" or cdata.get("Tool_Action"):
                     items.append((cdata.get("Name", "???"), card))
             # Unequip entries per slot
             if p.equipped_tools:
@@ -5281,6 +5561,147 @@ class GameScreen:
         self.equip_popup_buttons = []
         self.equip_popup_open = False
         self.equip_popup_slot = None
+
+    def _open_action_choice_popup(self, unit, hex_pos, actions):
+        """Open a popup near the clicked unit showing available actions (melee, projectile, recruit)."""
+        self._close_action_choice_popup()
+        # Convert hex position to screen pixel
+        cx, cy = self.hex_grid.get_hex_center(hex_pos[0], hex_pos[1])
+        btn_w = 200
+        btn_h = 30
+        # Position popup to the right of the hex, offset slightly
+        start_x = int(cx + self.hex_grid.hex_size * 0.8)
+        start_y = int(cy - (len(actions) * (btn_h + 4)) // 2)
+        # Clamp to screen bounds
+        if start_x + btn_w > WINDOW_WIDTH:
+            start_x = int(cx - self.hex_grid.hex_size * 0.8 - btn_w)
+        if start_y < 0:
+            start_y = 5
+        if start_y + len(actions) * (btn_h + 4) > WINDOW_HEIGHT:
+            start_y = WINDOW_HEIGHT - len(actions) * (btn_h + 4) - 5
+        for i, (label, action_type, data) in enumerate(actions):
+            y = start_y + i * (btn_h + 4)
+            btn = UIButton(pygame.Rect(start_x, y, btn_w, btn_h), label, manager)
+            self.action_choice_buttons.append((btn, action_type, data))
+            self.ui_elements.append(btn)
+        self.action_choice_open = True
+        self.action_choice_target = unit
+
+    def _close_action_choice_popup(self):
+        """Close the action choice popup."""
+        for btn, _, _ in self.action_choice_buttons:
+            btn.kill()
+            if btn in self.ui_elements:
+                self.ui_elements.remove(btn)
+        self.action_choice_buttons = []
+        self.action_choice_open = False
+        self.action_choice_target = None
+
+    def _handle_action_choice(self, action_type, data):
+        """Dispatch the chosen action from the action choice popup."""
+        target = self.action_choice_target
+        self._close_action_choice_popup()
+        if not target:
+            return
+        current_player = game.current_player
+        if action_type == "melee":
+            self.selected_attack = current_player.attacks["melee"]["name"]
+            self.player_mode = "attack"
+            # Execute the attack on the target
+            hex_pos = target.position
+            if hex_pos:
+                message, result = current_player.attack(target, self.selected_attack, self.hex_grid, game.current_party)
+                self.add_to_log(message)
+                if message:
+                    if isinstance(result, list):
+                        for hit_unit, hit_dmg, hit_defeated in result:
+                            hit_unit.attack_flash = True
+                            hit_unit.flash_start = pygame.time.get_ticks()
+                            if hit_defeated:
+                                hit_pos = hit_unit.position
+                                if hit_pos:
+                                    self.hex_grid.grid[hit_pos[0]][hit_pos[1]]["unit"] = None
+                                if hit_unit in self.hex_grid.units:
+                                    self.hex_grid.units.remove(hit_unit)
+                                self.add_to_log(f"{hit_unit.name} defeated")
+                                self.add_defeat_notification(hit_unit.name)
+                                self.card_manager.track_card_usage(hit_unit.card_id, {"action": "defeated", "screen": "game"})
+                                quest_results = game.current_quest_manager.update("unit_death", {"unit": hit_unit}, self.hex_grid, current_player)
+                                for quest, qresult, msg in quest_results:
+                                    self.add_to_log(msg)
+                                self._handle_quest_chain()
+                        self.update_quest_button()
+                        self.show_stats(None)
+                    else:
+                        target.attack_flash = True
+                        target.flash_start = pygame.time.get_ticks()
+                        if result:
+                            self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = None
+                            if target in self.hex_grid.units:
+                                self.hex_grid.units.remove(target)
+                            self.add_to_log(f"{target.name} defeated")
+                            self.add_defeat_notification(target.name)
+                            self.card_manager.track_card_usage(target.card_id, {"action": "defeated", "screen": "game"})
+                            quest_results = game.current_quest_manager.update("unit_death", {"unit": target}, self.hex_grid, current_player)
+                            for quest, qresult, msg in quest_results:
+                                self.add_to_log(msg)
+                            self._handle_quest_chain()
+                            self.update_quest_button()
+                            self.show_stats(None)
+                self.player_info_label.set_text(self.get_player_info())
+                self.selected_attack = None
+                if current_player.action_used and not current_player.movement_used:
+                    self.player_mode = "movement"
+        elif action_type == "projectile":
+            self.selected_attack = current_player.attacks["projectile"]["name"]
+            self.player_mode = "attack"
+            hex_pos = target.position
+            if hex_pos:
+                message, result = current_player.attack(target, self.selected_attack, self.hex_grid, game.current_party)
+                self.add_to_log(message)
+                if message:
+                    if isinstance(result, list):
+                        for hit_unit, hit_dmg, hit_defeated in result:
+                            hit_unit.attack_flash = True
+                            hit_unit.flash_start = pygame.time.get_ticks()
+                            if hit_defeated:
+                                hit_pos = hit_unit.position
+                                if hit_pos:
+                                    self.hex_grid.grid[hit_pos[0]][hit_pos[1]]["unit"] = None
+                                if hit_unit in self.hex_grid.units:
+                                    self.hex_grid.units.remove(hit_unit)
+                                self.add_to_log(f"{hit_unit.name} defeated")
+                                self.add_defeat_notification(hit_unit.name)
+                                self.card_manager.track_card_usage(hit_unit.card_id, {"action": "defeated", "screen": "game"})
+                                quest_results = game.current_quest_manager.update("unit_death", {"unit": hit_unit}, self.hex_grid, current_player)
+                                for quest, qresult, msg in quest_results:
+                                    self.add_to_log(msg)
+                                self._handle_quest_chain()
+                        self.update_quest_button()
+                        self.show_stats(None)
+                    else:
+                        target.attack_flash = True
+                        target.flash_start = pygame.time.get_ticks()
+                        if result:
+                            self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = None
+                            if target in self.hex_grid.units:
+                                self.hex_grid.units.remove(target)
+                            self.add_to_log(f"{target.name} defeated")
+                            self.add_defeat_notification(target.name)
+                            self.card_manager.track_card_usage(target.card_id, {"action": "defeated", "screen": "game"})
+                            quest_results = game.current_quest_manager.update("unit_death", {"unit": target}, self.hex_grid, current_player)
+                            for quest, qresult, msg in quest_results:
+                                self.add_to_log(msg)
+                            self._handle_quest_chain()
+                            self.update_quest_button()
+                            self.show_stats(None)
+                self.player_info_label.set_text(self.get_player_info())
+                self.selected_attack = None
+                if current_player.action_used and not current_player.movement_used:
+                    self.player_mode = "movement"
+        elif action_type == "recruit":
+            game.current_screen = "recruitment"
+            recruitment_screen.initialize_screen(target)
 
     def _handle_equip_popup_selection(self, slot_type, data):
         """Handle equip/unequip from the popup menu."""
@@ -5353,9 +5774,19 @@ class GameScreen:
                 name = data.get_current_data().get("Name", "???")
                 self.add_to_log(f"Equipped {name}")
 
+        elif slot_type == "items":
+            # Selected a consumable item from the Items popup
+            item_name = data.get_current_data().get("Name", "???")
+            self.selected_item = data
+            self.item_targeting_mode = True
+            self.player_mode = "item"
+            self.add_to_log(f"Selected {item_name} - Click adjacent entity or self to use")
+            self._close_equip_popup()
+            return
+
         self._close_equip_popup()
         self.player_info_label.set_text(
-            f"<font color='#FFFFFF'>{self.get_player_info().replace(chr(10), '<br>')}</font>"
+            self.get_player_info()
         )
         self._create_equipment_toolbar()
         self.rebuild_left_panel()
@@ -5373,6 +5804,7 @@ class GameScreen:
             if defeated_unit in self.hex_grid.units:
                 self.hex_grid.units.remove(defeated_unit)
             self.add_to_log(f"{defeated_unit.name} defeated")
+            self.add_defeat_notification(defeated_unit.name)
             self.card_manager.track_card_usage(defeated_unit.card_id, {"action": "defeated", "screen": "game"})
             # Notify quest system of unit death
             quest_results = game.current_quest_manager.update("unit_death", {"unit": defeated_unit}, self.hex_grid, game.current_player)
@@ -5537,6 +5969,10 @@ class GameScreen:
     def resume_after_instance(self):
         """Called after an instance event is resolved to continue the turn."""
         print(f"[DEBUG] resume_after_instance: turn_phase={self.turn_phase}, campaign={bool(self.campaign)}")
+        # Show defeat notifications for any units killed by the instance event
+        for name in game.instance_manager.defeated_units:
+            self.add_defeat_notification(name)
+        game.instance_manager.defeated_units.clear()
         # If we're still in transition phase (instance was triggered by transition card),
         # complete the transition and move to player phase
         if self.turn_phase == "transition":
@@ -5703,6 +6139,7 @@ class GameScreen:
                     self.hex_grid.grid[dead_unit.position[0]][dead_unit.position[1]]["unit"] = None
                 self.hex_grid.units.remove(dead_unit)
                 self.add_to_log(f"{dead_unit.name} defeated")
+                self.add_defeat_notification(dead_unit.name)
                 self.card_manager.track_card_usage(dead_unit.card_id, {"action": "defeated", "screen": "game"})
                 quest_results = game.current_quest_manager.update("unit_death", {"unit": dead_unit}, self.hex_grid, game.current_player)
                 for quest, result, msg in quest_results:
@@ -5805,7 +6242,8 @@ class GameScreen:
             if unit.animating:
                 unit.update_animation(self.hex_grid)  # Pass grid
                 animating = True
-            unit.update_animation(self.hex_grid)  # Pass grid for damage text
+            elif unit.damage_text:
+                unit.update_animation(self.hex_grid)  # Update damage text fade only
 
         # Check for pending NPC arrivals (quest NPCs moving to locations)
         if game.current_quest_manager.has_pending_arrivals():
@@ -5818,6 +6256,10 @@ class GameScreen:
 
     def _is_click_on_ui(self, pos):
         """Check if a screen position overlaps any visible UI element."""
+        # Right panel covers the entire right side
+        rp_rect = pygame.Rect(self.rp_x, 0, self.rp_width, self.rp_height)
+        if rp_rect.collidepoint(pos):
+            return True
         if self.equip_popup_open:
             for btn, _, _ in self.equip_popup_buttons:
                 if btn.rect.collidepoint(pos):
@@ -5853,6 +6295,15 @@ class GameScreen:
                             break
                 if not on_popup:
                     self._close_equip_popup()
+            # Dismiss action choice popup if clicking outside it
+            if self.action_choice_open and event.button == 1:
+                on_action_popup = False
+                for btn, _, _ in self.action_choice_buttons:
+                    if btn.rect.collidepoint(pos):
+                        on_action_popup = True
+                        break
+                if not on_action_popup:
+                    self._close_action_choice_popup()
             # Skip hex grid processing if click is on a UI element
             if self._is_click_on_ui(pos):
                 return
@@ -5864,16 +6315,40 @@ class GameScreen:
                 unit = self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"]
                 self.show_stats(unit, hex_pos)
                 current_player = game.current_player
-                # Auto-detect attack type if clicking on an enemy in range (skip in recruit/skill modes)
-                if not self.selected_attack and not current_player.action_used and unit and isinstance(unit, Unit) and self.player_mode not in ("recruit", "skill"):
-                    melee_range = current_player.get_melee_attack_range(self.hex_grid)
-                    proj_range = current_player.get_projectile_attack_range(self.hex_grid, game.current_party)
-                    if melee_range and hex_pos in melee_range:
-                        self.selected_attack = current_player.attacks["melee"]["name"]
-                        self.player_mode = "attack"
-                    elif proj_range and hex_pos in proj_range:
-                        self.selected_attack = current_player.attacks["projectile"]["name"]
-                        self.player_mode = "attack"
+                # Auto-detect available actions when clicking on a unit (skip in recruit/skill modes)
+                if not self.selected_attack and unit and isinstance(unit, Unit) and self.player_mode not in ("recruit", "skill", "item"):
+                    available_actions = []
+                    # Attack options only available if action not yet used
+                    if not current_player.action_used:
+                        melee_range = current_player.get_melee_attack_range(self.hex_grid)
+                        proj_range = current_player.get_projectile_attack_range(self.hex_grid, game.current_party)
+                        if melee_range and hex_pos in melee_range:
+                            melee_name = current_player.attacks["melee"]["name"]
+                            melee_dmg = current_player.attacks["melee"]["damage"]
+                            available_actions.append((f"Melee: {melee_name} ({melee_dmg} dmg)", "melee", None))
+                        if proj_range and hex_pos in proj_range:
+                            proj_name = current_player.attacks["projectile"]["name"]
+                            proj_dmg = current_player.attacks["projectile"]["damage"]
+                            available_actions.append((f"Proj: {proj_name} ({proj_dmg} dmg)", "projectile", None))
+                    # Recruit option available regardless of action_used
+                    if unit.allegiance == "Neutral" and self.hex_grid.hex_distance(current_player.position, hex_pos) == 1:
+                        cost = self._calculate_recruitment_cost(unit)
+                        available_actions.append((f"Recruit {unit.name} (Cost: {cost})", "recruit", unit))
+                    if len(available_actions) == 1:
+                        action_type = available_actions[0][1]
+                        if action_type == "melee":
+                            self.selected_attack = current_player.attacks["melee"]["name"]
+                            self.player_mode = "attack"
+                        elif action_type == "projectile":
+                            self.selected_attack = current_player.attacks["projectile"]["name"]
+                            self.player_mode = "attack"
+                        elif action_type == "recruit":
+                            game.current_screen = "recruitment"
+                            recruitment_screen.initialize_screen(unit)
+                            return
+                    elif len(available_actions) >= 2:
+                        self._open_action_choice_popup(unit, hex_pos, available_actions)
+                        return
                 if self.player_mode == "attack" and self.selected_attack and unit and isinstance(unit, Unit):
                     message, result = current_player.attack(unit, self.selected_attack, self.hex_grid, game.current_party)
                     self.add_to_log(message)
@@ -5890,6 +6365,7 @@ class GameScreen:
                                     if hit_unit in self.hex_grid.units:
                                         self.hex_grid.units.remove(hit_unit)
                                     self.add_to_log(f"{hit_unit.name} defeated")
+                                    self.add_defeat_notification(hit_unit.name)
                                     self.card_manager.track_card_usage(hit_unit.card_id, {"action": "defeated", "screen": "game"})
                                     quest_results = game.current_quest_manager.update("unit_death", {"unit": hit_unit}, self.hex_grid, current_player)
                                     for quest, qresult, msg in quest_results:
@@ -5905,6 +6381,7 @@ class GameScreen:
                                 self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = None
                                 self.hex_grid.units.remove(unit)
                                 self.add_to_log(f"{unit.name} defeated")
+                                self.add_defeat_notification(unit.name)
                                 self.card_manager.track_card_usage(unit.card_id, {"action": "defeated", "screen": "game"})
                                 quest_results = game.current_quest_manager.update("unit_death", {"unit": unit}, self.hex_grid, current_player)
                                 for quest, qresult, msg in quest_results:
@@ -5949,6 +6426,7 @@ class GameScreen:
                             self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = None
                             self.hex_grid.units.remove(unit)
                             self.add_to_log(f"{unit.name} defeated")
+                            self.add_defeat_notification(unit.name)
                             self.card_manager.track_card_usage(unit.card_id, {"action": "defeated", "screen": "game"})
                             # Notify quest system of unit death
                             quest_results = game.current_quest_manager.update("unit_death", {"unit": unit}, self.hex_grid, current_player)
@@ -5961,6 +6439,29 @@ class GameScreen:
                     self.selected_skill = None
                     self.player_mode = "movement"
                     self.initialize_screen()  # Refresh to update cooldown display
+                elif self.player_mode == "item" and self.selected_item:
+                    # Use consumable item on target
+                    target = None
+                    if hex_pos == current_player.position:
+                        target = current_player
+                    elif self.hex_grid.hex_distance(current_player.position, hex_pos) == 1:
+                        if unit and isinstance(unit, Unit):
+                            target = unit
+                        elif unit and hasattr(unit, 'class_name'):
+                            # Another player in multiplayer
+                            target = unit
+                    if target is None:
+                        self.add_to_log("No valid target - click self or adjacent entity")
+                    else:
+                        success, msg = current_player.use_item(self.selected_item, target, self.hex_grid)
+                        self.add_to_log(msg)
+                        if success:
+                            self.player_info_label.set_text(self.get_player_info())
+                            self._create_equipment_toolbar()
+                        # Exit item mode after attempt
+                        self.selected_item = None
+                        self.item_targeting_mode = False
+                        self.player_mode = "movement"
                 elif self.player_mode == "recruit" and unit and isinstance(unit, Unit):
                     # Check if clicked unit is adjacent and neutral
                     distance = self.hex_grid.hex_distance(current_player.position, hex_pos)
@@ -6077,22 +6578,45 @@ class GameScreen:
         elif event.type == pygame.MOUSEBUTTONUP and event.button in (2, 3):
             if hasattr(self, 'drag_button') and event.button == self.drag_button:
                 self.dragging = False
-        elif event.type == pygame.MOUSEMOTION and self.dragging:
-            dx = event.pos[0] - self.drag_start_x
-            dy = event.pos[1] - self.drag_start_y
-            self.hex_grid.view_offset_x = self.start_view_offset_x + dx
-            self.hex_grid.view_offset_y = self.start_view_offset_y + dy
-            grid_width = self.hex_grid.cols * self.hex_grid.hex_size * 1.5
-            grid_height = self.hex_grid.rows * self.hex_grid.hex_size * 1.732
-            # Allow scrolling with padding so edges can be seen when zoomed in
-            padding_x = WINDOW_WIDTH * 0.4  # 40% of window as padding
-            padding_y = WINDOW_HEIGHT * 0.4
-            min_offset_x = WINDOW_WIDTH - grid_width - padding_x
-            max_offset_x = padding_x
-            min_offset_y = WINDOW_HEIGHT - grid_height - padding_y
-            max_offset_y = padding_y
-            self.hex_grid.view_offset_x = max(min(self.hex_grid.view_offset_x, max_offset_x), min_offset_x)
-            self.hex_grid.view_offset_y = max(min(self.hex_grid.view_offset_y, max_offset_y), min_offset_y)
+        elif event.type == pygame.MOUSEMOTION:
+            # Update hover hex tracking (always, even when not dragging)
+            if not self._is_click_on_ui(event.pos):
+                self.hex_grid.hovered_hex = self.hex_grid.get_hex_at_pixel(event.pos[0], event.pos[1])
+                # Build damage preview for hover tooltip
+                self.hex_grid.hover_extra_lines = []
+                hover_pos = self.hex_grid.hovered_hex
+                if hover_pos and not game.current_player.action_used:
+                    hcell = self.hex_grid.grid[hover_pos[0]][hover_pos[1]] if (0 <= hover_pos[0] < self.hex_grid.rows and 0 <= hover_pos[1] < self.hex_grid.cols) else None
+                    h_unit = hcell.get("unit") if hcell else None
+                    if h_unit and isinstance(h_unit, Unit) and hasattr(h_unit, 'allegiance') and h_unit.allegiance == "Hostile":
+                        cp = game.current_player
+                        melee_r = cp.get_melee_attack_range(self.hex_grid)
+                        proj_r = cp.get_projectile_attack_range(self.hex_grid, game.current_party)
+                        if melee_r and hover_pos in melee_r:
+                            m_dmg = cp.attacks["melee"]["damage"]
+                            self.hex_grid.hover_extra_lines.append(f"~Melee: {m_dmg} dmg")
+                        if proj_r and hover_pos in proj_r:
+                            p_dmg = cp.attacks["projectile"]["damage"]
+                            self.hex_grid.hover_extra_lines.append(f"~Proj: {p_dmg} dmg")
+            else:
+                self.hex_grid.hovered_hex = None
+                self.hex_grid.hover_extra_lines = []
+            if self.dragging:
+                dx = event.pos[0] - self.drag_start_x
+                dy = event.pos[1] - self.drag_start_y
+                self.hex_grid.view_offset_x = self.start_view_offset_x + dx
+                self.hex_grid.view_offset_y = self.start_view_offset_y + dy
+                grid_width = self.hex_grid.cols * self.hex_grid.hex_size * 1.5
+                grid_height = self.hex_grid.rows * self.hex_grid.hex_size * 1.732
+                # Allow scrolling with padding so edges can be seen when zoomed in
+                padding_x = WINDOW_WIDTH * 0.4  # 40% of window as padding
+                padding_y = WINDOW_HEIGHT * 0.4
+                min_offset_x = WINDOW_WIDTH - grid_width - padding_x
+                max_offset_x = padding_x
+                min_offset_y = WINDOW_HEIGHT - grid_height - padding_y
+                max_offset_y = padding_y
+                self.hex_grid.view_offset_x = max(min(self.hex_grid.view_offset_x, max_offset_x), min_offset_x)
+                self.hex_grid.view_offset_y = max(min(self.hex_grid.view_offset_y, max_offset_y), min_offset_y)
         elif event.type == pygame.MOUSEWHEEL:
             # Skip zoom if mouse is over a UI element
             mx, my = pygame.mouse.get_pos()
@@ -6147,6 +6671,13 @@ class GameScreen:
 
             is_player_turn = self.turn_phase in ("player", "player1", "player2")
 
+            # Action choice popup button clicks
+            if self.action_choice_open:
+                for btn, action_type, data in self.action_choice_buttons:
+                    if event.ui_element == btn:
+                        self._handle_action_choice(action_type, data)
+                        return
+
             # Equipment popup button clicks
             if self.equip_popup_open:
                 for popup_btn, slot_type, data in self.equip_popup_buttons:
@@ -6156,11 +6687,14 @@ class GameScreen:
 
             # Equipment toolbar slot clicks (player turn only)
             if is_player_turn:
-                slot_types = ["melee", "projectile", "accessory", "tool", "action"]
+                slot_types = ["melee", "projectile", "accessory", "tool", "action", "items"]
                 for i, btn in enumerate(self.equip_toolbar_buttons):
                     if event.ui_element == btn:
                         if slot_types[i] == "action":
                             self._handle_tool_action_click()
+                            return
+                        if slot_types[i] == "items":
+                            self._handle_items_click()
                             return
                         if self.equip_popup_open and self.equip_popup_slot == slot_types[i]:
                             self._close_equip_popup()
@@ -6195,32 +6729,29 @@ class GameScreen:
                         self._close_attack_submenu()
                         return
 
-            if event.ui_element in self.left_panel_buttons:
-                text = event.ui_element.text
-                # Close attack submenu when clicking any left panel button
+            # End Turn button (in toolbar, not left panel)
+            if hasattr(self, 'end_turn_button') and event.ui_element == self.end_turn_button and is_player_turn:
+                self.advance_turn()
+                return
+
+            # Menu button (in right panel)
+            if event.ui_element == self.menu_button and is_player_turn:
                 if self.attack_submenu_open:
                     self._close_attack_submenu()
-                if text == "Menu" and is_player_turn:
-                    game.current_screen = "tabbed_menu"
-                    tabbed_menu_screen.initialize_screen()
-                elif text == "Recruit NPC" and is_player_turn:
-                    # Toggle recruit mode
-                    if self.player_mode == "recruit":
-                        self.player_mode = "movement"
-                        self.add_to_log("Exited recruit mode")
-                    else:
-                        # Check for adjacent neutral NPCs
-                        adjacent_neutrals = self._get_adjacent_neutral_npcs()
-                        if adjacent_neutrals:
-                            self.player_mode = "recruit"
-                            # Display adjacent NPC costs
-                            for unit in adjacent_neutrals:
-                                cost = self._calculate_recruitment_cost(unit)
-                                self.add_to_log(f"[Recruit] {unit.name} - Cost: {cost}")
-                            self.add_to_log("Click on an adjacent neutral NPC to recruit")
-                        else:
-                            self.add_to_log("No adjacent neutral NPCs to recruit")
-                elif text == "Search" and is_player_turn:
+                if self.action_choice_open:
+                    self._close_action_choice_popup()
+                game.current_screen = "tabbed_menu"
+                tabbed_menu_screen.initialize_screen()
+                return
+
+            if event.ui_element in self.left_panel_buttons:
+                text = event.ui_element.text
+                # Close popups when clicking any left panel button
+                if self.attack_submenu_open:
+                    self._close_attack_submenu()
+                if self.action_choice_open:
+                    self._close_action_choice_popup()
+                if text == "Search" and is_player_turn:
                     # Search for items using Searchable documents in inventory
                     current_player = game.current_player
                     if current_player.action_used:
@@ -6345,7 +6876,7 @@ class GameScreen:
                         "inset": 0.40
                     })
 
-        if is_player_turn and player_alive and not current_player.action_used and not self.animating and self.player_mode != "recruit":
+        if is_player_turn and player_alive and not current_player.action_used and not self.animating and self.player_mode not in ("recruit", "item"):
             melee_range = current_player.get_melee_attack_range(self.hex_grid)
             if melee_range:
                 attack_ranges.append({"range": melee_range, "color": (255, 69, 0, 220), "outline": (139, 0, 0, 220), "inset": 0.75})
@@ -6353,12 +6884,18 @@ class GameScreen:
             if proj_range:
                 attack_ranges.append({"range": proj_range, "color": (191, 0, 255, 220), "outline": (75, 0, 130, 220), "inset": 0.55})
 
-        # In recruit mode, show white rings around recruitable adjacent NPCs
-        if is_player_turn and self.player_mode == "recruit":
+        # Show white rings around recruitable adjacent NPCs (always visible on player turn)
+        if is_player_turn:
             adjacent_neutrals = self._get_adjacent_neutral_npcs()
             recruit_hexes = {npc_unit.position for npc_unit in adjacent_neutrals if npc_unit.position}
             if recruit_hexes:
                 attack_ranges.append({"range": recruit_hexes, "color": (255, 255, 255, 220), "outline": (180, 180, 180, 220), "inset": 0.75})
+
+        # In item targeting mode, show green rings on adjacent hexes + self
+        if is_player_turn and self.player_mode == "item" and self.selected_item:
+            item_hexes = set(self.hex_grid.get_adjacent_hexes(*current_player.position))
+            item_hexes.add(current_player.position)
+            attack_ranges.append({"range": item_hexes, "color": (0, 200, 100, 200), "outline": (0, 140, 70, 200), "inset": 0.75})
 
         # Get targetable units for visual highlighting from all attack ranges
         targetable_units = None
@@ -6369,29 +6906,115 @@ class GameScreen:
             targetable_units = self.hex_grid.get_targetable_units(all_attack_hexes, "player")
 
         self.hex_grid.draw(screen, movement_range, attack_ranges, self.colors, targetable_units)
-        for rect in (self.ui_elements[0].rect if not self.log_minimized else None, self.ui_elements[1].rect if self.ui_elements[1].visible else None, self.ui_elements[2].rect):
-            if rect:
-                pygame.draw.rect(screen, GRAY, rect)
-        # Equipment toolbar background
+        # Draw dark semi-transparent backgrounds behind UI panels
+        panel_border_color = (58, 58, 92)  # Subtle indigo-gray border
+
+        # --- Unified right panel background ---
+        rp_rect = pygame.Rect(self.rp_x, 0, self.rp_width, self.rp_height)
+        rp_bg = pygame.Surface((rp_rect.width, rp_rect.height), pygame.SRCALPHA)
+        rp_bg.fill((10, 10, 30, 180))
+        screen.blit(rp_bg, rp_rect.topleft)
+        pygame.draw.rect(screen, panel_border_color, rp_rect, 1)
+
+        # Section headers (muted gold text)
+        header_font = self.rp_header_font
+        header_color = (180, 160, 100)
+        # "Player" header
+        player_hdr = header_font.render("Player", True, header_color)
+        screen.blit(player_hdr, (self.rp_x + self.rp_pad, 4))
+        # "Selected" header
+        selected_hdr = header_font.render("Selected", True, header_color)
+        screen.blit(selected_hdr, (self.rp_x + self.rp_pad, self.rp_stats_y - 20))
+
+        # Section divider lines
+        # Divider between Player and Selected
+        div1_y = self.rp_stats_y - 24
+        pygame.draw.line(screen, panel_border_color,
+                         (self.rp_x + self.rp_pad, div1_y),
+                         (self.rp_x + self.rp_width - self.rp_pad, div1_y), 1)
+        # Divider above Menu button
+        div2_y = self.rp_menu_y - 6
+        pygame.draw.line(screen, panel_border_color,
+                         (self.rp_x + self.rp_pad, div2_y),
+                         (self.rp_x + self.rp_width - self.rp_pad, div2_y), 1)
+
+        # --- Other panel backgrounds (log, turn label) ---
+        panel_rects = []
+        if not self.log_minimized:
+            panel_rects.append(self.ui_elements[0].rect)
+        else:
+            # Background behind minimized log (toggle + label)
+            if self.log_toggle_button and self.log_mini_label:
+                mini_rect = pygame.Rect(self.log_toggle_button.rect.x, self.log_toggle_button.rect.y,
+                                        self.log_mini_label.rect.right - self.log_toggle_button.rect.x,
+                                        self.log_toggle_button.rect.height)
+                panel_rects.append(mini_rect)
+        panel_rects.append(self.ui_elements[2].rect)  # Turn label
+        for rect in panel_rects:
+            padded = rect.inflate(6, 6)
+            bg_surf = pygame.Surface((padded.width, padded.height), pygame.SRCALPHA)
+            bg_surf.fill((10, 10, 30, 180))
+            screen.blit(bg_surf, padded.topleft)
+            pygame.draw.rect(screen, panel_border_color, padded, 1)
+        # Left panel buttons background
+        if self.left_panel_buttons:
+            first_btn = self.left_panel_buttons[0]
+            last_btn = self.left_panel_buttons[-1]
+            lp_rect = pygame.Rect(first_btn.rect.x - 4, first_btn.rect.y - 4,
+                                  first_btn.rect.width + 8, last_btn.rect.bottom - first_btn.rect.y + 8)
+            bg_surf = pygame.Surface((lp_rect.width, lp_rect.height), pygame.SRCALPHA)
+            bg_surf.fill((10, 10, 30, 140))
+            screen.blit(bg_surf, lp_rect.topleft)
+            pygame.draw.rect(screen, panel_border_color, lp_rect, 1)
+        # Equipment toolbar background (includes end turn button)
         if self.equip_toolbar_buttons:
             first = self.equip_toolbar_buttons[0]
-            last = self.equip_toolbar_buttons[-1]
-            bg = pygame.Rect(first.rect.x - 5, first.rect.y - 5,
-                             last.rect.right - first.rect.x + 10, first.rect.height + 10)
-            pygame.draw.rect(screen, GRAY, bg)
+            last_btn = self.end_turn_button if hasattr(self, 'end_turn_button') and self.end_turn_button else self.equip_toolbar_buttons[-1]
+            bg = pygame.Rect(first.rect.x - 6, first.rect.y - 6,
+                             last_btn.rect.right - first.rect.x + 12, first.rect.height + 12)
+            bg_surf = pygame.Surface((bg.width, bg.height), pygame.SRCALPHA)
+            bg_surf.fill((10, 10, 30, 180))
+            screen.blit(bg_surf, bg.topleft)
+            pygame.draw.rect(screen, panel_border_color, bg, 1)
         manager.draw_ui(screen)
         # Draw colored borders on equipment toolbar buttons
         if self.equip_toolbar_buttons and len(self.equip_toolbar_buttons) >= 2:
             # Melee button: red-orange border (matches melee range color)
-            pygame.draw.rect(screen, (255, 69, 0), self.equip_toolbar_buttons[0].rect, 3)
+            pygame.draw.rect(screen, (255, 69, 0), self.equip_toolbar_buttons[0].rect, 2)
             # Projectile button: purple border (matches projectile range color)
-            pygame.draw.rect(screen, (191, 0, 255), self.equip_toolbar_buttons[1].rect, 3)
+            pygame.draw.rect(screen, (191, 0, 255), self.equip_toolbar_buttons[1].rect, 2)
+        # Dim empty toolbar slots with a dark overlay
+        if self.equip_toolbar_buttons and len(self.equip_toolbar_buttons) >= 6:
+            empty_labels = ("---",)
+            for i, btn in enumerate(self.equip_toolbar_buttons):
+                label_text = btn.text if hasattr(btn, 'text') else ""
+                if label_text.endswith("---"):
+                    dim_surf = pygame.Surface((btn.rect.width, btn.rect.height), pygame.SRCALPHA)
+                    dim_surf.fill((0, 0, 0, 80))
+                    screen.blit(dim_surf, btn.rect.topleft)
+        # End Turn button: gold border
+        if hasattr(self, 'end_turn_button') and self.end_turn_button:
+            pygame.draw.rect(screen, (180, 160, 60), self.end_turn_button.rect, 2)
+        # Items button: green border when in item targeting mode
+        if self.item_targeting_mode and len(self.equip_toolbar_buttons) >= 6:
+            pygame.draw.rect(screen, (0, 200, 100), self.equip_toolbar_buttons[5].rect, 2)
         # Draw colored outlines on attack submenu buttons
         if self.attack_submenu_open:
             for btn, _, _ in self.attack_submenu_buttons:
                 if hasattr(btn, '_outline_color'):
                     pygame.draw.rect(screen, btn._outline_color, btn.rect, 2)
-        self.animating = self.check_animations()
+        # Draw background behind action choice popup
+        if self.action_choice_open and self.action_choice_buttons:
+            first_btn = self.action_choice_buttons[0][0]
+            last_btn = self.action_choice_buttons[-1][0]
+            popup_rect = pygame.Rect(first_btn.rect.x - 6, first_btn.rect.y - 6,
+                                     first_btn.rect.width + 12,
+                                     last_btn.rect.bottom - first_btn.rect.y + 12)
+            bg_surf = pygame.Surface((popup_rect.width, popup_rect.height), pygame.SRCALPHA)
+            bg_surf.fill((10, 10, 30, 200))
+            screen.blit(bg_surf, popup_rect.topleft)
+            pygame.draw.rect(screen, (80, 80, 120), popup_rect, 1)
+        self.draw_defeat_notifications()
         # Check for pending location screen (show after movement animation completes)
         if self.pending_location and not self.animating:
             loc_data = self.pending_location
@@ -6819,8 +7442,11 @@ class PauseMenuScreen:
     def __init__(self):
         self.ui_elements = []
         self.buttons = {}
+        self.game_snapshot = None  # Screenshot of the game behind the overlay
 
     def initialize_screen(self):
+        # Capture current screen as background snapshot
+        self.game_snapshot = screen.copy()
         manager.clear_and_reset()
         self.ui_elements = []
         self.buttons = {}
@@ -6832,15 +7458,15 @@ class PauseMenuScreen:
         )
 
         # Centered column of buttons
-        btn_width = 200
-        btn_height = 50
-        btn_spacing = 70
+        btn_width = 220
+        btn_height = 46
+        btn_spacing = 58
         button_labels = [
             "Continue", "Save Game", "Load Game",
             "Restart Level", "Settings", "Main Menu", "Quit Game"
         ]
         total_height = len(button_labels) * btn_spacing
-        start_y = (WINDOW_HEIGHT - total_height) // 2 + 30
+        start_y = (WINDOW_HEIGHT - total_height) // 2 + 40
         btn_x = (WINDOW_WIDTH - btn_width) // 2
 
         for i, label in enumerate(button_labels):
@@ -6932,7 +7558,24 @@ class PauseMenuScreen:
             self._return_to_pause()
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        # Draw game snapshot behind a dark overlay
+        if self.game_snapshot:
+            screen.blit(self.game_snapshot, (0, 0))
+            overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)
+            overlay.fill((10, 10, 30, 180))
+            screen.blit(overlay, (0, 0))
+        else:
+            screen.fill(DARK_INDIGO)
+        # Draw title text manually with style
+        title_font = pygame.font.Font(None, 64)
+        title_shadow = title_font.render("Paused", True, (10, 10, 30))
+        title_surf = title_font.render("Paused", True, (200, 180, 120))
+        title_rect = title_surf.get_rect(centerx=WINDOW_WIDTH // 2, y=80)
+        screen.blit(title_shadow, title_rect.move(2, 2))
+        screen.blit(title_surf, title_rect)
+        # Decorative line under title
+        line_y = title_rect.bottom + 8
+        pygame.draw.line(screen, (200, 180, 120, 100), (WINDOW_WIDTH // 2 - 100, line_y), (WINDOW_WIDTH // 2 + 100, line_y), 1)
         manager.draw_ui(screen)
 
 

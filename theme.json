@@ -1,1 +1,118 @@
-{"@default": {"colours": {"normal_bg": "#add8e6", "hovered_bg": "#add8e6", "active_bg": "#add8e6", "normal_text": "#8b4513", "hovered_text": "#8b4513", "selected_text": "#8b4513", "dark_bg": "#4b0082"}}, "button": {"colours": {"normal_bg": "#b87333", "hovered_bg": "#b87333", "active_bg": "#b87333", "normal_text": "#f5f5dc", "hovered_text": "#f5f5dc", "selected_text": "#f5f5dc"}}, "label": {"colours": {"normal_text": "#ffd700"}}, "text_entry_line": {"colours": {"normal_bg": "#add8e6", "hovered_bg": "#add8e6", "active_bg": "#add8e6", "normal_text": "#8b4513", "hovered_text": "#8b4513", "selected_text": "#8b4513"}}, "drop_down_menu": {"colours": {"normal_bg": "#add8e6", "hovered_bg": "#add8e6", "active_bg": "#add8e6", "normal_text": "#8b4513", "hovered_text": "#8b4513", "selected_text": "#8b4513"}}, "#title_label": {"font": {"name": "freesansbold", "size": "30", "bold": "1", "italic": "0"}}}
+{
+    "@default": {
+        "colours": {
+            "normal_bg": "#1a1a2e",
+            "hovered_bg": "#25254a",
+            "active_bg": "#16162a",
+            "normal_text": "#c8c8d4",
+            "hovered_text": "#e0e0ec",
+            "selected_text": "#ffffff",
+            "dark_bg": "#0f0f1e",
+            "normal_border": "#3a3a5c",
+            "hovered_border": "#5a5a8c"
+        }
+    },
+    "button": {
+        "colours": {
+            "normal_bg": "#2a2a44",
+            "hovered_bg": "#3d3d66",
+            "active_bg": "#1e1e36",
+            "normal_text": "#dcd8c8",
+            "hovered_text": "#fff8e0",
+            "selected_text": "#ffd700",
+            "normal_border": "#4a4a6e",
+            "hovered_border": "#b8860b"
+        },
+        "misc": {
+            "border_width": "1",
+            "shape_corner_radius": "4"
+        }
+    },
+    "text_box": {
+        "colours": {
+            "dark_bg": "#12122a",
+            "normal_bg": "#161633",
+            "normal_border": "#2e2e52",
+            "link_text": "#ffd700",
+            "normal_text": "#d0d0dc"
+        }
+    },
+    "label": {
+        "colours": {
+            "normal_text": "#ffd700"
+        }
+    },
+    "text_entry_line": {
+        "colours": {
+            "normal_bg": "#1a1a3a",
+            "hovered_bg": "#222248",
+            "active_bg": "#1a1a3a",
+            "normal_text": "#d0d0dc",
+            "hovered_text": "#d0d0dc",
+            "selected_text": "#ffffff",
+            "normal_border": "#3a3a5c",
+            "hovered_border": "#5a5a8c"
+        }
+    },
+    "drop_down_menu": {
+        "colours": {
+            "normal_bg": "#1a1a3a",
+            "hovered_bg": "#222248",
+            "active_bg": "#1a1a3a",
+            "normal_text": "#d0d0dc",
+            "hovered_text": "#e0e0ec",
+            "selected_text": "#ffffff"
+        }
+    },
+    "selection_list": {
+        "colours": {
+            "normal_bg": "#161633",
+            "hovered_bg": "#222248",
+            "active_bg": "#1a1a3a",
+            "normal_text": "#d0d0dc",
+            "hovered_text": "#e0e0ec",
+            "selected_text": "#ffd700"
+        }
+    },
+    "window": {
+        "colours": {
+            "normal_bg": "#1a1a30",
+            "dark_bg": "#12122a",
+            "normal_border": "#3a3a5c"
+        }
+    },
+    "#title_label": {
+        "font": {
+            "name": "freesansbold",
+            "size": "30",
+            "bold": "1",
+            "italic": "0"
+        }
+    },
+    "#log_textbox": {
+        "colours": {
+            "dark_bg": "#0a0a1e",
+            "normal_bg": "#0e0e24"
+        }
+    },
+    "#stats_panel": {
+        "colours": {
+            "dark_bg": "#00000000",
+            "normal_bg": "#00000000",
+            "normal_border": "#00000000"
+        }
+    },
+    "#right_panel_info": {
+        "colours": {
+            "dark_bg": "#00000000",
+            "normal_bg": "#00000000",
+            "normal_border": "#00000000"
+        }
+    },
+    "#turn_label": {
+        "colours": {
+            "dark_bg": "#14142e",
+            "normal_bg": "#18183a"
+        }
+    }
+}
