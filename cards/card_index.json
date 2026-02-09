@@ -1126,6 +1126,13 @@
     "states": 2,
     "name": "Tangled Rope"
   },
+  "beta_junk_tool_scavengers_kit": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Scrap Pouch & Twine"
+  },
   "beta_junk_material_mystery_metal": {
     "type": "Junk Card",
     "subclass": null,

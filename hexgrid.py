@@ -34,6 +34,8 @@ class HexGrid:
         self.players = []  # For multiplayer mode - list of players
         self.units = []
         self.selected_hex = None
+        self.hovered_hex = None  # Hex currently under mouse cursor
+        self.hover_extra_lines = []  # Extra tooltip lines set by game screen (e.g. damage preview)
         self.card_drawing_hexes = []
         self.deck_data = {}
         # Location hex system
@@ -1568,55 +1570,55 @@ class HexGrid:
         """
         Calculate mist/shadow range pattern - 6 directional lines that bisect
         the standard hex directions (30°, 90°, 150°, 210°, 270°, 330°).
+        Supports any distance (no hardcoded limit).
         """
         range_set = set()
         row, col = pos
-        is_odd_col = col % 2 != 0
 
-        # Define step offsets for diagonal angles based on column parity
-        # These create lines that bisect the standard hex directions
-        step_offsets = {
-            30: [(-1, 1), (-3, 2), (-4, 3), (-6, 4)] if is_odd_col else [(-2, 1), (-3, 2), (-5, 3), (-6, 4)],
-            150: [(2, 1), (3, 2), (5, 3), (6, 4)] if is_odd_col else [(1, 1), (3, 2), (4, 3), (6, 4)],
-            210: [(2, -1), (3, -2), (5, -3), (6, -4)] if is_odd_col else [(1, -1), (3, -2), (4, -3), (6, -4)],
-            330: [(-1, -1), (-3, -2), (-4, -3), (-6, -4)] if is_odd_col else [(-2, -1), (-3, -2), (-5, -3), (-6, -4)]
+        # Diagonal direction definitions: (col_delta, row_delta_to_even_col, row_delta_to_odd_col)
+        # Each step moves 1 column; row delta depends on parity of the NEW column.
+        diag_dirs = {
+            30:  (+1, -1, -2),   # ↗ up-right
+            150: (+1, +2, +1),   # ↘ down-right
+            210: (-1, +2, +1),   # ↙ down-left
+            330: (-1, -1, -2),   # ↖ up-left
         }
 
-        angles = [30, 90, 150, 210, 270, 330]
-
-        for angle in angles:
+        for angle in [30, 90, 150, 210, 270, 330]:
             line = []
 
-            if angle in [90, 270]:
+            if angle in (90, 270):
                 # Horizontal directions: step by 2 columns
-                steps = min(4, distance)
-                for step in range(1, steps + 1):
+                for step in range(1, distance + 1):
                     new_c = col + (2 * step if angle == 90 else -2 * step)
                     new_pos = (row, new_c)
-
-                    if (0 <= row < self.rows and 0 <= new_c < self.cols and
-                        self.hex_distance(pos, new_pos) <= distance):
+                    if (0 <= new_c < self.cols and
+                            self.hex_distance(pos, new_pos) <= distance):
                         if self.grid[row][new_c]["accessible"]:
                             line.append(new_pos)
                         else:
-                            break  # Stop at obstruction
+                            break
                     else:
                         break
             else:
-                # Diagonal directions: use predefined offsets
-                offsets = step_offsets[angle]
-                for dr, dc in offsets[:min(4, distance)]:
-                    new_r, new_c = row + dr, col + dc
+                # Diagonal directions: compute offsets algorithmically
+                col_d, dr_to_even, dr_to_odd = diag_dirs[angle]
+                cur_r, cur_c = row, col
+                for step in range(distance):
+                    new_c = cur_c + col_d
+                    # Row delta depends on parity of the NEW column
+                    dr = dr_to_odd if new_c % 2 != 0 else dr_to_even
+                    new_r = cur_r + dr
                     new_pos = (new_r, new_c)
-
                     if (0 <= new_r < self.rows and 0 <= new_c < self.cols and
-                        self.hex_distance(pos, new_pos) <= distance):
+                            self.hex_distance(pos, new_pos) <= distance):
                         if self.grid[new_r][new_c]["accessible"]:
                             line.append(new_pos)
                         else:
-                            break  # Stop at obstruction
+                            break
                     else:
                         break
+                    cur_r, cur_c = new_r, new_c
 
             range_set.update(line)
 
@@ -1699,6 +1701,99 @@ class HexGrid:
                 terrain_type = self.grid[row][col].get("terrain", "grass")
                 terrain_color = get_terrain_color(terrain_type)
                 pygame.draw.polygon(hex_surface, terrain_color, points, 0)
+                # Subtle terrain texture patterns
+                tc = terrain_color
+                pat_alpha = 30
+                pat_color = (max(0, tc[0] - 40), max(0, tc[1] - 40), max(0, tc[2] - 40), pat_alpha)
+                pat_hi = (min(255, tc[0] + 30), min(255, tc[1] + 30), min(255, tc[2] + 30), pat_alpha)
+                hs = self.hex_size
+                ix, iy = int(x), int(y)
+                if terrain_type == "water" or terrain_type == "deep_water":
+                    # Wavy horizontal lines
+                    wave_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
+                    for wi in range(-2, 3):
+                        wy = hs + wi * int(hs * 0.3)
+                        wave_pts = [(int(hs * 0.3 + j * hs * 0.15), wy + int(math.sin(j * 0.8) * hs * 0.08)) for j in range(10)]
+                        if len(wave_pts) > 1:
+                            pygame.draw.lines(wave_surf, pat_hi, False, wave_pts, 1)
+                    hex_surface.blit(wave_surf, (ix - hs, iy - hs))
+                elif terrain_type == "sand":
+                    # Scattered dots
+                    dot_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
+                    rng = random.Random(row * 100 + col)
+                    for _ in range(8):
+                        dx = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                        dy = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                        pygame.draw.circle(dot_surf, pat_color, (dx, dy), max(1, int(hs * 0.04)))
+                    hex_surface.blit(dot_surf, (ix - hs, iy - hs))
+                elif terrain_type == "forest":
+                    # Small tree-like marks
+                    tree_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
+                    rng = random.Random(row * 100 + col)
+                    for _ in range(5):
+                        tx = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                        ty = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                        s = max(2, int(hs * 0.07))
+                        pygame.draw.circle(tree_surf, pat_color, (tx, ty), s)
+                        pygame.draw.line(tree_surf, pat_color, (tx, ty + s), (tx, ty + s * 2), 1)
+                    hex_surface.blit(tree_surf, (ix - hs, iy - hs))
+                elif terrain_type == "mountain" or terrain_type == "cliff":
+                    # Small triangle peaks
+                    mtn_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
+                    rng = random.Random(row * 100 + col)
+                    for _ in range(3):
+                        mx = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                        my = rng.randint(int(hs * 0.6), int(hs * 1.4))
+                        s = max(3, int(hs * 0.1))
+                        pygame.draw.polygon(mtn_surf, pat_hi, [(mx, my - s), (mx - s, my + s // 2), (mx + s, my + s // 2)])
+                    hex_surface.blit(mtn_surf, (ix - hs, iy - hs))
+                elif terrain_type == "stone":
+                    # Crack lines
+                    crack_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
+                    rng = random.Random(row * 100 + col)
+                    for _ in range(3):
+                        cx1 = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                        cy1 = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                        cx2 = cx1 + rng.randint(-int(hs * 0.3), int(hs * 0.3))
+                        cy2 = cy1 + rng.randint(-int(hs * 0.3), int(hs * 0.3))
+                        pygame.draw.line(crack_surf, pat_color, (cx1, cy1), (cx2, cy2), 1)
+                    hex_surface.blit(crack_surf, (ix - hs, iy - hs))
+                elif terrain_type == "swamp":
+                    # Scattered puddle circles
+                    swamp_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
+                    rng = random.Random(row * 100 + col)
+                    for _ in range(4):
+                        sx = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                        sy = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                        sr = max(2, int(hs * 0.06))
+                        pygame.draw.circle(swamp_surf, pat_color, (sx, sy), sr, 1)
+                    hex_surface.blit(swamp_surf, (ix - hs, iy - hs))
+                elif terrain_type == "lava":
+                    # Bright glow spots
+                    lava_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
+                    rng = random.Random(row * 100 + col)
+                    for _ in range(4):
+                        lx = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                        ly = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                        lr = max(2, int(hs * 0.06))
+                        pygame.draw.circle(lava_surf, (255, 200, 50, 35), (lx, ly), lr)
+                    hex_surface.blit(lava_surf, (ix - hs, iy - hs))
+                elif terrain_type == "ice":
+                    # Crystalline lines
+                    ice_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
+                    rng = random.Random(row * 100 + col)
+                    for _ in range(4):
+                        ix1 = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                        iy1 = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                        ang = rng.uniform(0, math.pi)
+                        length = int(hs * 0.15)
+                        ix2 = ix1 + int(math.cos(ang) * length)
+                        iy2 = iy1 + int(math.sin(ang) * length)
+                        pygame.draw.line(ice_surf, (220, 240, 255, 40), (ix1, iy1), (ix2, iy2), 1)
+                    hex_surface.blit(ice_surf, (ix - hs, iy - hs))
+                # Subtle edge shading for terrain depth
+                edge_color = (max(0, terrain_color[0] - 25), max(0, terrain_color[1] - 25), max(0, terrain_color[2] - 25))
+                pygame.draw.polygon(hex_surface, edge_color, points, 2)
 
                 # Draw overlay for inaccessible hexes (darker tint)
                 if not self.grid[row][col]["accessible"]:
@@ -1710,13 +1805,27 @@ class HexGrid:
                         pygame.draw.polygon(dark_overlay, (0, 0, 0, 80), dark_points, 0)
                         hex_surface.blit(dark_overlay, (x - self.hex_size, y - self.hex_size))
 
-                # Draw special hex indicators
+                # Hover highlight
+                if self.hovered_hex == (row, col) and self.selected_hex != (row, col):
+                    pygame.draw.polygon(hex_surface, (255, 255, 255, 25), points, 0)
+
+                # Draw special hex indicators with pulsing glow
                 for hex_data in self.card_drawing_hexes:
                     if hex_data["row"] == row and hex_data["column"] == col:
+                        pulse = (math.sin(pygame.time.get_ticks() / 600.0) + 1) / 2  # 0.0 to 1.0
+                        pulse_alpha = int(100 + pulse * 155)  # 100-255
                         if "linked_level" in hex_data and hex_data["linked_level"]:
-                            pygame.draw.polygon(hex_surface, colors['PURPLE'], points, 3)  # Purple for linked levels
+                            glow_color = (180, 80, 255, int(pulse * 25))
+                            border_color = (180, 80, 255, pulse_alpha)
                         elif "deck_file" in hex_data and hex_data["deck_file"] or "card_id" in hex_data and hex_data["card_id"]:
-                            pygame.draw.polygon(hex_surface, colors['LIGHT_GREEN'], points, 3)  # Green for card-drawing
+                            glow_color = (80, 255, 80, int(pulse * 20))
+                            border_color = (80, 255, 80, pulse_alpha)
+                        else:
+                            break
+                        # Subtle inner glow fill
+                        pygame.draw.polygon(hex_surface, glow_color, points, 0)
+                        # Pulsing border
+                        pygame.draw.polygon(hex_surface, border_color, points, 3)
                         break
                 # Draw location hex indicators
                 if (row, col) in self.location_data:
@@ -1735,8 +1844,11 @@ class HexGrid:
                         border_color = colors['ORANGE']
                     pygame.draw.polygon(hex_surface, border_color, points, 3)
                 if self.selected_hex == (row, col):
-                    pygame.draw.polygon(hex_surface, (255, 255, 0, 100), points, 0)
-                pygame.draw.polygon(hex_surface, colors['WHITE'], points, 1)
+                    pygame.draw.polygon(hex_surface, (255, 215, 0, 60), points, 0)
+                    pygame.draw.polygon(hex_surface, (255, 215, 0, 220), points, 3)
+                # Thin border only where edge shading doesn't cover (selected hex)
+                if self.selected_hex == (row, col):
+                    pygame.draw.polygon(hex_surface, (80, 80, 100), points, 1)
 
         # Second pass: Draw range rings on top of terrain and hex borders
         ring_width = max(4, int(self.hex_size * 0.22))
@@ -1744,39 +1856,31 @@ class HexGrid:
             for col in range(self.cols):
                 if movement_range and (row, col) in movement_range:
                     x, y = self.get_hex_center(row, col)
-                    half_ring = ring_width // 2
-                    move_outline = (0, 0, 120, 220)  # Dark blue
-                    # Outer outline
-                    outer_points = [(x + (self.hex_size + half_ring) * math.cos(math.radians(60 * i)),
-                                     y + (self.hex_size + half_ring) * math.sin(math.radians(60 * i))) for i in range(6)]
-                    pygame.draw.polygon(hex_surface, move_outline, outer_points, 1)
-                    # Color ring
-                    points = [(x + self.hex_size * math.cos(math.radians(60 * i)),
-                               y + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
-                    pygame.draw.polygon(hex_surface, (0, 180, 255, 200), points, ring_width)  # Electric blue
-                    # Inner outline
-                    inner_points = [(x + (self.hex_size - half_ring) * math.cos(math.radians(60 * i)),
-                                     y + (self.hex_size - half_ring) * math.sin(math.radians(60 * i))) for i in range(6)]
-                    pygame.draw.polygon(hex_surface, move_outline, inner_points, 1)
+                    radius = int(self.hex_size * 0.75)
+                    # Very subtle fill
+                    fill_surf = pygame.Surface((radius * 2 + 4, radius * 2 + 4), pygame.SRCALPHA)
+                    pygame.draw.circle(fill_surf, (0, 80, 160, 20), (radius + 2, radius + 2), radius)
+                    hex_surface.blit(fill_surf, (int(x) - radius - 2, int(y) - radius - 2))
+                    # Darker circle ring
+                    ring_surf = pygame.Surface((radius * 2 + 4, radius * 2 + 4), pygame.SRCALPHA)
+                    pygame.draw.circle(ring_surf, (0, 80, 160, 180), (radius + 2, radius + 2), radius, ring_width)
+                    hex_surface.blit(ring_surf, (int(x) - radius - 2, int(y) - radius - 2))
                 if attack_ranges:
                     for ar in attack_ranges:
                         if (row, col) in ar["range"]:
                             x, y = self.get_hex_center(row, col)
                             inset_size = self.hex_size * ar["inset"]
-                            half_ring = ring_width // 2
+                            cr = int(inset_size)
+                            color = ar["color"]
                             outline_color = ar.get("outline", (0, 0, 0, 220))
-                            # Outer outline
-                            outer_points = [(x + (inset_size + half_ring) * math.cos(math.radians(60 * i)),
-                                             y + (inset_size + half_ring) * math.sin(math.radians(60 * i))) for i in range(6)]
-                            pygame.draw.polygon(hex_surface, outline_color, outer_points, 1)
-                            # Color ring
-                            points = [(x + inset_size * math.cos(math.radians(60 * i)),
-                                       y + inset_size * math.sin(math.radians(60 * i))) for i in range(6)]
-                            pygame.draw.polygon(hex_surface, ar["color"], points, ring_width)
-                            # Inner outline
-                            inner_points = [(x + (inset_size - half_ring) * math.cos(math.radians(60 * i)),
-                                             y + (inset_size - half_ring) * math.sin(math.radians(60 * i))) for i in range(6)]
-                            pygame.draw.polygon(hex_surface, outline_color, inner_points, 1)
+                            surf_size = cr * 2 + 4
+                            center = cr + 2
+                            ring_surf = pygame.Surface((surf_size, surf_size), pygame.SRCALPHA)
+                            # Subtle fill
+                            pygame.draw.circle(ring_surf, (color[0], color[1], color[2], 15), (center, center), cr)
+                            # Circle ring
+                            pygame.draw.circle(ring_surf, color, (center, center), cr, ring_width)
+                            hex_surface.blit(ring_surf, (int(x) - center, int(y) - center))
 
         # Third pass: Draw location icons and names on top of range rings
         for (row, col), loc_data in self.location_data.items():
@@ -1793,6 +1897,7 @@ class HexGrid:
                 if is_spawn_location and has_health:
                     # Draw tower/fort icon for active enemy spawn locations (red)
                     icon_color = colors['RED']
+                    outline_color = (10, 10, 20)
                     tower_size = self.hex_size * 0.3
                     tower_x, tower_y = x, y
                     base_rect = pygame.Rect(
@@ -1801,6 +1906,7 @@ class HexGrid:
                         tower_size * 0.8,
                         tower_size * 0.8
                     )
+                    pygame.draw.rect(hex_surface, outline_color, base_rect.inflate(2, 2))
                     pygame.draw.rect(hex_surface, icon_color, base_rect)
                     cren_width = tower_size * 0.2
                     cren_height = tower_size * 0.25
@@ -1811,6 +1917,7 @@ class HexGrid:
                             cren_width,
                             cren_height
                         )
+                        pygame.draw.rect(hex_surface, outline_color, cren_rect.inflate(2, 2))
                         pygame.draw.rect(hex_surface, icon_color, cren_rect)
                     # Health bar
                     max_health = loc_data.get("max_health", 1)
@@ -1829,6 +1936,7 @@ class HexGrid:
                 elif is_npc_spawn and has_npc_health:
                     # Draw church icon for active NPC spawn locations (blue)
                     icon_color = colors['BLUE']
+                    outline_color = (10, 10, 20)
                     church_size = self.hex_size * 0.3
                     church_x, church_y = x, y
                     steeple_points = [
@@ -1836,13 +1944,15 @@ class HexGrid:
                         (church_x - church_size * 0.2, church_y - church_size * 0.4),
                         (church_x + church_size * 0.2, church_y - church_size * 0.4)
                     ]
-                    pygame.draw.polygon(hex_surface, icon_color, steeple_points)
+                    pygame.draw.polygon(hex_surface, outline_color, steeple_points)
+                    pygame.draw.polygon(hex_surface, icon_color, steeple_points, 0)
                     body_rect = pygame.Rect(
                         church_x - church_size * 0.4,
                         church_y - church_size * 0.4,
                         church_size * 0.8,
                         church_size * 0.8
                     )
+                    pygame.draw.rect(hex_surface, outline_color, body_rect.inflate(2, 2))
                     pygame.draw.rect(hex_surface, icon_color, body_rect)
                     cross_color = colors['WHITE']
                     cross_y = church_y - church_size * 0.85
@@ -1868,6 +1978,7 @@ class HexGrid:
                 else:
                     # Draw house icon for regular assigned locations
                     icon_color = colors['GREEN'] if is_upgraded else colors['ORANGE']
+                    outline_color = (10, 10, 20)
                     house_size = self.hex_size * 0.3
                     house_x, house_y = x, y
                     roof_points = [
@@ -1881,16 +1992,22 @@ class HexGrid:
                         house_size * 0.8,
                         house_size * 0.6
                     )
-                    pygame.draw.polygon(hex_surface, icon_color, roof_points)
+                    pygame.draw.polygon(hex_surface, outline_color, roof_points)
+                    pygame.draw.polygon(hex_surface, icon_color, roof_points, 0)
+                    pygame.draw.rect(hex_surface, outline_color, base_rect.inflate(2, 2))
                     pygame.draw.rect(hex_surface, icon_color, base_rect)
 
-                # Draw location name
+                # Draw location name with shadow
                 loc_card = loc_data["card"]
                 loc_name = loc_card.get_current_data().get("Name", "")
                 if loc_name:
                     house_size = self.hex_size * 0.3
+                    shadow_color = (10, 10, 20)
                     name_surface = self.font.render(loc_name, True, colors['WHITE'])
+                    shadow_surface = self.font.render(loc_name, True, shadow_color)
                     name_rect = name_surface.get_rect(centerx=x, top=y + house_size * 0.5)
+                    for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                        hex_surface.blit(shadow_surface, name_rect.move(dx, dy))
                     hex_surface.blit(name_surface, name_rect)
 
                 # Draw garrison indicator (small green circle with count)
@@ -1909,6 +2026,7 @@ class HexGrid:
             else:
                 # Draw unknown building icon for unassigned locations
                 unknown_color = (210, 180, 100)  # Muted gold/tan
+                outline_color = (10, 10, 20)
                 house_size = self.hex_size * 0.35  # Slightly larger than regular
                 house_x, house_y = x, y
                 # House silhouette (triangle roof + rectangle base)
@@ -1923,7 +2041,9 @@ class HexGrid:
                     house_size * 1.0,
                     house_size * 0.7
                 )
-                pygame.draw.polygon(hex_surface, unknown_color, roof_points)
+                pygame.draw.polygon(hex_surface, outline_color, roof_points)
+                pygame.draw.polygon(hex_surface, unknown_color, roof_points, 0)
+                pygame.draw.rect(hex_surface, outline_color, base_rect.inflate(2, 2))
                 pygame.draw.rect(hex_surface, unknown_color, base_rect)
                 # Draw "?" in the center of the building
                 q_font = pygame.font.Font(None, max(14, int(house_size * 1.8)))
@@ -2008,13 +2128,27 @@ class HexGrid:
                         color = colors['BLUE']
                     else:
                         color = (0, 190, 170)  # Teal for neutral NPCs
-                    radius = max(10, int(self.hex_size / 3))
-                    # Draw black outline behind the token
-                    if not isinstance(unit, Player):
-                        pygame.draw.circle(hex_surface, (0, 0, 0),
-                                           (int(pos[0]), int(pos[1])), radius + 2)
-                    pygame.draw.circle(hex_surface, colors['WHITE'] if unit.attack_flash else color,
-                                       (int(pos[0]), int(pos[1])), radius)
+                    base_radius = max(10, int(self.hex_size / 3))
+                    # Player tokens are slightly larger
+                    radius = int(base_radius * 1.15) if isinstance(unit, Player) else base_radius
+                    cx, cy = int(pos[0]), int(pos[1])
+                    draw_color = colors['WHITE'] if unit.attack_flash else color
+                    # Dark outline
+                    pygame.draw.circle(hex_surface, (10, 10, 20), (cx, cy), radius + 2)
+                    # Player gets a thin gold ring around the token
+                    if isinstance(unit, Player) and not is_dead_player:
+                        pygame.draw.circle(hex_surface, (200, 170, 50), (cx, cy), radius + 1)
+                    # Main token
+                    pygame.draw.circle(hex_surface, draw_color, (cx, cy), radius)
+                    # Inner highlight (lighter shade, upper-left offset for 3D effect)
+                    if not unit.attack_flash:
+                        hi_r = min(255, draw_color[0] + 60)
+                        hi_g = min(255, draw_color[1] + 60)
+                        hi_b = min(255, draw_color[2] + 60)
+                        highlight_surf = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+                        pygame.draw.circle(highlight_surf, (hi_r, hi_g, hi_b, 80),
+                                           (radius - 2, radius - 2), radius // 2)
+                        hex_surface.blit(highlight_surf, (cx - radius, cy - radius))
                     health_bar_y = pos[1] - radius - 5  # Position health bar just above the circle
 
                     # Draw P1/P2 badge for multiplayer mode
@@ -2033,20 +2167,45 @@ class HexGrid:
                         hex_surface.blit(badge_bg, (badge_x, badge_y))
                         hex_surface.blit(badge_surface, (badge_x + 3, badge_y + 2))
 
-                    # Draw unit name above health bar (with proper spacing)
+                    # Draw unit name above health bar (with shadow for readability)
                     if isinstance(unit, Player):
                         name = unit.name if hasattr(unit, 'name') and unit.name else unit.class_name
                     else:
                         name = unit.name
+                    shadow_surface = self.font.render(name, True, (0, 0, 0))
                     text_surface = self.font.render(name, True, colors['WHITE'])
                     name_y = health_bar_y - 12  # Name above health bar with gap
                     text_rect = text_surface.get_rect(centerx=pos[0], bottom=name_y)
+                    # Draw shadow offset by 1px in each direction
+                    for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                        hex_surface.blit(shadow_surface, text_rect.move(dx, dy))
                     hex_surface.blit(text_surface, text_rect)
-                    # Draw damage text if present (above the name)
+                    # Draw damage text if present (above the name) with float-up and fade
                     if unit.damage_text:
-                        damage_surface = self.font.render(unit.damage_text, True, colors['RED'])
-                        damage_rect = damage_surface.get_rect(centerx=pos[0], bottom=text_rect.top - 2)
-                        hex_surface.blit(damage_surface, damage_rect)
+                        elapsed = pygame.time.get_ticks() - unit.damage_time
+                        duration = 1000  # matches DAMAGE_TEXT_DURATION
+                        progress = min(1.0, elapsed / duration)
+                        # Float upward by 20px over the duration
+                        float_offset = int(progress * 20)
+                        # Fade out: full opacity for first half, then fade
+                        alpha = 255 if progress < 0.5 else int(255 * (1.0 - (progress - 0.5) * 2))
+                        alpha = max(0, alpha)
+                        # Use larger font for damage numbers
+                        dmg_font_size = max(20, int(self.hex_size * 0.45))
+                        dmg_font = pygame.font.Font(None, dmg_font_size)
+                        # Green for heals (no minus sign), red for damage
+                        is_heal = not unit.damage_text.startswith("-")
+                        dmg_color = (80, 255, 80) if is_heal else (255, 60, 60)
+                        dmg_text_surf = dmg_font.render(unit.damage_text, True, dmg_color)
+                        dmg_shadow_surf = dmg_font.render(unit.damage_text, True, (0, 0, 0))
+                        damage_rect = dmg_text_surf.get_rect(centerx=pos[0], bottom=text_rect.top - 2 - float_offset)
+                        # Create alpha surface for fade
+                        fade_surf = pygame.Surface((dmg_text_surf.get_width() + 4, dmg_text_surf.get_height() + 4), pygame.SRCALPHA)
+                        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                            fade_surf.blit(dmg_shadow_surf, (2 + dx, 2 + dy))
+                        fade_surf.blit(dmg_text_surf, (2, 2))
+                        fade_surf.set_alpha(alpha)
+                        hex_surface.blit(fade_surf, (damage_rect.x - 2, damage_rect.y - 2))
                 unit.draw_health_bar(hex_surface, (pos[0], health_bar_y))
 
                 # Draw defeated X marker for dead players
@@ -2058,5 +2217,58 @@ class HexGrid:
                     pygame.draw.line(x_surf, (255, 0, 0, 200), (xc - x_radius, xc - x_radius), (xc + x_radius, xc + x_radius), 3)
                     pygame.draw.line(x_surf, (255, 0, 0, 200), (xc - x_radius, xc + x_radius), (xc + x_radius, xc - x_radius), 3)
                     hex_surface.blit(x_surf, (cx - xc, cy - xc))
+
+        # Draw hover tooltip near the hovered hex
+        if self.hovered_hex:
+            h_row, h_col = self.hovered_hex
+            if 0 <= h_row < self.rows and 0 <= h_col < self.cols:
+                hx, hy = self.get_hex_center(h_row, h_col)
+                cell = self.grid[h_row][h_col]
+                h_terrain = cell.get("terrain", "grass").replace("_", " ").title()
+                # Build tooltip lines
+                tip_lines = [h_terrain]
+                h_unit = cell.get("unit")
+                if h_unit:
+                    tip_lines.append(h_unit.name if hasattr(h_unit, 'name') else "Unit")
+                # Check location
+                if (h_row, h_col) in self.location_data:
+                    loc = self.location_data[(h_row, h_col)]
+                    if loc.get("card"):
+                        loc_name = loc["card"].get_current_data().get("Name", "")
+                        if loc_name:
+                            tip_lines.append(loc_name)
+                # Append extra lines (e.g. damage preview from game screen)
+                for extra in self.hover_extra_lines:
+                    tip_lines.append(extra)
+                # Render tooltip
+                tip_font = pygame.font.Font(None, 16)
+                # Color extra lines differently (damage preview in red/yellow)
+                tip_surfs = []
+                for i, line in enumerate(tip_lines):
+                    if line.startswith("~"):
+                        # Colored line (damage preview)
+                        tip_surfs.append(tip_font.render(line[1:], True, (255, 180, 80)))
+                    else:
+                        tip_surfs.append(tip_font.render(line, True, (220, 220, 230)))
+                tip_w = max(s.get_width() for s in tip_surfs) + 12
+                tip_h = sum(s.get_height() for s in tip_surfs) + 8 + (len(tip_surfs) - 1) * 2
+                tip_x = int(hx + self.hex_size * 0.8)
+                tip_y = int(hy - tip_h // 2)
+                # Keep on screen
+                sw, sh = surface.get_size()
+                if tip_x + tip_w > sw:
+                    tip_x = int(hx - self.hex_size * 0.8 - tip_w)
+                if tip_y < 0:
+                    tip_y = 0
+                if tip_y + tip_h > sh:
+                    tip_y = sh - tip_h
+                tip_bg = pygame.Surface((tip_w, tip_h), pygame.SRCALPHA)
+                tip_bg.fill((15, 15, 35, 200))
+                pygame.draw.rect(tip_bg, (58, 58, 92, 180), (0, 0, tip_w, tip_h), 1)
+                hex_surface.blit(tip_bg, (tip_x, tip_y))
+                ty_offset = 4
+                for ts in tip_surfs:
+                    hex_surface.blit(ts, (tip_x + 6, tip_y + ty_offset))
+                    ty_offset += ts.get_height() + 2
 
         surface.blit(hex_surface, (0, 0))

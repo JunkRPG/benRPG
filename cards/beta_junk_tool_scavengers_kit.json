@@ -1,0 +1,27 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Scrap Pouch & Twine",
+    "Description": "A ratty pouch full of hooks, string, and bent nails. Could be fashioned into a proper scavenging kit.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "1",
+    "Metal Value": "1",
+    "Wood Value": "1",
+    "Price": "8",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "1",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "",
+    "Requirements: Metal": "1",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Scavenger's Kit",
+    "2nd_state_Type": "Tool",
+    "2nd_state_Subtype": "Searching",
+    "2nd_state_Use": "A well-organized kit of hooks, probes, and pouches for scavenging terrain.",
+    "2nd_state_Tool_Action": "Search",
+    "2nd_state_Tool Image": ""
+  }
+}

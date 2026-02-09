@@ -48,8 +48,23 @@ exclude_adj_button = UIButton(relative_rect=pygame.Rect(10, 160, 150, 30), text=
 include_pos_state = False
 exclude_adj_state = False
 
-instructions_label = UILabel(relative_rect=pygame.Rect(10, 400, 450, 30), 
-                             text="Left: Move Center, Right: Toggle Obstacle, Middle: Clear Obstacle", 
+# Range 2 controls
+range2_enabled = False
+range2_toggle_button = UIButton(relative_rect=pygame.Rect(10, 200, 150, 30), text="Range 2: OFF", manager=manager)
+range2_distance_entry = UITextEntryLine(relative_rect=pygame.Rect(10, 230, 100, 30), manager=manager, initial_text="3")
+range2_distance_label = UILabel(relative_rect=pygame.Rect(120, 230, 150, 30), text="Range 2 Distance", manager=manager)
+range2_pattern_dropdown = UIDropDownMenu(options_list=pattern_options, starting_option="Area Effect",
+                                         relative_rect=pygame.Rect(10, 270, 150, 30), manager=manager)
+range2_pattern_label = UILabel(relative_rect=pygame.Rect(170, 270, 120, 30), text="Range 2 Pattern", manager=manager)
+range2_include_pos_button = UIButton(relative_rect=pygame.Rect(10, 310, 150, 30), text="R2 Include Pos: OFF", manager=manager)
+range2_exclude_adj_button = UIButton(relative_rect=pygame.Rect(10, 340, 150, 30), text="R2 Exclude Adj: OFF", manager=manager)
+range2_include_pos_state = False
+range2_exclude_adj_state = False
+current_range2 = set()
+range2_color = GREEN
+
+instructions_label = UILabel(relative_rect=pygame.Rect(10, 400, 450, 30),
+                             text="Left: Move Center, Right: Toggle Obstacle, Middle: Clear Obstacle",
                              manager=manager)
 
 dragging = False
@@ -93,89 +108,41 @@ def get_hex_direction(pos, target):
         return DIRECTIONS[0]  # 30°
     return DIRECTIONS[0]  # Fallback
 
+PATTERN_NAME_MAP = {
+    "Line of Sight": "line_of_sight",
+    "Melee": "melee",
+    "Area Effect": "area_effect",
+    "Echo": "echo",
+    "Multi Echo": "multi_echo",
+    "Perimeter": "perimeter",
+    "Mist/Shadow": "mist_shadow",
+}
+
 def calculate_range(grid, pos, distance, pattern, include_pos, exclude_adj):
     if not distance.isdigit() or int(distance) < 0:
         print(f"Invalid distance: {distance}")
         return set()
     dist = int(distance)
-    
+
     if isinstance(pattern, tuple):
         pattern = pattern[0]
-    print(f"Calculating range: pattern={pattern}, distance={dist}, include_pos={include_pos}, exclude_adj={exclude_adj}")
-    
-    if pattern == "Line of Sight":
-        range_set = grid.get_attack_range(pos, dist, is_projectile=True)
-    elif pattern == "Melee":
-        range_set = grid.get_attack_range(pos, dist, is_projectile=False)
-    elif pattern == "Area Effect":
-        range_set = grid.get_movement_range(pos, dist)
-    elif pattern == "Echo":
-        range_set = {hex_pos for hex_pos in grid.get_movement_range(pos, dist) 
-                     if grid.hex_distance(pos, hex_pos) % 2 == 1 and grid.grid[hex_pos[0]][hex_pos[1]]["accessible"]}
-    elif pattern == "Multi Echo":
-        range_set = {hex_pos for hex_pos in grid.get_movement_range(pos, dist) 
-                     if grid.hex_distance(pos, hex_pos) % 2 == 0 and grid.grid[hex_pos[0]][hex_pos[1]]["accessible"]}
-    elif pattern == "Perimeter":
-        range_set = {hex_pos for hex_pos in grid.get_movement_range(pos, dist) 
-                     if grid.hex_distance(pos, hex_pos) == dist and grid.grid[hex_pos[0]][hex_pos[1]]["accessible"]}
-    elif pattern == "Mist/Shadow":
-        range_set = set()
-        angles = [30, 90, 150, 210, 270, 330]
-        row, col = pos
-        is_odd_col = col % 2 != 0
-        
-        # Define target offsets based on column parity
-        step_offsets = {
-            30: [(-1, 1), (-3, 2), (-4, 3), (-6, 4)] if is_odd_col else [(-2, 1), (-3, 2), (-5, 3), (-6, 4)],
-            150: [(2, 1), (3, 2), (5, 3), (6, 4)] if is_odd_col else [(1, 1), (3, 2), (4, 3), (6, 4)],
-            210: [(2, -1), (3, -2), (5, -3), (6, -4)] if is_odd_col else [(1, -1), (3, -2), (4, -3), (6, -4)],
-            330: [(-1, -1), (-3, -2), (-4, -3), (-6, -4)] if is_odd_col else [(-2, -1), (-3, -2), (-5, -3), (-6, -4)]
-        }
-        
-        for angle in angles:
-            line = []
-            r, c = row, col
-            if angle in [90, 270]:
-                # Horizontal directions: step by 2 columns
-                steps = min(4, dist)
-                for step in range(1, steps + 1):
-                    new_r, new_c = r, c + (2 * step if angle == 90 else -2 * step)
-                    new_pos = (new_r, new_c)
-                    if (0 <= new_r < grid.rows and 0 <= new_c < grid.cols and 
-                        grid.hex_distance(pos, new_pos) <= dist):
-                        if grid.grid[new_r][new_c]["accessible"]:
-                            line.append(new_pos)
-                        else:
-                            break  # Stop at the first obstruction
-                    else:
-                        break
-            else:
-                # Diagonal directions: use predefined offsets
-                offsets = step_offsets[angle]
-                for dr, dc in offsets[:min(4, dist)]:
-                    new_r, new_c = r + dr, c + dc
-                    new_pos = (new_r, new_c)
-                    if (0 <= new_r < grid.rows and 0 <= new_c < grid.cols and 
-                        grid.hex_distance(pos, new_pos) <= dist):
-                        if grid.grid[new_r][new_c]["accessible"]:
-                            line.append(new_pos)
-                        else:
-                            break  # Stop at the first obstruction
-                    else:
-                        break
-            range_set.update(line)
-    
-    # Apply include_pos and exclude_adjacent filters
-    if not include_pos and pos in range_set:
-        range_set.remove(pos)
-    if exclude_adj:
-        adj = set(grid.get_neighbors(*pos))
-        range_set -= adj
-    
-    return range_set
 
-current_range = calculate_range(hex_grid, center_pos, range_distance_entry.get_text(), 
+    # Map display name to internal name and delegate to HexGrid.calculate_range()
+    internal_pattern = PATTERN_NAME_MAP.get(pattern, pattern)
+    return grid.calculate_range(pos, dist, internal_pattern, include_pos, exclude_adj)
+
+def recalc_range2():
+    """Recalculate Range 2 if enabled."""
+    if range2_enabled:
+        return calculate_range(hex_grid, hex_grid.selected_hex or center_pos,
+                               range2_distance_entry.get_text(),
+                               range2_pattern_dropdown.selected_option,
+                               range2_include_pos_state, range2_exclude_adj_state)
+    return set()
+
+current_range = calculate_range(hex_grid, center_pos, range_distance_entry.get_text(),
                                 pattern_dropdown.selected_option, include_pos_state, exclude_adj_state)
+current_range2 = recalc_range2()
 
 clock = pygame.time.Clock()
 running = True
@@ -193,23 +160,26 @@ while running:
                 if hex_pos:
                     if event.button == 1:
                         hex_grid.selected_hex = hex_pos
-                        current_range = calculate_range(hex_grid, hex_pos, range_distance_entry.get_text(), 
-                                                        pattern_dropdown.selected_option, 
+                        current_range = calculate_range(hex_grid, hex_pos, range_distance_entry.get_text(),
+                                                        pattern_dropdown.selected_option,
                                                         include_pos_state, exclude_adj_state)
+                        current_range2 = recalc_range2()
                     elif event.button == 2:
                         hex_grid.grid[hex_pos[0]][hex_pos[1]]["accessible"] = True
-                        current_range = calculate_range(hex_grid, hex_grid.selected_hex or center_pos, 
-                                                        range_distance_entry.get_text(), 
-                                                        pattern_dropdown.selected_option, 
+                        current_range = calculate_range(hex_grid, hex_grid.selected_hex or center_pos,
+                                                        range_distance_entry.get_text(),
+                                                        pattern_dropdown.selected_option,
                                                         include_pos_state, exclude_adj_state)
+                        current_range2 = recalc_range2()
                     elif event.button == 3:
                         if not dragging:
                             current_state = hex_grid.grid[hex_pos[0]][hex_pos[1]]["accessible"]
                             hex_grid.grid[hex_pos[0]][hex_pos[1]]["accessible"] = not current_state
-                            current_range = calculate_range(hex_grid, hex_grid.selected_hex or center_pos, 
-                                                            range_distance_entry.get_text(), 
-                                                            pattern_dropdown.selected_option, 
+                            current_range = calculate_range(hex_grid, hex_grid.selected_hex or center_pos,
+                                                            range_distance_entry.get_text(),
+                                                            pattern_dropdown.selected_option,
                                                             include_pos_state, exclude_adj_state)
+                            current_range2 = recalc_range2()
                         dragging = True
                         drag_start_x, drag_start_y = event.pos
                         start_view_offset_x, start_view_offset_y = hex_grid.view_offset_x, hex_grid.view_offset_y
@@ -248,42 +218,67 @@ while running:
                     max_offset_y = 0 if grid_height > WINDOW_HEIGHT else WINDOW_HEIGHT - grid_height
                     hex_grid.view_offset_x = max(min(hex_grid.view_offset_x, max_offset_x), min_offset_x)
                     hex_grid.view_offset_y = max(min(hex_grid.view_offset_y, max_offset_y), min_offset_y)
-                    current_range = calculate_range(hex_grid, hex_grid.selected_hex or center_pos, 
-                                                    range_distance_entry.get_text(), 
-                                                    pattern_dropdown.selected_option, 
+                    current_range = calculate_range(hex_grid, hex_grid.selected_hex or center_pos,
+                                                    range_distance_entry.get_text(),
+                                                    pattern_dropdown.selected_option,
                                                     include_pos_state, exclude_adj_state)
-        
+                    current_range2 = recalc_range2()
+
         if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
-            current_range = calculate_range(hex_grid, hex_grid.selected_hex or center_pos, 
-                                            range_distance_entry.get_text(), 
-                                            pattern_dropdown.selected_option, 
-                                            include_pos_state, exclude_adj_state)
+            if event.ui_element == range_distance_entry:
+                current_range = calculate_range(hex_grid, hex_grid.selected_hex or center_pos,
+                                                range_distance_entry.get_text(),
+                                                pattern_dropdown.selected_option,
+                                                include_pos_state, exclude_adj_state)
+            elif event.ui_element == range2_distance_entry:
+                current_range2 = recalc_range2()
         elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
-            pattern = event.text if isinstance(event.text, str) else event.text[0]
-            current_range = calculate_range(hex_grid, hex_grid.selected_hex or center_pos, 
-                                            range_distance_entry.get_text(), 
-                                            pattern, 
-                                            include_pos_state, exclude_adj_state)
-            range_color = (RED if pattern in ("Line of Sight", "Melee") else 
-                          GREEN if pattern == "Area Effect" else 
-                          ORANGE if pattern in ("Echo", "Multi Echo") else 
-                          MAGENTA if pattern == "Perimeter" else 
-                          CYAN if pattern == "Mist/Shadow" else BLUE)
+            if event.ui_element == pattern_dropdown:
+                pattern = event.text if isinstance(event.text, str) else event.text[0]
+                current_range = calculate_range(hex_grid, hex_grid.selected_hex or center_pos,
+                                                range_distance_entry.get_text(),
+                                                pattern,
+                                                include_pos_state, exclude_adj_state)
+                range_color = (RED if pattern in ("Line of Sight", "Melee") else
+                              GREEN if pattern == "Area Effect" else
+                              ORANGE if pattern in ("Echo", "Multi Echo") else
+                              MAGENTA if pattern == "Perimeter" else
+                              CYAN if pattern == "Mist/Shadow" else BLUE)
+            elif event.ui_element == range2_pattern_dropdown:
+                r2_pattern = event.text if isinstance(event.text, str) else event.text[0]
+                range2_color = (RED if r2_pattern in ("Line of Sight", "Melee") else
+                                GREEN if r2_pattern == "Area Effect" else
+                                ORANGE if r2_pattern in ("Echo", "Multi Echo") else
+                                MAGENTA if r2_pattern == "Perimeter" else
+                                CYAN if r2_pattern == "Mist/Shadow" else BLUE)
+                current_range2 = recalc_range2()
         elif event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == include_pos_button:
                 include_pos_state = not include_pos_state
                 include_pos_button.set_text(f"Include Position: {'ON' if include_pos_state else 'OFF'}")
-                current_range = calculate_range(hex_grid, hex_grid.selected_hex or center_pos, 
-                                                range_distance_entry.get_text(), 
-                                                pattern_dropdown.selected_option, 
+                current_range = calculate_range(hex_grid, hex_grid.selected_hex or center_pos,
+                                                range_distance_entry.get_text(),
+                                                pattern_dropdown.selected_option,
                                                 include_pos_state, exclude_adj_state)
             elif event.ui_element == exclude_adj_button:
                 exclude_adj_state = not exclude_adj_state
                 exclude_adj_button.set_text(f"Exclude Adjacent: {'ON' if exclude_adj_state else 'OFF'}")
-                current_range = calculate_range(hex_grid, hex_grid.selected_hex or center_pos, 
-                                                range_distance_entry.get_text(), 
-                                                pattern_dropdown.selected_option, 
+                current_range = calculate_range(hex_grid, hex_grid.selected_hex or center_pos,
+                                                range_distance_entry.get_text(),
+                                                pattern_dropdown.selected_option,
                                                 include_pos_state, exclude_adj_state)
+            elif event.ui_element == range2_toggle_button:
+                range2_enabled = not range2_enabled
+                range2_toggle_button.set_text(f"Range 2: {'ON' if range2_enabled else 'OFF'}")
+                current_range2 = recalc_range2()
+            elif event.ui_element == range2_include_pos_button:
+                range2_include_pos_state = not range2_include_pos_state
+                range2_include_pos_button.set_text(f"R2 Include Pos: {'ON' if range2_include_pos_state else 'OFF'}")
+                current_range2 = recalc_range2()
+            elif event.ui_element == range2_exclude_adj_button:
+                range2_exclude_adj_state = not range2_exclude_adj_state
+                range2_exclude_adj_button.set_text(f"R2 Exclude Adj: {'ON' if range2_exclude_adj_state else 'OFF'}")
+                current_range2 = recalc_range2()
 
     manager.update(time_delta)
     screen.fill(DARK_INDIGO)
@@ -294,20 +289,35 @@ while running:
         'YELLOW': YELLOW,
         'GOLDEN_YELLOW': GOLDEN_YELLOW,
         'GRAY': (128, 128, 128),
+        'WHITE': (255, 255, 255),
+        'RED': RED,
+        'GREEN': GREEN,
+        'LIGHT_GREEN': (144, 238, 144),
+        'PURPLE': PURPLE,
+        'ORANGE': ORANGE,
     }
 
+    # Build attack_ranges list for drawing
+    attack_ranges = []
     pattern = pattern_dropdown.selected_option
     if isinstance(pattern, tuple):
         pattern = pattern[0]
-    pattern = pattern.lower()
-    movement_range = current_range if "area" in pattern else None
-    attack_range = current_range if "sight" in pattern or "melee" in pattern or "echo" in pattern or "perimeter" in pattern or "mist" in pattern else None
-    
-    print(f"Drawing: movement_range={len(movement_range) if movement_range else 0}, attack_range={len(attack_range) if attack_range else 0}")
+    pattern_lower = pattern.lower()
+    movement_range = current_range if "area" in pattern_lower else None
+    attack_range = current_range if movement_range is None and current_range else None
+
+    if attack_range:
+        rc = range_color
+        attack_ranges.append({"range": attack_range, "color": (rc[0], rc[1], rc[2], 220), "outline": (rc[0]//2, rc[1]//2, rc[2]//2, 220), "inset": 0.65})
+
+    if range2_enabled and current_range2:
+        r2c = range2_color
+        attack_ranges.append({"range": current_range2, "color": (r2c[0], r2c[1], r2c[2], 140), "outline": (r2c[0]//2, r2c[1]//2, r2c[2]//2, 220), "inset": 0.50})
+
     if movement_range:
-        hex_grid.draw(screen, movement_range=movement_range, colors=colors)
-    elif attack_range:
-        hex_grid.draw(screen, attack_range=attack_range, colors=colors)
+        hex_grid.draw(screen, movement_range=movement_range, attack_ranges=attack_ranges if attack_ranges else None, colors=colors)
+    elif attack_ranges:
+        hex_grid.draw(screen, attack_ranges=attack_ranges, colors=colors)
     else:
         hex_grid.draw(screen, colors=colors)
 

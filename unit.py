@@ -558,15 +558,11 @@ class Unit:
                 if damage <= 0:
                     continue
 
-                # Use cached range if available, otherwise calculate
-                cache_key = "_cached_range"
-                cached = defense.get(cache_key)
-                if cached is None:
-                    cached = grid.calculate_range(
-                        pos, defense["range_distance"], defense["range_type"],
-                        defense.get("include_position", False), defense.get("exclude_adjacent", False)
-                    )
-                    defense[cache_key] = cached
+                # Calculate defense range each time (position-dependent, not safe to cache)
+                cached = grid.calculate_range(
+                    pos, defense["range_distance"], defense["range_type"],
+                    defense.get("include_position", False), defense.get("exclude_adjacent", False)
+                )
 
                 if current_hex in cached:
                     # Roll passthrough chance
@@ -581,11 +577,22 @@ class Unit:
 
     def draw_health_bar(self, surface, pos):
         if self.hp > 0:
-            bar_width, bar_height = 20, 5
+            bar_width, bar_height = 28, 4
             bar_x, bar_y = int(pos[0] - bar_width / 2), int(pos[1] - 15)
-            pygame.draw.rect(surface, (255, 0, 0), (bar_x, bar_y, bar_width, bar_height))
-            health_width = int(bar_width * (self.hp / self.max_hp))
-            pygame.draw.rect(surface, (0, 255, 0), (bar_x, bar_y, health_width, bar_height))
+            # Dark outline
+            pygame.draw.rect(surface, (10, 10, 20), (bar_x - 1, bar_y - 1, bar_width + 2, bar_height + 2))
+            # Red background (missing health)
+            pygame.draw.rect(surface, (120, 20, 20), (bar_x, bar_y, bar_width, bar_height))
+            # Health fill - color shifts from green to yellow to red
+            hp_ratio = self.hp / self.max_hp
+            health_width = max(1, int(bar_width * hp_ratio))
+            if hp_ratio > 0.5:
+                r = int(255 * (1 - hp_ratio) * 2)
+                g = 220
+            else:
+                r = 220
+                g = int(220 * hp_ratio * 2)
+            pygame.draw.rect(surface, (r, g, 30), (bar_x, bar_y, health_width, bar_height))
 
     def teleport(self, grid, new_row, new_col):
         grid.grid[self.position[0]][self.position[1]]["unit"] = None

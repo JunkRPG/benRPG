@@ -13,7 +13,8 @@ CHARACTER_CLASSES = {
             {"card_id": "starter_ranger_bow", "state": 1},
             {"card_id": "starter_ranger_bowstring", "state": 1},
             {"card_id": "starter_ranger_curved_branch", "state": 1},
-            {"card_id": "win_guide", "state": 1}
+            {"card_id": "win_guide", "state": 1},
+            {"card_id": "beta_junk_tool_scavengers_kit", "state": 2}
         ]
     },
     "Warrior": {
@@ -25,7 +26,8 @@ CHARACTER_CLASSES = {
             {"card_id": "starter_warrior_bowstring", "state": 1},
             {"card_id": "starter_warrior_metal_wraps", "state": 1},
             {"card_id": "starter_warrior_arrows", "state": 2},
-            {"card_id": "win_guide", "state": 1}
+            {"card_id": "win_guide", "state": 1},
+            {"card_id": "beta_junk_tool_scavengers_kit", "state": 2}
         ]
     },
     "Tank": {
@@ -36,7 +38,8 @@ CHARACTER_CLASSES = {
             {"card_id": "starter_tank_sledgehammer_plans", "state": 1},
             {"card_id": "starter_tank_hammer_head", "state": 1},
             {"card_id": "starter_tank_branch", "state": 1},
-            {"card_id": "win_guide", "state": 1}
+            {"card_id": "win_guide", "state": 1},
+            {"card_id": "beta_junk_tool_scavengers_kit", "state": 2}
         ]
     }
 }
@@ -1003,6 +1006,91 @@ class Player:
         # Other tool types - placeholder for future mechanics
         return False, f"{tool_name} cannot be used directly"
 
+    def use_item(self, card, target=None, grid=None):
+        """
+        Use a consumable item from inventory on a target (self, adjacent unit, or adjacent player).
+
+        Args:
+            card: The consumable InventoryCard to use
+            target: The target entity (Player, Unit, or self)
+            grid: HexGrid for adjacency checks
+
+        Returns:
+            tuple: (success: bool, message: str)
+        """
+        if self.action_used:
+            return False, "Action already used this turn"
+
+        if card not in self.inventory:
+            return False, "Item not in inventory"
+
+        card_data = card.get_current_data()
+        item_name = card_data.get("Name", "Unknown")
+        hp_effect = card_data.get("Use_HP", "")
+
+        if not hp_effect:
+            return False, f"{item_name} has no usable effect"
+
+        try:
+            # Handle case where hp_effect is a list
+            if isinstance(hp_effect, list):
+                hp_effect = next((effect for effect in hp_effect if effect and "HP" in str(effect)), "+0HP")
+
+            # Parse HP value (handles +15HP, -10HP, etc.)
+            hp_str = str(hp_effect).replace("HP", "").replace("+", "")
+            hp_change = int(hp_str)
+        except (ValueError, StopIteration):
+            return False, f"Cannot use {item_name}: invalid effect"
+
+        # Determine target
+        if target is None:
+            target = self
+
+        # Check adjacency if target is not self
+        if target is not self and grid:
+            distance = grid.hex_distance(self.position, target.position)
+            if distance > 1:
+                return False, "Target is not adjacent"
+
+        # Check revival rules
+        is_revival = str(card_data.get("Revival", "false")).lower() == "true"
+        if target.hp <= 0 and not is_revival:
+            return False, f"{item_name} cannot be used on a defeated target"
+
+        # Apply HP change
+        if hp_change > 0:
+            was_dead = target.hp <= 0
+            old_hp = target.hp
+            max_hp = target.max_hp if hasattr(target, 'max_hp') else target.hp + hp_change
+            target.hp = min(max_hp, target.hp + hp_change)
+            actual_heal = target.hp - old_hp
+            self.action_used = True
+
+            # Clear death log flag if revived
+            if was_dead and target.hp > 0 and hasattr(target, '_death_logged'):
+                target._death_logged = False
+
+            target_name = "self" if target is self else (target.name if hasattr(target, 'name') else target.class_name)
+
+            # Check for revert chance (consumable may revert to raw materials)
+            revert_chance = int(card_data.get("Revert_Chance", 0) or 0)
+            revert_msg = ""
+            if revert_chance > 0 and random.randint(1, 100) <= revert_chance:
+                card.current_state = 1
+                revert_msg = " Item reverted to materials!"
+
+            if was_dead and target.hp > 0:
+                return True, f"Used {item_name}: REVIVED {target_name}! (+{actual_heal} HP){revert_msg}"
+            return True, f"Used {item_name} on {target_name}: +{actual_heal} HP ({old_hp} -> {target.hp}){revert_msg}"
+
+        elif hp_change < 0:
+            target.hp = max(0, target.hp + hp_change)
+            self.action_used = True
+            target_name = "self" if target is self else (target.name if hasattr(target, 'name') else target.class_name)
+            return True, f"Used {item_name} on {target_name}: {hp_change} HP"
+        else:
+            return False, f"{item_name} has no effect"
+
     def get_tool_effect_text(self, slot_index=0):
         """
         Get a short description of the equipped tool's effect for UI display.
@@ -1436,11 +1524,22 @@ class Player:
 
     def draw_health_bar(self, surface, pos):
         if self.hp > 0:
-            bar_width, bar_height = 20, 5
+            bar_width, bar_height = 28, 4
             bar_x, bar_y = int(pos[0] - bar_width / 2), int(pos[1] - 15)
-            pygame.draw.rect(surface, (255, 0, 0), (bar_x, bar_y, bar_width, bar_height))
-            health_width = int(bar_width * (self.hp / self.max_hp))
-            pygame.draw.rect(surface, (0, 255, 0), (bar_x, bar_y, health_width, bar_height))
+            # Dark outline
+            pygame.draw.rect(surface, (10, 10, 20), (bar_x - 1, bar_y - 1, bar_width + 2, bar_height + 2))
+            # Red background (missing health)
+            pygame.draw.rect(surface, (120, 20, 20), (bar_x, bar_y, bar_width, bar_height))
+            # Health fill - color shifts from green to yellow to red
+            hp_ratio = self.hp / self.max_hp
+            health_width = max(1, int(bar_width * hp_ratio))
+            if hp_ratio > 0.5:
+                r = int(255 * (1 - hp_ratio) * 2)
+                g = 220
+            else:
+                r = 220
+                g = int(220 * hp_ratio * 2)
+            pygame.draw.rect(surface, (r, g, 30), (bar_x, bar_y, health_width, bar_height))
 
     def teleport(self, grid, new_row, new_col):
         grid.grid[self.position[0]][self.position[1]]["unit"] = None

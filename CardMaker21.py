@@ -712,7 +712,7 @@ class CardEditor:
 
         new_data = {entry[1]: entry[0].get_text() for entry in self.input_boxes}
         new_data.update({entry[2]: entry[0].get_text() for entry in self.file_inputs})
-        new_data.update({dropdown[1]: dropdown[0].selected_option for dropdown in self.dropdown_inputs})
+        new_data.update({dropdown[1]: dropdown[0].selected_option[0] if isinstance(dropdown[0].selected_option, tuple) else dropdown[0].selected_option for dropdown in self.dropdown_inputs})
         card_data["data"] = new_data
 
         # Validate JSON fields before saving
@@ -2286,7 +2286,7 @@ class CardCreationScreen:
             "data": {entry[1]: entry[0].get_text() for entry in self.input_boxes}
         }
         card_data["data"].update({entry[2]: entry[0].get_text() for entry in self.file_inputs})
-        card_data["data"].update({dropdown[1]: dropdown[0].selected_option for dropdown in self.dropdown_inputs})
+        card_data["data"].update({dropdown[1]: dropdown[0].selected_option[0] if isinstance(dropdown[0].selected_option, tuple) else dropdown[0].selected_option for dropdown in self.dropdown_inputs})
 
         # Validate JSON fields before saving
         is_valid, errors = validate_card_json_fields(card_data)

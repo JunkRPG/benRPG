@@ -17,6 +17,17 @@
     "2nd_state_Shop_Size": "0",
     "2nd_state_Shop_Currency": "metal",
     "2nd_state_Shop_Cycle_Turns": "",
+    "2nd_state_Defense_Enabled": "true",
+    "2nd_state_Defense_Requires_NPC": "true",
+    "2nd_state_Defense_Damage": "8",
+    "2nd_state_Defense_Range_Type": "line_of_sight",
+    "2nd_state_Defense_Range_Distance": "4",
+    "2nd_state_Defense_Include_Position": "false",
+    "2nd_state_Defense_Exclude_Adjacent": "false",
+    "2nd_state_Defense_Passthrough_Chance": "0",
+    "2nd_state_Defense_Color_R": "255",
+    "2nd_state_Defense_Color_G": "200",
+    "2nd_state_Defense_Color_B": "0",
     "2nd_state_Location Image File Path": ""
   }
 }

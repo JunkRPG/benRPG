@@ -68,6 +68,7 @@ class InstanceManager:
         self.pending_outcome = None  # Outcome waiting for resolution
         self.pending_choice = None  # Player choice waiting for input
         self.last_result_text = ""  # Last outcome result for display
+        self.defeated_units = []  # Names of units/players killed by instance outcomes
 
     def set_hex_grid(self, hex_grid):
         """Set the hex grid reference (called when game starts)."""
@@ -199,6 +200,8 @@ class InstanceManager:
             if player:
                 old_hp = player.hp
                 player.hp = max(0, player.hp - damage)
+                if player.hp <= 0 and old_hp > 0:
+                    self.defeated_units.append(getattr(player, 'class_name', 'Player'))
                 return f"You take {damage} damage! ({old_hp} -> {player.hp} HP)"
             return ""
 
@@ -313,19 +316,25 @@ class InstanceManager:
                 old_hp = unit.hp
                 unit.hp = max(0, unit.hp - damage)
                 messages.append(f"{unit.name} takes {damage} damage ({old_hp} -> {unit.hp})")
+                if unit.hp <= 0 and old_hp > 0:
+                    self.defeated_units.append(unit.name)
         elif target_mode == "nearest":
             # Find nearest to player - use passed player reference
             player_pos = player.position if player else None
             if player_pos:
-                nearest = min(targets, key=lambda u: hex_grid.get_distance(player_pos, u.position) if u.position else float('inf'))
+                nearest = min(targets, key=lambda u: hex_grid.hex_distance(player_pos, u.position) if u.position else float('inf'))
                 old_hp = nearest.hp
                 nearest.hp = max(0, nearest.hp - damage)
                 messages.append(f"{nearest.name} takes {damage} damage ({old_hp} -> {nearest.hp})")
+                if nearest.hp <= 0 and old_hp > 0:
+                    self.defeated_units.append(nearest.name)
         else:  # random
             target = random.choice(targets)
             old_hp = target.hp
             target.hp = max(0, target.hp - damage)
             messages.append(f"{target.name} takes {damage} damage ({old_hp} -> {target.hp})")
+            if target.hp <= 0 and old_hp > 0:
+                self.defeated_units.append(target.name)
 
         return "\n".join(messages)
 
