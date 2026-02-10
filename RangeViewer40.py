@@ -14,7 +14,7 @@ WINDOW_HEIGHT = display_info.current_h
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.FULLSCREEN)
 pygame.display.set_caption("Range Viewer")
 
-DARK_INDIGO = (25, 25, 112)
+DARK_CHARCOAL = (35, 35, 40)
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -25,7 +25,7 @@ ORANGE = (255, 165, 0)
 CYAN = (0, 255, 255)
 MAGENTA = (255, 0, 255)
 
-manager = pygame_gui.UIManager((WINDOW_WIDTH, WINDOW_HEIGHT))
+manager = pygame_gui.UIManager((WINDOW_WIDTH, WINDOW_HEIGHT), "theme.json")
 
 hex_grid = HexGrid(16, 24, 30, WINDOW_WIDTH, WINDOW_HEIGHT)
 center_pos = (hex_grid.rows // 2, hex_grid.cols // 2)
@@ -281,7 +281,7 @@ while running:
                 current_range2 = recalc_range2()
 
     manager.update(time_delta)
-    screen.fill(DARK_INDIGO)
+    screen.fill(DARK_CHARCOAL)
 
     colors = {
         'BLUE': BLUE,

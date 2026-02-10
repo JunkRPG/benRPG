@@ -1,5 +1,5 @@
 # constants.py
-DARK_INDIGO = (25, 25, 112)      # Background
+DARK_CHARCOAL = (35, 35, 40)      # Background
 LIGHT_GOLDEN = (238, 221, 130)   # Text on background
 LIGHT_TEAL = (127, 255, 212)     # Text box background
 DARK_BRONZE = (139, 69, 19)      # Text inside text boxes

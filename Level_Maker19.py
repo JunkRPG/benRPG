@@ -22,13 +22,9 @@ WINDOW_HEIGHT = display_info.current_h
 screen = display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.FULLSCREEN)
 display.set_caption("Level Maker")
 
-# Colors synced with Card Maker
-DARK_INDIGO = (25, 25, 112)      # Background
+# Colors
+DARK_CHARCOAL = (35, 35, 40)      # Background
 LIGHT_GOLDEN = (238, 221, 130)   # Text
-LIGHT_TEAL = (127, 255, 212)     # UI elements background
-DARK_BRONZE = (139, 69, 19)      # Text in UI
-DARK_BRASS = (184, 134, 11)      # Button background
-LIGHT_CREAM = (245, 245, 220)    # Button text
 LIGHT_GREEN = (144, 238, 144)    # Card-drawing hex border
 YELLOW = (255, 255, 0)           # Selected hex border
 GRAY = (200, 200, 200)           # Default hex border
@@ -812,7 +808,7 @@ class LevelEditor:
                 self.status_label.set_text(f"Error loading level: {e}")
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         self.grid.draw(screen, self.selected_hex, self.card_drawing_dict, self.player_start, self.terrain, self.units, self)
         manager.draw_ui(screen)
 

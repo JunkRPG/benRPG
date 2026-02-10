@@ -34,13 +34,9 @@ WINDOW_HEIGHT = display_info.current_h
 screen = display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.FULLSCREEN)
 display.set_caption("Campaign Maker")
 
-# Colors synced with other tools
-DARK_INDIGO = (25, 25, 112)
+# Colors
+DARK_CHARCOAL = (35, 35, 40)
 LIGHT_GOLDEN = (238, 221, 130)
-LIGHT_TEAL = (127, 255, 212)
-DARK_BRONZE = (139, 69, 19)
-DARK_BRASS = (184, 134, 11)
-LIGHT_CREAM = (245, 245, 220)
 LIGHT_GREEN = (144, 238, 144)
 YELLOW = (255, 255, 0)
 GRAY = (200, 200, 200)
@@ -931,7 +927,7 @@ Card Hexes: {card_hexes}
 
     def draw(self):
         """Draw the application."""
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
 
         # Draw preview border
         pygame.draw.rect(screen, GRAY, self.preview_rect, 2)

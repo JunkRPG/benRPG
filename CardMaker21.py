@@ -15,12 +15,9 @@ from card_utils import validate_card_json_fields, JSON_FIELDS, get_json_field_he
 # Constants
 CARD_WIDTH = 400
 CARD_HEIGHT = 600
-LIGHT_TEAL = (173, 216, 230)
-DARK_BRONZE = (139, 69, 19)
-DARK_INDIGO = (75, 0, 130)
-DARK_BRASS = (184, 115, 51)
-LIGHT_CREAM = (245, 245, 220)
-LIGHT_GOLDEN = (255, 215, 0)
+DARK_CHARCOAL = (35, 35, 40)
+CARD_BG = (26, 26, 62)
+CARD_TEXT = (200, 200, 212)
 SUPPORTED_IMAGE_FORMATS = ('.png', '.jpg', '.jpeg', '.bmp', '.gif')
 
 # Initialize Pygame
@@ -32,57 +29,6 @@ WINDOW_WIDTH = display_info.current_w
 WINDOW_HEIGHT = display_info.current_h
 CARD_SCALE = min((WINDOW_WIDTH - 40) / CARD_WIDTH, (WINDOW_HEIGHT - 200) / CARD_HEIGHT)
 
-# Custom theme (unchanged)
-THEME_JSON = {
-    "@default": {
-        "colours": {
-            "normal_bg": f"#{LIGHT_TEAL[0]:02x}{LIGHT_TEAL[1]:02x}{LIGHT_TEAL[2]:02x}",
-            "hovered_bg": f"#{LIGHT_TEAL[0]:02x}{LIGHT_TEAL[1]:02x}{LIGHT_TEAL[2]:02x}",
-            "active_bg": f"#{LIGHT_TEAL[0]:02x}{LIGHT_TEAL[1]:02x}{LIGHT_TEAL[2]:02x}",
-            "normal_text": f"#{DARK_BRONZE[0]:02x}{DARK_BRONZE[1]:02x}{DARK_BRONZE[2]:02x}",
-            "hovered_text": f"#{DARK_BRONZE[0]:02x}{DARK_BRONZE[1]:02x}{DARK_BRONZE[2]:02x}",
-            "selected_text": f"#{DARK_BRONZE[0]:02x}{DARK_BRONZE[1]:02x}{DARK_BRONZE[2]:02x}",
-            "dark_bg": f"#{DARK_INDIGO[0]:02x}{DARK_INDIGO[1]:02x}{DARK_INDIGO[2]:02x}"
-        }
-    },
-    "button": {
-        "colours": {
-            "normal_bg": f"#{DARK_BRASS[0]:02x}{DARK_BRASS[1]:02x}{DARK_BRASS[2]:02x}",
-            "hovered_bg": f"#{DARK_BRASS[0]:02x}{DARK_BRASS[1]:02x}{DARK_BRASS[2]:02x}",
-            "active_bg": f"#{DARK_BRASS[0]:02x}{DARK_BRASS[1]:02x}{DARK_BRASS[2]:02x}",
-            "normal_text": f"#{LIGHT_CREAM[0]:02x}{LIGHT_CREAM[1]:02x}{LIGHT_CREAM[2]:02x}",
-            "hovered_text": f"#{LIGHT_CREAM[0]:02x}{LIGHT_CREAM[1]:02x}{LIGHT_CREAM[2]:02x}",
-            "selected_text": f"#{LIGHT_CREAM[0]:02x}{LIGHT_CREAM[1]:02x}{LIGHT_CREAM[2]:02x}"
-        }
-    },
-    "label": {
-        "colours": {"normal_text": f"#{LIGHT_GOLDEN[0]:02x}{LIGHT_GOLDEN[1]:02x}{LIGHT_GOLDEN[2]:02x}"}
-    },
-    "text_entry_line": {
-        "colours": {
-            "normal_bg": f"#{LIGHT_TEAL[0]:02x}{LIGHT_TEAL[1]:02x}{LIGHT_TEAL[2]:02x}",
-            "hovered_bg": f"#{LIGHT_TEAL[0]:02x}{LIGHT_TEAL[1]:02x}{LIGHT_TEAL[2]:02x}",
-            "active_bg": f"#{LIGHT_TEAL[0]:02x}{LIGHT_TEAL[1]:02x}{LIGHT_TEAL[2]:02x}",
-            "normal_text": f"#{DARK_BRONZE[0]:02x}{DARK_BRONZE[1]:02x}{DARK_BRONZE[2]:02x}",
-            "hovered_text": f"#{DARK_BRONZE[0]:02x}{DARK_BRONZE[1]:02x}{DARK_BRONZE[2]:02x}",
-            "selected_text": f"#{DARK_BRONZE[0]:02x}{DARK_BRONZE[1]:02x}{DARK_BRONZE[2]:02x}"
-        }
-    },
-    "drop_down_menu": {
-        "colours": {
-            "normal_bg": f"#{LIGHT_TEAL[0]:02x}{LIGHT_TEAL[1]:02x}{LIGHT_TEAL[2]:02x}",
-            "hovered_bg": f"#{LIGHT_TEAL[0]:02x}{LIGHT_TEAL[1]:02x}{LIGHT_TEAL[2]:02x}",
-            "active_bg": f"#{LIGHT_TEAL[0]:02x}{LIGHT_TEAL[1]:02x}{LIGHT_TEAL[2]:02x}",
-            "normal_text": f"#{DARK_BRONZE[0]:02x}{DARK_BRONZE[1]:02x}{DARK_BRONZE[2]:02x}",
-            "hovered_text": f"#{DARK_BRONZE[0]:02x}{DARK_BRONZE[1]:02x}{DARK_BRONZE[2]:02x}",
-            "selected_text": f"#{DARK_BRONZE[0]:02x}{DARK_BRONZE[1]:02x}{DARK_BRONZE[2]:02x}"
-        }
-    },
-    "#title_label": {"font": {"name": "freesansbold", "size": "30", "bold": "1", "italic": "0"}}
-}
-
-with open("theme.json", "w") as f:
-    json.dump(THEME_JSON, f)
 manager = pygame_gui.UIManager((WINDOW_WIDTH, WINDOW_HEIGHT), "theme.json")
 
 screen = display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.FULLSCREEN)
@@ -195,10 +141,10 @@ class CardPreview:
                 self.edit_action()
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         
         card_surface = pygame.Surface((CARD_WIDTH, CARD_HEIGHT))
-        card_surface.fill(LIGHT_TEAL)  # Card background
+        card_surface.fill(CARD_BG)  # Card background
         
         bg_path = self.card_data["data"].get("Background Image", 
                                            self.card_data["data"].get("Background Image File Path", ""))
@@ -233,7 +179,7 @@ class CardPreview:
         y_pos = int(20 * CARD_SCALE)
         name = self.card_data["data"].get("Name", 
                                         self.card_data["data"].get("Default Name", "Unnamed"))
-        name_surface = font.render(name, True, DARK_BRONZE)
+        name_surface = font.render(name, True, CARD_TEXT)
         name_rect = name_surface.get_rect(center=(CARD_WIDTH//2, y_pos))
         card_surface.blit(name_surface, name_rect)
         y_pos += int(120 * CARD_SCALE)
@@ -248,12 +194,12 @@ class CardPreview:
                 if key in ["Upgraded Type (Weapon, Tool, Consumable, Armor)", "Upgraded Name"]:
                     value = value or "N/A"
                 text = f"{key}: {value}"
-                text_surface = font.render(text, True, DARK_BRONZE)
+                text_surface = font.render(text, True, CARD_TEXT)
                 text_rect = text_surface.get_rect(center=(CARD_WIDTH//2, y_pos))
                 if text_rect.width > CARD_WIDTH - 20:
                     while text_rect.width > CARD_WIDTH - 20 and len(text) > 0:
                         text = text[:-1]
-                        text_surface = font.render(text + "...", True, DARK_BRONZE)
+                        text_surface = font.render(text + "...", True, CARD_TEXT)
                         text_rect = text_surface.get_rect(center=(CARD_WIDTH//2, y_pos))
                 card_surface.blit(text_surface, text_rect)
                 y_pos += int(90 * CARD_SCALE)
@@ -848,7 +794,7 @@ class CardEditor:
                 element.rect.y = element.relative_rect.y - self.scroll_offset
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
 
 class CardViewer:
     def __init__(self, card_type, back_action):
@@ -947,7 +893,7 @@ class CardViewer:
                 element.rect.y = element.relative_rect.y - self.scroll_offset
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         if self.preview:
             self.preview.draw()
 
@@ -2372,7 +2318,7 @@ class CardCreationScreen:
         CardManager.instance.current_screen = "preview"
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
 
 class DeckMaker:
     def __init__(self, back_action):
@@ -2597,7 +2543,7 @@ class DeckMaker:
                 self.update_selected_cards()
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
 
 class CardManager:
     instance = None
@@ -2887,7 +2833,7 @@ class CardManager:
                         break
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         if self.current_screen == "creation" and self.creation_screen:
             self.creation_screen.draw()
         elif self.current_screen == "viewer" and self.viewer_screen:

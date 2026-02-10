@@ -35,10 +35,10 @@ screen = display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.FULLSCREEN)
 display.set_caption("Hex-Grid RPG")
 
 # Initialize UIManager
-manager = pygame_gui.UIManager((WINDOW_WIDTH, WINDOW_HEIGHT))
+manager = pygame_gui.UIManager((WINDOW_WIDTH, WINDOW_HEIGHT), "theme.json")
 
 # Colors (synced with level maker where applicable)
-DARK_INDIGO = (25, 25, 112)  # Background
+DARK_CHARCOAL = (35, 35, 40)  # Background
 GRAY = (200, 200, 200)
 YELLOW = (255, 255, 0)
 GOLDEN_YELLOW = (255, 215, 0)
@@ -465,7 +465,7 @@ class InventoryScreen:
             self.info_text.set_text(f"<font color='#FF0000'>Cannot use {current_data.get('Name', 'Item')}: invalid effect</font>")
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -1276,7 +1276,7 @@ class LocationScreen:
             self.info_text.set_text(f"<font color='#FF0000'>{msg}</font>")
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -1509,7 +1509,7 @@ class RecruitmentScreen:
         game_screen.initialize_screen()
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -1740,7 +1740,7 @@ class PartyScreen:
         self.initialize_screen()  # Refresh
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -1932,7 +1932,7 @@ class QuestScreen:
         self.quest_details.set_text(f"<font color='#FFFFFF'>{'<br>'.join(lines)}</font>")
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -2153,7 +2153,7 @@ class SkillsScreen:
                 self.initialize_screen()  # Refresh after animation complete
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -2340,7 +2340,7 @@ class CraftingScreen:
         return True
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -3323,7 +3323,7 @@ class TabbedMenuScreen:
             self._handle_quests_event(event)
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         # Draw active tab highlight (underline bar)
         if self.active_tab in self.tab_buttons:
             btn = self.tab_buttons[self.active_tab]
@@ -3396,7 +3396,7 @@ class PlayerCountScreen:
                 main_menu.initialize_buttons()
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -3460,7 +3460,7 @@ class MainMenu:
                 sys.exit()
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         # Decorative background hex pattern
         hex_s = 40
         pat_color = (30, 30, 70)
@@ -3539,7 +3539,7 @@ class CharacterCreationScreen:
                         break
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -3647,7 +3647,7 @@ class MultiplayerCharacterCreationScreen:
         game_screen.start_new_game_multiplayer(level_file=self.level_file)
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -3669,7 +3669,7 @@ class SettingsScreen:
             main_menu.initialize_buttons()
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 # GameScreen class
@@ -6843,7 +6843,7 @@ class GameScreen:
                     skill_button_clicked = skill_button_clicked or tool_button_clicked  # Prevent further processing
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         current_player = game.current_player
         is_player_turn = self.turn_phase in ("player", "player1", "player2")
         # Check animation state early so range displays are accurate this frame
@@ -7050,7 +7050,7 @@ class GameSettingsScreen:
             game_screen.initialize_screen()
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 # InstanceEventScreen class
@@ -7216,7 +7216,7 @@ class InstanceEventScreen:
         print(f"[DEBUG] After resume_after_instance, current_screen={game._current_screen}")
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -7431,7 +7431,7 @@ class TransitionEventScreen:
         print(f"[DEBUG] After resume_after_transition, current_screen={game._current_screen}")
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -7565,7 +7565,7 @@ class PauseMenuScreen:
             overlay.fill((10, 10, 30, 180))
             screen.blit(overlay, (0, 0))
         else:
-            screen.fill(DARK_INDIGO)
+            screen.fill(DARK_CHARCOAL)
         # Draw title text manually with style
         title_font = pygame.font.Font(None, 64)
         title_shadow = title_font.render("Paused", True, (10, 10, 30))
@@ -7634,7 +7634,7 @@ class ConfirmationScreen:
                     return
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -7755,7 +7755,7 @@ class SaveLoadScreen:
                     self.initialize_screen(mode=self.mode)
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -7820,7 +7820,7 @@ class DefeatScreen:
                 main_menu.initialize_buttons()
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -8083,7 +8083,7 @@ class CardBrowserScreen:
                 self.status_label.set_text(f"{len(self.selected_cards)} card(s) selected")
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
@@ -8267,7 +8267,7 @@ class NpcBrowserScreen:
                 self.status_label.set_text(f"{len(self.selected_npcs)} NPC(s) selected")
 
     def draw(self):
-        screen.fill(DARK_INDIGO)
+        screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
 
 
