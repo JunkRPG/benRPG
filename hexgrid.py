@@ -1850,37 +1850,31 @@ class HexGrid:
                 if self.selected_hex == (row, col):
                     pygame.draw.polygon(hex_surface, (80, 80, 100), points, 1)
 
-        # Second pass: Draw range rings on top of terrain and hex borders
-        ring_width = max(4, int(self.hex_size * 0.22))
+        # Second pass: Draw range overlays on top of terrain and hex borders
         for row in range(self.rows):
             for col in range(self.cols):
-                if movement_range and (row, col) in movement_range:
+                # Movement range: shade out-of-range hexes
+                if movement_range and (row, col) not in movement_range:
                     x, y = self.get_hex_center(row, col)
-                    radius = int(self.hex_size * 0.75)
-                    # Very subtle fill
-                    fill_surf = pygame.Surface((radius * 2 + 4, radius * 2 + 4), pygame.SRCALPHA)
-                    pygame.draw.circle(fill_surf, (0, 80, 160, 20), (radius + 2, radius + 2), radius)
-                    hex_surface.blit(fill_surf, (int(x) - radius - 2, int(y) - radius - 2))
-                    # Darker circle ring
-                    ring_surf = pygame.Surface((radius * 2 + 4, radius * 2 + 4), pygame.SRCALPHA)
-                    pygame.draw.circle(ring_surf, (0, 80, 160, 180), (radius + 2, radius + 2), radius, ring_width)
-                    hex_surface.blit(ring_surf, (int(x) - radius - 2, int(y) - radius - 2))
+                    dark_overlay = pygame.Surface((self.hex_size * 2, self.hex_size * 2), pygame.SRCALPHA)
+                    dark_points = [(self.hex_size + self.hex_size * math.cos(math.radians(60 * i)),
+                                   self.hex_size + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                    pygame.draw.polygon(dark_overlay, (0, 0, 0, 100), dark_points, 0)
+                    hex_surface.blit(dark_overlay, (x - self.hex_size, y - self.hex_size))
+                # Attack ranges: colored hex tint + hex border
                 if attack_ranges:
                     for ar in attack_ranges:
                         if (row, col) in ar["range"]:
                             x, y = self.get_hex_center(row, col)
-                            inset_size = self.hex_size * ar["inset"]
-                            cr = int(inset_size)
                             color = ar["color"]
-                            outline_color = ar.get("outline", (0, 0, 0, 220))
-                            surf_size = cr * 2 + 4
-                            center = cr + 2
-                            ring_surf = pygame.Surface((surf_size, surf_size), pygame.SRCALPHA)
-                            # Subtle fill
-                            pygame.draw.circle(ring_surf, (color[0], color[1], color[2], 15), (center, center), cr)
-                            # Circle ring
-                            pygame.draw.circle(ring_surf, color, (center, center), cr, ring_width)
-                            hex_surface.blit(ring_surf, (int(x) - center, int(y) - center))
+                            range_overlay = pygame.Surface((self.hex_size * 2, self.hex_size * 2), pygame.SRCALPHA)
+                            range_points = [(self.hex_size + self.hex_size * math.cos(math.radians(60 * i)),
+                                            self.hex_size + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                            # Subtle hex-shaped tint fill
+                            pygame.draw.polygon(range_overlay, (color[0], color[1], color[2], 45), range_points, 0)
+                            # Colored hex border
+                            pygame.draw.polygon(range_overlay, (color[0], color[1], color[2], 180), range_points, 4)
+                            hex_surface.blit(range_overlay, (x - self.hex_size, y - self.hex_size))
 
         # Third pass: Draw location icons and names on top of range rings
         for (row, col), loc_data in self.location_data.items():
