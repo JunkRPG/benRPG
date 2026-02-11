@@ -16,6 +16,7 @@ from terrain_config import (
 )
 from deck_utils import resolve_deck_path
 from card_utils import load_card
+from attack_animations import AttackAnimationManager
 
 # Hexagonal directions for LOS
 DIRECTIONS = [
@@ -52,6 +53,8 @@ class HexGrid:
         self.active_turn_unit = None  # Unit/player whose turn is currently active (for glow ring)
         # Animation state for targeting visuals
         self.pulse_time = 0
+        # Attack animation manager
+        self.attack_anims = AttackAnimationManager()
 
     def load_level(self, level_file, card_manager, player):
         try:
@@ -2126,7 +2129,8 @@ class HexGrid:
                     # Player tokens are slightly larger
                     radius = int(base_radius * 1.15) if isinstance(unit, Player) else base_radius
                     cx, cy = int(pos[0]), int(pos[1])
-                    draw_color = colors['WHITE'] if unit.attack_flash else color
+                    flash_elapsed = pygame.time.get_ticks() - unit.flash_start if unit.attack_flash else 0
+                    draw_color = colors['WHITE'] if (unit.attack_flash and flash_elapsed >= 0) else color
                     # Dark outline
                     pygame.draw.circle(hex_surface, (10, 10, 20), (cx, cy), radius + 2)
                     # Player gets a thin gold ring around the token
@@ -2175,7 +2179,8 @@ class HexGrid:
                         hex_surface.blit(shadow_surface, text_rect.move(dx, dy))
                     hex_surface.blit(text_surface, text_rect)
                     # Draw damage text if present (above the name) with float-up and fade
-                    if unit.damage_text:
+                    # elapsed < 0 means the damage_time was set in the future (delayed by attack animation)
+                    if unit.damage_text and (pygame.time.get_ticks() - unit.damage_time) >= 0:
                         elapsed = pygame.time.get_ticks() - unit.damage_time
                         duration = 1000  # matches DAMAGE_TEXT_DURATION
                         progress = min(1.0, elapsed / duration)
@@ -2264,5 +2269,9 @@ class HexGrid:
                 for ts in tip_surfs:
                     hex_surface.blit(ts, (tip_x + 6, tip_y + ty_offset))
                     ty_offset += ts.get_height() + 2
+
+        # Update and draw attack animations
+        self.attack_anims.update()
+        self.attack_anims.draw(hex_surface)
 
         surface.blit(hex_surface, (0, 0))

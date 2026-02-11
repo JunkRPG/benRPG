@@ -163,11 +163,18 @@ class Player:
             damage = self.attacks["melee"]["damage"] + self.get_mount_melee_bonus(party)
             distance = grid.hex_distance(self.position, enemy.position)
             if distance == 1:
+                # Trigger melee animation
+                delay = 0
+                if hasattr(grid, 'attack_anims'):
+                    src = grid.get_hex_center(*self.position)
+                    tgt = grid.get_hex_center(*enemy.position)
+                    grid.attack_anims.create_melee(src, tgt)
+                    delay = grid.attack_anims.get_max_remaining_ms()
                 enemy.hp -= damage
-                enemy.set_damage_text(damage)
+                enemy.set_damage_text(damage, delay)
                 self._mark_attack_used(is_projectile=False)
                 self.attack_flash = True
-                self.flash_start = pygame.time.get_ticks()
+                self.flash_start = pygame.time.get_ticks() + delay
                 return f"{self.class_name} used {attack_name} on {enemy.name} for {damage} damage", enemy.hp <= 0
         return "", False
 
@@ -229,12 +236,18 @@ class Player:
         if self.piercing_projectile and self.projectile_range_type == "line_of_sight":
             return self._execute_piercing_attack(enemy, attack_name, damage, ammo_card, ammo_data, requires_ammo, grid)
 
-        # Standard single-target attack
+        # Standard single-target attack — trigger projectile animation
+        delay = 0
+        if hasattr(grid, 'attack_anims'):
+            src = grid.get_hex_center(*self.position)
+            tgt = grid.get_hex_center(*enemy.position)
+            grid.attack_anims.create_projectile(src, tgt)
+            delay = grid.attack_anims.get_max_remaining_ms()
         enemy.hp -= damage
-        enemy.set_damage_text(damage)
+        enemy.set_damage_text(damage, delay)
         self._mark_attack_used(is_projectile=True)
         self.attack_flash = True
-        self.flash_start = pygame.time.get_ticks()
+        self.flash_start = pygame.time.get_ticks() + delay
 
         base_msg = f"{self.class_name} used {attack_name} on {enemy.name} for {damage} damage"
         killed = enemy.hp <= 0
@@ -265,6 +278,14 @@ class Player:
         if not attack_line:
             return "Cannot determine attack line", False
 
+        # Trigger projectile animation toward primary target
+        delay = 0
+        if hasattr(grid, 'attack_anims'):
+            src = grid.get_hex_center(*self.position)
+            tgt = grid.get_hex_center(*primary_target.position)
+            grid.attack_anims.create_projectile(src, tgt)
+            delay = grid.attack_anims.get_max_remaining_ms()
+
         # Collect all entities along the line up to and including the clicked target
         hit_units = []
         messages = []
@@ -280,9 +301,9 @@ class Player:
             unit = grid.grid[row][col].get("unit")
             if unit and hasattr(unit, 'hp') and unit.hp > 0:
                 unit.hp -= damage
-                unit.set_damage_text(damage)
+                unit.set_damage_text(damage, delay)
                 unit.attack_flash = True
-                unit.flash_start = pygame.time.get_ticks()
+                unit.flash_start = pygame.time.get_ticks() + delay
                 defeated = unit.hp <= 0
                 hit_units.append((unit, damage, defeated))
                 messages.append(f"{unit.name} ({damage} dmg{'- defeated' if defeated else ''})")
@@ -292,7 +313,7 @@ class Player:
 
         self._mark_attack_used(is_projectile=True)
         self.attack_flash = True
-        self.flash_start = pygame.time.get_ticks()
+        self.flash_start = pygame.time.get_ticks() + delay
 
         # Handle ammunition runout
         ammo_msg = ""
@@ -503,6 +524,16 @@ class Player:
         hits = 0
         max_hits = 3
 
+        # Trigger projectile animation for multi-target
+        delay = 0
+        if hasattr(grid, 'attack_anims') and attack_line:
+            src = grid.get_hex_center(*self.position)
+            # Aim at last hex in line for the animation
+            last_hex = attack_line[-1] if attack_line else self.position
+            tgt = grid.get_hex_center(*last_hex)
+            grid.attack_anims.create_projectile(src, tgt)
+            delay = grid.attack_anims.get_max_remaining_ms()
+
         # Hit all enemies along the line (up to 3)
         for hex_pos in attack_line:
             if hits >= max_hits:
@@ -512,9 +543,9 @@ class Player:
                 unit = grid.grid[row][col].get("unit")
                 if unit and hasattr(unit, 'allegiance') and unit.allegiance == "Hostile" and unit.hp > 0:
                     unit.hp -= damage
-                    unit.set_damage_text(damage)
+                    unit.set_damage_text(damage, delay)
                     unit.attack_flash = True
-                    unit.flash_start = pygame.time.get_ticks()
+                    unit.flash_start = pygame.time.get_ticks() + delay
                     messages.append(f"{unit.name} ({damage} dmg)")
                     hits += 1
                     if unit.hp <= 0:
@@ -525,7 +556,7 @@ class Player:
 
         self.action_used = True
         self.attack_flash = True
-        self.flash_start = pygame.time.get_ticks()
+        self.flash_start = pygame.time.get_ticks() + delay
 
         # Check ammo runout after successful attack
         if requires_ammo and ammo_card:
@@ -570,15 +601,21 @@ class Player:
         adjacent_hexes = grid.get_hexes_at_distance(self.position, 1)
 
         targets_hit = 0
+        delay = 300  # melee animation duration
         for hex_pos in adjacent_hexes:
             row, col = hex_pos
             if 0 <= row < grid.rows and 0 <= col < grid.cols:
                 unit = grid.grid[row][col].get("unit")
                 if unit and hasattr(unit, 'allegiance') and unit.allegiance == "Hostile" and unit.hp > 0:
+                    # Trigger melee animation for each target
+                    if hasattr(grid, 'attack_anims'):
+                        src = grid.get_hex_center(*self.position)
+                        tgt = grid.get_hex_center(*unit.position)
+                        grid.attack_anims.create_melee(src, tgt)
                     unit.hp -= damage
-                    unit.set_damage_text(damage)
+                    unit.set_damage_text(damage, delay)
                     unit.attack_flash = True
-                    unit.flash_start = pygame.time.get_ticks()
+                    unit.flash_start = pygame.time.get_ticks() + delay
                     targets_hit += 1
                     messages.append(f"{unit.name} ({damage} dmg)")
                     if unit.hp <= 0:
@@ -589,7 +626,7 @@ class Player:
 
         self.action_used = True
         self.attack_flash = True
-        self.flash_start = pygame.time.get_ticks()
+        self.flash_start = pygame.time.get_ticks() + delay
 
         result = f"{self.class_name} used Spin Punch! Hit: {', '.join(messages)}"
         return result, defeated
@@ -1457,10 +1494,11 @@ class Player:
 
         return True, f"Built {location_name}!", location_plan_card
 
-    def set_damage_text(self, damage):
-        """Set the damage text and timestamp when damage is taken."""
+    def set_damage_text(self, damage, delay=0):
+        """Set the damage text and timestamp when damage is taken.
+        delay: ms to wait before showing the text (syncs with attack animations)."""
         self.damage_text = f"-{damage}"
-        self.damage_time = pygame.time.get_ticks()
+        self.damage_time = pygame.time.get_ticks() + delay
 
     def animate_move(self, grid, new_row, new_col):
         """Start path-based movement animation from current position to new position."""
@@ -1631,12 +1669,23 @@ class Player:
             if distance > attack_range:
                 return "Target out of range", False
 
+        # Trigger attack animation
+        delay = 0
+        if hasattr(grid, 'attack_anims'):
+            src = grid.get_hex_center(*self.position)
+            tgt = grid.get_hex_center(*target.position)
+            if attack_type == "Melee":
+                grid.attack_anims.create_melee(src, tgt)
+            else:
+                grid.attack_anims.create_projectile(src, tgt)
+            delay = grid.attack_anims.get_max_remaining_ms()
+
         # Apply damage
         target.hp -= damage
-        target.set_damage_text(damage)
+        target.set_damage_text(damage, delay)
         self.action_used = True
         self.attack_flash = True
-        self.flash_start = pygame.time.get_ticks()
+        self.flash_start = pygame.time.get_ticks() + delay
 
         # Set cooldown
         if cooldown > 0:

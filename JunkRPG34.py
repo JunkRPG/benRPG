@@ -6245,6 +6245,10 @@ class GameScreen:
             elif unit.damage_text:
                 unit.update_animation(self.hex_grid)  # Update damage text fade only
 
+        # Check for active attack animations
+        if self.hex_grid.attack_anims.is_animating():
+            animating = True
+
         # Check for pending NPC arrivals (quest NPCs moving to locations)
         if game.current_quest_manager.has_pending_arrivals():
             messages = game.current_quest_manager.update_pending_arrivals()

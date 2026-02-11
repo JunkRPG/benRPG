@@ -79,10 +79,17 @@ class Unit:
             
             if melee_possible_player:
                 damage = self.melee_damage
+                # Trigger melee animation
+                delay = 0
+                if hasattr(grid, 'attack_anims'):
+                    src = grid.get_hex_center(*self.position)
+                    tgt = grid.get_hex_center(*player.position)
+                    grid.attack_anims.create_melee(src, tgt)
+                    delay = grid.attack_anims.get_max_remaining_ms()
                 player.hp -= damage
-                player.set_damage_text(damage)  # Set damage feedback for player
+                player.set_damage_text(damage, delay)
                 self.attack_flash = True
-                self.flash_start = pygame.time.get_ticks()
+                self.flash_start = pygame.time.get_ticks() + delay
                 log.append(f"{self.name} attacked {player.class_name} for {damage} damage")
                 if self.special_skill == "Life Drain":
                     heal = damage // 2
@@ -96,10 +103,17 @@ class Unit:
                 return log
             elif projectile_possible_player:
                 damage = self.projectile_damage
+                # Trigger projectile animation
+                delay = 0
+                if hasattr(grid, 'attack_anims'):
+                    src = grid.get_hex_center(*self.position)
+                    tgt = grid.get_hex_center(*player.position)
+                    grid.attack_anims.create_projectile(src, tgt)
+                    delay = grid.attack_anims.get_max_remaining_ms()
                 player.hp -= damage
-                player.set_damage_text(damage)
+                player.set_damage_text(damage, delay)
                 self.attack_flash = True
-                self.flash_start = pygame.time.get_ticks()
+                self.flash_start = pygame.time.get_ticks() + delay
                 log.append(f"{self.name} attacked {player.class_name} with projectile for {damage} damage")
                 if player.hp <= 0:
                     all_players = grid.players if grid.players else [grid.player]
@@ -112,10 +126,17 @@ class Unit:
                 if allied_melee:
                     target = random.choice(allied_melee)
                     damage = self.melee_damage
+                    # Trigger melee animation
+                    delay = 0
+                    if hasattr(grid, 'attack_anims'):
+                        src = grid.get_hex_center(*self.position)
+                        tgt = grid.get_hex_center(*target.position)
+                        grid.attack_anims.create_melee(src, tgt)
+                        delay = grid.attack_anims.get_max_remaining_ms()
                     target.hp -= damage
-                    target.set_damage_text(damage)  # Set damage feedback for allied unit
+                    target.set_damage_text(damage, delay)
                     self.attack_flash = True
-                    self.flash_start = pygame.time.get_ticks()
+                    self.flash_start = pygame.time.get_ticks() + delay
                     log.append(f"{self.name} attacked {target.name} for {damage} damage")
                     if self.special_skill == "Life Drain":
                         heal = damage // 2
@@ -131,10 +152,17 @@ class Unit:
                 if allied_projectile:
                     target = min(allied_projectile, key=lambda u: grid.hex_distance(self.position, u.position))
                     damage = self.projectile_damage
+                    # Trigger projectile animation
+                    delay = 0
+                    if hasattr(grid, 'attack_anims'):
+                        src = grid.get_hex_center(*self.position)
+                        tgt = grid.get_hex_center(*target.position)
+                        grid.attack_anims.create_projectile(src, tgt)
+                        delay = grid.attack_anims.get_max_remaining_ms()
                     target.hp -= damage
-                    target.set_damage_text(damage)
+                    target.set_damage_text(damage, delay)
                     self.attack_flash = True
-                    self.flash_start = pygame.time.get_ticks()
+                    self.flash_start = pygame.time.get_ticks() + delay
                     log.append(f"{self.name} attacked {target.name} with projectile for {damage} damage")
                     return log
 
@@ -147,8 +175,14 @@ class Unit:
                         damage = self.melee_damage
                         damage_dealt, destroyed, msg = grid.damage_npc_location(loc_pos[0], loc_pos[1], damage)
                         if damage_dealt > 0:
+                            delay = 0
+                            if hasattr(grid, 'attack_anims'):
+                                src = grid.get_hex_center(*self.position)
+                                tgt = grid.get_hex_center(*loc_pos)
+                                grid.attack_anims.create_melee(src, tgt)
+                                delay = grid.attack_anims.get_max_remaining_ms()
                             self.attack_flash = True
-                            self.flash_start = pygame.time.get_ticks()
+                            self.flash_start = pygame.time.get_ticks() + delay
                             log.append(msg)
                             return log
                     # Check projectile attack on church
@@ -159,8 +193,14 @@ class Unit:
                         damage = self.projectile_damage
                         damage_dealt, destroyed, msg = grid.damage_npc_location(loc_pos[0], loc_pos[1], damage)
                         if damage_dealt > 0:
+                            delay = 0
+                            if hasattr(grid, 'attack_anims'):
+                                src = grid.get_hex_center(*self.position)
+                                tgt = grid.get_hex_center(*loc_pos)
+                                grid.attack_anims.create_projectile(src, tgt)
+                                delay = grid.attack_anims.get_max_remaining_ms()
                             self.attack_flash = True
-                            self.flash_start = pygame.time.get_ticks()
+                            self.flash_start = pygame.time.get_ticks() + delay
                             log.append(msg)
                             return log
 
@@ -417,10 +457,21 @@ class Unit:
             if target not in grid.units or target.hp <= 0:
                 return []
 
+        # Trigger attack animation
+        delay = 0
+        if hasattr(grid, 'attack_anims') and self.position and target.position:
+            src = grid.get_hex_center(*self.position)
+            tgt = grid.get_hex_center(*target.position)
+            if attack_type == "projectile":
+                grid.attack_anims.create_projectile(src, tgt)
+            else:
+                grid.attack_anims.create_melee(src, tgt)
+            delay = grid.attack_anims.get_max_remaining_ms()
+
         target.hp -= damage
-        target.set_damage_text(damage)
+        target.set_damage_text(damage, delay)
         self.attack_flash = True
-        self.flash_start = pygame.time.get_ticks()
+        self.flash_start = pygame.time.get_ticks() + delay
 
         log = []
         if is_player:
@@ -472,10 +523,11 @@ class Unit:
             stats += f"\nState: {self.current_state}/2"
         return stats
 
-    def set_damage_text(self, damage):
-        """Set the damage text and timestamp when damage is taken."""
+    def set_damage_text(self, damage, delay=0):
+        """Set the damage text and timestamp when damage is taken.
+        delay: ms to wait before showing the text (syncs with attack animations)."""
         self.damage_text = f"-{damage}"
-        self.damage_time = pygame.time.get_ticks()
+        self.damage_time = pygame.time.get_ticks() + delay
 
     def animate_move(self, grid, new_row, new_col):
         """Start path-based movement animation from current position to new position."""
