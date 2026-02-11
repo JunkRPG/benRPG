@@ -23,6 +23,7 @@ from deck_utils import resolve_deck_path
 from card_utils import load_card, load_card_index
 from terrain_config import TERRAIN_CONFIG, get_terrain_color
 from save_system import SaveManager
+from sound_manager import sound_manager, play_card_acquired_sound
 
 # Initialize Pygame and Pygame-GUI
 pygame.init()
@@ -32,7 +33,7 @@ display_info = pygame.display.Info()
 WINDOW_WIDTH = display_info.current_w
 WINDOW_HEIGHT = display_info.current_h
 screen = display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.FULLSCREEN)
-display.set_caption("Hex-Grid RPG")
+display.set_caption("Junk RPG")
 
 # Initialize UIManager
 manager = pygame_gui.UIManager((WINDOW_WIDTH, WINDOW_HEIGHT), "theme.json")
@@ -75,6 +76,7 @@ CHARACTER_CLASSES = {
 
 def add_card_to_player(card):
     """Add a card to inventory or party depending on type. Returns message about where it went."""
+    play_card_acquired_sound(card)
     card_type = card.card_data.get("card_type", "")
     if card_type == "NPC Card":
         allegiance = card.get_current_data().get("Allegiance (Hostile, Neutral, Allied)", "")
@@ -2283,7 +2285,7 @@ class CraftingScreen:
                     for material in self.selected_materials:
                         game.current_player.inventory.remove(material)
                     self.selected_to_craft.toggle_state()
-                    crafted_name = self.selected_to_craft.get_state_data(2).get("2nd_state_Name", "Unnamed Item")
+                    crafted_name = self.selected_to_craft.get_state_data(2).get("Name", "Unnamed Item")
                     self.success_label.set_text(f"Crafted {crafted_name}")
                     self.selected_to_craft = None
                     self.selected_materials.clear()
@@ -2305,7 +2307,7 @@ class CraftingScreen:
                     info_text = f"<font color='#FFFFFF' size=4>To Craft: {state1_data.get('Name', 'Unnamed')}<br>" + "<br>".join(f"{k}: {v}" for k, v in state1_data.items() if k != "Name" and v) + "</font>"
                     self.to_craft_info.set_text(info_text)
                     state2_data = self.selected_to_craft.get_state_data(2)
-                    state2_text = f"<font color='#FFFFFF' size=4>State 2: {state2_data.get('2nd_state_Name', 'Unnamed')}<br>" + "<br>".join(f"{k}: {v}" for k, v in state2_data.items() if k != '2nd_state_Name' and v) + "</font>"
+                    state2_text = f"<font color='#FFFFFF' size=4>State 2: {state2_data.get('Name', 'Unnamed')}<br>" + "<br>".join(f"{k}: {v}" for k, v in state2_data.items() if k != 'Name' and v) + "</font>"
                     self.state2_info.set_text(state2_text)
                     self.update_requirements_display()
             elif event.ui_element == self.materials_list:
@@ -2821,7 +2823,7 @@ class TabbedMenuScreen:
                     for material in self.craft_selected_materials:
                         game.current_player.inventory.remove(material)
                     self.craft_selected_to_craft.toggle_state()
-                    crafted_name = self.craft_selected_to_craft.get_state_data(2).get("2nd_state_Name", "Unnamed Item")
+                    crafted_name = self.craft_selected_to_craft.get_state_data(2).get("Name", "Unnamed Item")
                     self.craft_selected_to_craft = None
                     self.craft_selected_materials.clear()
                     self._refresh_current_tab()
@@ -2843,7 +2845,7 @@ class TabbedMenuScreen:
                     info_text = f"<font color='#FFFFFF' size=4>To Craft: {state1_data.get('Name', 'Unnamed')}<br>" + "<br>".join(f"{k}: {v}" for k, v in state1_data.items() if k != "Name" and v) + "</font>"
                     self.craft_to_craft_info.set_text(info_text)
                     state2_data = self.craft_selected_to_craft.get_state_data(2)
-                    state2_text = f"<font color='#FFFFFF' size=4>State 2: {state2_data.get('2nd_state_Name', 'Unnamed')}<br>" + "<br>".join(f"{k}: {v}" for k, v in state2_data.items() if k != '2nd_state_Name' and v) + "</font>"
+                    state2_text = f"<font color='#FFFFFF' size=4>State 2: {state2_data.get('Name', 'Unnamed')}<br>" + "<br>".join(f"{k}: {v}" for k, v in state2_data.items() if k != 'Name' and v) + "</font>"
                     self.craft_state2_info.set_text(state2_text)
                     self._craft_update_requirements_display()
             elif event.ui_element == self.craft_materials_list:
@@ -3410,7 +3412,6 @@ class MainMenu:
         manager.clear_and_reset()
         btn_x = (WINDOW_WIDTH - 200) // 2
         self.ui_elements = [
-            UILabel(pygame.Rect(0, 50, WINDOW_WIDTH, 50), "Hex-Grid RPG", manager, object_id="#title_label", anchors={'centerx': 'centerx'}),
             UIButton(pygame.Rect(btn_x, 200, 200, 50), "New Campaign", manager),
             UIButton(pygame.Rect(btn_x, 270, 200, 50), "Load Campaign", manager),
             UIButton(pygame.Rect(btn_x, 340, 200, 50), "Load Level", manager),
@@ -3473,7 +3474,7 @@ class MainMenu:
         # Styled title
         title_font = pygame.font.Font(None, 80)
         subtitle_font = pygame.font.Font(None, 28)
-        title_text = "Hex-Grid RPG"
+        title_text = "Junk RPG"
         shadow = title_font.render(title_text, True, (10, 10, 30))
         title = title_font.render(title_text, True, (200, 180, 120))
         tr = title.get_rect(centerx=WINDOW_WIDTH // 2, y=50)
@@ -3723,6 +3724,7 @@ class GameScreen:
         # Pending defeat screen (show after death animation completes)
         self.pending_defeat = False
         self.defeat_notifications = []  # [(name, timestamp), ...]
+        self.turn_banner = None  # (label, color_tuple, timestamp) or None
         self.current_location_hex = None  # (row, col) if player is on a location
         # Building/placement mode
         self.placement_mode = False
@@ -3772,6 +3774,7 @@ class GameScreen:
 
     def add_defeat_notification(self, name):
         self.defeat_notifications.append((name, pygame.time.get_ticks()))
+        sound_manager.play("entity_defeated")
 
     def draw_defeat_notifications(self):
         now = pygame.time.get_ticks()
@@ -3802,6 +3805,42 @@ class GameScreen:
             banner.blit(text_surf, (20, 10))
             banner.set_alpha(alpha)
             screen.blit(banner, (cx - bw // 2, by))
+
+    def show_turn_banner(self, label, hex_color):
+        """Show a temporary turn phase banner. hex_color is like '#66DD66'."""
+        r, g, b = int(hex_color[1:3], 16), int(hex_color[3:5], 16), int(hex_color[5:7], 16)
+        self.turn_banner = (label, (r, g, b), pygame.time.get_ticks())
+
+    def draw_turn_banner(self):
+        """Draw the current turn phase banner with fade-out."""
+        if not self.turn_banner:
+            return
+        label, color, timestamp = self.turn_banner
+        now = pygame.time.get_ticks()
+        elapsed = now - timestamp
+        duration = 2000  # Total duration in ms
+        opaque_time = 1200  # Fully opaque portion
+        if elapsed >= duration:
+            self.turn_banner = None
+            return
+        if elapsed < opaque_time:
+            alpha = 255
+        else:
+            alpha = max(0, 255 - int(255 * (elapsed - opaque_time) / (duration - opaque_time)))
+        font = pygame.font.SysFont("Arial", 46, bold=True)
+        text_surf = font.render(label, True, color)
+        shadow_surf = font.render(label, True, (10, 10, 30))
+        tw, th = text_surf.get_size()
+        bw, bh = tw + 60, th + 30
+        cx = WINDOW_WIDTH // 2
+        by = WINDOW_HEIGHT // 3
+        banner = pygame.Surface((bw, bh), pygame.SRCALPHA)
+        banner.fill((10, 10, 30, min(alpha, 200)))
+        pygame.draw.rect(banner, (58, 58, 92, min(alpha, 160)), (0, 0, bw, bh), 1)
+        banner.blit(shadow_surf, (32, 17))
+        banner.blit(text_surf, (30, 15))
+        banner.set_alpha(alpha)
+        screen.blit(banner, (cx - bw // 2, by))
 
     def set_card_manager(self, card_manager):
         self.card_manager = card_manager
@@ -5067,6 +5106,7 @@ class GameScreen:
             label, color = phases.get(self.turn_phase, ("Unknown", "#FFFFFF"))
         turn_num = self.turn_cycle_count + 1
         self.ui_elements[2].set_text(f"<font color='{color}' size=4>{label}</font> <font color='#8888AA' size=3>Turn {turn_num}</font>")
+        self.show_turn_banner(label, color)
 
     def rebuild_left_panel(self):
         """Rebuild the left panel UI for the current player (used in multiplayer when turn changes)."""
@@ -7019,6 +7059,7 @@ class GameScreen:
             screen.blit(bg_surf, popup_rect.topleft)
             pygame.draw.rect(screen, (80, 80, 120), popup_rect, 1)
         self.draw_defeat_notifications()
+        self.draw_turn_banner()
         # Check for pending location screen (show after movement animation completes)
         if self.pending_location and not self.animating:
             loc_data = self.pending_location
