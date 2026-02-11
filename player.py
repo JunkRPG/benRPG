@@ -80,6 +80,8 @@ class Player:
         self.projectile_weapon = None
         self.damage_text = None
         self.damage_time = 0
+        self._hp_visual_offset = 0
+        self._hp_visual_offset_until = 0
         # Path-based animation
         self.animation_path = []  # List of hex positions to animate through
         self.animation_path_index = 0  # Current target in the path
@@ -380,6 +382,9 @@ class Player:
             if ammo_card in self.equipped_tools:
                 idx = self.equipped_tools.index(ammo_card)
                 self.equipped_tools[idx] = None
+                # Also clear legacy single slot if it references this card
+                if self.equipped_tool == ammo_card:
+                    self.equipped_tool = None
             elif ammo_card == self.equipped_tool:
                 self.equipped_tool = None
             elif ammo_card == self.equipped_accessory:
@@ -1499,6 +1504,9 @@ class Player:
         delay: ms to wait before showing the text (syncs with attack animations)."""
         self.damage_text = f"-{damage}"
         self.damage_time = pygame.time.get_ticks() + delay
+        if delay > 0:
+            self._hp_visual_offset = damage
+            self._hp_visual_offset_until = pygame.time.get_ticks() + delay
 
     def animate_move(self, grid, new_row, new_col):
         """Start path-based movement animation from current position to new position."""
@@ -1569,7 +1577,12 @@ class Player:
             # Red background (missing health)
             pygame.draw.rect(surface, (120, 20, 20), (bar_x, bar_y, bar_width, bar_height))
             # Health fill - color shifts from green to yellow to red
-            hp_ratio = self.hp / self.max_hp
+            visual_hp = self.hp
+            if self._hp_visual_offset > 0 and pygame.time.get_ticks() < self._hp_visual_offset_until:
+                visual_hp = min(self.max_hp, self.hp + self._hp_visual_offset)
+            elif self._hp_visual_offset > 0:
+                self._hp_visual_offset = 0
+            hp_ratio = visual_hp / self.max_hp
             health_width = max(1, int(bar_width * hp_ratio))
             if hp_ratio > 0.5:
                 r = int(255 * (1 - hp_ratio) * 2)

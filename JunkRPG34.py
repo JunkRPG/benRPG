@@ -523,13 +523,14 @@ class LocationScreen:
 
         # Header with location name
         self.header_label = pygame_gui.elements.UILabel(
-            pygame.Rect(10, 5, 1150, 40), loc_name, manager, container=self.window
+            pygame.Rect(10, 5, 1150, 50), loc_name, manager, container=self.window,
+            object_id="#location_title"
         )
 
         # Description
         self.desc_text = pygame_gui.elements.UITextBox(
             f"<font color='#FFFFFF'>{description}</font>",
-            pygame.Rect(10, 45, 380, 80), manager, container=self.window
+            pygame.Rect(10, 55, 380, 70), manager, container=self.window
         )
 
         # Choices panel (left side)
@@ -3735,6 +3736,15 @@ class GameScreen:
         self.turn_cycle_count = 0
         # Save manager
         self.save_manager = SaveManager()
+        # Autopan smooth camera state
+        self.autopan_active = False
+        self.autopan_start_x = 0.0
+        self.autopan_start_y = 0.0
+        self.autopan_target_x = 0.0
+        self.autopan_target_y = 0.0
+        self.autopan_start_time = 0
+        self.autopan_duration = 0
+        self.autopan_callback = None
         # Equipment toolbar (bottom of screen)
         self.equip_toolbar_buttons = []    # 6 UIButtons for Melee/Proj/Acc/Tool/Action/Items slots
         self.equip_action_tool = None      # Reference to the equipped tool providing the current action
@@ -3771,6 +3781,460 @@ class GameScreen:
             'PURPLE': PURPLE,  # Added for linked level hexes
             'ORANGE': ORANGE   # Added for location hexes
         }
+        # === Event banner overlay state ===
+        self.event_banner_active = False
+        self.event_banner_type = ""        # "transition" or "instance"
+        self.event_banner_start_time = 0
+        self.event_banner_phase = "main"   # "main" or "result"
+        # Transition banner data
+        self.event_transition_card = None
+        self.event_transition_all_outcomes = []
+        self.event_transition_selected_index = -1
+        self.event_transition_result_text = ""
+        self.event_transition_target_label = ""
+        # Instance banner data
+        self.event_instance_card = None
+        self.event_instance_outcome_text = ""
+        self.event_instance_needs_choice = False
+        self.event_instance_choices = []
+        self.event_instance_target_name = ""
+        self.event_instance_target_player = None
+        self.event_instance_result_text = ""
+        # Banner buttons (manually drawn, not pygame-gui)
+        self.event_banner_buttons = []     # [{"rect": Rect, "label": str, "action": str|int}, ...]
+        self.event_banner_hovered_btn = None
+        # Cached fonts for banner rendering
+        self.event_title_font = pygame.font.SysFont("Arial", 36, bold=True)
+        self.event_subtitle_font = pygame.font.SysFont("Arial", 28, bold=True)
+        self.event_desc_font = pygame.font.SysFont("Arial", 22)
+        self.event_outcome_font = pygame.font.SysFont("Arial", 24)
+        self.event_result_font = pygame.font.SysFont("Arial", 30, bold=True)
+        self.event_btn_font = pygame.font.SysFont("Arial", 22, bold=True)
+        self.event_small_font = pygame.font.SysFont("Arial", 18)
+
+    # === Event banner overlay helpers ===
+
+    def _wrap_text(self, text, font, max_width):
+        """Word-wrap text to fit within max_width pixels. Returns list of lines."""
+        words = text.split()
+        if not words:
+            return [""]
+        lines = []
+        current_line = words[0]
+        for word in words[1:]:
+            test = current_line + " " + word
+            if font.size(test)[0] <= max_width:
+                current_line = test
+            else:
+                lines.append(current_line)
+                current_line = word
+        lines.append(current_line)
+        return lines
+
+    def _clear_event_banner(self):
+        """Reset all event banner state to defaults."""
+        self.event_banner_active = False
+        self.event_banner_type = ""
+        self.event_banner_start_time = 0
+        self.event_banner_phase = "main"
+        self.event_transition_card = None
+        self.event_transition_all_outcomes = []
+        self.event_transition_selected_index = -1
+        self.event_transition_result_text = ""
+        self.event_transition_target_label = ""
+        self.event_instance_card = None
+        self.event_instance_outcome_text = ""
+        self.event_instance_needs_choice = False
+        self.event_instance_choices = []
+        self.event_instance_target_name = ""
+        self.event_instance_target_player = None
+        self.event_instance_result_text = ""
+        self.event_banner_buttons = []
+        self.event_banner_hovered_btn = None
+
+    def _show_transition_banner(self, transition_card, all_outcomes, selected_index, result_text, target_label=""):
+        """Activate the transition event banner overlay."""
+        self.event_banner_active = True
+        self.event_banner_type = "transition"
+        self.event_banner_start_time = pygame.time.get_ticks()
+        self.event_banner_phase = "main"
+        self.event_transition_card = transition_card
+        self.event_transition_all_outcomes = all_outcomes
+        self.event_transition_selected_index = selected_index
+        self.event_transition_result_text = result_text
+        self.event_transition_target_label = target_label
+        self._build_event_banner_buttons()
+
+    def _build_event_banner_buttons(self):
+        """Compute button rects for the current event banner state."""
+        self.event_banner_buttons = []
+        btn_y = WINDOW_HEIGHT - 120
+        btn_h = 50
+
+        if self.event_banner_type == "transition":
+            # Single "OK" button, centered
+            btn_w = 220
+            btn_x = (WINDOW_WIDTH - btn_w) // 2
+            self.event_banner_buttons.append({
+                "rect": pygame.Rect(btn_x, btn_y, btn_w, btn_h),
+                "label": "OK",
+                "action": "ok_transition"
+            })
+
+        elif self.event_banner_type == "instance":
+            if self.event_banner_phase == "result":
+                # Result phase: single Continue button
+                btn_w = 220
+                btn_x = (WINDOW_WIDTH - btn_w) // 2
+                self.event_banner_buttons.append({
+                    "rect": pygame.Rect(btn_x, btn_y, btn_w, btn_h),
+                    "label": "Continue",
+                    "action": "continue_instance"
+                })
+            elif self.event_instance_needs_choice and self.event_instance_choices:
+                # Choice buttons stacked vertically upward from btn_y
+                btn_w = 360
+                num_choices = len(self.event_instance_choices)
+                total_h = num_choices * (btn_h + 8) - 8
+                start_y = btn_y - total_h + btn_h
+                btn_x = (WINDOW_WIDTH - btn_w) // 2
+                for i, choice in enumerate(self.event_instance_choices):
+                    choice_name = choice.get("name", f"Choice {i+1}")
+                    risk = choice.get("risk", 0)
+                    risk_text = f" (Risk: {int(risk * 100)}%)" if risk > 0 else ""
+                    self.event_banner_buttons.append({
+                        "rect": pygame.Rect(btn_x, start_y + i * (btn_h + 8), btn_w, btn_h),
+                        "label": f"{choice_name}{risk_text}",
+                        "action": i
+                    })
+            else:
+                # No choice: single Continue button
+                btn_w = 220
+                btn_x = (WINDOW_WIDTH - btn_w) // 2
+                self.event_banner_buttons.append({
+                    "rect": pygame.Rect(btn_x, btn_y, btn_w, btn_h),
+                    "label": "Continue",
+                    "action": "continue_instance"
+                })
+
+    def draw_event_banner(self):
+        """Draw the event banner overlay on top of the game board."""
+        if not self.event_banner_active:
+            return
+
+        now = pygame.time.get_ticks()
+
+        # 1. Dim overlay
+        dim = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)
+        dim.fill((0, 0, 0, 100))
+        screen.blit(dim, (0, 0))
+
+        # 2. Text content
+        if self.event_banner_type == "transition":
+            self._draw_transition_banner_text()
+        elif self.event_banner_type == "instance":
+            self._draw_instance_banner_text()
+
+        # 3. Buttons with pulsing borders
+        pulse = math.sin(now / 400.0)
+        border_alpha = int(120 + (255 - 120) * (pulse * 0.5 + 0.5))
+
+        for i, btn_info in enumerate(self.event_banner_buttons):
+            rect = btn_info["rect"]
+            is_hovered = (i == self.event_banner_hovered_btn)
+
+            # Button background
+            btn_bg = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+            if is_hovered:
+                btn_bg.fill((60, 60, 80, 220))
+            else:
+                btn_bg.fill((20, 20, 35, 200))
+            screen.blit(btn_bg, rect.topleft)
+
+            # Pulsing border
+            if is_hovered:
+                border_color = (220, 200, 80, 255)
+            else:
+                border_color = (180, 160, 60, border_alpha)
+            # Draw border on a SRCALPHA surface for alpha support
+            border_surf = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+            pygame.draw.rect(border_surf, border_color, (0, 0, rect.width, rect.height), 2)
+            screen.blit(border_surf, rect.topleft)
+
+            # Button label
+            label_surf = self.event_btn_font.render(btn_info["label"], True, (255, 255, 255))
+            lw, lh = label_surf.get_size()
+            screen.blit(label_surf, (rect.x + (rect.width - lw) // 2, rect.y + (rect.height - lh) // 2))
+
+        # 4. Bouncing arrow after 4 seconds
+        elapsed = now - self.event_banner_start_time
+        if elapsed > 4000 and self.event_banner_buttons:
+            last_btn = self.event_banner_buttons[-1]["rect"]
+            arrow_x_base = last_btn.right + 20
+            arrow_y = last_btn.y + last_btn.height // 2
+            offset_x = int(10 * math.sin(now / 300.0))
+            # Draw left-pointing triangle
+            arrow_pts = [
+                (arrow_x_base + offset_x, arrow_y),
+                (arrow_x_base + 14 + offset_x, arrow_y - 8),
+                (arrow_x_base + 14 + offset_x, arrow_y + 8),
+            ]
+            pygame.draw.polygon(screen, (180, 160, 60), arrow_pts)
+
+    def _draw_transition_banner_text(self):
+        """Draw transition event text content in the upper portion of the screen."""
+        card = self.event_transition_card
+        cx = WINDOW_WIDTH // 2
+        max_w = 700
+        y = 60
+
+        # Title
+        state_text = " (Night)" if card.current_state == 2 else " (Day)" if card.states == 2 else ""
+        title = f"{card.get_current_name()}{state_text}"
+        title_surf = self.event_title_font.render(title, True, (255, 255, 255))
+        shadow_surf = self.event_title_font.render(title, True, (0, 0, 0))
+        tw = title_surf.get_width()
+        screen.blit(shadow_surf, (cx - tw // 2 + 2, y + 2))
+        screen.blit(title_surf, (cx - tw // 2, y))
+        y += 50
+
+        # Target label
+        if self.event_transition_target_label:
+            label = self.event_transition_target_label
+            if label == "Both Players":
+                color = (255, 215, 0)
+            elif game.multiplayer_mode and len(game.players) >= 2 and label == (game.players[1].name or "Player 2"):
+                color = (68, 136, 255)
+            else:
+                color = (68, 255, 68)
+            target_surf = self.event_subtitle_font.render(f"Affecting: {label}", True, color)
+            screen.blit(target_surf, (cx - target_surf.get_width() // 2, y))
+            y += 40
+
+        # Description
+        desc = card.get_current_description()
+        desc_lines = self._wrap_text(desc, self.event_desc_font, max_w)
+        for line in desc_lines:
+            line_surf = self.event_desc_font.render(line, True, (170, 170, 170))
+            screen.blit(line_surf, (cx - line_surf.get_width() // 2, y))
+            y += 28
+        y += 15
+
+        # Creative mode: show all outcomes with probabilities
+        if game.game_mode == "creative":
+            header_surf = self.event_small_font.render("Possible Outcomes:", True, (200, 200, 200))
+            screen.blit(header_surf, (cx - header_surf.get_width() // 2, y))
+            y += 25
+            for i, outcome in enumerate(self.event_transition_all_outcomes):
+                prob = outcome.get("probability", 0)
+                prob_pct = int(prob * 100)
+                outcome_type = outcome.get("type", "none").replace("_", " ").title()
+                outcome_text = outcome.get("text", "Something happens...")
+                is_selected = (i == self.event_transition_selected_index)
+                if is_selected:
+                    color = (0, 255, 0)
+                    prefix = ">>> "
+                    suffix = " <<<"
+                else:
+                    color = (136, 136, 136)
+                    prefix = "    "
+                    suffix = ""
+                line = f"{prefix}[{prob_pct}%] {outcome_type}: {outcome_text}{suffix}"
+                line_surf = self.event_small_font.render(line, True, color)
+                screen.blit(line_surf, (cx - max_w // 2, y))
+                y += 22
+            y += 15
+
+        # Result text
+        if game.game_mode == "creative":
+            rh_surf = self.event_small_font.render("Result:", True, (200, 200, 200))
+            screen.blit(rh_surf, (cx - rh_surf.get_width() // 2, y))
+            y += 25
+
+        result_lines = self._wrap_text(self.event_transition_result_text, self.event_result_font, max_w)
+        for line in result_lines:
+            line_surf = self.event_result_font.render(line, True, (255, 255, 0))
+            screen.blit(line_surf, (cx - line_surf.get_width() // 2, y))
+            y += 36
+
+    def _draw_instance_banner_text(self):
+        """Draw instance event text content in the upper portion of the screen."""
+        card = self.event_instance_card
+        cx = WINDOW_WIDTH // 2
+        max_w = 700
+        y = 60
+
+        # Target label
+        if self.event_instance_target_name:
+            name = self.event_instance_target_name
+            if game.multiplayer_mode and len(game.players) >= 2 and name == (game.players[1].name or "Player 2"):
+                color = (68, 136, 255)
+            else:
+                color = (68, 255, 68)
+            target_surf = self.event_subtitle_font.render(f"Affecting: {name}", True, color)
+            screen.blit(target_surf, (cx - target_surf.get_width() // 2, y))
+            y += 40
+
+        # Title
+        title = f"EVENT: {card.name}"
+        title_surf = self.event_title_font.render(title, True, (255, 255, 255))
+        shadow_surf = self.event_title_font.render(title, True, (0, 0, 0))
+        tw = title_surf.get_width()
+        screen.blit(shadow_surf, (cx - tw // 2 + 2, y + 2))
+        screen.blit(title_surf, (cx - tw // 2, y))
+        y += 50
+
+        # Description
+        desc = card.description if hasattr(card, 'description') else ""
+        if desc:
+            desc_lines = self._wrap_text(desc, self.event_desc_font, max_w)
+            for line in desc_lines:
+                line_surf = self.event_desc_font.render(line, True, (255, 255, 255))
+                screen.blit(line_surf, (cx - line_surf.get_width() // 2, y))
+                y += 28
+            y += 10
+
+        if self.event_banner_phase == "result":
+            # Show result in green
+            result_lines = self._wrap_text(self.event_instance_result_text, self.event_result_font, max_w)
+            for line in result_lines:
+                line_surf = self.event_result_font.render(line, True, (0, 255, 0))
+                screen.blit(line_surf, (cx - line_surf.get_width() // 2, y))
+                y += 36
+        else:
+            # Show outcome text in yellow
+            if self.event_instance_outcome_text:
+                outcome_lines = self._wrap_text(self.event_instance_outcome_text, self.event_outcome_font, max_w)
+                for line in outcome_lines:
+                    line_surf = self.event_outcome_font.render(line, True, (255, 255, 0))
+                    screen.blit(line_surf, (cx - line_surf.get_width() // 2, y))
+                    y += 30
+
+    def _handle_event_banner(self, event):
+        """Handle input events while the event banner is active."""
+        if event.type == pygame.MOUSEMOTION:
+            pos = event.pos
+            self.event_banner_hovered_btn = None
+            for i, btn_info in enumerate(self.event_banner_buttons):
+                if btn_info["rect"].collidepoint(pos):
+                    self.event_banner_hovered_btn = i
+                    break
+
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            pos = event.pos
+            for btn_info in self.event_banner_buttons:
+                if btn_info["rect"].collidepoint(pos):
+                    self._handle_event_banner_click(btn_info["action"])
+                    return
+
+        elif event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE):
+            # Press single button with keyboard
+            if len(self.event_banner_buttons) == 1:
+                self._handle_event_banner_click(self.event_banner_buttons[0]["action"])
+
+    def _handle_event_banner_click(self, action):
+        """Dispatch a banner button click based on its action."""
+        if action == "ok_transition":
+            # Check for chained instance event
+            if game.instance_manager.pending_instance:
+                instance_card = game.instance_manager.pending_instance
+                target_player = game.instance_manager.pending_instance_player
+                self._clear_event_banner()
+                self.show_instance_event(instance_card, target_player)
+                return
+
+            # No pending instance — clear banner and resume
+            self._clear_event_banner()
+            self.player_info_label.set_text(self.get_player_info())
+            self.resume_after_transition()
+
+        elif action == "continue_instance":
+            self._clear_event_banner()
+            game.instance_manager.clear_pending()
+            self.player_info_label.set_text(self.get_player_info())
+            self.resume_after_instance()
+
+        elif isinstance(action, int):
+            # Player chose a choice option
+            target = self.event_instance_target_player or game.current_player
+            result = game.instance_manager.resolve_player_choice(action, self.hex_grid, target)
+            self.event_banner_phase = "result"
+            self.event_instance_result_text = result
+            self.event_banner_start_time = pygame.time.get_ticks()
+            self._build_event_banner_buttons()
+
+    # ── Autopan smooth camera helpers ──────────────────────────────────
+
+    def _ease_in_out_cubic(self, t):
+        """Cubic ease-in-out: smooth acceleration and deceleration."""
+        if t < 0.5:
+            return 4.0 * t * t * t
+        return 0.5 * (2.0 * t - 2.0) ** 3 + 1.0
+
+    def _is_hex_in_viewport_center(self, row, col):
+        """Return True if (row, col) is within the central 50% of the viewport."""
+        pixel_x = self.hex_grid.view_offset_x + col * self.hex_grid.hex_size * 1.5
+        pixel_y = (self.hex_grid.view_offset_y + row * self.hex_grid.hex_size * 1.732
+                   + (col % 2) * self.hex_grid.hex_size * 0.866)
+        margin_x = WINDOW_WIDTH * 0.25
+        margin_y = WINDOW_HEIGHT * 0.25
+        return (margin_x <= pixel_x <= WINDOW_WIDTH - margin_x and
+                margin_y <= pixel_y <= WINDOW_HEIGHT - margin_y)
+
+    def _calculate_autopan_duration(self, dx, dy):
+        """Scale pan duration with distance: short pans are gentle, long pans cap at 1200ms."""
+        dist = math.sqrt(dx * dx + dy * dy)
+        return max(350, min(1200, int(dist * 1.2)))
+
+    def _start_autopan(self, row, col, callback=None):
+        """Smoothly pan camera to center on hex (row, col). Fires callback when done."""
+        if self._is_hex_in_viewport_center(row, col):
+            # Already visible — skip pan
+            if callback:
+                callback()
+            return
+        # Target offset to center the hex on screen
+        pixel_x = col * self.hex_grid.hex_size * 1.5
+        pixel_y = row * self.hex_grid.hex_size * 1.732 + (col % 2) * self.hex_grid.hex_size * 0.866
+        target_x = WINDOW_WIDTH / 2 - pixel_x
+        target_y = WINDOW_HEIGHT / 2 - pixel_y
+        dx = target_x - self.hex_grid.view_offset_x
+        dy = target_y - self.hex_grid.view_offset_y
+        if abs(dx) < 1 and abs(dy) < 1:
+            # Already centered
+            if callback:
+                callback()
+            return
+        self.autopan_start_x = self.hex_grid.view_offset_x
+        self.autopan_start_y = self.hex_grid.view_offset_y
+        self.autopan_target_x = target_x
+        self.autopan_target_y = target_y
+        self.autopan_start_time = pygame.time.get_ticks()
+        self.autopan_duration = self._calculate_autopan_duration(dx, dy)
+        self.autopan_callback = callback
+        self.autopan_active = True
+
+    def _update_autopan(self):
+        """Advance the autopan interpolation. Called every frame from draw()."""
+        if not self.autopan_active:
+            return
+        elapsed = pygame.time.get_ticks() - self.autopan_start_time
+        if elapsed >= self.autopan_duration:
+            # Snap to final position
+            self.hex_grid.view_offset_x = self.autopan_target_x
+            self.hex_grid.view_offset_y = self.autopan_target_y
+            self.autopan_active = False
+            cb = self.autopan_callback
+            self.autopan_callback = None
+            if cb:
+                cb()
+            return
+        t = elapsed / self.autopan_duration
+        eased = self._ease_in_out_cubic(t)
+        self.hex_grid.view_offset_x = self.autopan_start_x + (self.autopan_target_x - self.autopan_start_x) * eased
+        self.hex_grid.view_offset_y = self.autopan_start_y + (self.autopan_target_y - self.autopan_start_y) * eased
+
+    # ── End autopan helpers ─────────────────────────────────────────────
 
     def add_defeat_notification(self, name):
         self.defeat_notifications.append((name, pygame.time.get_ticks()))
@@ -3868,6 +4332,9 @@ class GameScreen:
         self.action_choice_open = False
         self.action_choice_buttons = []
         self.action_choice_target = None
+        self._clear_event_banner()
+        self.autopan_active = False
+        self.autopan_callback = None
         # Reset party
         game.party = []
         # Reset quest manager
@@ -3974,6 +4441,9 @@ class GameScreen:
         self.pending_defeat = False
         self.current_location_hex = None
         self.transition_target_cycle = 0
+        self._clear_event_banner()
+        self.autopan_active = False
+        self.autopan_callback = None
 
         # Reset instance manager and try to load test deck
         game.instance_manager = InstanceManager(self.card_manager, self.hex_grid)
@@ -4400,14 +4870,11 @@ class GameScreen:
         self.player_mode = "movement"
         self.selected_attack = None
         self._close_attack_submenu()
-        # Center camera on the active player
+        # Smooth pan camera to the active player
         current_player = game.current_player
         if current_player and current_player.position:
             row, col = current_player.position
-            pixel_x = col * self.hex_grid.hex_size * 1.5
-            pixel_y = row * self.hex_grid.hex_size * 1.732 + (col % 2) * self.hex_grid.hex_size * 0.866
-            self.hex_grid.view_offset_x = WINDOW_WIDTH / 2 - pixel_x
-            self.hex_grid.view_offset_y = WINDOW_HEIGHT / 2 - pixel_y
+            self._start_autopan(row, col)
 
     def advance_turn(self):
         self._close_action_choice_popup()
@@ -4599,6 +5066,21 @@ class GameScreen:
 
         self.current_acting_unit = unit
         self.hex_grid.active_turn_unit = unit
+
+        # Pan to unit first, then execute turn via callback
+        if unit.position:
+            row, col = unit.position
+            self._start_autopan(row, col, callback=lambda u=unit: self._execute_unit_turn(u))
+        else:
+            self._execute_unit_turn(unit)
+
+    def _execute_unit_turn(self, unit):
+        """Execute a unit's AI turn (called after autopan completes)."""
+        # Guard: unit may have died during pan
+        if unit not in self.hex_grid.units or unit.hp <= 0:
+            self.process_next_unit()
+            return
+
         self.last_action_time = pygame.time.get_ticks()
 
         # Track position before turn for quest movement detection
@@ -4685,6 +5167,9 @@ class GameScreen:
         """Update the turn queue - called each frame to process consecutive unit turns."""
         if not self.waiting_for_animation:
             return
+
+        if self.autopan_active:
+            return  # Wait for camera pan to complete before processing
 
         # Check if animation is still playing
         # Also check if the unit is still on the grid (it might have been removed by quest completion)
@@ -4840,11 +5325,6 @@ class GameScreen:
             manager, object_id="#right_panel_info"
         )
         self.ui_elements.append(self.player_info_label)
-        
-        # Menu button inside the right panel
-        self.menu_button = UIButton(
-            pygame.Rect(rp_x + rp_pad, menu_y, rp_inner_w, 30), "Menu", manager)
-        self.ui_elements.append(self.menu_button)
 
         y_pos = 200
         self.left_panel_buttons = []
@@ -5106,7 +5586,8 @@ class GameScreen:
             label, color = phases.get(self.turn_phase, ("Unknown", "#FFFFFF"))
         turn_num = self.turn_cycle_count + 1
         self.ui_elements[2].set_text(f"<font color='{color}' size=4>{label}</font> <font color='#8888AA' size=3>Turn {turn_num}</font>")
-        self.show_turn_banner(label, color)
+        if self.turn_phase != "transition":
+            self.show_turn_banner(label, color)
 
     def rebuild_left_panel(self):
         """Rebuild the left panel UI for the current player (used in multiplayer when turn changes)."""
@@ -5128,16 +5609,6 @@ class GameScreen:
         self.player_info_label.set_text(
             self.get_player_info()
         )
-
-        # Rebuild menu button in right panel
-        if self.menu_button:
-            self.menu_button.kill()
-            if self.menu_button in self.ui_elements:
-                self.ui_elements.remove(self.menu_button)
-        self.menu_button = UIButton(
-            pygame.Rect(self.rp_x + self.rp_pad, self.rp_menu_y, self.rp_inner_w, 30),
-            "Menu", manager)
-        self.ui_elements.append(self.menu_button)
 
         y_pos = 200
         self.attack_submenu_open = False
@@ -5166,7 +5637,7 @@ class GameScreen:
         self._create_equipment_toolbar()
 
     def _create_equipment_toolbar(self):
-        """Create 7 bottom toolbar buttons (6 equipment + End Turn)."""
+        """Create 8 bottom toolbar buttons (Menu + 6 equipment + End Turn)."""
         self._close_equip_popup()
         # Kill existing toolbar buttons
         for btn in self.equip_toolbar_buttons:
@@ -5185,7 +5656,7 @@ class GameScreen:
         p = game.current_player
         btn_w, btn_h = 180, 40
         gap = 8
-        total_w = btn_w * 7 + gap * 6
+        total_w = btn_w * 8 + gap * 7
         start_x = (WINDOW_WIDTH - total_w) // 2
         y = WINDOW_HEIGHT - 50
 
@@ -5226,15 +5697,15 @@ class GameScreen:
         else:
             acc_name = "---"
 
-        labels = [f"Melee: {melee_name}", f"Proj: {proj_name}", f"Acc: {acc_name}", f"Tool: {tool_label}", f"Action: {action_label}", "Items"]
+        labels = ["Menu", f"Melee: {melee_name}", f"Proj: {proj_name}", f"Acc: {acc_name}", f"Tool: {tool_label}", f"Action: {action_label}", "Items"]
         for i, label in enumerate(labels):
             bx = start_x + i * (btn_w + gap)
             btn = UIButton(pygame.Rect(bx, y, btn_w, btn_h), label, manager)
             self.equip_toolbar_buttons.append(btn)
             self.ui_elements.append(btn)
 
-        # End Turn as 7th button in the same row
-        end_x = start_x + 6 * (btn_w + gap)
+        # End Turn as 8th button in the same row
+        end_x = start_x + 7 * (btn_w + gap)
         self.end_turn_button = UIButton(pygame.Rect(end_x, y, btn_w, btn_h), "End Turn", manager)
         self.ui_elements.append(self.end_turn_button)
 
@@ -5437,10 +5908,10 @@ class GameScreen:
             self.add_to_log("Action already used this turn")
             return
 
-        # Get the Items button (index 5)
-        if len(self.equip_toolbar_buttons) < 6:
+        # Get the Items button (index 6)
+        if len(self.equip_toolbar_buttons) < 7:
             return
-        slot_btn = self.equip_toolbar_buttons[5]
+        slot_btn = self.equip_toolbar_buttons[6]
 
         items = []
         # Gather equipped cards to exclude
@@ -5504,7 +5975,7 @@ class GameScreen:
             self.item_targeting_mode = False
             self.player_mode = "movement"
         p = game.current_player
-        slot_idx_map = {"melee": 0, "projectile": 1, "accessory": 2, "tool": 3}
+        slot_idx_map = {"melee": 1, "projectile": 2, "accessory": 3, "tool": 4}
         btn_idx = slot_idx_map[slot_type]
         if btn_idx >= len(self.equip_toolbar_buttons):
             return
@@ -5621,7 +6092,8 @@ class GameScreen:
             start_y = WINDOW_HEIGHT - len(actions) * (btn_h + 4) - 5
         for i, (label, action_type, data) in enumerate(actions):
             y = start_y + i * (btn_h + 4)
-            btn = UIButton(pygame.Rect(start_x, y, btn_w, btn_h), label, manager)
+            btn = UIButton(pygame.Rect(start_x, y, btn_w, btn_h), label, manager,
+                           object_id="#action_choice_btn")
             self.action_choice_buttons.append((btn, action_type, data))
             self.ui_elements.append(btn)
         self.action_choice_open = True
@@ -5964,47 +6436,49 @@ class GameScreen:
         return hp_component + melee + ranged + movement + 5
 
     def show_instance_event(self, instance_card, target_player=None):
-        """Show an instance event and switch to instance event screen."""
-        import sys
-        print(f"[DEBUG] show_instance_event START for {instance_card.name}", flush=True)
-
+        """Show an instance event as a banner overlay."""
         # Use provided target player, or fall back to stored pending player, then current player
         if target_player is None:
             target_player = game.instance_manager.pending_instance_player or game.current_player
-        print(f"[DEBUG] show_instance_event: target_player={target_player.name if target_player else 'None'}", flush=True)
 
         # Update hex_grid reference in instance manager
         game.instance_manager.set_hex_grid(self.hex_grid)
-        print("[DEBUG] show_instance_event: set hex_grid", flush=True)
 
         # Resolve the instance and get outcome using the correct target player
-        print("[DEBUG] show_instance_event: calling resolve_instance...", flush=True)
         try:
             outcome_text, needs_choice = game.instance_manager.resolve_instance(
                 instance_card, self.hex_grid, target_player
             )
-            print(f"[DEBUG] show_instance_event: resolve_instance returned, needs_choice={needs_choice}", flush=True)
         except Exception as e:
             import traceback
-            print(f"[DEBUG] EXCEPTION in resolve_instance: {e}", flush=True)
             traceback.print_exc()
-            sys.stdout.flush()
             outcome_text, needs_choice = "Error occurred.", False
 
-        # Switch to instance event screen
-        print(f"[DEBUG] show_instance_event: setting current_screen to instance_event (was {game._current_screen})", flush=True)
-        game.current_screen = "instance_event"
-        print(f"[DEBUG] show_instance_event: current_screen is now {game._current_screen}", flush=True)
-
-        print("[DEBUG] show_instance_event: calling instance_event_screen.initialize_screen...", flush=True)
         # Determine target player name for display
         target_name = target_player.name if target_player and target_player.name else "Player"
-        instance_event_screen.initialize_screen(instance_card, outcome_text, needs_choice, target_name, target_player)
-        print("[DEBUG] show_instance_event: initialize_screen completed", flush=True)
+
+        # Set banner state
+        self.event_banner_active = True
+        self.event_banner_type = "instance"
+        self.event_banner_start_time = pygame.time.get_ticks()
+        self.event_banner_phase = "main"
+        self.event_instance_card = instance_card
+        self.event_instance_outcome_text = outcome_text
+        self.event_instance_needs_choice = needs_choice
+        self.event_instance_target_name = target_name
+        self.event_instance_target_player = target_player
+        self.event_instance_result_text = ""
+
+        # Get choices if needed
+        if needs_choice:
+            self.event_instance_choices = game.instance_manager.get_pending_choices()
+        else:
+            self.event_instance_choices = []
+
+        self._build_event_banner_buttons()
 
         # Log the event
         self.add_to_log(f"EVENT: {instance_card.name}")
-        print("[DEBUG] show_instance_event END", flush=True)
 
     def resume_after_instance(self):
         """Called after an instance event is resolved to continue the turn."""
@@ -6245,11 +6719,8 @@ class GameScreen:
             # Update UI in case stats changed
             self.player_info_label.set_text(self.get_player_info())
 
-            # Show the transition event screen
-            game.current_screen = "transition_event"
-            transition_event_screen.initialize_screen(
-                transition_card, all_outcomes, selected_index, result_text, target_label
-            )
+            # Show the transition event as a banner overlay
+            self._show_transition_banner(transition_card, all_outcomes, selected_index, result_text, target_label)
             return  # Wait for user to click OK
 
         except Exception as e:
@@ -6316,11 +6787,34 @@ class GameScreen:
         return False
 
     def handle_event(self, event):
+        # Event banner modal — block ALL other game input
+        if self.event_banner_active:
+            self._handle_event_banner(event)
+            return
         # ESC opens pause menu
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             game.current_screen = "pause_menu"
             pause_menu_screen.initialize_screen()
             return
+        # Keyboard shortcuts to open menu tabs (i/c/p/s/q)
+        if event.type == pygame.KEYDOWN and self.turn_phase in ("player", "player1", "player2"):
+            tab_map = {
+                pygame.K_i: "Inventory",
+                pygame.K_c: "Crafting",
+                pygame.K_p: "Party",
+                pygame.K_s: "Skills",
+                pygame.K_q: "Quests",
+            }
+            tab = tab_map.get(event.key)
+            if tab:
+                if self.attack_submenu_open:
+                    self._close_attack_submenu()
+                if self.action_choice_open:
+                    self._close_action_choice_popup()
+                game.current_screen = "tabbed_menu"
+                tabbed_menu_screen.active_tab = tab
+                tabbed_menu_screen.initialize_screen()
+                return
         if self.animating:
             return
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -6615,6 +7109,10 @@ class GameScreen:
                     else:
                         self.add_to_log("No valid path within movement range")
             elif event.button in (2, 3) and hex_pos:  # Middle mouse (2) or right-click (3) to pan
+                # Cancel autopan if player manually pans
+                if self.autopan_active:
+                    self.autopan_active = False
+                    self.autopan_callback = None
                 self.dragging = True
                 self.drag_button = event.button
                 self.drag_start_x, self.drag_start_y = pos
@@ -6731,9 +7229,17 @@ class GameScreen:
 
             # Equipment toolbar slot clicks (player turn only)
             if is_player_turn:
-                slot_types = ["melee", "projectile", "accessory", "tool", "action", "items"]
+                slot_types = ["menu", "melee", "projectile", "accessory", "tool", "action", "items"]
                 for i, btn in enumerate(self.equip_toolbar_buttons):
                     if event.ui_element == btn:
+                        if slot_types[i] == "menu":
+                            if self.attack_submenu_open:
+                                self._close_attack_submenu()
+                            if self.action_choice_open:
+                                self._close_action_choice_popup()
+                            game.current_screen = "tabbed_menu"
+                            tabbed_menu_screen.initialize_screen()
+                            return
                         if slot_types[i] == "action":
                             self._handle_tool_action_click()
                             return
@@ -6776,16 +7282,6 @@ class GameScreen:
             # End Turn button (in toolbar, not left panel)
             if hasattr(self, 'end_turn_button') and event.ui_element == self.end_turn_button and is_player_turn:
                 self.advance_turn()
-                return
-
-            # Menu button (in right panel)
-            if event.ui_element == self.menu_button and is_player_turn:
-                if self.attack_submenu_open:
-                    self._close_attack_submenu()
-                if self.action_choice_open:
-                    self._close_action_choice_popup()
-                game.current_screen = "tabbed_menu"
-                tabbed_menu_screen.initialize_screen()
                 return
 
             if event.ui_element in self.left_panel_buttons:
@@ -6888,6 +7384,7 @@ class GameScreen:
 
     def draw(self):
         screen.fill(DARK_CHARCOAL)
+        self._update_autopan()
         current_player = game.current_player
         is_player_turn = self.turn_phase in ("player", "player1", "player2")
         # Check animation state early so range displays are accurate this frame
@@ -6923,10 +7420,10 @@ class GameScreen:
         if is_player_turn and player_alive and not current_player.action_used and not self.animating and self.player_mode not in ("recruit", "item"):
             melee_range = current_player.get_melee_attack_range(self.hex_grid)
             if melee_range:
-                attack_ranges.append({"range": melee_range, "color": (255, 69, 0, 220), "outline": (139, 0, 0, 220), "inset": 0.75})
+                attack_ranges.append({"range": melee_range, "color": (200, 80, 60, 220), "outline": (139, 0, 0, 220), "inset": 0.75})
             proj_range = current_player.get_projectile_attack_range(self.hex_grid, game.current_party)
             if proj_range:
-                attack_ranges.append({"range": proj_range, "color": (191, 0, 255, 220), "outline": (75, 0, 130, 220), "inset": 0.55})
+                attack_ranges.append({"range": proj_range, "color": (80, 50, 180, 220), "outline": (50, 30, 140, 220), "inset": 0.55})
 
         # Show white rings around recruitable adjacent NPCs (always visible on player turn)
         if is_player_turn:
@@ -6976,12 +7473,6 @@ class GameScreen:
         pygame.draw.line(screen, panel_border_color,
                          (self.rp_x + self.rp_pad, div1_y),
                          (self.rp_x + self.rp_width - self.rp_pad, div1_y), 1)
-        # Divider above Menu button
-        div2_y = self.rp_menu_y - 6
-        pygame.draw.line(screen, panel_border_color,
-                         (self.rp_x + self.rp_pad, div2_y),
-                         (self.rp_x + self.rp_width - self.rp_pad, div2_y), 1)
-
         # --- Other panel backgrounds (log, turn label) ---
         panel_rects = []
         if not self.log_minimized:
@@ -7022,13 +7513,13 @@ class GameScreen:
             pygame.draw.rect(screen, panel_border_color, bg, 1)
         manager.draw_ui(screen)
         # Draw colored borders on equipment toolbar buttons
-        if self.equip_toolbar_buttons and len(self.equip_toolbar_buttons) >= 2:
+        if self.equip_toolbar_buttons and len(self.equip_toolbar_buttons) >= 3:
             # Melee button: red-orange border (matches melee range color)
-            pygame.draw.rect(screen, (255, 69, 0), self.equip_toolbar_buttons[0].rect, 2)
+            pygame.draw.rect(screen, (255, 69, 0), self.equip_toolbar_buttons[1].rect, 2)
             # Projectile button: purple border (matches projectile range color)
-            pygame.draw.rect(screen, (191, 0, 255), self.equip_toolbar_buttons[1].rect, 2)
+            pygame.draw.rect(screen, (191, 0, 255), self.equip_toolbar_buttons[2].rect, 2)
         # Dim empty toolbar slots with a dark overlay
-        if self.equip_toolbar_buttons and len(self.equip_toolbar_buttons) >= 6:
+        if self.equip_toolbar_buttons and len(self.equip_toolbar_buttons) >= 7:
             empty_labels = ("---",)
             for i, btn in enumerate(self.equip_toolbar_buttons):
                 label_text = btn.text if hasattr(btn, 'text') else ""
@@ -7040,8 +7531,8 @@ class GameScreen:
         if hasattr(self, 'end_turn_button') and self.end_turn_button:
             pygame.draw.rect(screen, (180, 160, 60), self.end_turn_button.rect, 2)
         # Items button: green border when in item targeting mode
-        if self.item_targeting_mode and len(self.equip_toolbar_buttons) >= 6:
-            pygame.draw.rect(screen, (0, 200, 100), self.equip_toolbar_buttons[5].rect, 2)
+        if self.item_targeting_mode and len(self.equip_toolbar_buttons) >= 7:
+            pygame.draw.rect(screen, (0, 200, 100), self.equip_toolbar_buttons[6].rect, 2)
         # Draw colored outlines on attack submenu buttons
         if self.attack_submenu_open:
             for btn, _, _ in self.attack_submenu_buttons:
@@ -7055,11 +7546,12 @@ class GameScreen:
                                      first_btn.rect.width + 12,
                                      last_btn.rect.bottom - first_btn.rect.y + 12)
             bg_surf = pygame.Surface((popup_rect.width, popup_rect.height), pygame.SRCALPHA)
-            bg_surf.fill((10, 10, 30, 200))
+            bg_surf.fill((10, 10, 30, 245))
             screen.blit(bg_surf, popup_rect.topleft)
-            pygame.draw.rect(screen, (80, 80, 120), popup_rect, 1)
+            pygame.draw.rect(screen, (140, 140, 180), popup_rect, 2)
         self.draw_defeat_notifications()
         self.draw_turn_banner()
+        self.draw_event_banner()
         # Check for pending location screen (show after movement animation completes)
         if self.pending_location and not self.animating:
             loc_data = self.pending_location
@@ -7097,388 +7589,6 @@ class GameSettingsScreen:
     def draw(self):
         screen.fill(DARK_CHARCOAL)
         manager.draw_ui(screen)
-
-# InstanceEventScreen class
-class InstanceEventScreen:
-    """Full-screen modal for instance events."""
-
-    def __init__(self):
-        self.ui_elements = []
-        self.instance_card = None
-        self.outcome_text = ""
-        self.choices = []
-        self.choice_buttons = []
-        self.continue_button = None
-        self.needs_choice = False
-        self.closing = False  # Prevent event processing after close starts
-        self.target_player = None  # Player affected by this instance
-
-    def initialize_screen(self, instance_card, outcome_text, needs_choice=False, target_name="", target_player=None):
-        """Display the event and its outcome."""
-        manager.clear_and_reset()
-        self.instance_card = instance_card
-        self.outcome_text = outcome_text
-        self.needs_choice = needs_choice
-        self.target_name = target_name
-        self.target_player = target_player  # Store affected player for choice resolution
-        self.choice_buttons = []
-        self.ui_elements = []
-        self.closing = False  # Reset closing flag when screen opens
-
-        # Target player label
-        y_pos = 20
-        if target_name:
-            if game.multiplayer_mode and len(game.players) >= 2 and target_name == (game.players[1].name or "Player 2"):
-                label_color = "#4488FF"  # Blue for P2
-            else:
-                label_color = "#44FF44"  # Green for P1
-            target_text = f"<font color='{label_color}' size=4.5><b>Affecting: {target_name}</b></font>"
-            target_box = UITextBox(
-                target_text,
-                pygame.Rect((WINDOW_WIDTH - 500) // 2, y_pos, 500, 40),
-                manager
-            )
-            self.ui_elements.append(target_box)
-            y_pos += 45
-
-        # Title
-        title_label = UILabel(
-            pygame.Rect(0, y_pos, WINDOW_WIDTH, 50),
-            f"EVENT: {instance_card.name}",
-            manager,
-            anchors={'centerx': 'centerx'}
-        )
-        self.ui_elements.append(title_label)
-        y_pos += 55
-
-        # Description box
-        desc_text = f"<font color='#FFFFFF' size=4>{instance_card.description}</font>"
-        desc_box = UITextBox(
-            desc_text,
-            pygame.Rect((WINDOW_WIDTH - 600) // 2, y_pos, 600, 100),
-            manager
-        )
-        self.ui_elements.append(desc_box)
-        y_pos += 110
-
-        # Outcome text box
-        outcome_display = f"<font color='#FFFF00' size=4>{outcome_text}</font>"
-        outcome_box = UITextBox(
-            outcome_display,
-            pygame.Rect((WINDOW_WIDTH - 600) // 2, y_pos, 600, 150),
-            manager
-        )
-        self.ui_elements.append(outcome_box)
-        y_pos += 160
-
-        if needs_choice:
-            # Show choice buttons
-            self.choices = game.instance_manager.get_pending_choices()
-            for i, choice in enumerate(self.choices):
-                choice_name = choice.get("name", f"Choice {i+1}")
-                risk = choice.get("risk", 0)
-                risk_text = f" (Risk: {int(risk * 100)}%)" if risk > 0 else ""
-                btn = UIButton(
-                    pygame.Rect((WINDOW_WIDTH - 300) // 2, y_pos, 300, 50),
-                    f"{choice_name}{risk_text}",
-                    manager
-                )
-                self.choice_buttons.append(btn)
-                self.ui_elements.append(btn)
-                y_pos += 60
-        else:
-            # Show continue button
-            self.continue_button = UIButton(
-                pygame.Rect((WINDOW_WIDTH - 200) // 2, y_pos, 200, 50),
-                "Continue",
-                manager
-            )
-            self.ui_elements.append(self.continue_button)
-
-    def show_result(self, result_text):
-        """Show the result of a player choice."""
-        manager.clear_and_reset()
-        self.ui_elements = []
-        self.choice_buttons = []
-
-        # Title
-        title_label = UILabel(
-            pygame.Rect(0, 50, WINDOW_WIDTH, 50),
-            f"EVENT: {self.instance_card.name}",
-            manager,
-            anchors={'centerx': 'centerx'}
-        )
-        self.ui_elements.append(title_label)
-
-        # Result text box
-        result_display = f"<font color='#00FF00' size=4>{result_text}</font>"
-        result_box = UITextBox(
-            result_display,
-            pygame.Rect((WINDOW_WIDTH - 600) // 2, 150, 600, 200),
-            manager
-        )
-        self.ui_elements.append(result_box)
-
-        # Continue button
-        self.continue_button = UIButton(
-            pygame.Rect((WINDOW_WIDTH - 200) // 2, 400, 200, 50),
-            "Continue",
-            manager
-        )
-        self.ui_elements.append(self.continue_button)
-        self.needs_choice = False
-
-    def handle_event(self, event):
-        # Prevent processing events after close has started
-        if self.closing:
-            return
-
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            # Check for choice buttons
-            for i, btn in enumerate(self.choice_buttons):
-                if event.ui_element == btn:
-                    result = game.instance_manager.resolve_player_choice(i, game_screen.hex_grid, self.target_player or game.current_player)
-                    self.show_result(result)
-                    return
-
-            # Check for continue button
-            if event.ui_element == self.continue_button:
-                self.close()
-
-    def close(self):
-        """Return to game, resume player turn."""
-        print(f"[DEBUG] InstanceEventScreen.close() called, current_screen={game._current_screen}")
-        self.closing = True  # Prevent further event processing
-        game.instance_manager.clear_pending()
-        game.current_screen = "game"
-        print(f"[DEBUG] Set current_screen to game, now={game._current_screen}")
-        game_screen.initialize_screen()
-        # Update player info in case HP or inventory changed
-        game_screen.player_info_label.set_text(game_screen.get_player_info())
-        # Resume the turn that was interrupted by the instance event
-        print("[DEBUG] Calling resume_after_instance...")
-        game_screen.resume_after_instance()
-        print(f"[DEBUG] After resume_after_instance, current_screen={game._current_screen}")
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-# TransitionEventScreen class
-class TransitionEventScreen:
-    """Full-screen modal for transition card events showing all outcomes."""
-
-    def __init__(self):
-        self.ui_elements = []
-        self.transition_card = None
-        self.all_outcomes = []
-        self.selected_index = -1
-        self.selected_outcome = None
-        self.result_text = ""
-        self.ok_button = None
-        self.closing = False  # Prevent event processing after close starts
-        self.target_label = ""
-
-    def initialize_screen(self, transition_card, all_outcomes, selected_index, result_text, target_label=""):
-        """Display the transition card with all outcomes, highlighting the selected one."""
-        manager.clear_and_reset()
-        self.transition_card = transition_card
-        self.all_outcomes = all_outcomes
-        self.selected_index = selected_index
-        self.selected_outcome = all_outcomes[selected_index] if 0 <= selected_index < len(all_outcomes) else None
-        self.result_text = result_text
-        self.target_label = target_label
-        self.ui_elements = []
-        self.closing = False  # Reset closing flag when screen opens
-
-        # Title - Card name and state
-        state_text = " (Night)" if transition_card.current_state == 2 else " (Day)" if transition_card.states == 2 else ""
-        is_survival = game.game_mode != "creative"
-
-        if is_survival:
-            # Survival mode: larger fonts throughout
-            title_text = f"<font color='#FFFFFF' size=5.5><b>WORLD EVENT: {transition_card.get_current_name()}{state_text}</b></font>"
-            title_box = UITextBox(
-                title_text,
-                pygame.Rect((WINDOW_WIDTH - 800) // 2, 20, 800, 50),
-                manager
-            )
-            self.ui_elements.append(title_box)
-
-            if target_label:
-                if target_label == "Both Players":
-                    label_color = "#FFD700"
-                elif game.multiplayer_mode and len(game.players) >= 2 and target_label == (game.players[1].name or "Player 2"):
-                    label_color = "#4488FF"
-                else:
-                    label_color = "#44FF44"
-                target_text = f"<font color='{label_color}' size=5><b>Affecting: {target_label}</b></font>"
-                target_box = UITextBox(
-                    target_text,
-                    pygame.Rect((WINDOW_WIDTH - 500) // 2, 70, 500, 45),
-                    manager
-                )
-                self.ui_elements.append(target_box)
-
-            desc_y = 125 if target_label else 80
-            desc_text = f"<font color='#AAAAAA' size=4.5>{transition_card.get_current_description()}</font>"
-            desc_box = UITextBox(
-                desc_text,
-                pygame.Rect((WINDOW_WIDTH - 800) // 2, desc_y, 800, 80),
-                manager
-            )
-            self.ui_elements.append(desc_box)
-        else:
-            # Creative mode: original compact fonts
-            title_label = UILabel(
-                pygame.Rect(0, 20, WINDOW_WIDTH, 40),
-                f"WORLD EVENT: {transition_card.get_current_name()}{state_text}",
-                manager,
-                anchors={'centerx': 'centerx'}
-            )
-            self.ui_elements.append(title_label)
-
-            if target_label:
-                if target_label == "Both Players":
-                    label_color = "#FFD700"
-                elif game.multiplayer_mode and len(game.players) >= 2 and target_label == (game.players[1].name or "Player 2"):
-                    label_color = "#4488FF"
-                else:
-                    label_color = "#44FF44"
-                target_text = f"<font color='{label_color}' size=4><b>Affecting: {target_label}</b></font>"
-                target_box = UITextBox(
-                    target_text,
-                    pygame.Rect((WINDOW_WIDTH - 400) // 2, 55, 400, 35),
-                    manager
-                )
-                self.ui_elements.append(target_box)
-
-            desc_y = 95 if target_label else 60
-            desc_text = f"<font color='#AAAAAA' size=3>{transition_card.get_current_description()}</font>"
-            desc_box = UITextBox(
-                desc_text,
-                pygame.Rect((WINDOW_WIDTH - 700) // 2, desc_y, 700, 50),
-                manager
-            )
-            self.ui_elements.append(desc_box)
-
-        if game.game_mode == "creative":
-            # Creative mode: show all outcomes with probabilities
-            outcomes_header = UILabel(
-                pygame.Rect((WINDOW_WIDTH - 700) // 2, desc_y + 55, 700, 25),
-                "Possible Outcomes:",
-                manager
-            )
-            self.ui_elements.append(outcomes_header)
-
-            y_pos = desc_y + 85
-            for i, outcome in enumerate(all_outcomes):
-                prob = outcome.get("probability", 0)
-                prob_pct = int(prob * 100)
-                outcome_type = outcome.get("type", "none")
-                outcome_text = outcome.get("text", "Something happens...")
-
-                is_selected = (i == selected_index)
-
-                if is_selected:
-                    color = "#00FF00"
-                    prefix = ">>> "
-                    suffix = " <<<"
-                else:
-                    color = "#888888"
-                    prefix = "    "
-                    suffix = ""
-
-                type_display = outcome_type.replace("_", " ").title()
-                line_text = f"<font color='{color}' size=3>{prefix}[{prob_pct}%] {type_display}: {outcome_text}{suffix}</font>"
-
-                outcome_box = UITextBox(
-                    line_text,
-                    pygame.Rect((WINDOW_WIDTH - 700) // 2, y_pos, 700, 35),
-                    manager
-                )
-                self.ui_elements.append(outcome_box)
-                y_pos += 38
-
-            y_pos += 20
-        else:
-            # Survival mode: only show the selected outcome
-            y_pos = desc_y + 55
-
-        # Result section
-        if game.game_mode == "creative":
-            result_header = UILabel(
-                pygame.Rect((WINDOW_WIDTH - 700) // 2, y_pos, 700, 25),
-                "Result:",
-                manager
-            )
-            self.ui_elements.append(result_header)
-            y_pos += 30
-            result_display = f"<font color='#FFFF00' size=4>{self.result_text}</font>"
-            result_box = UITextBox(
-                result_display,
-                pygame.Rect((WINDOW_WIDTH - 700) // 2, y_pos, 700, 80),
-                manager
-            )
-            self.ui_elements.append(result_box)
-            y_pos += 100
-        else:
-            # Survival mode: larger, centered result with more breathing room
-            y_pos += 20
-            result_display = f"<font color='#FFFF00' size=5.5><b>{self.result_text}</b></font>"
-            result_box = UITextBox(
-                result_display,
-                pygame.Rect((WINDOW_WIDTH - 800) // 2, y_pos, 800, 200),
-                manager
-            )
-            self.ui_elements.append(result_box)
-            y_pos += 220
-        self.ok_button = UIButton(
-            pygame.Rect((WINDOW_WIDTH - 150) // 2, y_pos, 150, 45),
-            "OK",
-            manager
-        )
-        self.ui_elements.append(self.ok_button)
-
-    def handle_event(self, event):
-        # Prevent processing events after close has started
-        if self.closing:
-            return
-
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.ok_button:
-                self.close()
-
-    def close(self):
-        """Return to game and continue the turn."""
-        print(f"[DEBUG] TransitionEventScreen.close() called, current_screen={game._current_screen}")
-        self.closing = True  # Prevent further event processing
-
-        # Check if transition triggered an instance event BEFORE switching screens
-        # This avoids rapidly switching game -> instance_event
-        if game.instance_manager.pending_instance:
-            instance_card = game.instance_manager.pending_instance
-            target_player = game.instance_manager.pending_instance_player
-            print(f"[DEBUG] Found pending instance: {instance_card.name}, target_player={target_player.name if target_player else 'None'}, calling show_instance_event")
-            game_screen.show_instance_event(instance_card, target_player)
-            print(f"[DEBUG] After show_instance_event, current_screen={game._current_screen}")
-            return
-
-        # No pending instance, go directly to game screen
-        print("[DEBUG] No pending instance, going to game screen")
-        game.current_screen = "game"
-        game_screen.initialize_screen()
-        # Update player info in case stats changed
-        game_screen.player_info_label.set_text(game_screen.get_player_info())
-        # Continue to player phase
-        game_screen.resume_after_transition()
-        print(f"[DEBUG] After resume_after_transition, current_screen={game._current_screen}")
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
 
 # ConfirmationScreen class
 class PauseMenuScreen:
@@ -8350,8 +8460,6 @@ class Game:
             "skills": skills_screen,
             "quest": quest_screen,
             "defeat": defeat_screen,
-            "instance_event": instance_event_screen,
-            "transition_event": transition_event_screen,
             "card_browser": card_browser_screen,
             "tabbed_menu": tabbed_menu_screen,
             "npc_browser": npc_browser_screen,
@@ -8436,8 +8544,6 @@ pause_menu_screen = PauseMenuScreen()
 confirmation_screen = ConfirmationScreen()
 save_load_screen = SaveLoadScreen()
 defeat_screen = DefeatScreen()
-instance_event_screen = InstanceEventScreen()
-transition_event_screen = TransitionEventScreen()
 card_browser_screen = CardBrowserScreen()
 tabbed_menu_screen = TabbedMenuScreen()
 npc_browser_screen = NpcBrowserScreen()

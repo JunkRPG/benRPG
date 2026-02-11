@@ -114,5 +114,31 @@
             "dark_bg": "#14142e",
             "normal_bg": "#18183a"
         }
+    },
+    "#action_choice_btn": {
+        "colours": {
+            "normal_bg": "#2a2a50",
+            "hovered_bg": "#3d3d72",
+            "active_bg": "#1e1e40",
+            "normal_text": "#ffffff",
+            "hovered_text": "#fffae0",
+            "normal_border": "#6666aa",
+            "hovered_border": "#cc9900"
+        },
+        "misc": {
+            "border_width": "2",
+            "shape_corner_radius": "4"
+        }
+    },
+    "#location_title": {
+        "colours": {
+            "normal_text": "#ffd700"
+        },
+        "font": {
+            "name": "freesansbold",
+            "size": "26",
+            "bold": "1",
+            "italic": "0"
+        }
     }
 }
