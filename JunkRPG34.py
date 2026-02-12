@@ -3726,6 +3726,8 @@ class GameScreen:
         self.pending_defeat = False
         self.defeat_notifications = []  # [(name, timestamp), ...]
         self.turn_banner = None  # (label, color_tuple, timestamp) or None
+        self._ammo_banner = None  # (label, color_rgb, start_timestamp) or None
+        self._pending_advance_after_banner = False  # Wait for banner to finish before advancing
         self.current_location_hex = None  # (row, col) if player is on a location
         # Building/placement mode
         self.placement_mode = False
@@ -4240,6 +4242,13 @@ class GameScreen:
         self.defeat_notifications.append((name, pygame.time.get_ticks()))
         sound_manager.play("entity_defeated")
 
+    def _get_banner_y(self):
+        """Return y position for banners, just below the log panel."""
+        if self.log_minimized:
+            return 80   # just below minimized log (bottom ~73)
+        else:
+            return 190  # just below expanded log (bottom ~185)
+
     def draw_defeat_notifications(self):
         now = pygame.time.get_ticks()
         self.defeat_notifications = [(n, t) for n, t in self.defeat_notifications if now - t < 3000]
@@ -4248,7 +4257,7 @@ class GameScreen:
         font = pygame.font.SysFont("Arial", 36, bold=True)
         shadow_font = pygame.font.SysFont("Arial", 36, bold=True)
         cx = WINDOW_WIDTH // 2
-        start_y = WINDOW_HEIGHT // 3
+        start_y = self._get_banner_y()
         for i, (name, timestamp) in enumerate(self.defeat_notifications):
             elapsed = now - timestamp
             alpha = 255 if elapsed < 2000 else max(0, 255 - int(255 * (elapsed - 2000) / 1000))
@@ -4297,12 +4306,55 @@ class GameScreen:
         tw, th = text_surf.get_size()
         bw, bh = tw + 60, th + 30
         cx = WINDOW_WIDTH // 2
-        by = WINDOW_HEIGHT // 3
+        by = self._get_banner_y()
         banner = pygame.Surface((bw, bh), pygame.SRCALPHA)
         banner.fill((10, 10, 30, min(alpha, 200)))
         pygame.draw.rect(banner, (58, 58, 92, min(alpha, 160)), (0, 0, bw, bh), 1)
         banner.blit(shadow_surf, (32, 17))
         banner.blit(text_surf, (30, 15))
+        banner.set_alpha(alpha)
+        screen.blit(banner, (cx - bw // 2, by))
+
+    def _check_ammo_runout_banner(self, player):
+        """Check if player has a pending ammo runout and schedule the banner."""
+        if player.ammo_runout_pending:
+            delay = self.hex_grid.attack_anims.get_max_remaining_ms() if hasattr(self.hex_grid, 'attack_anims') else 0
+            name = player.ammo_runout_pending
+            self._ammo_banner = (f"{name} ran out!", (255, 170, 50), pygame.time.get_ticks() + delay)
+            player.ammo_runout_pending = None
+            self.rebuild_left_panel()  # Refresh toolbar to clear the emptied ammo slot
+
+    def draw_ammo_banner(self):
+        """Draw the ammo runout banner with fade-out."""
+        if not self._ammo_banner:
+            return
+        label, color, start_time = self._ammo_banner
+        now = pygame.time.get_ticks()
+        # start_time may be in the future (delayed until animation finishes)
+        if now < start_time:
+            return
+        elapsed = now - start_time
+        duration = 2500
+        opaque_time = 1500
+        if elapsed >= duration:
+            self._ammo_banner = None
+            return
+        if elapsed < opaque_time:
+            alpha = 255
+        else:
+            alpha = max(0, 255 - int(255 * (elapsed - opaque_time) / (duration - opaque_time)))
+        font = pygame.font.SysFont("Arial", 36, bold=True)
+        text_surf = font.render(label, True, color)
+        shadow_surf = font.render(label, True, (10, 10, 30))
+        tw, th = text_surf.get_size()
+        bw, bh = tw + 40, th + 20
+        cx = WINDOW_WIDTH // 2
+        by = self._get_banner_y() + 60  # offset below turn banner
+        banner = pygame.Surface((bw, bh), pygame.SRCALPHA)
+        banner.fill((10, 10, 30, min(alpha, 200)))
+        pygame.draw.rect(banner, (58, 58, 92, min(alpha, 160)), (0, 0, bw, bh), 1)
+        banner.blit(shadow_surf, (22, 12))
+        banner.blit(text_surf, (20, 10))
         banner.set_alpha(alpha)
         screen.blit(banner, (cx - bw // 2, by))
 
@@ -4929,12 +4981,18 @@ class GameScreen:
             self.turn_phase = "hostile"
             self.execute_turn("Hostile")
         elif self.turn_phase == "hostile":
-            # Clear passthrough defense cache and move to location defense phase
+            # Clear passthrough defense cache
             self._clear_defense_range_cache()
-            self.turn_phase = "location_defense"
             self.hex_grid.active_turn_unit = None
-            self.update_turn_label()
-            self.process_location_defense_turn()
+            # Skip location_defense phase entirely if no active defenses
+            if self.hex_grid.get_active_defensive_locations():
+                self.turn_phase = "location_defense"
+                self.update_turn_label()
+                self.process_location_defense_turn()
+            else:
+                self.turn_phase = "transition"
+                self.update_turn_label()
+                self.process_transition_turn()
         elif self.turn_phase == "location_defense":
             # Move to transition phase
             self.turn_phase = "transition"
@@ -6160,6 +6218,7 @@ class GameScreen:
                             self._handle_quest_chain()
                             self.update_quest_button()
                             self.show_stats(None)
+                self._check_ammo_runout_banner(current_player)
                 self.player_info_label.set_text(self.get_player_info())
                 self.selected_attack = None
                 if current_player.action_used and not current_player.movement_used:
@@ -6207,6 +6266,7 @@ class GameScreen:
                             self._handle_quest_chain()
                             self.update_quest_button()
                             self.show_stats(None)
+                self._check_ammo_runout_banner(current_player)
                 self.player_info_label.set_text(self.get_player_info())
                 self.selected_attack = None
                 if current_player.action_used and not current_player.movement_used:
@@ -6597,7 +6657,8 @@ class GameScreen:
         """Process defensive location attacks against hostile units."""
         active_locations = self.hex_grid.get_active_defensive_locations()
         if not active_locations:
-            self.advance_turn()
+            # No defenses to fire — defer advance until banner finishes displaying
+            self._pending_advance_after_banner = True
             return
 
         attacks_fired = False
@@ -6661,7 +6722,8 @@ class GameScreen:
                 self._handle_quest_chain()
             self.player_info_label.set_text(self.get_player_info())
 
-        self.advance_turn()
+        # Defer advance until the Location Defense banner finishes displaying
+        self._pending_advance_after_banner = True
 
     def process_transition_turn(self):
         """Process the transition card's turn in the cycle."""
@@ -6927,6 +6989,7 @@ class GameScreen:
                                 self._handle_quest_chain()
                                 self.update_quest_button()
                                 self.show_stats(None)
+                        self._check_ammo_runout_banner(current_player)
                         self.player_info_label.set_text(self.get_player_info())
                         self.selected_attack = None
                         # Auto-switch to movement mode after action is fully used
@@ -6948,6 +7011,7 @@ class GameScreen:
                     if message:
                         self.add_to_log(message)
                     if action_used:
+                        self._check_ammo_runout_banner(current_player)
                         self.player_info_label.set_text(self.get_player_info())
                         self.selected_attack = None
                         if not current_player.movement_used:
@@ -7511,6 +7575,23 @@ class GameScreen:
             bg_surf.fill((10, 10, 30, 180))
             screen.blit(bg_surf, bg.topleft)
             pygame.draw.rect(screen, panel_border_color, bg, 1)
+        # Draw background behind action choice popup (before manager.draw_ui so buttons render on top)
+        if self.action_choice_open and self.action_choice_buttons:
+            first_btn = self.action_choice_buttons[0][0]
+            last_btn = self.action_choice_buttons[-1][0]
+            pad = 10
+            header_h = 22
+            popup_rect = pygame.Rect(first_btn.rect.x - pad, first_btn.rect.y - pad - header_h,
+                                     first_btn.rect.width + pad * 2,
+                                     last_btn.rect.bottom - first_btn.rect.y + pad * 2 + header_h)
+            bg_surf = pygame.Surface((popup_rect.width, popup_rect.height), pygame.SRCALPHA)
+            bg_surf.fill((20, 16, 10, 235))
+            screen.blit(bg_surf, popup_rect.topleft)
+            pygame.draw.rect(screen, (200, 150, 44), popup_rect, 2, border_radius=6)
+            # Header text
+            header_font = pygame.font.SysFont("freesansbold", 15, bold=True)
+            header_text = header_font.render("Choose Action", True, (255, 215, 100))
+            screen.blit(header_text, (popup_rect.x + pad, popup_rect.y + 5))
         manager.draw_ui(screen)
         # Draw colored borders on equipment toolbar buttons
         if self.equip_toolbar_buttons and len(self.equip_toolbar_buttons) >= 3:
@@ -7538,19 +7619,13 @@ class GameScreen:
             for btn, _, _ in self.attack_submenu_buttons:
                 if hasattr(btn, '_outline_color'):
                     pygame.draw.rect(screen, btn._outline_color, btn.rect, 2)
-        # Draw background behind action choice popup
-        if self.action_choice_open and self.action_choice_buttons:
-            first_btn = self.action_choice_buttons[0][0]
-            last_btn = self.action_choice_buttons[-1][0]
-            popup_rect = pygame.Rect(first_btn.rect.x - 6, first_btn.rect.y - 6,
-                                     first_btn.rect.width + 12,
-                                     last_btn.rect.bottom - first_btn.rect.y + 12)
-            bg_surf = pygame.Surface((popup_rect.width, popup_rect.height), pygame.SRCALPHA)
-            bg_surf.fill((10, 10, 30, 245))
-            screen.blit(bg_surf, popup_rect.topleft)
-            pygame.draw.rect(screen, (140, 140, 180), popup_rect, 2)
         self.draw_defeat_notifications()
         self.draw_turn_banner()
+        self.draw_ammo_banner()
+        # Advance turn once the Location Defense banner has finished displaying
+        if self._pending_advance_after_banner and self.turn_banner is None:
+            self._pending_advance_after_banner = False
+            self.advance_turn()
         self.draw_event_banner()
         # Check for pending location screen (show after movement animation completes)
         if self.pending_location and not self.animating:

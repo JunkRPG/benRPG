@@ -95,6 +95,7 @@ class Player:
         self.tool_slots = 1             # Number of available tool slots (expandable via tool belt)
         self.equipped_tools = []        # List of equipped tool cards (multi-slot)
         self.equipped_accessory = None  # Tool belt or other accessory in accessory slot
+        self.ammo_runout_pending = None  # Set to ammo name when runout triggers
 
         # Range properties (set by equipped projectile weapon)
         self.projectile_range_type = "line_of_sight"  # Pattern: line_of_sight, area_effect, echo, perimeter
@@ -377,6 +378,8 @@ class Player:
         if runout_chance > 0 and random.randint(1, 100) <= runout_chance:
             # Revert ammo card back to state 1 (document/raw material form)
             ammo_card.current_state = 1
+            ammo_name = ammo_data.get("Name", "Ammunition")
+            self.ammo_runout_pending = ammo_name
 
             # Remove from equipped slot and return to inventory
             if ammo_card in self.equipped_tools:
