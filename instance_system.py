@@ -6,6 +6,7 @@ Handles random event cards that trigger during gameplay with multiple possible o
 import json
 import random
 import os
+from sound_manager import play_card_acquired_sound
 from deck_utils import resolve_deck_path
 from card_utils import load_card
 
@@ -281,6 +282,7 @@ class InstanceManager:
                 print(f"[DEBUG] _draw_card: got card, adding to inventory", flush=True)
                 if player:
                     player.inventory.append(card)
+                    play_card_acquired_sound(card)
                 return card
         else:
             # Draw random card of type from all available
@@ -294,6 +296,7 @@ class InstanceManager:
                 print(f"[DEBUG] _draw_card: created card, adding to inventory", flush=True)
                 if player:
                     player.inventory.append(card)
+                    play_card_acquired_sound(card)
                 return card
 
         print("[DEBUG] _draw_card: returning None", flush=True)

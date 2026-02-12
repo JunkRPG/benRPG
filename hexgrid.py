@@ -17,6 +17,7 @@ from terrain_config import (
 from deck_utils import resolve_deck_path
 from card_utils import load_card
 from attack_animations import AttackAnimationManager
+from sound_manager import sound_manager
 
 # Hexagonal directions for LOS
 DIRECTIONS = [
@@ -54,7 +55,7 @@ class HexGrid:
         # Animation state for targeting visuals
         self.pulse_time = 0
         # Attack animation manager
-        self.attack_anims = AttackAnimationManager()
+        self.attack_anims = AttackAnimationManager(sound_mgr=sound_manager)
 
     def load_level(self, level_file, card_manager, player):
         try:
@@ -650,24 +651,69 @@ class HexGrid:
             loc_data["shop"] = []
             return
 
+        # Check if this shop sells both states (wild/tamed pairs)
+        sell_both_states = str(card_data.get("Shop_Sell_Both_States", "false")).lower() == "true"
+
         # Draw cards for shop inventory
         shop_items = []
         available_cards = deck["cards"].copy()
-        for _ in range(min(shop_size, len(available_cards))):
-            if not available_cards:
-                break
-            card_id = random.choice(available_cards)
-            available_cards.remove(card_id)
 
-            item_data = load_card(card_id)
-            if not item_data:
-                print(f"Skipping shop item: card '{card_id}' not found")
-                continue
+        if sell_both_states:
+            # Draw half as many unique cards, then create wild/tamed pairs
+            draw_count = min(shop_size // 2, len(available_cards))
+            for _ in range(draw_count):
+                if not available_cards:
+                    break
+                card_id = random.choice(available_cards)
+                available_cards.remove(card_id)
 
-            item_card = InventoryCard(item_data)
-            # Calculate price
-            price = self._calculate_item_price(item_card, card_data)
-            shop_items.append({"card": item_card, "price": price})
+                item_data = load_card(card_id)
+                if not item_data:
+                    print(f"Skipping shop item: card '{card_id}' not found")
+                    continue
+
+                # Only create both-states entries for 2-state cards
+                if item_data.get("states", 1) == 2:
+                    # State 1 (Wild) - discounted at 60%
+                    wild_card = InventoryCard(item_data)
+                    wild_price = self._calculate_item_price(wild_card, card_data)
+                    wild_price["amount"] = max(1, int(wild_price["amount"] * 0.6))
+                    wild_name = wild_card.get_current_data().get("Name", "Unknown")
+                    shop_items.append({
+                        "card": wild_card, "price": wild_price,
+                        "display_name": f"{wild_name} (Wild)", "sell_state": 1
+                    })
+
+                    # State 2 (Tamed) - premium at 200%
+                    tamed_card = InventoryCard(item_data)
+                    tamed_card.current_state = 2
+                    tamed_price = self._calculate_item_price(tamed_card, card_data)
+                    tamed_price["amount"] = max(1, int(tamed_price["amount"] * 2.0))
+                    tamed_name = item_data["data"].get("2nd_State_Name", "Unknown")
+                    shop_items.append({
+                        "card": tamed_card, "price": tamed_price,
+                        "display_name": f"{tamed_name} (Tamed)", "sell_state": 2
+                    })
+                else:
+                    item_card = InventoryCard(item_data)
+                    price = self._calculate_item_price(item_card, card_data)
+                    shop_items.append({"card": item_card, "price": price})
+        else:
+            for _ in range(min(shop_size, len(available_cards))):
+                if not available_cards:
+                    break
+                card_id = random.choice(available_cards)
+                available_cards.remove(card_id)
+
+                item_data = load_card(card_id)
+                if not item_data:
+                    print(f"Skipping shop item: card '{card_id}' not found")
+                    continue
+
+                item_card = InventoryCard(item_data)
+                # Calculate price
+                price = self._calculate_item_price(item_card, card_data)
+                shop_items.append({"card": item_card, "price": price})
 
         loc_data["shop"] = shop_items
 
@@ -1055,6 +1101,8 @@ class HexGrid:
         if not deck or not deck.get("cards"):
             return
 
+        sell_both_states = str(card_data.get("Shop_Sell_Both_States", "false")).lower() == "true"
+
         shop = loc_data.get("shop", [])
         if len(shop) >= shop_size:
             return
@@ -1072,9 +1120,31 @@ class HexGrid:
             print(f"Skipping shop replenishment: card '{card_id}' not found")
             return
 
-        item_card = InventoryCard(item_data)
-        price = self._calculate_item_price(item_card, card_data)
-        shop.append({"card": item_card, "price": price})
+        if sell_both_states and item_data.get("states", 1) == 2:
+            # Add wild/tamed pair if there's room
+            wild_card = InventoryCard(item_data)
+            wild_price = self._calculate_item_price(wild_card, card_data)
+            wild_price["amount"] = max(1, int(wild_price["amount"] * 0.6))
+            wild_name = wild_card.get_current_data().get("Name", "Unknown")
+            shop.append({
+                "card": wild_card, "price": wild_price,
+                "display_name": f"{wild_name} (Wild)", "sell_state": 1
+            })
+
+            if len(shop) < shop_size:
+                tamed_card = InventoryCard(item_data)
+                tamed_card.current_state = 2
+                tamed_price = self._calculate_item_price(tamed_card, card_data)
+                tamed_price["amount"] = max(1, int(tamed_price["amount"] * 2.0))
+                tamed_name = item_data["data"].get("2nd_State_Name", "Unknown")
+                shop.append({
+                    "card": tamed_card, "price": tamed_price,
+                    "display_name": f"{tamed_name} (Tamed)", "sell_state": 2
+                })
+        else:
+            item_card = InventoryCard(item_data)
+            price = self._calculate_item_price(item_card, card_data)
+            shop.append({"card": item_card, "price": price})
 
     def cycle_shop_inventory(self, row, col):
         """Refresh all shop items for a location."""
@@ -1864,7 +1934,11 @@ class HexGrid:
                                    self.hex_size + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
                     pygame.draw.polygon(dark_overlay, (0, 0, 0, 100), dark_points, 0)
                     hex_surface.blit(dark_overlay, (x - self.hex_size, y - self.hex_size))
-                # Attack ranges: colored hex tint + hex border
+
+        # Attack range hex fill with gentle breathing alpha
+        ar_pulse = (math.sin(pygame.time.get_ticks() / 400.0) + 1) / 2  # 0.0–1.0
+        for row in range(self.rows):
+            for col in range(self.cols):
                 if attack_ranges:
                     for ar in attack_ranges:
                         if (row, col) in ar["range"]:
@@ -1873,10 +1947,11 @@ class HexGrid:
                             range_overlay = pygame.Surface((self.hex_size * 2, self.hex_size * 2), pygame.SRCALPHA)
                             range_points = [(self.hex_size + self.hex_size * math.cos(math.radians(60 * i)),
                                             self.hex_size + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
-                            # Subtle hex-shaped tint fill
-                            pygame.draw.polygon(range_overlay, (color[0], color[1], color[2], 45), range_points, 0)
-                            # Colored hex border
-                            pygame.draw.polygon(range_overlay, (color[0], color[1], color[2], 180), range_points, 4)
+                            # Breathing hex tint fill
+                            fill_alpha = int(30 + ar_pulse * 25)
+                            pygame.draw.polygon(range_overlay, (color[0], color[1], color[2], fill_alpha), range_points, 0)
+                            # Subtle inner hex border
+                            pygame.draw.polygon(range_overlay, (color[0], color[1], color[2], 100), range_points, 2)
                             hex_surface.blit(range_overlay, (x - self.hex_size, y - self.hex_size))
 
         # Third pass: Draw location icons and names on top of range rings
@@ -2216,6 +2291,58 @@ class HexGrid:
                     pygame.draw.line(x_surf, (255, 0, 0, 200), (xc - x_radius, xc - x_radius), (xc + x_radius, xc + x_radius), 3)
                     pygame.draw.line(x_surf, (255, 0, 0, 200), (xc - x_radius, xc + x_radius), (xc + x_radius, xc - x_radius), 3)
                     hex_surface.blit(x_surf, (cx - xc, cy - xc))
+
+        # Movement range boundary: pulsing edge on border between reachable and unreachable
+        # Drawn late so boundary lines appear above terrain, hex borders, and units
+        if movement_range:
+            pulse = (math.sin(pygame.time.get_ticks() / 500.0) + 1) / 2
+            edge_alpha = int(140 + pulse * 115)
+            edge_color = (180, 220, 255, edge_alpha)
+            edge_surf = pygame.Surface((hex_surface.get_width(), hex_surface.get_height()), pygame.SRCALPHA)
+            # Edge i faces direction (i+1)%6: edge 0→lower-right, 1→below, 2→lower-left, 3→upper-left, 4→above, 5→upper-right
+            even_col_neighbors = [(0, 1), (1, 0), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
+            odd_col_neighbors = [(1, 1), (1, 0), (1, -1), (0, -1), (-1, 0), (0, 1)]
+            for (mr, mc) in movement_range:
+                x, y = self.get_hex_center(mr, mc)
+                verts = [(x + self.hex_size * math.cos(math.radians(60 * i)),
+                          y + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                offsets = even_col_neighbors if mc % 2 == 0 else odd_col_neighbors
+                for i, (dr, dc) in enumerate(offsets):
+                    nr, nc = mr + dr, mc + dc
+                    if (nr, nc) not in movement_range:
+                        pygame.draw.line(edge_surf, edge_color, verts[i], verts[(i + 1) % 6], 2)
+            hex_surface.blit(edge_surf, (0, 0))
+
+        # Attack range boundary: pulsing inward-thickened edges on border of each attack range
+        if attack_ranges:
+            ar_edge_pulse = (math.sin(pygame.time.get_ticks() / 400.0) + 1) / 2
+            even_col_nb = [(0, 1), (1, 0), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
+            odd_col_nb = [(1, 1), (1, 0), (1, -1), (0, -1), (-1, 0), (0, 1)]
+            inset_t = 0.12  # How far inward the thick edge extends (fraction of hex radius)
+            for ar in attack_ranges:
+                ar_set = ar["range"]
+                color = ar["color"]
+                glow_r = min(255, color[0] + 80)
+                glow_g = min(255, color[1] + 80)
+                glow_b = min(255, color[2] + 80)
+                edge_alpha = int(160 + ar_edge_pulse * 95)
+                glow_color = (glow_r, glow_g, glow_b, edge_alpha)
+                ar_edge_surf = pygame.Surface((hex_surface.get_width(), hex_surface.get_height()), pygame.SRCALPHA)
+                for (mr, mc) in ar_set:
+                    x, y = self.get_hex_center(mr, mc)
+                    verts = [(x + self.hex_size * math.cos(math.radians(60 * i)),
+                              y + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                    # Inset vertices: each vertex lerped toward hex center
+                    inset_verts = [(v[0] + (x - v[0]) * inset_t, v[1] + (y - v[1]) * inset_t) for v in verts]
+                    offsets = even_col_nb if mc % 2 == 0 else odd_col_nb
+                    for i, (dr, dc) in enumerate(offsets):
+                        nr, nc = mr + dr, mc + dc
+                        if (nr, nc) not in ar_set:
+                            ni = (i + 1) % 6
+                            # Quad from outer edge inward: outer_i, outer_i+1, inset_i+1, inset_i
+                            quad = [verts[i], verts[ni], inset_verts[ni], inset_verts[i]]
+                            pygame.draw.polygon(ar_edge_surf, glow_color, quad, 0)
+                hex_surface.blit(ar_edge_surf, (0, 0))
 
         # Draw hover tooltip near the hovered hex
         if self.hovered_hex:

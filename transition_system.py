@@ -6,6 +6,7 @@ like spawning enemies from map edges, weather changes, drawing cards, etc.
 
 import json
 import random
+from sound_manager import play_card_acquired_sound
 import os
 from deck_utils import resolve_deck_path
 from card_utils import load_card
@@ -540,6 +541,7 @@ class TransitionManager:
 
             if card:
                 player.inventory.append(card)
+                play_card_acquired_sound(card)
                 cards_drawn.append(card.get_current_data().get("Name", "Unknown"))
 
         if cards_drawn:

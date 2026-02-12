@@ -277,14 +277,49 @@ class Unit:
                 log = self._allied_idle_turn(grid)
 
         elif self.allegiance == "Neutral":
-            neighbors = grid.get_neighbors(*self.position)
-            empty_neighbors = [pos for pos in neighbors if grid.grid[pos[0]][pos[1]]["unit"] is None]
-            if empty_neighbors:
-                new_pos = random.choice(empty_neighbors)
-                success, msg = grid.move_unit(self, *new_pos)
-                if success:
-                    log.append(msg)
-        
+            # Wild mounts wander multiple hexes in a random direction
+            if (self.states == 2 and self.current_state == 1 and
+                    self.special_skill == "Mount"):
+                log = self._wild_mount_wander(grid)
+            else:
+                neighbors = grid.get_neighbors(*self.position)
+                empty_neighbors = [pos for pos in neighbors if grid.grid[pos[0]][pos[1]]["unit"] is None]
+                if empty_neighbors:
+                    new_pos = random.choice(empty_neighbors)
+                    success, msg = grid.move_unit(self, *new_pos)
+                    if success:
+                        log.append(msg)
+
+        return log
+
+    def _wild_mount_wander(self, grid):
+        """Wild mount wander: pick a random direction and walk in a line up to movement range."""
+        log = []
+        DIRECTIONS = [
+            (1, 0, -1), (1, -1, 0), (0, -1, 1),
+            (-1, 0, 1), (-1, 1, 0), (0, 1, -1)
+        ]
+        dir_idx = random.randint(0, 5)
+        direction = DIRECTIONS[dir_idx]
+        distance = random.randint(1, self.movement)
+        row, col = self.position
+        line = grid.get_line(row, col, direction, distance)
+
+        # Walk the line, stopping at first inaccessible or occupied hex
+        furthest = None
+        for hex_pos in line:
+            r, c = hex_pos
+            if (0 <= r < grid.rows and 0 <= c < grid.cols and
+                    grid.grid[r][c]["accessible"] and
+                    grid.grid[r][c]["unit"] is None):
+                furthest = hex_pos
+            else:
+                break
+
+        if furthest:
+            success, msg = grid.move_unit(self, furthest[0], furthest[1])
+            if success:
+                log.append(msg)
         return log
 
     def _allied_rush_turn(self, grid, hostile_units):

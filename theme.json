@@ -117,17 +117,22 @@
     },
     "#action_choice_btn": {
         "colours": {
-            "normal_bg": "#2a2a50",
-            "hovered_bg": "#3d3d72",
-            "active_bg": "#1e1e40",
-            "normal_text": "#ffffff",
-            "hovered_text": "#fffae0",
-            "normal_border": "#6666aa",
-            "hovered_border": "#cc9900"
+            "normal_bg": "#3a2a18",
+            "hovered_bg": "#5c3d1a",
+            "active_bg": "#2e2010",
+            "normal_text": "#ffeaaa",
+            "hovered_text": "#ffffff",
+            "normal_border": "#c8962c",
+            "hovered_border": "#ffd700"
+        },
+        "font": {
+            "name": "freesansbold",
+            "size": "14",
+            "bold": "1"
         },
         "misc": {
             "border_width": "2",
-            "shape_corner_radius": "4"
+            "shape_corner_radius": "6"
         }
     },
     "#location_title": {

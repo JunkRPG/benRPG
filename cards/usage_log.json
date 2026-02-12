@@ -43979,6 +43979,28 @@
           13
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-10T20:16:54.854033",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          7,
+          30
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-11T20:35:42.584137",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          17,
+          10
+        ]
+      }
     }
   ],
   "beta_location_rusty_anchor": [
@@ -44091,6 +44113,17 @@
           22
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-11T20:32:35.380793",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
     }
   ],
   "beta_enemy_forest_archer": [
@@ -44131,6 +44164,13 @@
     },
     {
       "timestamp": "2026-02-08T17:36:55.298953",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-11T20:40:03.043625",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -44236,6 +44276,61 @@
           13
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-10T18:38:54.996455",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          4,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-10T20:49:19.485630",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          11,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-10T21:24:49.364802",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-10T22:19:23.668305",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          11,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-11T20:33:00.934366",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          4,
+          20
+        ]
+      }
     }
   ],
   "beta_enemy_hungry_wolf": [
@@ -44290,6 +44385,13 @@
     },
     {
       "timestamp": "2026-02-08T21:00:08.548404",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-10T19:33:23.744457",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -44439,6 +44541,39 @@
           32
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-10T19:16:14.144383",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          13,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-10T22:27:18.756942",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          15,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-11T20:34:50.722481",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          13,
+          22
+        ]
+      }
     }
   ],
   "beta_enemy_funny_tumbleweed": [
@@ -44472,6 +44607,13 @@
     },
     {
       "timestamp": "2026-02-08T14:50:34.881876",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-10T20:17:39.435397",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -44604,6 +44746,39 @@
           18
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-10T20:19:15.436972",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          3,
+          30
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-10T22:23:17.991205",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          13,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-11T20:29:58.370556",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          8
+        ]
+      }
     }
   ],
   "beta_location_hollowed_tree": [
@@ -44705,11 +44880,47 @@
           13
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-10T20:52:31.752099",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-11T20:48:10.567420",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          21,
+          20
+        ]
+      }
     }
   ],
   "beta_enemy_funny_past": [
     {
       "timestamp": "2026-02-04T20:59:51.726515",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-10T20:53:55.317829",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-11T19:22:46.344839",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -44761,6 +44972,34 @@
     },
     {
       "timestamp": "2026-02-08T23:00:31.043115",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-10T20:58:39.327253",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-10T21:51:25.913013",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-10T22:26:04.886672",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-11T20:47:55.820062",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -44892,6 +45131,20 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-10T20:59:13.328462",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-11T19:49:26.336926",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "beta_enemy_funny_tax": [
@@ -44934,6 +45187,20 @@
     },
     {
       "timestamp": "2026-02-07T20:31:23.486530",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-10T21:24:32.435283",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-10T22:20:41.257562",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -44993,6 +45260,13 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-10T22:25:48.591424",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "beta_enemy_corrupted_guard": [
@@ -45009,11 +45283,25 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-11T19:46:45.377335",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "beta_npc_funny_farmer": [
     {
       "timestamp": "2026-02-07T23:20:18.939959",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-10T22:22:16.331286",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -45031,6 +45319,39 @@
           30
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-10T18:36:25.664109",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-10T20:54:43.675804",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          4,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-11T20:38:47.048173",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          11,
+          13
+        ]
+      }
     }
   ],
   "beta_enemy_shadow_stalker": [
@@ -45040,11 +45361,43 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-11T19:50:47.558480",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "beta_npc_funny_child": [
     {
       "timestamp": "2026-02-08T09:00:19.623620",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    }
+  ],
+  "beta_enemy_the_collector": [
+    {
+      "timestamp": "2026-02-10T22:33:12.884770",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-11T20:38:57.376191",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    }
+  ],
+  "feral_wolf": [
+    {
+      "timestamp": "2026-02-11T20:37:55.147245",
       "context": {
         "action": "defeated",
         "screen": "game"

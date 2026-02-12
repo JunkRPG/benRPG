@@ -8,7 +8,7 @@ the game engine (hexgrid.py) and the level editor (Level_Maker19.py).
 # Terrain types configuration
 # Each terrain has: color, accessible (can units walk on it), blocks_los (does it block line of sight)
 TERRAIN_CONFIG = {
-    "grass": {"color": (76, 153, 0), "accessible": True, "blocks_los": False},
+    "grass": {"color": (62, 130, 20), "accessible": True, "blocks_los": False},
     "dirt": {"color": (139, 90, 43), "accessible": True, "blocks_los": False},
     "sand": {"color": (238, 214, 175), "accessible": True, "blocks_los": False},
     "stone": {"color": (128, 128, 128), "accessible": True, "blocks_los": False},

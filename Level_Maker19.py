@@ -221,6 +221,7 @@ class LevelEditor:
         self.unit_cards = {"Enemy": [], "Boss": [], "NPC": []}
         # Location hex system
         self.location_hexes = []
+        self._extra_level_data = {}  # Preserve fields we don't edit (starting_inventory, obstacles)
         self.location_deck_files = []  # Decks containing Location cards
         self.setup_ui()
         self.current_unit_type = self.unit_type_dropdown.selected_option[0]
@@ -755,7 +756,9 @@ class LevelEditor:
                 "units": [{"card_id": u["card_id"], "position": {"row": u["position"][0], "column": u["position"][1]}}
                          for u in self.units],
                 "card_drawing_hexes": self.card_drawing_hexes,
-                "location_hexes": self.location_hexes
+                "location_hexes": self.location_hexes,
+                "starting_inventory": self._extra_level_data.get("starting_inventory", []),
+                "obstacles": self._extra_level_data.get("obstacles", [])
             }
             try:
                 with open(file_path, 'w') as f:
@@ -774,8 +777,12 @@ class LevelEditor:
             try:
                 with open(file_path, 'r') as f:
                     level_data = json.load(f)
-                rows = level_data["grid"]["rows"]
-                cols = level_data["grid"]["columns"]
+                if "grid" in level_data:
+                    rows = level_data["grid"]["rows"]
+                    cols = level_data["grid"]["columns"]
+                else:
+                    rows = level_data.get("grid_rows", 16)
+                    cols = level_data.get("grid_cols", 24)
                 # Warn about large levels
                 if rows > MAX_GRID_SIZE or cols > MAX_GRID_SIZE:
                     self.status_label.set_text(f"Level exceeds max size ({MAX_GRID_SIZE}x{MAX_GRID_SIZE})")
@@ -792,7 +799,14 @@ class LevelEditor:
                         self.accessible[row][col] = False
                 self.units = [{"card_id": u["card_id"], "position": (u["position"]["row"], u["position"]["column"])} 
                              for u in level_data["units"]]
-                self.player_start = (level_data["player_start"]["row"], level_data["player_start"]["column"]) if level_data.get("player_start") else None
+                if level_data.get("player_start"):
+                    ps = level_data["player_start"]
+                    self.player_start = (ps["row"], ps.get("column", ps.get("col", 0)))
+                else:
+                    self.player_start = None
+                self._extra_level_data = {}
+                self._extra_level_data["starting_inventory"] = level_data.get("starting_inventory", [])
+                self._extra_level_data["obstacles"] = level_data.get("obstacles", [])
                 self.card_drawing_hexes = level_data["card_drawing_hexes"]
                 self.card_drawing_dict = {(hex["row"], hex["column"]): hex["deck_file"]
                                          for hex in self.card_drawing_hexes if hex.get("deck_file")}

@@ -1707,6 +1707,48 @@
     "states": 2,
     "name": "Giant Hawk"
   },
+  "beta_npc_mustang": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Wild Mustang"
+  },
+  "beta_npc_clydesdale": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Stray Clydesdale"
+  },
+  "beta_npc_warhorse": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Wild Warhorse"
+  },
+  "beta_food_wild_oats": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Wild Oats"
+  },
+  "beta_food_sugar_beets": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Sugar Beets"
+  },
+  "beta_food_dried_apples": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Dried Apples"
+  },
   "beta_location_horse_stable": {
     "type": "Location Card",
     "subclass": null,

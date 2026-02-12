@@ -581,7 +581,7 @@ class LocationScreen:
                 card = item.get("card")
                 price = item.get("price", {})
                 if card:
-                    item_name = card.get_current_data().get("Name", "Unknown")
+                    item_name = item.get("display_name") or card.get_current_data().get("Name", "Unknown")
                     price_str = f"{price.get('amount', 0)} {price.get('type', 'metal')}"
                     shop_items.append(f"{item_name} - {price_str}")
 
@@ -1120,6 +1120,12 @@ class LocationScreen:
             self.info_text.set_text("<font color='#FF0000'>Select a shop item first!</font>")
             return
 
+        # Save sell_state before purchase (shop item gets removed during purchase)
+        shop_inv = self.hex_grid.get_shop_inventory(self.hex_pos[0], self.hex_pos[1])
+        sell_state = None
+        if self.selected_shop_item < len(shop_inv):
+            sell_state = shop_inv[self.selected_shop_item].get("sell_state")
+
         # Get selected materials using the display name to card mapping
         selected_material_names = self.sell_materials_list.get_multi_selection() if self.sell_materials_list else []
         material_cards = [self.material_name_to_card[name] for name in selected_material_names
@@ -1134,12 +1140,41 @@ class LocationScreen:
             for mat in material_cards:
                 if mat in game.current_player.inventory:
                     game.current_player.inventory.remove(mat)
-            # Add purchased card
-            party_msg = add_card_to_player(purchased_card)
-            if party_msg:
-                game_screen.add_to_log(party_msg)
+
+            # Route based on sell_state for mount NPCs
+            is_mount_npc = (purchased_card.card_data.get("card_type") == "NPC Card" and
+                           purchased_card.card_data.get("data", {}).get("Special Skill") == "Mount")
+
+            if sell_state == 1 and is_mount_npc:
+                # Wild purchase: spawn as neutral unit near stable
+                from unit import Unit
+                spawn_card = purchased_card.card_data.copy()
+                spawn_card["data"] = spawn_card["data"].copy()
+                wild_unit = Unit(spawn_card)
+                spawn_pos = self.hex_grid.find_empty_hex_near(self.hex_pos, 3)
+                if spawn_pos:
+                    self.hex_grid.place_unit(wild_unit, spawn_pos[0], spawn_pos[1])
+                    wild_name = purchased_card.get_current_data().get("Name", "Horse")
+                    game_screen.add_to_log(f"{wild_name} released near the stable!")
+                    self.info_text.set_text(f"<font color='#00FF00'>{wild_name} released near the stable!</font>")
+                else:
+                    game_screen.add_to_log("No space to release the horse nearby!")
+                    self.info_text.set_text("<font color='#FF0000'>No space to release nearby!</font>")
+            elif sell_state == 2 and is_mount_npc:
+                # Tamed purchase: add to party (reset to state 1 for mount system compatibility)
+                purchased_card.current_state = 1
+                game.current_party.append(purchased_card)
+                tamed_name = purchased_card.card_data.get("data", {}).get("2nd_State_Name", "Horse")
+                game_screen.add_to_log(f"{tamed_name} joined your party!")
+                self.info_text.set_text(f"<font color='#00FF00'>{tamed_name} joined your party!</font>")
+            else:
+                # Normal flow
+                party_msg = add_card_to_player(purchased_card)
+                if party_msg:
+                    game_screen.add_to_log(party_msg)
+                self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
+
             game_screen.add_to_log(msg)
-            self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
             # Refresh the screen
             self.initialize_screen(self.location_card, self.hex_pos, self.hex_grid)
         else:
@@ -6274,6 +6309,46 @@ class GameScreen:
         elif action_type == "recruit":
             game.current_screen = "recruitment"
             recruitment_screen.initialize_screen(target)
+        elif action_type == "feed":
+            # Taming mechanic: feed food to wild mount
+            taming_food = self._get_taming_food(current_player)
+            if not taming_food:
+                self.add_to_log("No food available for taming!")
+                return
+            food_card, taming_chance = taming_food[0]
+            food_name = food_card.get_current_data().get("Name", "food")
+
+            # Consume the food card
+            if food_card in current_player.inventory:
+                current_player.inventory.remove(food_card)
+
+            # Mark action used
+            current_player.action_used = True
+
+            # Roll for taming
+            roll = random.randint(1, 100)
+            if roll <= taming_chance:
+                # Success: remove unit from grid, add tamed version to party
+                hex_pos = target.position
+                if hex_pos:
+                    self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = None
+                if target in self.hex_grid.units:
+                    self.hex_grid.units.remove(target)
+                tamed_name = target.second_state.get("name", target.name)
+                # Load card and add to party
+                card_data = load_card(target.card_id)
+                if card_data:
+                    tamed_card = InventoryCard(card_data)
+                    game.current_party.append(tamed_card)
+                self.add_to_log(f"Fed {food_name} to {target.name} - {tamed_name} tamed!")
+                self.add_defeat_notification(f"{tamed_name} tamed!")
+            else:
+                # Failure
+                self.add_to_log(f"{target.name} rejected the {food_name}! ({taming_chance}% chance)")
+
+            self.player_info_label.set_text(self.get_player_info())
+            if current_player.action_used and not current_player.movement_used:
+                self.player_mode = "movement"
 
     def _handle_equip_popup_selection(self, slot_type, data):
         """Handle equip/unequip from the popup menu."""
@@ -6494,6 +6569,29 @@ class GameScreen:
         ranged = unit.projectile_damage if hasattr(unit, 'projectile_damage') else 0
         movement = unit.movement if hasattr(unit, 'movement') else 3
         return hp_component + melee + ranged + movement + 5
+
+    def _get_taming_food(self, player):
+        """Get list of (card, taming_chance) tuples from player inventory, sorted by best chance first."""
+        food_list = []
+        for card in player.inventory:
+            if card.current_state != 2:
+                continue
+            card_data = card.get_current_data()
+            # Check for dedicated taming food (Taming_Chance field)
+            taming_chance = card_data.get("Taming_Chance")
+            if taming_chance:
+                try:
+                    chance = int(taming_chance)
+                    if chance > 0:
+                        food_list.append((card, chance))
+                        continue
+                except (ValueError, TypeError):
+                    pass
+            # Check for generic consumable with Use_HP (fallback 25% chance)
+            if card_data.get("Use_HP"):
+                food_list.append((card, 25))
+        food_list.sort(key=lambda x: x[1], reverse=True)
+        return food_list
 
     def show_instance_event(self, instance_card, target_player=None):
         """Show an instance event as a banner overlay."""
@@ -6934,6 +7032,16 @@ class GameScreen:
                     if unit.allegiance == "Neutral" and self.hex_grid.hex_distance(current_player.position, hex_pos) == 1:
                         cost = self._calculate_recruitment_cost(unit)
                         available_actions.append((f"Recruit {unit.name} (Cost: {cost})", "recruit", unit))
+                    # Feed option for taming wild mounts
+                    if (not current_player.action_used and
+                        unit.allegiance == "Neutral" and
+                        self.hex_grid.hex_distance(current_player.position, hex_pos) == 1 and
+                        unit.states == 2 and unit.current_state == 1 and
+                        unit.special_skill == "Mount"):
+                        taming_food = self._get_taming_food(current_player)
+                        if taming_food:
+                            best_chance = taming_food[0][1]
+                            available_actions.append((f"Feed {unit.name} ({best_chance}% tame)", "feed", unit))
                     if len(available_actions) == 1:
                         action_type = available_actions[0][1]
                         if action_type == "melee":
@@ -6945,6 +7053,9 @@ class GameScreen:
                         elif action_type == "recruit":
                             game.current_screen = "recruitment"
                             recruitment_screen.initialize_screen(unit)
+                            return
+                        elif action_type == "feed":
+                            self._handle_action_choice("feed", available_actions[0][2])
                             return
                     elif len(available_actions) >= 2:
                         self._open_action_choice_popup(unit, hex_pos, available_actions)

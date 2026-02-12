@@ -8,6 +8,7 @@ filled when activated.
 
 import json
 import os
+from sound_manager import play_card_acquired_sound
 import random
 from inventory_card import InventoryCard
 from unit import Unit
@@ -602,6 +603,7 @@ class QuestManager:
         rewards = quest.get_rewards()
         for reward_card in rewards:
             player.inventory.append(reward_card)
+            play_card_acquired_sound(reward_card)
 
         # Flip quest card to state 2 if it has 2 states
         if quest.quest_card.states == 2:

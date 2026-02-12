@@ -4,6 +4,9 @@
   "cards": [
     "beta_npc_horse",
     "beta_npc_draft_horse",
-    "beta_npc_swift_pony"
+    "beta_npc_swift_pony",
+    "beta_npc_mustang",
+    "beta_npc_clydesdale",
+    "beta_npc_warhorse"
   ]
 }

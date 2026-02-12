@@ -197,19 +197,24 @@ class AttackAnimation:
 class AttackAnimationManager:
     """Manages all active attack animations."""
 
-    def __init__(self):
+    def __init__(self, sound_mgr=None):
         self.active_animations = []
+        self.sound_mgr = sound_mgr
 
     def create_projectile(self, source_pos, target_pos, color=None):
         """Create a projectile (arrow) animation from source to target pixel coords."""
         anim = AttackAnimation("projectile", source_pos, target_pos, color)
         self.active_animations.append(anim)
+        if self.sound_mgr:
+            self.sound_mgr.play("projectile_shot")
         return anim
 
     def create_melee(self, source_pos, target_pos, color=None):
         """Create a melee slash arc animation."""
         anim = AttackAnimation("melee", source_pos, target_pos, color)
         self.active_animations.append(anim)
+        if self.sound_mgr:
+            self.sound_mgr.play("melee_swing")
         return anim
 
     def update(self):
