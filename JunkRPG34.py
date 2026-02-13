@@ -52,6 +52,16 @@ LIGHT_GREEN = (144, 238, 144)  # Card-drawing hex border
 PURPLE = (128, 0, 128)  # Linked level hex border
 ORANGE = (255, 165, 0)  # Location hex border
 
+# Multiplayer player colors (up to 4 players)
+PLAYER_COLORS = [
+    (0, 200, 0),      # P1: Green
+    (100, 150, 255),   # P2: Blue
+    (255, 100, 100),   # P3: Red
+    (255, 200, 50),    # P4: Gold
+]
+PLAYER_COLOR_NAMES = ["Green", "Blue", "Red", "Gold"]
+PLAYER_COLOR_HEX = ["#66DD66", "#6688FF", "#FF6666", "#FFD744"]
+
 # Animation constants
 MOVE_SPEED = 5
 ATTACK_FLASH_DURATION = 500
@@ -3396,7 +3406,9 @@ class PlayerCountScreen:
             UILabel(pygame.Rect(0, 240, WINDOW_WIDTH, 30), f"Level: {level_name}", manager, anchors={'centerx': 'centerx'}),
             UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 290, 200, 50), "1 Player", manager),
             UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 360, 200, 50), "2 Players", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 460, 200, 50), "Back", manager)
+            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 430, 200, 50), "3 Players", manager),
+            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 500, 200, 50), "4 Players", manager),
+            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 600, 200, 50), "Back", manager)
         ]
         self.mode_buttons = [survival_btn, creative_btn]
         self.mode_label = mode_label
@@ -3428,8 +3440,16 @@ class PlayerCountScreen:
             elif event.ui_element == self.ui_elements[3]:  # 2 Players
                 game.game_mode = self.selected_mode
                 game.current_screen = "multiplayer_character_creation"
-                multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file)
-            elif event.ui_element == self.ui_elements[4]:  # Back
+                multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file, num_players=2)
+            elif event.ui_element == self.ui_elements[4]:  # 3 Players
+                game.game_mode = self.selected_mode
+                game.current_screen = "multiplayer_character_creation"
+                multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file, num_players=3)
+            elif event.ui_element == self.ui_elements[5]:  # 4 Players
+                game.game_mode = self.selected_mode
+                game.current_screen = "multiplayer_character_creation"
+                multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file, num_players=4)
+            elif event.ui_element == self.ui_elements[6]:  # Back
                 game.current_screen = "main_menu"
                 main_menu.initialize_buttons()
 
@@ -3452,7 +3472,7 @@ class MainMenu:
             UIButton(pygame.Rect(btn_x, 270, 200, 50), "Load Campaign", manager),
             UIButton(pygame.Rect(btn_x, 340, 200, 50), "Load Level", manager),
             UIButton(pygame.Rect(btn_x, 410, 200, 50), "Load Game", manager),
-            UIButton(pygame.Rect(btn_x, 480, 200, 50), "2-Player Local", manager),
+            UIButton(pygame.Rect(btn_x, 480, 200, 50), "Multiplayer", manager),
             UIButton(pygame.Rect(btn_x, 550, 200, 50), "Settings", manager),
             UIButton(pygame.Rect(btn_x, 620, 200, 50), "Quit", manager)
         ]
@@ -3486,7 +3506,7 @@ class MainMenu:
             elif text == "Load Game":
                 game.current_screen = "save_load"
                 save_load_screen.initialize_screen(mode="load")
-            elif text == "2-Player Local":
+            elif text == "Multiplayer":
                 game.current_screen = "multiplayer_character_creation"
                 multiplayer_character_creation_screen.initialize_screen()
             elif text == "Settings":
@@ -3620,30 +3640,32 @@ class CharacterCreationScreen:
         manager.draw_ui(screen)
 
 
-# Multiplayer Character Creation Screen (2-player local)
+# Multiplayer Character Creation Screen (2-4 player local)
 class MultiplayerCharacterCreationScreen:
     def __init__(self):
         self.ui_elements = []
         self.class_buttons = []
-        self.current_player_selecting = 1  # 1 or 2
-        self.player1_class = None
-        self.player1_name = ""
+        self.current_player_selecting = 1
+        self.num_players = 2
+        self.player_selections = []  # List of {"class": ..., "name": ...}
         self.level_file = None
         self.name_entry = None
 
-    def initialize_screen(self, level_file=None):
+    def initialize_screen(self, level_file=None, num_players=2):
         self.level_file = level_file
+        self.num_players = num_players
         self.current_player_selecting = 1
-        self.player1_class = None
-        self.player1_name = ""
+        self.player_selections = []
         manager.clear_and_reset()
         self._build_selection_ui()
 
     def _build_selection_ui(self):
         """Build the class selection UI for the current player."""
         manager.clear_and_reset()
-        player_label = f"Player {self.current_player_selecting}: Enter Name & Choose Class"
-        color_hint = "(Green)" if self.current_player_selecting == 1 else "(Blue)"
+        player_label = f"Player {self.current_player_selecting} of {self.num_players}: Enter Name & Choose Class"
+        idx = self.current_player_selecting - 1
+        color_name = PLAYER_COLOR_NAMES[idx] if idx < len(PLAYER_COLOR_NAMES) else "Unknown"
+        color_hint = f"({color_name})"
         self.ui_elements = [
             UILabel(pygame.Rect(0, 30, WINDOW_WIDTH, 40), player_label, manager, anchors={'centerx': 'centerx'}),
             UILabel(pygame.Rect(0, 70, WINDOW_WIDTH, 30), color_hint, manager, anchors={'centerx': 'centerx'}),
@@ -3666,11 +3688,10 @@ class MultiplayerCharacterCreationScreen:
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.ui_elements[2]:  # Back button
-                if self.current_player_selecting == 2:
-                    # Go back to player 1 selection
-                    self.current_player_selecting = 1
-                    self.player1_class = None
-                    self.player1_name = ""
+                if self.current_player_selecting > 1:
+                    # Go back to previous player selection
+                    self.current_player_selecting -= 1
+                    self.player_selections.pop()
                     self._build_selection_ui()
                 else:
                     game.current_screen = "main_menu"
@@ -3679,45 +3700,37 @@ class MultiplayerCharacterCreationScreen:
                 for button, class_name in self.class_buttons:
                     if event.ui_element == button:
                         entered_name = self.name_entry.get_text().strip() if self.name_entry else ""
-                        if self.current_player_selecting == 1:
-                            # Store Player 1's name and class, move to Player 2 selection
-                            self.player1_class = class_name
-                            self.player1_name = entered_name if entered_name else "Player 1"
-                            self.current_player_selecting = 2
+                        player_name = entered_name if entered_name else f"Player {self.current_player_selecting}"
+                        self.player_selections.append({"class": class_name, "name": player_name})
+
+                        if self.current_player_selecting < self.num_players:
+                            # Move to next player selection
+                            self.current_player_selecting += 1
                             self._build_selection_ui()
                         else:
-                            # Both players selected - start the game
-                            player2_name = entered_name if entered_name else "Player 2"
-                            self._start_multiplayer_game(self.player1_class, class_name, self.player1_name, player2_name)
+                            # All players selected - start the game
+                            self._start_multiplayer_game(self.player_selections)
                         break
 
-    def _start_multiplayer_game(self, player1_class, player2_class, player1_name, player2_name):
-        """Create both players and start the multiplayer game."""
-        # Create Player 1
-        player1 = Player(player1_class)
-        player1.name = player1_name
-        player1.player_number = 1
-        player1.player_color = (0, 200, 0)  # Green
-        player1.party = []
-
-        # Create Player 2
-        player2 = Player(player2_class)
-        player2.name = player2_name
-        player2.player_number = 2
-        player2.player_color = (100, 150, 255)  # Blue
-        player2.party = []
+    def _start_multiplayer_game(self, player_selections):
+        """Create all players and start the multiplayer game."""
+        players = []
+        for i, sel in enumerate(player_selections):
+            p = Player(sel["class"])
+            p.name = sel["name"]
+            p.player_number = i + 1
+            p.player_color = PLAYER_COLORS[i] if i < len(PLAYER_COLORS) else (200, 200, 200)
+            p.party = []
+            players.append(p)
 
         # Set up multiplayer mode
         game.multiplayer_mode = True
-        game.players = [player1, player2]
+        game.players = players
         game.current_player_index = 0
-        game.player = player1  # For backwards compatibility
+        game.player = players[0]  # For backwards compatibility
 
         # Create per-player quest managers
-        game.quest_managers = [
-            QuestManager(game.card_manager),
-            QuestManager(game.card_manager)
-        ]
+        game.quest_managers = [QuestManager(game.card_manager) for _ in players]
 
         # Start the game
         game.current_screen = "game"
@@ -3799,6 +3812,8 @@ class GameScreen:
         self.pending_location = None  # {"card": loc_card, "pos": hex_pos, "hex_grid": hex_grid}
         # Pending defeat screen (show after death animation completes)
         self.pending_defeat = False
+        # Pending unit removals - defer grid removal until attack animations finish
+        self.pending_defeats = []
         self.defeat_notifications = []  # [(name, timestamp), ...]
         self.turn_banner = None  # (label, color_tuple, timestamp) or None
         self._ammo_banner = None  # (label, color_rgb, start_timestamp) or None
@@ -4451,6 +4466,7 @@ class GameScreen:
         self.waiting_for_animation = False
         self.pending_location = None
         self.pending_defeat = False
+        self.pending_defeats = []
         self.defeat_notifications = []
         self.current_location_hex = None
         self.transition_target_cycle = 0
@@ -4549,14 +4565,15 @@ class GameScreen:
         self.save_manager.save_game(game, self, save_type="autosave", save_label="Level Start")
 
     def start_new_game_multiplayer(self, level_file=None):
-        """Start a new multiplayer game with two players."""
+        """Start a new multiplayer game with 2-4 players."""
         # Reset game state
         self.hex_grid = HexGrid(16, 24, 30, WINDOW_WIDTH, WINDOW_HEIGHT)
         self.hex_grid.players = game.players  # Set players list on hex_grid
         self.current_level_file = level_file
         self.campaign_file = None
         self.log.clear()
-        self.turn_phase = "player1"  # Start with player 1's turn
+        self.turn_phase = "multiplayer_player"  # Start with first player's turn
+        game.current_player_index = 0
         self.is_player_turn = True
         self.hex_grid.game_over = False
         # Reset turn queue
@@ -4565,6 +4582,7 @@ class GameScreen:
         self.waiting_for_animation = False
         self.pending_location = None
         self.pending_defeat = False
+        self.pending_defeats = []
         self.current_location_hex = None
         self.transition_target_cycle = 0
         self._clear_event_banner()
@@ -4580,38 +4598,45 @@ class GameScreen:
 
         # Load level or use default placement
         player1 = game.players[0]
-        player2 = game.players[1]
 
         if level_file:
             try:
                 # Load level with player 1 first
                 self.hex_grid.load_level(level_file, self.card_manager, player1)
                 self.log.append(f"Loaded level: {level_file}")
-                # Find adjacent position for player 2
-                p1_pos = player1.position
-                neighbors = self.hex_grid.get_neighbors(p1_pos[0], p1_pos[1])
-                p2_placed = False
-                for n_row, n_col in neighbors:
-                    if (0 <= n_row < self.hex_grid.rows and 0 <= n_col < self.hex_grid.cols and
-                        self.hex_grid.grid[n_row][n_col]["unit"] is None and
-                        self.hex_grid.grid[n_row][n_col]["accessible"]):
-                        self.hex_grid.place_unit(player2, n_row, n_col)
-                        p2_placed = True
-                        break
-                if not p2_placed:
-                    # Fallback: place near center
-                    self.hex_grid.place_unit(player2, self.hex_grid.rows // 2 + 1, self.hex_grid.cols // 2)
+                # Place remaining players at adjacent accessible hexes
+                placed_positions = {player1.position}
+                for player in game.players[1:]:
+                    placed = False
+                    for existing_pos in list(placed_positions):
+                        for n_row, n_col in self.hex_grid.get_neighbors(existing_pos[0], existing_pos[1]):
+                            if (0 <= n_row < self.hex_grid.rows and 0 <= n_col < self.hex_grid.cols and
+                                (n_row, n_col) not in placed_positions and
+                                self.hex_grid.grid[n_row][n_col]["unit"] is None and
+                                self.hex_grid.grid[n_row][n_col]["accessible"]):
+                                self.hex_grid.place_unit(player, n_row, n_col)
+                                placed_positions.add((n_row, n_col))
+                                placed = True
+                                break
+                        if placed:
+                            break
+                    if not placed:
+                        # Fallback: offset from center
+                        fallback_row = self.hex_grid.rows // 2 + len(placed_positions)
+                        fallback_col = self.hex_grid.cols // 2
+                        self.hex_grid.place_unit(player, fallback_row, fallback_col)
+                        placed_positions.add((fallback_row, fallback_col))
             except Exception as e:
                 print(f"Error loading level '{level_file}': {e}")
-                # Place both players in default positions
-                self.hex_grid.place_unit(player1, self.hex_grid.rows // 2, self.hex_grid.cols // 2)
-                self.hex_grid.place_unit(player2, self.hex_grid.rows // 2 + 1, self.hex_grid.cols // 2)
+                # Place all players in default positions near center
+                for i, player in enumerate(game.players):
+                    self.hex_grid.place_unit(player, self.hex_grid.rows // 2 + i, self.hex_grid.cols // 2)
                 self.log.append("Failed to load level. Starting default level.")
         else:
-            # Default placement
-            self.hex_grid.place_unit(player1, self.hex_grid.rows // 2, self.hex_grid.cols // 2)
-            self.hex_grid.place_unit(player2, self.hex_grid.rows // 2 + 1, self.hex_grid.cols // 2)
-            self.log.append("Started default level (2-Player).")
+            # Default placement - cluster near center
+            for i, player in enumerate(game.players):
+                self.hex_grid.place_unit(player, self.hex_grid.rows // 2 + i, self.hex_grid.cols // 2)
+            self.log.append(f"Started default level ({len(game.players)}-Player).")
 
         # Load starter kits for both players
         for player in game.players:
@@ -4809,7 +4834,11 @@ class GameScreen:
 
         # Restore game screen state
         gs = save_data.get("game_screen", {})
-        self.turn_phase = gs.get("turn_phase", "player")
+        loaded_phase = gs.get("turn_phase", "player")
+        # Compatibility: old saves used "player1"/"player2", map to new unified phase
+        if loaded_phase in ("player1", "player2"):
+            loaded_phase = "multiplayer_player"
+        self.turn_phase = loaded_phase
         self.log = gs.get("log", [])
         self.transition_target_cycle = gs.get("transition_target_cycle", 0)
         self.turn_cycle_count = gs.get("turn_cycle_count", 0)
@@ -4892,8 +4921,9 @@ class GameScreen:
         self.waiting_for_animation = False
         self.pending_location = None
         self.pending_defeat = False
+        self.pending_defeats = []
         self.current_location_hex = None
-        self.is_player_turn = self.turn_phase in ("player", "player1", "player2")
+        self.is_player_turn = self._is_player_phase()
         self.hex_grid.game_over = False
 
         # Set active turn unit
@@ -4975,20 +5005,22 @@ class GameScreen:
 
     def _setup_multiplayer_player_phase(self):
         """Set up the correct player phase, skipping dead players."""
-        if game.players[0].hp > 0:
-            self.turn_phase = "player1"
-            game.current_player_index = 0
-            self.hex_grid.active_turn_unit = game.players[0]
-        elif game.players[1].hp > 0:
-            self.turn_phase = "player2"
-            game.current_player_index = 1
-            self.hex_grid.active_turn_unit = game.players[1]
-        else:
-            # Both dead - fallback
-            self.turn_phase = "player1"
-            game.current_player_index = 0
-            self.hex_grid.active_turn_unit = game.players[0]
+        for i, player in enumerate(game.players):
+            if player.hp > 0:
+                self.turn_phase = "multiplayer_player"
+                game.current_player_index = i
+                self.hex_grid.active_turn_unit = player
+                self.rebuild_left_panel()
+                return
+        # All dead - fallback
+        self.turn_phase = "multiplayer_player"
+        game.current_player_index = 0
+        self.hex_grid.active_turn_unit = game.players[0]
         self.rebuild_left_panel()
+
+    def _is_player_phase(self):
+        """Check if it's currently any player's turn (single or multiplayer)."""
+        return self.turn_phase in ("player", "multiplayer_player")
 
     def _start_player_turn(self):
         """Reset UI state and center camera on the current active player."""
@@ -5012,41 +5044,37 @@ class GameScreen:
             game.player.reset_double_attack()
             self.turn_phase = "allied"
             self.execute_turn("Allied")
-        elif self.turn_phase == "player1":
-            # Multiplayer: End Player 1's turn
-            player1 = game.players[0]
-            for msg in player1.apply_passive_skills(self.hex_grid, "Turn_End"):
+        elif self.turn_phase == "multiplayer_player":
+            # Multiplayer: End current player's turn
+            current = game.current_player
+            for msg in current.apply_passive_skills(self.hex_grid, "Turn_End"):
                 self.add_to_log(msg)
-            player1.tick_cooldowns()
-            player1.movement_used = player1.action_used = False
-            player1.reset_double_attack()
-            # Switch to Player 2's turn
-            player2 = game.players[1]
-            if player2.hp <= 0:
-                # Player 2 is dead, skip to allied phase
-                self.turn_phase = "allied"
-                self.execute_turn("Allied")
-            else:
-                game.current_player_index = 1
-                self.turn_phase = "player2"
+            current.tick_cooldowns()
+            current.movement_used = current.action_used = False
+            current.reset_double_attack()
+
+            # Find next alive player
+            next_idx = None
+            for i in range(game.current_player_index + 1, len(game.players)):
+                if game.players[i].hp > 0:
+                    next_idx = i
+                    break
+
+            if next_idx is not None:
+                # Switch to next player
+                game.current_player_index = next_idx
+                self.turn_phase = "multiplayer_player"
                 self.is_player_turn = True
-                self.hex_grid.active_turn_unit = player2
+                self.hex_grid.active_turn_unit = game.players[next_idx]
                 self.rebuild_left_panel()
                 self._start_player_turn()
-                # Apply Turn_Start passives for player 2
-                for msg in player2.apply_passive_skills(self.hex_grid, "Turn_Start"):
+                # Apply Turn_Start passives for next player
+                for msg in game.players[next_idx].apply_passive_skills(self.hex_grid, "Turn_Start"):
                     self.add_to_log(msg)
-        elif self.turn_phase == "player2":
-            # Multiplayer: End Player 2's turn
-            player2 = game.players[1]
-            for msg in player2.apply_passive_skills(self.hex_grid, "Turn_End"):
-                self.add_to_log(msg)
-            player2.tick_cooldowns()
-            player2.movement_used = player2.action_used = False
-            player2.reset_double_attack()
-            # Move to allied phase
-            self.turn_phase = "allied"
-            self.execute_turn("Allied")
+            else:
+                # All players done, move to allied phase
+                self.turn_phase = "allied"
+                self.execute_turn("Allied")
         elif self.turn_phase == "allied":
             self.turn_phase = "neutral"
             self.execute_turn("Neutral")
@@ -5091,7 +5119,7 @@ class GameScreen:
                     prev_level_file = self.current_level_file
                     self.load_campaign_level()
                     if game.multiplayer_mode:
-                        self.turn_phase = "player1"
+                        self.turn_phase = "multiplayer_player"
                         game.current_player_index = 0
                         self.hex_grid.active_turn_unit = game.players[0]
                         self.rebuild_left_panel()
@@ -5698,14 +5726,12 @@ class GameScreen:
             player_name = game.player.name if hasattr(game.player, 'name') and game.player.name else "Player"
             label = f"{player_name}'s Turn"
             color = "#66DD66"  # Green for player
-        elif self.turn_phase == "player1" and game.multiplayer_mode and len(game.players) > 0:
-            player_name = game.players[0].name if hasattr(game.players[0], 'name') and game.players[0].name else "Player 1"
+        elif self.turn_phase == "multiplayer_player" and game.multiplayer_mode:
+            idx = game.current_player_index
+            player = game.players[idx]
+            player_name = player.name if hasattr(player, 'name') and player.name else f"Player {idx + 1}"
             label = f"{player_name}'s Turn"
-            color = "#66DD66"
-        elif self.turn_phase == "player2" and game.multiplayer_mode and len(game.players) > 1:
-            player_name = game.players[1].name if hasattr(game.players[1], 'name') and game.players[1].name else "Player 2"
-            label = f"{player_name}'s Turn"
-            color = "#6688FF"  # Blue for player 2
+            color = PLAYER_COLOR_HEX[idx] if idx < len(PLAYER_COLOR_HEX) else "#FFFFFF"
         else:
             phases = {
                 "allied": ("Allied Turn", "#44AAFF"),
@@ -6261,11 +6287,7 @@ class GameScreen:
                             hit_unit.attack_flash = True
                             hit_unit.flash_start = pygame.time.get_ticks()
                             if hit_defeated:
-                                hit_pos = hit_unit.position
-                                if hit_pos:
-                                    self.hex_grid.grid[hit_pos[0]][hit_pos[1]]["unit"] = None
-                                if hit_unit in self.hex_grid.units:
-                                    self.hex_grid.units.remove(hit_unit)
+                                self.pending_defeats.append(hit_unit)
                                 self.add_to_log(f"{hit_unit.name} defeated")
                                 self.add_defeat_notification(hit_unit.name)
                                 self.card_manager.track_card_usage(hit_unit.card_id, {"action": "defeated", "screen": "game"})
@@ -6279,9 +6301,7 @@ class GameScreen:
                         target.attack_flash = True
                         target.flash_start = pygame.time.get_ticks()
                         if result:
-                            self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = None
-                            if target in self.hex_grid.units:
-                                self.hex_grid.units.remove(target)
+                            self.pending_defeats.append(target)
                             self.add_to_log(f"{target.name} defeated")
                             self.add_defeat_notification(target.name)
                             self.card_manager.track_card_usage(target.card_id, {"action": "defeated", "screen": "game"})
@@ -6309,11 +6329,7 @@ class GameScreen:
                             hit_unit.attack_flash = True
                             hit_unit.flash_start = pygame.time.get_ticks()
                             if hit_defeated:
-                                hit_pos = hit_unit.position
-                                if hit_pos:
-                                    self.hex_grid.grid[hit_pos[0]][hit_pos[1]]["unit"] = None
-                                if hit_unit in self.hex_grid.units:
-                                    self.hex_grid.units.remove(hit_unit)
+                                self.pending_defeats.append(hit_unit)
                                 self.add_to_log(f"{hit_unit.name} defeated")
                                 self.add_defeat_notification(hit_unit.name)
                                 self.card_manager.track_card_usage(hit_unit.card_id, {"action": "defeated", "screen": "game"})
@@ -6327,9 +6343,7 @@ class GameScreen:
                         target.attack_flash = True
                         target.flash_start = pygame.time.get_ticks()
                         if result:
-                            self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = None
-                            if target in self.hex_grid.units:
-                                self.hex_grid.units.remove(target)
+                            self.pending_defeats.append(target)
                             self.add_to_log(f"{target.name} defeated")
                             self.add_defeat_notification(target.name)
                             self.card_manager.track_card_usage(target.card_id, {"action": "defeated", "screen": "game"})
@@ -6471,13 +6485,9 @@ class GameScreen:
         message, defeated_units = game.current_player.use_special_attack(target, self.hex_grid)
         self.add_to_log(message)
 
-        # Handle defeated units
+        # Handle defeated units - defer grid removal until animations finish
         for defeated_unit in defeated_units:
-            if defeated_unit.position:
-                row, col = defeated_unit.position
-                self.hex_grid.grid[row][col]["unit"] = None
-            if defeated_unit in self.hex_grid.units:
-                self.hex_grid.units.remove(defeated_unit)
+            self.pending_defeats.append(defeated_unit)
             self.add_to_log(f"{defeated_unit.name} defeated")
             self.add_defeat_notification(defeated_unit.name)
             self.card_manager.track_card_usage(defeated_unit.card_id, {"action": "defeated", "screen": "game"})
@@ -6694,7 +6704,7 @@ class GameScreen:
                 if self.campaign and self.current_level_idx < len(stages):
                     self.load_campaign_level()
                     if game.multiplayer_mode:
-                        self.turn_phase = "player1"
+                        self.turn_phase = "multiplayer_player"
                         game.current_player_index = 0
                         self.hex_grid.active_turn_unit = game.players[0]
                         self.rebuild_left_panel()
@@ -6747,7 +6757,7 @@ class GameScreen:
             if self.campaign and self.current_level_idx < len(stages):
                 self.load_campaign_level()
                 if game.multiplayer_mode:
-                    self.turn_phase = "player1"
+                    self.turn_phase = "multiplayer_player"
                     game.current_player_index = 0
                     self.hex_grid.active_turn_unit = game.players[0]
                     self.rebuild_left_panel()
@@ -6865,35 +6875,33 @@ class GameScreen:
 
             # Determine target player(s) for multiplayer cycling
             if game.multiplayer_mode and len(game.players) >= 2:
+                num_p = len(game.players)
                 cycle = self.transition_target_cycle
-                p1, p2 = game.players[0], game.players[1]
 
-                if cycle == 0:
-                    target_player = p1
-                    target_label = p1.name or "Player 1"
-                elif cycle == 1:
-                    target_player = p2
-                    target_label = p2.name or "Player 2"
+                if cycle < num_p:
+                    target_player = game.players[cycle]
+                    target_label = target_player.name or f"Player {cycle + 1}"
                 else:
-                    target_player = p1  # Will also apply to p2
-                    target_label = "Both Players"
+                    target_player = game.players[0]  # Primary target for "All" cycle
+                    target_label = "All Players"
 
                 # Roll and apply to primary target
                 selected_index, result_text, log_messages = game.transition_manager.process_transition_turn_with_index(
                     self.hex_grid, target_player
                 )
 
-                # For "Both" cycle, also apply same outcome to player 2
-                if cycle == 2 and 0 <= selected_index < len(all_outcomes):
+                # For "All" cycle, also apply same outcome to remaining players
+                if cycle >= num_p and 0 <= selected_index < len(all_outcomes):
                     outcome = all_outcomes[selected_index]
                     outcome_type = outcome.get("type", "none")
                     params = outcome.get("params", {})
-                    extra_result = game.transition_manager.apply_outcome(outcome_type, params, self.hex_grid, p2)
-                    if extra_result:
-                        result_text += f"\n{extra_result}"
-                        log_messages.append(extra_result)
+                    for p in game.players[1:]:
+                        extra_result = game.transition_manager.apply_outcome(outcome_type, params, self.hex_grid, p)
+                        if extra_result:
+                            result_text += f"\n{extra_result}"
+                            log_messages.append(extra_result)
 
-                self.transition_target_cycle = (self.transition_target_cycle + 1) % 3
+                self.transition_target_cycle = (self.transition_target_cycle + 1) % (num_p + 1)
             else:
                 target_label = ""
                 selected_index, result_text, log_messages = game.transition_manager.process_transition_turn_with_index(
@@ -6919,7 +6927,7 @@ class GameScreen:
             self.add_to_log(f"[Transition Error]")
             # Skip to player phase on error (don't call advance_turn which would re-process transition)
             if game.multiplayer_mode:
-                self.turn_phase = "player1"
+                self.turn_phase = "multiplayer_player"
                 game.current_player_index = 0
                 self.hex_grid.active_turn_unit = game.players[0]
                 self.rebuild_left_panel()
@@ -6934,15 +6942,16 @@ class GameScreen:
         # Update animations for all players (multiplayer or single player)
         all_players = self.hex_grid.players if self.hex_grid.players else ([self.hex_grid.player] if self.hex_grid.player else [])
         for player in all_players:
-            if player and player.animating:
+            if player and (player.animating or player.attack_flash or player.damage_text):
                 player.update_animation(self.hex_grid)
-                animating = True
+                if player.animating:
+                    animating = True
         for unit in self.hex_grid.units:
             if unit.animating:
                 unit.update_animation(self.hex_grid)  # Pass grid
                 animating = True
-            elif unit.damage_text:
-                unit.update_animation(self.hex_grid)  # Update damage text fade only
+            elif unit.damage_text or unit.attack_flash:
+                unit.update_animation(self.hex_grid)  # Update damage text/flash fade
 
         # Check for active attack animations
         if self.hex_grid.attack_anims.is_animating():
@@ -6954,6 +6963,17 @@ class GameScreen:
             for msg in messages:
                 self.add_to_log(msg)
             animating = True  # Keep animating while there are pending arrivals
+
+        # Process deferred unit removals once all animations finish
+        if not animating and self.pending_defeats:
+            for unit in self.pending_defeats:
+                if unit.position:
+                    row, col = unit.position
+                    if self.hex_grid.grid[row][col]["unit"] is unit:
+                        self.hex_grid.grid[row][col]["unit"] = None
+                if unit in self.hex_grid.units:
+                    self.hex_grid.units.remove(unit)
+            self.pending_defeats.clear()
 
         return animating
 
@@ -6985,7 +7005,7 @@ class GameScreen:
             pause_menu_screen.initialize_screen()
             return
         # Keyboard shortcuts to open menu tabs (i/c/p/s/q)
-        if event.type == pygame.KEYDOWN and self.turn_phase in ("player", "player1", "player2"):
+        if event.type == pygame.KEYDOWN and self._is_player_phase():
             tab_map = {
                 pygame.K_i: "Inventory",
                 pygame.K_c: "Crafting",
@@ -7034,8 +7054,8 @@ class GameScreen:
             if self._is_click_on_ui(pos):
                 return
             hex_pos = self.hex_grid.get_hex_at_pixel(pos[0], pos[1])
-            # Check if it's the current player's turn (single-player: "player", multiplayer: "player1" or "player2")
-            is_player_turn = self.turn_phase in ("player", "player1", "player2")
+            # Check if it's the current player's turn (single-player: "player", multiplayer: "multiplayer_player")
+            is_player_turn = self._is_player_phase()
             if event.button == 1 and hex_pos and is_player_turn:
                 self.hex_grid.selected_hex = hex_pos
                 unit = self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"]
@@ -7098,11 +7118,7 @@ class GameScreen:
                                 hit_unit.attack_flash = True
                                 hit_unit.flash_start = pygame.time.get_ticks()
                                 if hit_defeated:
-                                    hit_pos = hit_unit.position
-                                    if hit_pos:
-                                        self.hex_grid.grid[hit_pos[0]][hit_pos[1]]["unit"] = None
-                                    if hit_unit in self.hex_grid.units:
-                                        self.hex_grid.units.remove(hit_unit)
+                                    self.pending_defeats.append(hit_unit)
                                     self.add_to_log(f"{hit_unit.name} defeated")
                                     self.add_defeat_notification(hit_unit.name)
                                     self.card_manager.track_card_usage(hit_unit.card_id, {"action": "defeated", "screen": "game"})
@@ -7117,8 +7133,7 @@ class GameScreen:
                             unit.attack_flash = True
                             unit.flash_start = pygame.time.get_ticks()
                             if result:
-                                self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = None
-                                self.hex_grid.units.remove(unit)
+                                self.pending_defeats.append(unit)
                                 self.add_to_log(f"{unit.name} defeated")
                                 self.add_defeat_notification(unit.name)
                                 self.card_manager.track_card_usage(unit.card_id, {"action": "defeated", "screen": "game"})
@@ -7164,8 +7179,7 @@ class GameScreen:
                         unit.attack_flash = True
                         unit.flash_start = pygame.time.get_ticks()
                         if defeated:
-                            self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = None
-                            self.hex_grid.units.remove(unit)
+                            self.pending_defeats.append(unit)
                             self.add_to_log(f"{unit.name} defeated")
                             self.add_defeat_notification(unit.name)
                             self.card_manager.track_card_usage(unit.card_id, {"action": "defeated", "screen": "game"})
@@ -7292,19 +7306,20 @@ class GameScreen:
                                 loc_data = self.hex_grid.location_data.get((hex_pos[0], hex_pos[1]))
                                 loc_card = loc_data.get("card") if loc_data else None
 
-                                # Draw location card if unassigned
-                                if not loc_card:
-                                    loc_card, draw_msg = self.hex_grid.draw_location_card(
-                                        hex_pos[0], hex_pos[1], self.card_manager
-                                    )
-                                    self.add_to_log(draw_msg)
-
                                 if loc_card:
                                     # Queue location UI to show after movement animation completes
                                     self.pending_location = {
                                         "card": loc_card,
                                         "pos": hex_pos,
                                         "hex_grid": self.hex_grid
+                                    }
+                                else:
+                                    # Defer card draw until animation finishes
+                                    self.pending_location = {
+                                        "card": None,
+                                        "pos": hex_pos,
+                                        "hex_grid": self.hex_grid,
+                                        "needs_draw": True
                                     }
                                     # Don't show immediately - will show after animation in draw()
 
@@ -7414,7 +7429,7 @@ class GameScreen:
                     self.log_toggle_button.set_relative_position((log_x, 45))
                 return
 
-            is_player_turn = self.turn_phase in ("player", "player1", "player2")
+            is_player_turn = self._is_player_phase()
 
             # Action choice popup button clicks
             if self.action_choice_open:
@@ -7589,7 +7604,7 @@ class GameScreen:
         screen.fill(DARK_CHARCOAL)
         self._update_autopan()
         current_player = game.current_player
-        is_player_turn = self.turn_phase in ("player", "player1", "player2")
+        is_player_turn = self._is_player_phase()
         # Check animation state early so range displays are accurate this frame
         self.animating = self.check_animations()
         player_alive = current_player.hp > 0
@@ -7770,8 +7785,17 @@ class GameScreen:
         if self.pending_location and not self.animating:
             loc_data = self.pending_location
             self.pending_location = None
-            game.current_screen = "location"
-            location_screen.initialize_screen(loc_data["card"], loc_data["pos"], loc_data["hex_grid"])
+            # Draw location card now if deferred from movement
+            if loc_data.get("needs_draw"):
+                loc_card, draw_msg = loc_data["hex_grid"].draw_location_card(
+                    loc_data["pos"][0], loc_data["pos"][1], self.card_manager
+                )
+                if draw_msg:
+                    self.add_to_log(draw_msg)
+                loc_data["card"] = loc_card
+            if loc_data["card"]:
+                game.current_screen = "location"
+                location_screen.initialize_screen(loc_data["card"], loc_data["pos"], loc_data["hex_grid"])
             return
         # Check for pending defeat screen (show after death animation completes)
         if (self.pending_defeat or self.hex_grid.game_over) and not self.animating:
@@ -7780,7 +7804,7 @@ class GameScreen:
             defeat_screen.initialize_screen()
             return
         # Process turn queue for consecutive unit animations
-        if self.turn_phase not in ("player", "player1", "player2"):
+        if not self._is_player_phase():
             self.update_turn_queue()
 
 # Game Settings screen
@@ -7859,7 +7883,7 @@ class PauseMenuScreen:
                 game.current_screen = "game"
                 game_screen.initialize_screen()
             elif text == "Save Game":
-                is_player_turn = game_screen.turn_phase in ("player", "player1", "player2")
+                is_player_turn = game_screen._is_player_phase()
                 if is_player_turn:
                     success, result = game_screen.save_manager.save_game(
                         game, game_screen, save_type="manual", save_label="Manual Save"
@@ -8652,7 +8676,7 @@ class Game:
         self.instance_manager = InstanceManager(self.card_manager)
         self.transition_manager = TransitionManager(self.card_manager, self.instance_manager)
         # Multiplayer support
-        self.players = []  # List of players for multiplayer [player1, player2]
+        self.players = []  # List of players for multiplayer (2-4 players)
         self.current_player_index = 0  # Whose turn it is (0 or 1)
         self.multiplayer_mode = False  # True when in 2-player mode
         self.quest_managers = []  # Per-player quest managers in multiplayer

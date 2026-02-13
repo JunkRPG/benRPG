@@ -2224,23 +2224,29 @@ class HexGrid:
                         hex_surface.blit(highlight_surf, (cx - radius, cy - radius))
                     health_bar_y = pos[1] - radius - 5  # Position health bar just above the circle
 
-                    # Draw P1/P2 badge for multiplayer mode
-                    if isinstance(unit, Player) and hasattr(unit, 'player_number') and len(all_players) > 1:
-                        badge_font = pygame.font.Font(None, 16)
-                        badge_text = f"P{unit.player_number}"
-                        badge_surface = badge_font.render(badge_text, True, colors['WHITE'])
-                        badge_w = badge_surface.get_width() + 6
-                        badge_h = badge_surface.get_height() + 4
-                        badge_x = int(pos[0]) - radius - badge_w + 2
-                        badge_y = int(pos[1]) - radius - badge_h + 2
-                        # Draw badge background
-                        badge_bg = pygame.Surface((badge_w, badge_h), pygame.SRCALPHA)
-                        badge_color = unit.player_color if hasattr(unit, 'player_color') else (0, 200, 0)
-                        pygame.draw.rect(badge_bg, (*badge_color, 200), (0, 0, badge_w, badge_h), border_radius=3)
-                        hex_surface.blit(badge_bg, (badge_x, badge_y))
-                        hex_surface.blit(badge_surface, (badge_x + 3, badge_y + 2))
+                # --- Name, badge, health bar, damage text (drawn for both image and circle tokens) ---
 
-                    # Draw unit name above health bar (with shadow for readability)
+                # Draw player name badge for multiplayer mode
+                if isinstance(unit, Player) and hasattr(unit, 'player_number') and len(all_players) > 1:
+                    badge_font = pygame.font.Font(None, max(14, int(self.hex_size * 0.38)))
+                    player_name = unit.name if hasattr(unit, 'name') and unit.name else f"P{unit.player_number}"
+                    badge_text = f"P{unit.player_number}: {player_name}"
+                    badge_surface = badge_font.render(badge_text, True, colors['WHITE'])
+                    badge_w = badge_surface.get_width() + 8
+                    badge_h = badge_surface.get_height() + 4
+                    badge_x = int(pos[0]) - badge_w // 2
+                    badge_y = int(health_bar_y) - badge_h - 14
+                    # Draw badge background with player color
+                    badge_bg = pygame.Surface((badge_w, badge_h), pygame.SRCALPHA)
+                    badge_color = unit.player_color if hasattr(unit, 'player_color') else (0, 200, 0)
+                    pygame.draw.rect(badge_bg, (*badge_color, 200), (0, 0, badge_w, badge_h), border_radius=3)
+                    pygame.draw.rect(badge_bg, (255, 255, 255, 80), (0, 0, badge_w, badge_h), width=1, border_radius=3)
+                    hex_surface.blit(badge_bg, (badge_x, badge_y))
+                    hex_surface.blit(badge_surface, (badge_x + 4, badge_y + 2))
+
+                # Draw unit name above health bar (with shadow for readability)
+                # In multiplayer, player names are shown in the badge above, so skip the plain name label
+                if not (isinstance(unit, Player) and len(all_players) > 1):
                     if isinstance(unit, Player):
                         name = unit.name if hasattr(unit, 'name') and unit.name else unit.class_name
                     else:
@@ -2253,33 +2259,36 @@ class HexGrid:
                     for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                         hex_surface.blit(shadow_surface, text_rect.move(dx, dy))
                     hex_surface.blit(text_surface, text_rect)
-                    # Draw damage text if present (above the name) with float-up and fade
-                    # elapsed < 0 means the damage_time was set in the future (delayed by attack animation)
-                    if unit.damage_text and (pygame.time.get_ticks() - unit.damage_time) >= 0:
-                        elapsed = pygame.time.get_ticks() - unit.damage_time
-                        duration = 1000  # matches DAMAGE_TEXT_DURATION
-                        progress = min(1.0, elapsed / duration)
-                        # Float upward by 20px over the duration
-                        float_offset = int(progress * 20)
-                        # Fade out: full opacity for first half, then fade
-                        alpha = 255 if progress < 0.5 else int(255 * (1.0 - (progress - 0.5) * 2))
-                        alpha = max(0, alpha)
-                        # Use larger font for damage numbers
-                        dmg_font_size = max(20, int(self.hex_size * 0.45))
-                        dmg_font = pygame.font.Font(None, dmg_font_size)
-                        # Green for heals (no minus sign), red for damage
-                        is_heal = not unit.damage_text.startswith("-")
-                        dmg_color = (80, 255, 80) if is_heal else (255, 60, 60)
-                        dmg_text_surf = dmg_font.render(unit.damage_text, True, dmg_color)
-                        dmg_shadow_surf = dmg_font.render(unit.damage_text, True, (0, 0, 0))
-                        damage_rect = dmg_text_surf.get_rect(centerx=pos[0], bottom=text_rect.top - 2 - float_offset)
-                        # Create alpha surface for fade
-                        fade_surf = pygame.Surface((dmg_text_surf.get_width() + 4, dmg_text_surf.get_height() + 4), pygame.SRCALPHA)
-                        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                            fade_surf.blit(dmg_shadow_surf, (2 + dx, 2 + dy))
-                        fade_surf.blit(dmg_text_surf, (2, 2))
-                        fade_surf.set_alpha(alpha)
-                        hex_surface.blit(fade_surf, (damage_rect.x - 2, damage_rect.y - 2))
+
+                # Draw damage text if present (above the name/badge) with float-up and fade
+                # elapsed < 0 means the damage_time was set in the future (delayed by attack animation)
+                if unit.damage_text and (pygame.time.get_ticks() - unit.damage_time) >= 0:
+                    elapsed = pygame.time.get_ticks() - unit.damage_time
+                    duration = 1000  # matches DAMAGE_TEXT_DURATION
+                    progress = min(1.0, elapsed / duration)
+                    # Float upward by 20px over the duration
+                    float_offset = int(progress * 20)
+                    # Fade out: full opacity for first half, then fade
+                    alpha = 255 if progress < 0.5 else int(255 * (1.0 - (progress - 0.5) * 2))
+                    alpha = max(0, alpha)
+                    # Use larger font for damage numbers
+                    dmg_font_size = max(20, int(self.hex_size * 0.45))
+                    dmg_font = pygame.font.Font(None, dmg_font_size)
+                    # Green for heals (no minus sign), red for damage
+                    is_heal = not unit.damage_text.startswith("-")
+                    dmg_color = (80, 255, 80) if is_heal else (255, 60, 60)
+                    dmg_text_surf = dmg_font.render(unit.damage_text, True, dmg_color)
+                    dmg_shadow_surf = dmg_font.render(unit.damage_text, True, (0, 0, 0))
+                    dmg_base_y = int(health_bar_y) - 26  # Above health bar area
+                    damage_rect = dmg_text_surf.get_rect(centerx=pos[0], bottom=dmg_base_y - float_offset)
+                    # Create alpha surface for fade
+                    fade_surf = pygame.Surface((dmg_text_surf.get_width() + 4, dmg_text_surf.get_height() + 4), pygame.SRCALPHA)
+                    for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                        fade_surf.blit(dmg_shadow_surf, (2 + dx, 2 + dy))
+                    fade_surf.blit(dmg_text_surf, (2, 2))
+                    fade_surf.set_alpha(alpha)
+                    hex_surface.blit(fade_surf, (damage_rect.x - 2, damage_rect.y - 2))
+
                 unit.draw_health_bar(hex_surface, (pos[0], health_bar_y))
 
                 # Draw defeated X marker for dead players
