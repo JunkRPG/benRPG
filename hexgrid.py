@@ -2224,6 +2224,34 @@ class HexGrid:
                         hex_surface.blit(highlight_surf, (cx - radius, cy - radius))
                     health_bar_y = pos[1] - radius - 5  # Position health bar just above the circle
 
+                # --- Defensive posture indicator ---
+                if isinstance(unit, Player) and hasattr(unit, 'defensive_posture') and unit.defensive_posture and unit.defended_hex:
+                    # Draw a shield-like line from player center toward defended hex
+                    def_center = self.get_hex_center(*unit.defended_hex)
+                    px, py = int(pos[0]), int(pos[1])
+                    dx = def_center[0] - px
+                    dy = def_center[1] - py
+                    length = math.hypot(dx, dy)
+                    if length > 0:
+                        # Normalize and scale to token edge
+                        edge_dist = max(12, int(self.hex_size * 0.4))
+                        nx, ny = dx / length, dy / length
+                        # Shield arc: draw a thick line segment perpendicular to the direction
+                        # at the edge of the token
+                        tip_x = px + int(nx * edge_dist)
+                        tip_y = py + int(ny * edge_dist)
+                        perp_x, perp_y = -ny, nx
+                        arc_half = max(8, int(self.hex_size * 0.28))
+                        p1 = (int(tip_x + perp_x * arc_half), int(tip_y + perp_y * arc_half))
+                        p2 = (int(tip_x - perp_x * arc_half), int(tip_y - perp_y * arc_half))
+                        # Draw shield arc (thick colored line)
+                        shield_color = (80, 160, 255)
+                        pygame.draw.line(hex_surface, (20, 40, 80), p1, p2, max(4, int(self.hex_size * 0.12)))
+                        pygame.draw.line(hex_surface, shield_color, p1, p2, max(3, int(self.hex_size * 0.09)))
+                        # Small direction arrow tip
+                        arrow_tip = (int(tip_x + nx * 4), int(tip_y + ny * 4))
+                        pygame.draw.circle(hex_surface, shield_color, arrow_tip, max(2, int(self.hex_size * 0.05)))
+
                 # --- Name, badge, health bar, damage text (drawn for both image and circle tokens) ---
 
                 # Draw player name badge for multiplayer mode

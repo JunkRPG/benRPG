@@ -3782,6 +3782,8 @@ class GameScreen:
         self.drag_button = None  # Track which button started the drag (2=middle, 3=right)
         self.drag_start_x = self.drag_start_y = self.start_view_offset_x = self.start_view_offset_y = 0
         self.player_mode = "movement"
+        self.defensive_hex_options = []  # Valid hexes for defensive posture selection
+        self.defend_button = None        # Defend button on left panel
         self.selected_skill = None  # Currently selected skill for use
         self.skill_buttons = []     # List of (button, skill_card) tuples
         self.skills_button = None   # Skills menu button
@@ -5026,12 +5028,36 @@ class GameScreen:
         """Reset UI state and center camera on the current active player."""
         self.player_mode = "movement"
         self.selected_attack = None
+        self.defensive_hex_options = []
         self._close_attack_submenu()
-        # Smooth pan camera to the active player
+        # Clear defensive posture at start of this player's turn
         current_player = game.current_player
+        current_player.clear_defensive_posture()
+        # Smooth pan camera to the active player
         if current_player and current_player.position:
             row, col = current_player.position
             self._start_autopan(row, col)
+
+    def _get_defense_hex_options(self, player):
+        """Get the hexes a player can defend: 6 adjacent + mist shadow neighbors."""
+        if not player.position:
+            return []
+        row, col = player.position
+        options = []
+        # 6 adjacent hexes (all neighbors at distance 1, regardless of accessibility)
+        adj_hexes = self.hex_grid.get_hexes_at_distance(player.position, 1)
+        for pos in adj_hexes:
+            r, c = pos
+            if 0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols:
+                options.append(pos)
+        # Mist shadow direction hexes (nearest hex in each diagonal)
+        mist_hexes = self.hex_grid.calculate_range(player.position, 2, "mist_shadow", False, False)
+        # Only keep the nearest mist shadow hex in each direction (distance 2)
+        for mh in mist_hexes:
+            if mh not in options and 0 <= mh[0] < self.hex_grid.rows and 0 <= mh[1] < self.hex_grid.cols:
+                if self.hex_grid.hex_distance(player.position, mh) <= 2:
+                    options.append(mh)
+        return options
 
     def advance_turn(self):
         self._close_action_choice_popup()
@@ -5513,6 +5539,11 @@ class GameScreen:
             self.left_panel_buttons.append(btn)
             y_pos += 40
 
+        # Add Defend button
+        self.defend_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Defend", manager)
+        self.left_panel_buttons.append(self.defend_button)
+        y_pos += 40
+
         self.ui_elements.extend(self.left_panel_buttons)
 
         self.ui_elements[0].set_text("<font color='#FFFFFF' size=4>" + "<br>".join(reversed(self.log)) + "</font>")
@@ -5788,6 +5819,11 @@ class GameScreen:
             self.skill_buttons.append((btn, skill_card))
             self.left_panel_buttons.append(btn)
             y_pos += 40
+
+        # Add Defend button
+        self.defend_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Defend", manager)
+        self.left_panel_buttons.append(self.defend_button)
+        y_pos += 40
 
         self.ui_elements.extend(self.left_panel_buttons)
         self.update_turn_label()
@@ -7061,6 +7097,30 @@ class GameScreen:
                 unit = self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"]
                 self.show_stats(unit, hex_pos)
                 current_player = game.current_player
+
+                # Handle defensive posture hex selection
+                if self.player_mode == "defensive" and hex_pos in self.defensive_hex_options:
+                    current_player.defensive_posture = True
+                    current_player.defended_hex = hex_pos
+                    current_player.defense_value = current_player.get_shield_defense_value()
+                    shield_name = ""
+                    if current_player.equipped_accessory:
+                        acc_data = current_player.equipped_accessory.get_current_data()
+                        if acc_data.get("Type") == "Shield":
+                            shield_name = f" with {acc_data.get('Name', 'shield')}"
+                    player_name = current_player.name if current_player.name else current_player.class_name
+                    self.add_to_log(f"{player_name} takes a defensive posture{shield_name}! (Defense: {current_player.defense_value})")
+                    self.player_mode = "movement"
+                    self.defensive_hex_options = []
+                    self.advance_turn()
+                    return
+                elif self.player_mode == "defensive":
+                    # Clicked a non-valid hex while in defensive mode - cancel
+                    self.player_mode = "movement"
+                    self.defensive_hex_options = []
+                    self.add_to_log("Cancelled defensive posture selection")
+                    return
+
                 # Auto-detect available actions when clicking on a unit (skip in recruit/skill modes)
                 if not self.selected_attack and unit and isinstance(unit, Unit) and self.player_mode not in ("recruit", "skill", "item"):
                     available_actions = []
@@ -7336,8 +7396,26 @@ class GameScreen:
                 self.drag_start_x, self.drag_start_y = pos
                 self.start_view_offset_x, self.start_view_offset_y = self.hex_grid.view_offset_x, self.hex_grid.view_offset_y
         elif event.type == pygame.MOUSEBUTTONUP and event.button in (2, 3):
+            was_drag = False
             if hasattr(self, 'drag_button') and event.button == self.drag_button:
+                # Check if mouse actually moved (drag vs click)
+                dx = abs(event.pos[0] - self.drag_start_x)
+                dy = abs(event.pos[1] - self.drag_start_y)
+                was_drag = dx > 5 or dy > 5
                 self.dragging = False
+            # Right-click on player's own hex without dragging = enter defend mode
+            if event.button == 3 and not was_drag and self._is_player_phase():
+                hex_pos = self.hex_grid.get_hex_at_pixel(event.pos[0], event.pos[1])
+                current_player = game.current_player
+                if hex_pos and hex_pos == current_player.position and current_player.hp > 0:
+                    if self.player_mode == "defensive":
+                        self.player_mode = "movement"
+                        self.defensive_hex_options = []
+                        self.add_to_log("Cancelled defensive posture selection")
+                    else:
+                        self.player_mode = "defensive"
+                        self.defensive_hex_options = self._get_defense_hex_options(current_player)
+                        self.add_to_log("Choose a direction to defend (click a highlighted hex)")
         elif event.type == pygame.MOUSEMOTION:
             # Update hover hex tracking (always, even when not dragging)
             if not self._is_click_on_ui(event.pos):
@@ -7502,6 +7580,20 @@ class GameScreen:
                 self.advance_turn()
                 return
 
+            # Defend button
+            if hasattr(self, 'defend_button') and self.defend_button and event.ui_element == self.defend_button and is_player_turn:
+                current_player = game.current_player
+                if self.player_mode == "defensive":
+                    # Cancel defensive mode
+                    self.player_mode = "movement"
+                    self.defensive_hex_options = []
+                    self.add_to_log("Cancelled defensive posture selection")
+                else:
+                    self.player_mode = "defensive"
+                    self.defensive_hex_options = self._get_defense_hex_options(current_player)
+                    self.add_to_log("Choose a direction to defend (click a highlighted hex)")
+                return
+
             if event.ui_element in self.left_panel_buttons:
                 text = event.ui_element.text
                 # Close popups when clicking any left panel button
@@ -7655,6 +7747,11 @@ class GameScreen:
             item_hexes = set(self.hex_grid.get_adjacent_hexes(*current_player.position))
             item_hexes.add(current_player.position)
             attack_ranges.append({"range": item_hexes, "color": (0, 200, 100, 200), "outline": (0, 140, 70, 200), "inset": 0.75})
+
+        # In defensive posture selection mode, show blue rings on valid defense hexes
+        if is_player_turn and self.player_mode == "defensive" and self.defensive_hex_options:
+            defense_hexes = set(self.defensive_hex_options)
+            attack_ranges.append({"range": defense_hexes, "color": (60, 140, 220, 200), "outline": (40, 100, 180, 220), "inset": 0.70})
 
         # Get targetable units for visual highlighting from all attack ranges
         targetable_units = None

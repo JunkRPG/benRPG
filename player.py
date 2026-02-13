@@ -131,6 +131,11 @@ class Player:
         # Piercing Shot passive: projectile shots go through units
         self.piercing_projectile = (self.special_attack == "Piercing Shot")
 
+        # Defensive posture
+        self.defensive_posture = False      # Currently defending?
+        self.defended_hex = None            # (row, col) of the hex being defended
+        self.defense_value = 0              # Current defense strength (base or shield)
+
         # Multiplayer attributes
         self.player_number = 1  # 1 or 2 (for multiplayer mode)
         self.player_color = (0, 200, 0)  # Default green, customized per player
@@ -901,7 +906,7 @@ class Player:
         card_type = card_data.get("Type", "")
 
         # Check if this is a valid accessory
-        valid_accessory_types = ["Tool_Belt", "Accessory", "Belt", "Pouch", "Ammunition"]
+        valid_accessory_types = ["Tool_Belt", "Accessory", "Belt", "Pouch", "Ammunition", "Shield"]
         if card_type not in valid_accessory_types:
             return "This item cannot be equipped as an accessory"
 
@@ -1534,11 +1539,12 @@ class Player:
 
         return True, f"Built {location_name}!", location_plan_card
 
-    def set_damage_text(self, damage, delay=0, anim=None):
+    def set_damage_text(self, damage, delay=0, anim=None, text=None):
         """Set the damage text and timestamp when damage is taken.
         delay: ms to wait before showing the text (syncs with attack animations).
-        anim: AttackAnimation object to tie health bar offset to actual animation state."""
-        self.damage_text = f"-{damage}"
+        anim: AttackAnimation object to tie health bar offset to actual animation state.
+        text: Optional custom text to display instead of the default '-damage'."""
+        self.damage_text = text if text else f"-{damage}"
         self.damage_time = pygame.time.get_ticks() + delay
         if anim:
             self._pending_damage_anim = anim
@@ -1546,6 +1552,73 @@ class Player:
         elif delay > 0:
             self._hp_visual_offset = damage
             self._hp_visual_offset_until = pygame.time.get_ticks() + delay
+
+    def take_damage(self, damage, attacker_pos=None, grid=None):
+        """Apply damage with defensive posture check (probability-based).
+        Block chance = defense_value / damage (capped at 100%).
+        On failed block with shield: shield breaks, absorbs defense_value damage.
+        Returns (actual_damage, blocked, shield_broken) tuple."""
+        if self.defensive_posture and self.defended_hex and attacker_pos and grid and damage > 0:
+            if self._is_attack_from_defended_direction(attacker_pos, grid):
+                block_chance = min(1.0, self.defense_value / damage)
+                if random.random() < block_chance:
+                    # Block succeeded — no damage
+                    return (0, True, False)
+                else:
+                    # Block failed
+                    has_shield = False
+                    if self.equipped_accessory:
+                        acc_data = self.equipped_accessory.get_current_data()
+                        if acc_data.get("Type") == "Shield":
+                            has_shield = True
+                    if has_shield:
+                        # Shield absorbs its defense value, then breaks
+                        absorbed = min(self.defense_value, damage)
+                        actual = damage - absorbed
+                        self._break_shield()
+                        if actual > 0:
+                            self.hp -= actual
+                        return (actual, False, True)
+                    else:
+                        # No shield — full damage on failed block
+                        self.hp -= damage
+                        return (damage, False, False)
+
+        self.hp -= damage
+        return (damage, False, False)
+
+    def _is_attack_from_defended_direction(self, attacker_pos, grid):
+        """Check if an attack originates from or passes through the defended hex."""
+        if not self.defended_hex or not self.position:
+            return False
+        if attacker_pos == self.defended_hex:
+            return True
+        line = grid.get_line_between(attacker_pos[0], attacker_pos[1],
+                                     self.position[0], self.position[1])
+        return self.defended_hex in line
+
+    def _break_shield(self):
+        """Break the equipped shield — revert to state 1 and return to inventory."""
+        if self.equipped_accessory:
+            shield = self.equipped_accessory
+            shield.current_state = 1
+            self.inventory.append(shield)
+            self.equipped_accessory = None
+            self.defense_value = 5
+
+    def clear_defensive_posture(self):
+        """Clear defensive posture at start of player's next turn."""
+        self.defensive_posture = False
+        self.defended_hex = None
+        self.defense_value = 0
+
+    def get_shield_defense_value(self):
+        """Get defense value from equipped shield, or base defense if none."""
+        if self.equipped_accessory:
+            acc_data = self.equipped_accessory.get_current_data()
+            if acc_data.get("Type") == "Shield":
+                return int(acc_data.get("Defense_Value", 10))
+        return 5
 
     def animate_move(self, grid, new_row, new_col):
         """Start path-based movement animation from current position to new position."""

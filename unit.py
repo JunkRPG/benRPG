@@ -90,13 +90,22 @@ class Unit:
                     tgt = grid.get_hex_center(*player.position)
                     anim = grid.attack_anims.create_melee(src, tgt)
                     delay = grid.attack_anims.get_max_remaining_ms()
-                player.hp -= damage
-                player.set_damage_text(damage, delay, anim=anim)
+                actual_damage, blocked, shield_broken = player.take_damage(damage, self.position, grid)
+                if blocked:
+                    player.set_damage_text(0, delay, anim=anim, text="BLOCKED")
+                    self.attack_flash = True
+                    self.flash_start = pygame.time.get_ticks() + delay
+                    log.append(f"{self.name} attacked {player.class_name} — blocked by defense!")
+                    return log
+                if shield_broken:
+                    absorbed = damage - actual_damage
+                    log.append(f"{player.class_name}'s shield broke! (absorbed {absorbed} damage)")
+                player.set_damage_text(actual_damage, delay, anim=anim)
                 self.attack_flash = True
                 self.flash_start = pygame.time.get_ticks() + delay
-                log.append(f"{self.name} attacked {player.class_name} for {damage} damage")
+                log.append(f"{self.name} attacked {player.class_name} for {actual_damage} damage")
                 if self.special_skill == "Life Drain":
-                    heal = damage // 2
+                    heal = actual_damage // 2
                     self.hp = min(self.hp + heal, self.max_hp)
                     log.append(f"{self.name} drained {heal} HP!")
                 if player.hp <= 0:
@@ -115,11 +124,20 @@ class Unit:
                     tgt = grid.get_hex_center(*player.position)
                     anim = grid.attack_anims.create_projectile(src, tgt)
                     delay = grid.attack_anims.get_max_remaining_ms()
-                player.hp -= damage
-                player.set_damage_text(damage, delay, anim=anim)
+                actual_damage, blocked, shield_broken = player.take_damage(damage, self.position, grid)
+                if blocked:
+                    player.set_damage_text(0, delay, anim=anim, text="BLOCKED")
+                    self.attack_flash = True
+                    self.flash_start = pygame.time.get_ticks() + delay
+                    log.append(f"{self.name} attacked {player.class_name} with projectile — blocked by defense!")
+                    return log
+                if shield_broken:
+                    absorbed = damage - actual_damage
+                    log.append(f"{player.class_name}'s shield broke! (absorbed {absorbed} damage)")
+                player.set_damage_text(actual_damage, delay, anim=anim)
                 self.attack_flash = True
                 self.flash_start = pygame.time.get_ticks() + delay
-                log.append(f"{self.name} attacked {player.class_name} with projectile for {damage} damage")
+                log.append(f"{self.name} attacked {player.class_name} with projectile for {actual_damage} damage")
                 if player.hp <= 0:
                     all_players = grid.players if grid.players else [grid.player]
                     if all(p.hp <= 0 for p in all_players):
@@ -511,25 +529,44 @@ class Unit:
                 anim = grid.attack_anims.create_melee(src, tgt)
             delay = grid.attack_anims.get_max_remaining_ms()
 
-        target.hp -= damage
-        target.set_damage_text(damage, delay, anim=anim)
-        self.attack_flash = True
-        self.flash_start = pygame.time.get_ticks() + delay
-
         log = []
         if is_player:
             target_name = target.class_name
+            actual_damage, blocked, shield_broken = target.take_damage(damage, self.position, grid)
+            if blocked:
+                target.set_damage_text(0, delay, anim=anim, text="BLOCKED")
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks() + delay
+                log.append(f"{self.name} attacked {target_name} — blocked by defense!")
+                return log
+            if shield_broken:
+                absorbed = damage - actual_damage
+                log.append(f"{target_name}'s shield broke! (absorbed {absorbed} damage)")
+            target.set_damage_text(actual_damage, delay, anim=anim)
+            self.attack_flash = True
+            self.flash_start = pygame.time.get_ticks() + delay
+            if attack_type == "projectile":
+                log.append(f"{self.name} attacked {target_name} with projectile for {actual_damage} damage")
+            else:
+                log.append(f"{self.name} attacked {target_name} for {actual_damage} damage")
+                if self.special_skill == "Life Drain":
+                    heal = actual_damage // 2
+                    self.hp = min(self.hp + heal, self.max_hp)
+                    log.append(f"{self.name} drained {heal} HP!")
         else:
             target_name = target.name
-
-        if attack_type == "projectile":
-            log.append(f"{self.name} attacked {target_name} with projectile for {damage} damage")
-        else:
-            log.append(f"{self.name} attacked {target_name} for {damage} damage")
-            if self.special_skill == "Life Drain":
-                heal = damage // 2
-                self.hp = min(self.hp + heal, self.max_hp)
-                log.append(f"{self.name} drained {heal} HP!")
+            target.hp -= damage
+            target.set_damage_text(damage, delay, anim=anim)
+            self.attack_flash = True
+            self.flash_start = pygame.time.get_ticks() + delay
+            if attack_type == "projectile":
+                log.append(f"{self.name} attacked {target_name} with projectile for {damage} damage")
+            else:
+                log.append(f"{self.name} attacked {target_name} for {damage} damage")
+                if self.special_skill == "Life Drain":
+                    heal = damage // 2
+                    self.hp = min(self.hp + heal, self.max_hp)
+                    log.append(f"{self.name} drained {heal} HP!")
 
         if is_player and target.hp <= 0:
             # Only game over if ALL players are dead (multiplayer support)
