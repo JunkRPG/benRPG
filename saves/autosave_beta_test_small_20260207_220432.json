@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "save_type": "autosave",
+  "save_label": "Level Start",
+  "timestamp": "2026-02-07T22:04:32.184119",
+  "level_file": "levels/beta_test_small.json",
+  "campaign_file": null,
+  "current_level_idx": 0,
+  "multiplayer_mode": false,
+  "game_mode": "survival",
+  "player": {
+    "class_name": "Warrior",
+    "name": "Warrior",
+    "hp": 100,
+    "max_hp": 100,
+    "movement": 4,
+    "projectile_range": 4,
+    "attacks": {
+      "projectile": {
+        "name": "Throw Rock",
+        "damage": 6
+      },
+      "melee": {
+        "name": "Kick",
+        "damage": 6
+      }
+    },
+    "special_attack": "Dual Strike",
+    "position": [
+      8,
+      12
+    ],
+    "player_number": 1,
+    "player_color": [
+      0,
+      200,
+      0
+    ],
+    "inventory": [
+      {
+        "card_id": "starter_warrior_combat_bow",
+        "current_state": 1
+      },
+      {
+        "card_id": "starter_warrior_bowstring",
+        "current_state": 1
+      },
+      {
+        "card_id": "starter_warrior_metal_wraps",
+        "current_state": 1
+      },
+      {
+        "card_id": "starter_warrior_arrows",
+        "current_state": 2
+      },
+      {
+        "card_id": "win_guide",
+        "current_state": 1
+      }
+    ],
+    "melee_weapon": null,
+    "projectile_weapon": null,
+    "skills": [],
+    "equipped_skills": [],
+    "skill_cooldowns": {},
+    "active_skill_slots": 3,
+    "equipped_tools": [],
+    "equipped_tool": null,
+    "tool_slots": 1,
+    "equipped_accessory": null,
+    "projectile_range_type": "line_of_sight",
+    "projectile_include_pos": false,
+    "projectile_exclude_adj": false,
+    "piercing_projectile": false,
+    "movement_used": false,
+    "action_used": false,
+    "warrior_attacks_remaining": 2,
+    "double_attack_active": true
+  },
+  "party": [],
+  "units": [],
+  "location_data": {},
+  "card_drawing_hexes": [],
+  "quest_manager": {
+    "active_quests": [],
+    "completed_count": 0,
+    "failed_count": 0
+  },
+  "instance_manager": {
+    "trigger_chance": 0.0,
+    "deck_card_ids": [
+      "test_instance_sinkhole",
+      "test_instance_ambush",
+      "test_instance_discovery"
+    ]
+  },
+  "transition_manager": {
+    "weather_effect": null,
+    "weather_modifiers": {},
+    "active_card_id": "test_transition_forest",
+    "active_card_state": 1
+  },
+  "game_screen": {
+    "turn_phase": "player",
+    "log": [
+      "Loaded level: levels/beta_test_small.json"
+    ],
+    "transition_target_cycle": 0,
+    "turn_cycle_count": 0,
+    "player_class": "Warrior"
+  }
+}

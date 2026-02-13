@@ -3541,6 +3541,7 @@ class CharacterCreationScreen:
     def initialize_screen(self, level_file=None, campaign_file=None):
         self.level_file = level_file
         self.campaign_file = campaign_file
+        self.load_custom_button = None
         manager.clear_and_reset()
         self.ui_elements = [
             UILabel(pygame.Rect(0, 30, WINDOW_WIDTH, 40), "Enter Your Name", manager, anchors={'centerx': 'centerx'}),
@@ -3560,11 +3561,18 @@ class CharacterCreationScreen:
                    f"{list(stats['attacks'].keys())[1]} ({list(stats['attacks'].values())[1]} dmg), {stats['special_attack']}"
             self.ui_elements.append(UILabel(pygame.Rect((WINDOW_WIDTH - 600) // 2, y_pos + 60, 600, 30), desc, manager))
 
+        # "Load Custom Character" button below class buttons
+        custom_y = 170 + len(CHARACTER_CLASSES) * 100 + 10
+        self.load_custom_button = UIButton(pygame.Rect((WINDOW_WIDTH - 250) // 2, custom_y, 250, 50), "Load Custom Character", manager)
+        self.ui_elements.append(self.load_custom_button)
+
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.ui_elements[1]:
                 game.current_screen = "main_menu"
                 main_menu.initialize_buttons()
+            elif self.load_custom_button and event.ui_element == self.load_custom_button:
+                self._load_custom_character()
             else:
                 for button, class_name in self.class_buttons:
                     if event.ui_element == button:
@@ -3574,6 +3582,38 @@ class CharacterCreationScreen:
                         game.current_screen = "game"
                         game_screen.start_new_game(level_file=self.level_file, campaign_file=self.campaign_file)
                         break
+
+    def _load_custom_character(self):
+        """Open file dialog to load a custom character JSON and start the game."""
+        characters_dir = os.path.join(os.path.dirname(__file__), "characters")
+        if not os.path.isdir(characters_dir):
+            characters_dir = os.path.dirname(__file__)
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)
+        file_path = filedialog.askopenfilename(
+            title="Load Custom Character",
+            initialdir=characters_dir,
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+        )
+        root.destroy()
+        if not file_path:
+            return
+        try:
+            with open(file_path, 'r') as f:
+                custom_data = json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"Error loading character file: {e}")
+            return
+        game.player = Player("Custom", custom_data=custom_data)
+        # Override name with entry field if provided, otherwise use character file name
+        entered_name = self.name_entry.get_text().strip() if self.name_entry else ""
+        if entered_name:
+            game.player.name = entered_name
+        elif not game.player.name:
+            game.player.name = custom_data.get("name", "Custom")
+        game.current_screen = "game"
+        game_screen.start_new_game(level_file=self.level_file, campaign_file=self.campaign_file)
 
     def draw(self):
         screen.fill(DARK_CHARCOAL)
@@ -4461,9 +4501,8 @@ class GameScreen:
             self.hex_grid.place_unit(game.player, self.hex_grid.rows // 2, self.hex_grid.cols // 2)
             self.log.append("Started default level.")
 
-        # Load class-specific starter kit
-        from player import CHARACTER_CLASSES
-        starter_kit = CHARACTER_CLASSES.get(game.player.class_name, {}).get("starting_kit", [])
+        # Load starter kit from player object
+        starter_kit = game.player.starting_kit
         for item in starter_kit:
             card_id = item.get("card_id")
             card_data = load_card(card_id)
@@ -4574,10 +4613,9 @@ class GameScreen:
             self.hex_grid.place_unit(player2, self.hex_grid.rows // 2 + 1, self.hex_grid.cols // 2)
             self.log.append("Started default level (2-Player).")
 
-        # Load class-specific starter kits for both players
-        from player import CHARACTER_CLASSES
+        # Load starter kits for both players
         for player in game.players:
-            starter_kit = CHARACTER_CLASSES.get(player.class_name, {}).get("starting_kit", [])
+            starter_kit = player.starting_kit
             for item in starter_kit:
                 card_id = item.get("card_id")
                 card_data = load_card(card_id)
@@ -6360,19 +6398,14 @@ class GameScreen:
 
         if slot_type == "melee":
             if data == "unequip":
-                from player import CHARACTER_CLASSES
-                defaults = CHARACTER_CLASSES[p.class_name]
-                default_attacks = list(defaults["attacks"].items())
                 old_melee = p.melee_weapon
                 p.melee_weapon = None
-                p.attacks["melee"]["name"] = default_attacks[1][0]
-                p.attacks["melee"]["damage"] = default_attacks[1][1]
+                p.attacks["melee"] = dict(p.default_attacks["melee"])
                 # If both-type weapon was in projectile slot too, clear it
                 if p.projectile_weapon and p.projectile_weapon is old_melee:
                     p.projectile_weapon = None
-                    p.attacks["projectile"]["name"] = default_attacks[0][0]
-                    p.attacks["projectile"]["damage"] = default_attacks[0][1]
-                    p.projectile_range = defaults["projectile_range"]
+                    p.attacks["projectile"] = dict(p.default_attacks["projectile"])
+                    p.projectile_range = p.default_projectile_range
                 self.add_to_log("Unequipped melee weapon")
             else:
                 p.equip_weapon(data)
@@ -6381,18 +6414,13 @@ class GameScreen:
 
         elif slot_type == "projectile":
             if data == "unequip":
-                from player import CHARACTER_CLASSES
-                defaults = CHARACTER_CLASSES[p.class_name]
-                default_attacks = list(defaults["attacks"].items())
                 # If both-type weapon, clear melee too
                 if p.melee_weapon and p.projectile_weapon is p.melee_weapon:
                     p.melee_weapon = None
-                    p.attacks["melee"]["name"] = default_attacks[1][0]
-                    p.attacks["melee"]["damage"] = default_attacks[1][1]
+                    p.attacks["melee"] = dict(p.default_attacks["melee"])
                 p.projectile_weapon = None
-                p.attacks["projectile"]["name"] = default_attacks[0][0]
-                p.attacks["projectile"]["damage"] = default_attacks[0][1]
-                p.projectile_range = defaults["projectile_range"]
+                p.attacks["projectile"] = dict(p.default_attacks["projectile"])
+                p.projectile_range = p.default_projectile_range
                 p.projectile_range_type = "line_of_sight"
                 p.projectile_include_pos = False
                 p.projectile_exclude_adj = False

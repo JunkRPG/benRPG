@@ -44001,6 +44001,17 @@
           10
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-12T19:20:09.303281",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          7,
+          30
+        ]
+      }
     }
   ],
   "beta_location_rusty_anchor": [
@@ -44122,6 +44133,17 @@
         "position": [
           8,
           18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-12T19:24:38.428183",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          16,
+          38
         ]
       }
     }
@@ -44396,6 +44418,20 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-12T19:13:18.794882",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-12T19:20:05.204231",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "beta_location_crumbling_watchtower": [
@@ -44572,6 +44608,17 @@
         "position": [
           13,
           22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-12T19:22:54.553172",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          9,
+          37
         ]
       }
     }
@@ -44779,6 +44826,17 @@
           8
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-12T19:25:35.019434",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          15,
+          32
+        ]
+      }
     }
   ],
   "beta_location_hollowed_tree": [
@@ -44900,6 +44958,17 @@
         "position": [
           21,
           20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-12T19:11:23.285882",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          2,
+          8
         ]
       }
     }
@@ -45048,6 +45117,13 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-12T19:21:58.290400",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "beta_enemy_funny_goose": [
@@ -45171,6 +45247,13 @@
     },
     {
       "timestamp": "2026-02-08T21:02:13.387103",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-12T19:23:50.945101",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -45352,6 +45435,17 @@
           13
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-12T19:14:08.405815",
+      "context": {
+        "action": "location_assigned",
+        "screen": "game",
+        "position": [
+          4,
+          20
+        ]
+      }
     }
   ],
   "beta_enemy_shadow_stalker": [
@@ -45368,11 +45462,25 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-12T19:20:06.013277",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "beta_npc_funny_child": [
     {
       "timestamp": "2026-02-08T09:00:19.623620",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-12T19:19:31.587585",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -45389,6 +45497,13 @@
     },
     {
       "timestamp": "2026-02-11T20:38:57.376191",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-12T19:19:49.442096",
       "context": {
         "action": "defeated",
         "screen": "game"

@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "name": "Tony",
+  "created": "2026-02-12T18:53:00",
+  "stats": {
+    "hp": 120,
+    "max_hp": 120,
+    "movement": 6,
+    "projectile_range": 6,
+    "melee_damage": 3,
+    "projectile_damage": 3
+  },
+  "point_buy": {
+    "budget": 30,
+    "spent": 30,
+    "allocation": {
+      "hp": 12,
+      "movement": 6,
+      "projectile_range": 6,
+      "melee_damage": 3,
+      "projectile_damage": 3
+    }
+  },
+  "attacks": {
+    "projectile": {
+      "name": "Throw",
+      "damage": 3
+    },
+    "melee": {
+      "name": "Kick",
+      "damage": 3
+    }
+  },
+  "special_ability": "Dual Strike",
+  "starting_kit": [
+    {
+      "card_id": "starter_tank_sledgehammer_plans",
+      "state": 1
+    },
+    {
+      "card_id": "starter_warrior_combat_bow",
+      "state": 1
+    },
+    {
+      "card_id": "win_guide",
+      "state": 1
+    },
+    {
+      "card_id": "beta_junk_tool_scavengers_kit",
+      "state": 2
+    },
+    {
+      "card_id": "starter_tank_hammer_head",
+      "state": 1
+    }
+  ],
+  "class_name": "Custom"
+}

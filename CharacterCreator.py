@@ -135,6 +135,7 @@ class CharacterCreator:
         self.selected_kit = []  # list of {"card_id": ..., "state": ...}
         self.available_card_pool = []  # list of card_id strings
         self.card_names = {}  # card_id -> display name
+        self.card_data_cache = {}  # card_id -> full card dict
         self.over_budget_warning = ""
 
         self._init_stats()
@@ -169,12 +170,13 @@ class CharacterCreator:
                 pool.append(uid)
         self.available_card_pool = sorted(pool)
 
-        # Load display names
+        # Load display names and cache card data
         for card_id in self.available_card_pool:
             card = load_card(card_id, silent=True)
             if card:
                 name = card.get("data", {}).get("Name", card_id)
                 self.card_names[card_id] = f"{name} ({card_id})"
+                self.card_data_cache[card_id] = card
             else:
                 self.card_names[card_id] = card_id
 
@@ -269,6 +271,17 @@ class CharacterCreator:
             relative_rect=pygame.Rect(left_x, y + 44, left_w, 28),
             text="", manager=self.manager)
 
+        # Card info box
+        info_y = y + 80
+        UILabel(relative_rect=pygame.Rect(left_x, info_y, left_w, 24),
+                text="CARD INFO", manager=self.manager)
+        info_y += 26
+        info_h = H - info_y - int(H * 0.02)
+        self.card_info_box = UITextBox(
+            html_text="<i>Select a card from the kit lists to see details.</i>",
+            relative_rect=pygame.Rect(left_x, info_y, left_w, info_h),
+            manager=self.manager)
+
         # ===== CENTER PANEL: Special + Attacks + Kit =====
         y = content_y
 
@@ -334,8 +347,6 @@ class CharacterCreator:
 
         UILabel(relative_rect=pygame.Rect(center_x, y, list_w, 22),
                 text="Available Cards:", manager=self.manager)
-        UILabel(relative_rect=pygame.Rect(center_x + list_w + 90, y, list_w, 22),
-                text=f"Selected (0/{MAX_KIT_CARDS}):", manager=self.manager)
         self.selected_count_label_rect = pygame.Rect(center_x + list_w + 90, y, list_w, 22)
         y += 24
 
@@ -443,6 +454,130 @@ class CharacterCreator:
         available_ids = self._get_available_minus_selected()
         names = [self.card_names.get(cid, cid) for cid in available_ids]
         self.avail_list.set_item_list(names)
+
+    def _build_card_info_html(self, card_id):
+        card = self.card_data_cache.get(card_id)
+        if not card:
+            return f"<i>No data for {card_id}</i>"
+
+        data = card.get("data", {})
+        card_type = card.get("card_type", "Unknown")
+        subclass = card.get("subclass", "")
+        states = card.get("states", 1)
+
+        lines = []
+        # Header
+        name1 = data.get("Name", card_id)
+        lines.append(f"<b>{name1}</b>")
+        type_line = card_type
+        if subclass:
+            type_line += f" ({subclass})"
+        lines.append(f"<i>{type_line}</i>")
+
+        # Description
+        desc = data.get("Description", "")
+        if desc:
+            lines.append(f"<br>{desc}")
+
+        # Material values
+        mat_fields = [
+            ("Raw Material Value", "Raw"),
+            ("Refined Material Value", "Refined"),
+            ("Metal Value", "Metal"),
+            ("Wood Value", "Wood"),
+        ]
+        mat_parts = []
+        for field, label in mat_fields:
+            val = data.get(field, "")
+            if val and val != "0":
+                mat_parts.append(f"{label}: {val}")
+        if mat_parts:
+            lines.append(f"<br><b>Materials:</b> {', '.join(mat_parts)}")
+
+        # Crafting requirements
+        req_fields = [
+            ("Requirements: Raw Materials", "Raw"),
+            ("Requirements: Refined Materials", "Refined"),
+            ("Requirements: Wood", "Wood"),
+            ("Requirements: Metal", "Metal"),
+        ]
+        req_parts = []
+        for field, label in req_fields:
+            val = data.get(field, "")
+            if val and val != "0" and val.strip():
+                req_parts.append(f"{label}: {val}")
+        specific = data.get("Requirements: Specific Cards", "")
+        if specific and specific.strip():
+            req_parts.append(f"Cards: {specific}")
+        if req_parts:
+            lines.append(f"<b>Craft Cost:</b> {', '.join(req_parts)}")
+
+        # State 2 info
+        if states >= 2:
+            name2 = data.get("2nd_state_Name", "")
+            lines.append(f"<br><b>--- Crafted: {name2 or 'State 2'} ---</b>")
+
+            s2_type = data.get("2nd_state_Type", "")
+            s2_subtype = data.get("2nd_state_Subtype", "")
+            if s2_type:
+                type_str = s2_type
+                if s2_subtype:
+                    type_str += f" / {s2_subtype}"
+                lines.append(f"Type: {type_str}")
+
+            # Weapon stats
+            melee = data.get("2nd_state_Melee Damage", "")
+            proj = data.get("2nd_state_Projectile Damage", "")
+            if melee or proj:
+                parts = []
+                if melee and melee != "0":
+                    parts.append(f"Melee: {melee}")
+                if proj and proj != "0":
+                    parts.append(f"Proj: {proj}")
+                if parts:
+                    lines.append(f"Damage: {', '.join(parts)}")
+
+            # Range
+            rng_type = data.get("2nd_state_Range_Type", "")
+            rng_dist = data.get("2nd_state_Range_Distance", "")
+            if rng_type:
+                rng_str = f"Range: {rng_type}"
+                if rng_dist:
+                    rng_str += f" ({rng_dist} hexes)"
+                lines.append(rng_str)
+
+            # Ammo
+            req_ammo = data.get("2nd_state_Requires_Ammo", "")
+            if req_ammo and req_ammo.lower() == "true":
+                compat = data.get("2nd_state_Compatible_Ammo", "Any")
+                lines.append(f"Requires Ammo: {compat}")
+
+            # Tool info
+            tool_action = data.get("2nd_state_Tool_Action", "")
+            if tool_action:
+                lines.append(f"Action: {tool_action}")
+
+            # Use/description for state 2
+            s2_use = data.get("2nd_state_Use", "")
+            s2_desc = data.get("2nd_state_Description", "")
+            if s2_use:
+                lines.append(f"<i>{s2_use}</i>")
+            elif s2_desc:
+                lines.append(f"<i>{s2_desc}</i>")
+
+            # Guide info
+            guide_chance = data.get("2nd_state_Guide_Draw_Chance", "") or data.get("Guide_Draw_Chance", "")
+            if guide_chance:
+                lines.append(f"Draw Chance: {guide_chance}%")
+
+        return "<br>".join(lines)
+
+    def _update_card_info(self, card_id):
+        if card_id:
+            html = self._build_card_info_html(card_id)
+        else:
+            html = "<i>Select a card from the kit lists to see details.</i>"
+        self.card_info_box.set_text(html)
 
     def _get_card_id_from_display_name(self, display_name):
         for cid, dname in self.card_names.items():
@@ -813,6 +948,12 @@ class CharacterCreator:
                             if ui_el == btn:
                                 self._load_preset(preset_name)
                                 break
+
+                if ev.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
+                    if ev.ui_element in (self.avail_list, self.selected_list):
+                        sel_text = ev.text
+                        cid = self._get_card_id_from_display_name(sel_text)
+                        self._update_card_info(cid)
 
                 self.manager.process_events(ev)
 

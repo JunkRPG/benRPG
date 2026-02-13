@@ -234,12 +234,14 @@ class InstanceManager:
         elif outcome_type == "damage_enemy":
             damage = params.get("damage", 0)
             target_mode = params.get("target", "random")
-            return self._apply_damage_to_units(damage, target_mode, "Hostile", hex_grid, player)
+            spawn_deck = params.get("spawn_deck", None)
+            return self._apply_damage_to_units(damage, target_mode, "Hostile", hex_grid, player, spawn_deck)
 
         elif outcome_type == "damage_ally":
             damage = params.get("damage", 0)
             target_mode = params.get("target", "random")
-            return self._apply_damage_to_units(damage, target_mode, "Allied", hex_grid, player)
+            spawn_deck = params.get("spawn_deck", None)
+            return self._apply_damage_to_units(damage, target_mode, "Allied", hex_grid, player, spawn_deck)
 
         elif outcome_type == "spawn_enemy":
             deck_file = params.get("deck", None)
@@ -302,12 +304,17 @@ class InstanceManager:
         print("[DEBUG] _draw_card: returning None", flush=True)
         return None
 
-    def _apply_damage_to_units(self, damage, target_mode, allegiance, hex_grid, player):
+    def _apply_damage_to_units(self, damage, target_mode, allegiance, hex_grid, player, spawn_deck=None):
         """Apply damage to units of a specific allegiance."""
         if not hex_grid:
             return ""
 
         targets = [u for u in hex_grid.units if u.allegiance == allegiance]
+
+        if not targets and spawn_deck:
+            # Ambush scenario: spawn an enemy first, then damage it
+            self._spawn_units(spawn_deck, "player", 1, allegiance, hex_grid, player)
+            targets = [u for u in hex_grid.units if u.allegiance == allegiance]
 
         if not targets:
             return f"No {allegiance.lower()} units to damage."

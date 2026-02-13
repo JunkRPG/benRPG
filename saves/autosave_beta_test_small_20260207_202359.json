@@ -1,0 +1,388 @@
+{
+  "version": 1,
+  "save_type": "autosave",
+  "save_label": "Level Start",
+  "timestamp": "2026-02-07T20:23:59.904954",
+  "level_file": "C:/Users/Tony/Desktop/This is the current one/levels/beta_test_small.json",
+  "campaign_file": null,
+  "current_level_idx": 0,
+  "multiplayer_mode": true,
+  "game_mode": "survival",
+  "players": [
+    {
+      "class_name": "Ranger",
+      "name": "Player 1",
+      "hp": 50,
+      "max_hp": 50,
+      "movement": 5,
+      "projectile_range": 5,
+      "attacks": {
+        "projectile": {
+          "name": "Sling",
+          "damage": 8
+        },
+        "melee": {
+          "name": "Punch",
+          "damage": 4
+        }
+      },
+      "special_attack": "Piercing Shot",
+      "position": [
+        10,
+        5
+      ],
+      "player_number": 1,
+      "player_color": [
+        0,
+        200,
+        0
+      ],
+      "inventory": [
+        {
+          "card_id": "example_hunting_bow",
+          "current_state": 2
+        },
+        {
+          "card_id": "example_arrow_quiver",
+          "current_state": 2
+        },
+        {
+          "card_id": "example_tool_belt",
+          "current_state": 2
+        },
+        {
+          "card_id": "example_steel_arrows",
+          "current_state": 1
+        },
+        {
+          "card_id": "example_sniper_crossbow",
+          "current_state": 1
+        },
+        {
+          "card_id": "example_crossbow_bolts",
+          "current_state": 1
+        },
+        {
+          "card_id": "beta_junk_healing_herbs",
+          "current_state": 2
+        },
+        {
+          "card_id": "revival_smelling_salts",
+          "current_state": 2
+        },
+        {
+          "card_id": "revival_phoenix_dust",
+          "current_state": 2
+        },
+        {
+          "card_id": "starter_ranger_bow",
+          "current_state": 1
+        },
+        {
+          "card_id": "starter_ranger_bowstring",
+          "current_state": 1
+        },
+        {
+          "card_id": "starter_ranger_curved_branch",
+          "current_state": 1
+        }
+      ],
+      "melee_weapon": null,
+      "projectile_weapon": null,
+      "skills": [],
+      "equipped_skills": [],
+      "skill_cooldowns": {},
+      "active_skill_slots": 3,
+      "equipped_tools": [],
+      "equipped_tool": null,
+      "tool_slots": 1,
+      "equipped_accessory": null,
+      "projectile_range_type": "line_of_sight",
+      "projectile_include_pos": false,
+      "projectile_exclude_adj": false,
+      "piercing_projectile": true,
+      "movement_used": false,
+      "action_used": false,
+      "warrior_attacks_remaining": 0,
+      "double_attack_active": false
+    },
+    {
+      "class_name": "Warrior",
+      "name": "Player 2",
+      "hp": 100,
+      "max_hp": 100,
+      "movement": 4,
+      "projectile_range": 4,
+      "attacks": {
+        "projectile": {
+          "name": "Throw Rock",
+          "damage": 6
+        },
+        "melee": {
+          "name": "Kick",
+          "damage": 6
+        }
+      },
+      "special_attack": "Dual Strike",
+      "position": [
+        9,
+        5
+      ],
+      "player_number": 2,
+      "player_color": [
+        100,
+        150,
+        255
+      ],
+      "inventory": [
+        {
+          "card_id": "starter_warrior_combat_bow",
+          "current_state": 1
+        },
+        {
+          "card_id": "starter_warrior_bowstring",
+          "current_state": 1
+        },
+        {
+          "card_id": "starter_warrior_metal_wraps",
+          "current_state": 1
+        }
+      ],
+      "melee_weapon": null,
+      "projectile_weapon": null,
+      "skills": [],
+      "equipped_skills": [],
+      "skill_cooldowns": {},
+      "active_skill_slots": 3,
+      "equipped_tools": [],
+      "equipped_tool": null,
+      "tool_slots": 1,
+      "equipped_accessory": null,
+      "projectile_range_type": "line_of_sight",
+      "projectile_include_pos": false,
+      "projectile_exclude_adj": false,
+      "piercing_projectile": false,
+      "movement_used": false,
+      "action_used": false,
+      "warrior_attacks_remaining": 2,
+      "double_attack_active": true
+    }
+  ],
+  "current_player_index": 0,
+  "party": [],
+  "units": [],
+  "location_data": {
+    "7,6": {
+      "card_id": "village_church",
+      "card_state": 1,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    },
+    "16,5": {
+      "card_id": "forest_chapel",
+      "card_state": 1,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    },
+    "4,10": {
+      "card_id": "roadside_shrine",
+      "card_state": 1,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    },
+    "5,34": {
+      "card_id": "bandit_hideout",
+      "card_state": 1,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 30,
+      "max_health": 30
+    },
+    "12,38": {
+      "card_id": "skeleton_fort",
+      "card_state": 1,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 50,
+      "max_health": 50
+    },
+    "18,34": {
+      "card_id": "goblin_camp",
+      "card_state": 1,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 25,
+      "max_health": 25
+    },
+    "21,39": {
+      "card_id": "smuggler_den",
+      "card_state": 1,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 35,
+      "max_health": 35
+    },
+    "2,8": {
+      "card_id": null,
+      "card_state": null,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    },
+    "4,20": {
+      "card_id": null,
+      "card_state": null,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    },
+    "7,30": {
+      "card_id": null,
+      "card_state": null,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    },
+    "9,37": {
+      "card_id": null,
+      "card_state": null,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    },
+    "11,13": {
+      "card_id": null,
+      "card_state": null,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    },
+    "13,22": {
+      "card_id": null,
+      "card_state": null,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    },
+    "15,32": {
+      "card_id": null,
+      "card_state": null,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    },
+    "17,10": {
+      "card_id": null,
+      "card_state": null,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    },
+    "19,25": {
+      "card_id": null,
+      "card_state": null,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    },
+    "20,15": {
+      "card_id": null,
+      "card_state": null,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    },
+    "22,35": {
+      "card_id": null,
+      "card_state": null,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    },
+    "22,7": {
+      "card_id": null,
+      "card_state": null,
+      "shop": [],
+      "turns": 0,
+      "visited": false,
+      "health": 0,
+      "max_health": 0
+    }
+  },
+  "card_drawing_hexes": [],
+  "quest_manager": {
+    "active_quests": [],
+    "completed_count": 0,
+    "failed_count": 0
+  },
+  "quest_managers": [
+    {
+      "active_quests": [],
+      "completed_count": 0,
+      "failed_count": 0
+    },
+    {
+      "active_quests": [],
+      "completed_count": 0,
+      "failed_count": 0
+    }
+  ],
+  "instance_manager": {
+    "trigger_chance": 0.0,
+    "deck_card_ids": [
+      "test_instance_sinkhole",
+      "test_instance_ambush",
+      "test_instance_discovery"
+    ]
+  },
+  "transition_manager": {
+    "weather_effect": null,
+    "weather_modifiers": {},
+    "active_card_id": "test_transition_forest",
+    "active_card_state": 1
+  },
+  "game_screen": {
+    "turn_phase": "player1",
+    "log": [
+      "Loaded level: C:/Users/Tony/Desktop/This is the current one/levels/beta_test_small.json"
+    ],
+    "transition_target_cycle": 0,
+    "turn_cycle_count": 0,
+    "player_class": null
+  }
+}

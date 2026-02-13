@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "save_type": "autosave",
+  "save_label": "Level Start",
+  "timestamp": "2026-02-11T18:50:46.209202",
+  "level_file": "C:/Users/Tony/Desktop/This is the current one/levels/beta_test_small_editted.json",
+  "campaign_file": null,
+  "current_level_idx": 0,
+  "multiplayer_mode": false,
+  "game_mode": "survival",
+  "player": {
+    "class_name": "Ranger",
+    "name": "Ranger",
+    "hp": 50,
+    "max_hp": 50,
+    "movement": 5,
+    "projectile_range": 5,
+    "attacks": {
+      "projectile": {
+        "name": "Sling",
+        "damage": 8
+      },
+      "melee": {
+        "name": "Punch",
+        "damage": 4
+      }
+    },
+    "special_attack": "Piercing Shot",
+    "position": [
+      12,
+      21
+    ],
+    "player_number": 1,
+    "player_color": [
+      0,
+      200,
+      0
+    ],
+    "inventory": [
+      {
+        "card_id": "starter_ranger_bow",
+        "current_state": 1
+      },
+      {
+        "card_id": "starter_ranger_bowstring",
+        "current_state": 1
+      },
+      {
+        "card_id": "starter_ranger_curved_branch",
+        "current_state": 1
+      },
+      {
+        "card_id": "win_guide",
+        "current_state": 1
+      },
+      {
+        "card_id": "beta_junk_tool_scavengers_kit",
+        "current_state": 2
+      }
+    ],
+    "melee_weapon": null,
+    "projectile_weapon": null,
+    "skills": [],
+    "equipped_skills": [],
+    "skill_cooldowns": {},
+    "active_skill_slots": 3,
+    "equipped_tools": [],
+    "equipped_tool": null,
+    "tool_slots": 1,
+    "equipped_accessory": null,
+    "projectile_range_type": "line_of_sight",
+    "projectile_include_pos": false,
+    "projectile_exclude_adj": false,
+    "piercing_projectile": true,
+    "movement_used": false,
+    "action_used": false,
+    "warrior_attacks_remaining": 0,
+    "double_attack_active": false
+  },
+  "party": [],
+  "units": [],
+  "location_data": {},
+  "card_drawing_hexes": [],
+  "quest_manager": {
+    "active_quests": [],
+    "completed_count": 0,
+    "failed_count": 0
+  },
+  "instance_manager": {
+    "trigger_chance": 0.0,
+    "deck_card_ids": [
+      "test_instance_sinkhole",
+      "test_instance_ambush",
+      "test_instance_discovery"
+    ]
+  },
+  "transition_manager": {
+    "weather_effect": null,
+    "weather_modifiers": {},
+    "active_card_id": "test_transition_forest",
+    "active_card_state": 1
+  },
+  "game_screen": {
+    "turn_phase": "player",
+    "log": [
+      "Loaded level: C:/Users/Tony/Desktop/This is the current one/levels/beta_test_small_editted.json"
+    ],
+    "transition_target_cycle": 0,
+    "turn_cycle_count": 0,
+    "player_class": "Ranger"
+  }
+}

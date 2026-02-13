@@ -50,24 +50,50 @@ ATTACK_FLASH_DURATION = 500
 DAMAGE_TEXT_DURATION = 1000  # 1 second
 
 class Player:
-    def __init__(self, class_name):
-        stats = CHARACTER_CLASSES[class_name]
-        self.class_name = class_name
-        self.name = ""  # Set during character creation; defaults to class_name
-        self.hp = stats["hp"]
-        self.max_hp = stats["hp"]
-        self.movement = stats["movement"]
-        self.projectile_range = stats["projectile_range"]
-        self.attacks = {
-            "projectile": {"name": list(stats["attacks"].keys())[0], "damage": list(stats["attacks"].values())[0]},
-            "melee": {"name": list(stats["attacks"].keys())[1], "damage": list(stats["attacks"].values())[1]}
+    def __init__(self, class_name, custom_data=None):
+        if custom_data:
+            # Custom character from CharacterCreator
+            self.class_name = custom_data.get("class_name", "Custom")
+            self.name = custom_data.get("name", "")
+            cstats = custom_data.get("stats", {})
+            self.hp = cstats.get("hp", 100)
+            self.max_hp = cstats.get("max_hp", self.hp)
+            self.movement = cstats.get("movement", 4)
+            self.projectile_range = cstats.get("projectile_range", 4)
+            attacks = custom_data.get("attacks", {})
+            self.attacks = {
+                "projectile": attacks.get("projectile", {"name": "Throw", "damage": 5}),
+                "melee": attacks.get("melee", {"name": "Punch", "damage": 5})
+            }
+            self.special_attack = custom_data.get("special_ability", "Spin Punch")
+            self.starting_kit = custom_data.get("starting_kit", [])
+        else:
+            # Existing hardcoded class path
+            stats = CHARACTER_CLASSES[class_name]
+            self.class_name = class_name
+            self.name = ""  # Set during character creation; defaults to class_name
+            self.hp = stats["hp"]
+            self.max_hp = stats["hp"]
+            self.movement = stats["movement"]
+            self.projectile_range = stats["projectile_range"]
+            self.attacks = {
+                "projectile": {"name": list(stats["attacks"].keys())[0], "damage": list(stats["attacks"].values())[0]},
+                "melee": {"name": list(stats["attacks"].keys())[1], "damage": list(stats["attacks"].values())[1]}
+            }
+            self.special_attack = stats["special_attack"]
+            self.starting_kit = stats.get("starting_kit", [])
+
+        # Store default attacks for weapon unequip (restores base attacks)
+        self.default_attacks = {
+            "projectile": dict(self.attacks["projectile"]),
+            "melee": dict(self.attacks["melee"])
         }
-        self.special_attack = stats["special_attack"]
+        self.default_projectile_range = self.projectile_range
         self.movement_used = False
         self.action_used = False
-        # Warrior passive: always gets 2 attacks per turn (any combination of melee/projectile)
-        self.warrior_attacks_remaining = 2 if class_name == "Warrior" else 0
-        self.double_attack_active = (class_name == "Warrior")  # Always active for Warriors
+        # Dual Strike passive: always gets 2 attacks per turn (any combination of melee/projectile)
+        self.warrior_attacks_remaining = 2 if self.special_attack == "Dual Strike" else 0
+        self.double_attack_active = (self.special_attack == "Dual Strike")
         self.double_attack_melee_used = False
         self.double_attack_projectile_used = False
         self.position = (0, 0)
@@ -101,8 +127,8 @@ class Player:
         self.projectile_range_type = "line_of_sight"  # Pattern: line_of_sight, area_effect, echo, perimeter
         self.projectile_include_pos = False           # Include caster's hex in range
         self.projectile_exclude_adj = False           # Exclude adjacent hexes (for sniper-type weapons)
-        # Ranger passive: piercing projectile shots go through units
-        self.piercing_projectile = (class_name == "Ranger")
+        # Piercing Shot passive: projectile shots go through units
+        self.piercing_projectile = (self.special_attack == "Piercing Shot")
 
         # Multiplayer attributes
         self.player_number = 1  # 1 or 2 (for multiplayer mode)
@@ -447,8 +473,8 @@ class Player:
         )
 
     def reset_double_attack(self):
-        """Reset attack state at end of turn. Warriors always have 2 attacks."""
-        if self.class_name == "Warrior":
+        """Reset attack state at end of turn. Dual Strike users always have 2 attacks."""
+        if self.special_attack == "Dual Strike":
             self.double_attack_active = True
             self.warrior_attacks_remaining = 2
         else:
