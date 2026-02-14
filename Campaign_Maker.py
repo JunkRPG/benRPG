@@ -701,6 +701,13 @@ Card Hexes: {card_hexes}
             "junk_deck": self._get_deck_path_from_dropdown(self.junk_deck_dropdown)
         }
 
+        # Warn about missing completion targets
+        comp_type = stage["completion_conditions"].get("type", "")
+        if comp_type in ("defeat_boss", "collect_item", "reach_location") and not stage["completion_conditions"].get("target"):
+            self.status_label.set_text(f"Warning: '{comp_type}' needs a target name to work")
+            self.update_stage_list()
+            return
+
         self.update_stage_list()
         self.status_label.set_text(f"Applied changes to {stage['name']}")
 
@@ -826,6 +833,29 @@ Card Hexes: {card_hexes}
             if not stage.get("level_file"):
                 self.status_label.set_text(f"Stage {i+1} has no level file")
                 return
+
+        # Check level files exist on disk
+        for i, stage in enumerate(self.campaign_data["stages"]):
+            level_path = os.path.join("levels", stage["level_file"])
+            if not os.path.exists(level_path):
+                self.status_label.set_text(f"Stage {i+1}: level file '{stage['level_file']}' not found")
+                return
+
+        # Check completion conditions have required targets
+        for i, stage in enumerate(self.campaign_data["stages"]):
+            cc = stage.get("completion_conditions", {})
+            comp_type = cc.get("type", "")
+            if comp_type in ("defeat_boss", "collect_item", "reach_location") and not cc.get("target"):
+                self.status_label.set_text(f"Stage {i+1}: '{comp_type}' requires a target name")
+                return
+
+        # Check deck files exist
+        for i, stage in enumerate(self.campaign_data["stages"]):
+            deck_config = stage.get("deck_config", {})
+            for deck_key, deck_path in deck_config.items():
+                if deck_path and not os.path.exists(deck_path):
+                    self.status_label.set_text(f"Stage {i+1}: deck '{deck_path}' not found")
+                    return
 
         try:
             with open(temp_path, 'w') as f:

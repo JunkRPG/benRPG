@@ -5360,7 +5360,11 @@ class GameScreen:
 
             elif comp_type == "collect_item":
                 if target:
-                    return any(card.get_current_data().get("Name") == target for card in game.current_player.inventory)
+                    all_players = game.players if game.multiplayer_mode and game.players else [game.player]
+                    return any(
+                        any(card.get_current_data().get("Name") == target for card in p.inventory)
+                        for p in all_players if p.hp > 0
+                    )
                 return False
 
             elif comp_type == "reach_location":
@@ -5397,7 +5401,11 @@ class GameScreen:
             elif "Collect" in transition:
                 item_name = transition.split("'")[1] if "'" in transition else None
                 if item_name:
-                    return any(card.get_current_data().get("Name") == item_name for card in game.current_player.inventory)
+                    all_players = game.players if game.multiplayer_mode and game.players else [game.player]
+                    return any(
+                        any(card.get_current_data().get("Name") == item_name for card in p.inventory)
+                        for p in all_players if p.hp > 0
+                    )
 
         # Default: defeat all enemies
         return len([u for u in self.hex_grid.units if u.allegiance == "Hostile"]) == 0
@@ -5411,11 +5419,11 @@ class GameScreen:
                 self.hex_grid.active_turn_unit = player
                 self.rebuild_left_panel()
                 return
-        # All dead - fallback
+        # All dead - trigger defeat
         self.turn_phase = "multiplayer_player"
         game.current_player_index = 0
         self.hex_grid.active_turn_unit = game.players[0]
-        self.rebuild_left_panel()
+        self.pending_defeat = True
 
     def _is_player_phase(self):
         """Check if it's currently any player's turn (single or multiplayer)."""
@@ -5804,6 +5812,9 @@ class GameScreen:
 
         # Check for pending dialogue from Messenger NPCs
         if self.current_acting_unit and hasattr(self.current_acting_unit, 'pending_dialogue') and self.current_acting_unit.pending_dialogue:
+            # Don't activate dialogue while event banner is showing — leave pending for next frame
+            if self.event_banner_active:
+                return
             dlg = self.current_acting_unit.pending_dialogue
             self.current_acting_unit.pending_dialogue = None
             self.dialogue_active = True
@@ -8242,6 +8253,8 @@ class GameScreen:
         screen.fill(DARK_CHARCOAL)
         self._update_autopan()
         current_player = game.current_player
+        if not current_player:
+            return
         is_player_turn = self._is_player_phase()
         # Check animation state early so range displays are accurate this frame
         self.animating = self.check_animations()
