@@ -2364,5 +2364,26 @@
     "blueprint_subclass": null,
     "states": 2,
     "name": "Twisted Ether Conduit"
+  },
+  "beta_boss_repair_master": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Repair Master"
+  },
+  "beta_boss_war_healer": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "War Healer"
+  },
+  "beta_boss_war_chief": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "War Chief"
   }
 }

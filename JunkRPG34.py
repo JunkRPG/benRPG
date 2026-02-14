@@ -3044,11 +3044,43 @@ class TabbedMenuScreen:
             manager))
         self.party_member_names = party_names if party_names else []
 
-        # Info panel (right side)
-        self._add(UILabel(pygame.Rect(320, y + 40, 560, 25), "Member Details:", manager))
+        # Info panel (middle)
+        self._add(UILabel(pygame.Rect(320, y + 40, 270, 25), "Member Details:", manager))
         self.party_info_text = self._add(pygame_gui.elements.UITextBox(
             "<font color='#FFFFFF'>Select a party member to view details</font>",
-            pygame.Rect(320, y + 70, 560, 350), manager))
+            pygame.Rect(320, y + 70, 270, 350), manager))
+
+        # Behavior tree panel (right side)
+        bt_x = 600
+        self._add(UILabel(pygame.Rect(bt_x, y + 40, 280, 25), "Behavior Priority:", manager))
+        self.party_bt_list = None
+        self.party_bt_stubborn_label = None
+        self.party_bt_move_up = None
+        self.party_bt_move_down = None
+        self.party_bt_add_dropdown = None
+        self.party_bt_add_button = None
+        self.party_bt_remove_button = None
+        self.party_bt_set_target = None
+
+        # Placeholder behavior panel (populated when member selected)
+        self.party_bt_list = self._add(pygame_gui.elements.UISelectionList(
+            pygame.Rect(bt_x, y + 70, 280, 200),
+            ["Select a member"],
+            manager))
+
+        # Behavior tree buttons (initially hidden, shown when non-stubborn member selected)
+        self.party_bt_move_up = self._add(UIButton(pygame.Rect(bt_x, y + 275, 135, 30), "Move Up", manager))
+        self.party_bt_move_down = self._add(UIButton(pygame.Rect(bt_x + 145, y + 275, 135, 30), "Move Down", manager))
+        self.party_bt_remove_button = self._add(UIButton(pygame.Rect(bt_x, y + 310, 280, 30), "Remove Selected", manager))
+
+        # Add behavior dropdown and button
+        from unit import Unit
+        self.party_bt_add_dropdown = self._add(pygame_gui.elements.UIDropDownMenu(
+            ["-- Add Behavior --"], "-- Add Behavior --",
+            pygame.Rect(bt_x, y + 345, 200, 30), manager))
+        self.party_bt_add_button = self._add(UIButton(pygame.Rect(bt_x + 205, y + 345, 75, 30), "Add", manager))
+        self.party_bt_set_target = self._add(UIButton(pygame.Rect(bt_x, y + 380, 280, 30), "Set Target on Map", manager))
+        self.party_bt_set_target.hide()
 
         # Action buttons
         self.party_deploy_button = self._add(UIButton(pygame.Rect(320, y + 430, 170, 35), "Deploy to Map", manager))
@@ -3061,6 +3093,105 @@ class TabbedMenuScreen:
             self._add(UILabel(pygame.Rect(500, y + 520, 150, 35), "[Creative Mode]", manager))
         else:
             self.party_browse_npcs_button = None
+
+    def _get_party_member_behavior_tree(self, card):
+        """Get the current behavior tree for a party member (from deployed unit or overrides)."""
+        from unit import Unit
+        card_id = card.card_data.get("id")
+        # Check if deployed — use live unit's tree
+        for unit in game_screen.hex_grid.units:
+            if unit.card_id == card_id and unit.allegiance == "Allied":
+                return list(unit.behavior_tree), unit.is_stubborn
+        # Check overrides
+        if card_id in game.party_behavior_overrides:
+            override = game.party_behavior_overrides[card_id]
+            return list(override.get("tree", ["attack_closest"])), False
+        # Build default from card data
+        card_data = card.get_current_data()
+        dummy_data = {"id": card_id, "card_type": "NPC Card", "states": 1, "data": card_data}
+        dummy = Unit(dummy_data)
+        return list(dummy.behavior_tree), dummy.is_stubborn
+
+    def _refresh_party_behavior_panel(self, card):
+        """Refresh the behavior tree panel for the selected party member."""
+        from unit import Unit
+        tree, is_stubborn = self._get_party_member_behavior_tree(card)
+
+        # Build display labels from tree
+        labels = []
+        for b in tree:
+            info = Unit.BEHAVIOR_REGISTRY.get(b, {})
+            labels.append(info.get("label", b))
+
+        if not labels:
+            labels = ["(empty)"]
+
+        if self.party_bt_list:
+            self.party_bt_list.set_item_list(labels)
+
+        # Show/hide controls based on stubborn
+        if is_stubborn:
+            if self.party_bt_move_up: self.party_bt_move_up.hide()
+            if self.party_bt_move_down: self.party_bt_move_down.hide()
+            if self.party_bt_remove_button: self.party_bt_remove_button.hide()
+            if self.party_bt_add_dropdown: self.party_bt_add_dropdown.hide()
+            if self.party_bt_add_button: self.party_bt_add_button.hide()
+            if self.party_bt_set_target: self.party_bt_set_target.hide()
+        else:
+            if self.party_bt_move_up: self.party_bt_move_up.show()
+            if self.party_bt_move_down: self.party_bt_move_down.show()
+            if self.party_bt_remove_button: self.party_bt_remove_button.show()
+            if self.party_bt_add_dropdown: self.party_bt_add_dropdown.show()
+            if self.party_bt_add_button: self.party_bt_add_button.show()
+            # Update available behaviors in dropdown
+            self._update_bt_add_dropdown(card)
+            # Show set target button if tree has follow_target or attack_target
+            if "follow_target" in tree or "attack_target" in tree:
+                if self.party_bt_set_target: self.party_bt_set_target.show()
+            else:
+                if self.party_bt_set_target: self.party_bt_set_target.hide()
+
+    def _update_bt_add_dropdown(self, card):
+        """Update the add-behavior dropdown with behaviors available to this unit."""
+        from unit import Unit
+        card_data = card.get_current_data()
+        special_skill = card_data.get("Special Skill", "")
+        available = []
+        for key, info in Unit.BEHAVIOR_REGISTRY.items():
+            skill_req = info.get("restrict_skill")
+            if skill_req and special_skill != skill_req:
+                continue
+            available.append(info.get("label", key))
+        if not available:
+            available = ["(none available)"]
+        options = ["-- Add Behavior --"] + available
+        # Recreate dropdown (pygame_gui dropdowns can't easily update options)
+        if self.party_bt_add_dropdown:
+            rect = self.party_bt_add_dropdown.relative_rect
+            self.party_bt_add_dropdown.kill()
+            self.party_bt_add_dropdown = self._add(pygame_gui.elements.UIDropDownMenu(
+                options, options[0], rect, manager))
+
+    def _save_party_behavior_tree(self, card, tree, follow_target=None, attack_target=None):
+        """Save a modified behavior tree to both the deployed unit and overrides."""
+        card_id = card.card_data.get("id")
+        # Update deployed unit if exists
+        for unit in game_screen.hex_grid.units:
+            if unit.card_id == card_id and unit.allegiance == "Allied":
+                unit.behavior_tree = list(tree)
+                if follow_target is not None:
+                    unit.behavior_follow_target = follow_target
+                if attack_target is not None:
+                    unit.behavior_attack_target = attack_target
+                break
+        # Always save to overrides
+        if card_id not in game.party_behavior_overrides:
+            game.party_behavior_overrides[card_id] = {}
+        game.party_behavior_overrides[card_id]["tree"] = list(tree)
+        if follow_target is not None:
+            game.party_behavior_overrides[card_id]["follow_target"] = follow_target
+        if attack_target is not None:
+            game.party_behavior_overrides[card_id]["attack_target"] = attack_target
 
     def _handle_party_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -3077,6 +3208,27 @@ class TabbedMenuScreen:
             if event.ui_element == self.party_dismiss_button:
                 self._party_dismiss_member()
                 return
+
+            # Behavior tree controls
+            if self.party_selected_member is not None and self.party_selected_member < len(game.current_party):
+                card = game.current_party[self.party_selected_member]
+                tree, is_stubborn = self._get_party_member_behavior_tree(card)
+                if not is_stubborn:
+                    if self.party_bt_move_up and event.ui_element == self.party_bt_move_up:
+                        self._party_bt_move(card, tree, -1)
+                        return
+                    if self.party_bt_move_down and event.ui_element == self.party_bt_move_down:
+                        self._party_bt_move(card, tree, 1)
+                        return
+                    if self.party_bt_remove_button and event.ui_element == self.party_bt_remove_button:
+                        self._party_bt_remove(card, tree)
+                        return
+                    if self.party_bt_add_button and event.ui_element == self.party_bt_add_button:
+                        self._party_bt_add(card, tree)
+                        return
+                    if self.party_bt_set_target and event.ui_element == self.party_bt_set_target:
+                        self._party_bt_enter_target_mode(card, tree)
+                        return
 
         elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
             if event.ui_element == self.party_list:
@@ -3104,6 +3256,80 @@ class TabbedMenuScreen:
                             info_lines.append(f"{card_data.get('Description')}")
 
                         self.party_info_text.set_text(f"<font color='#FFFFFF'>{'<br>'.join(info_lines)}</font>")
+
+                        # Refresh behavior tree panel
+                        self._refresh_party_behavior_panel(card)
+
+    def _party_bt_move(self, card, tree, direction):
+        """Move the selected behavior up or down in the tree."""
+        from unit import Unit
+        if not self.party_bt_list:
+            return
+        selection = self.party_bt_list.get_single_selection()
+        if not selection:
+            return
+        # Find index by matching label to tree
+        for i, b in enumerate(tree):
+            info = Unit.BEHAVIOR_REGISTRY.get(b, {})
+            if info.get("label", b) == selection:
+                new_idx = i + direction
+                if 0 <= new_idx < len(tree):
+                    tree[i], tree[new_idx] = tree[new_idx], tree[i]
+                    self._save_party_behavior_tree(card, tree)
+                    self._refresh_party_behavior_panel(card)
+                return
+
+    def _party_bt_remove(self, card, tree):
+        """Remove the selected behavior from the tree."""
+        from unit import Unit
+        if not self.party_bt_list:
+            return
+        selection = self.party_bt_list.get_single_selection()
+        if not selection:
+            return
+        for i, b in enumerate(tree):
+            info = Unit.BEHAVIOR_REGISTRY.get(b, {})
+            if info.get("label", b) == selection:
+                tree.pop(i)
+                self._save_party_behavior_tree(card, tree)
+                self._refresh_party_behavior_panel(card)
+                return
+
+    def _party_bt_add(self, card, tree):
+        """Add a behavior from the dropdown to the tree."""
+        from unit import Unit
+        if not self.party_bt_add_dropdown:
+            return
+        selected_label = self.party_bt_add_dropdown.selected_option
+        if isinstance(selected_label, tuple):
+            selected_label = selected_label[0]
+        if selected_label == "-- Add Behavior --" or selected_label == "(none available)":
+            return
+        # Find the key from the label
+        for key, info in Unit.BEHAVIOR_REGISTRY.items():
+            if info.get("label", key) == selected_label:
+                tree.append(key)
+                self._save_party_behavior_tree(card, tree)
+                self._refresh_party_behavior_panel(card)
+                return
+
+    def _party_bt_enter_target_mode(self, card, tree):
+        """Enter target selection mode on the map for follow_target/attack_target behaviors."""
+        card_id = card.card_data.get("id")
+        # Determine which target type is needed
+        target_type = None
+        if "follow_target" in tree:
+            target_type = "follow_target"
+        elif "attack_target" in tree:
+            target_type = "attack_target"
+        if not target_type:
+            return
+        # Close the menu and enter target selection mode on the game screen
+        game_screen.behavior_target_type = target_type
+        game_screen.behavior_target_npc_card_id = card_id
+        game_screen.player_mode = "behavior_target_select"
+        game.current_screen = "game"
+        game_screen.initialize_screen()
 
     def _party_deploy_member(self):
         if self.party_selected_member is None:
@@ -3135,14 +3361,26 @@ class TabbedMenuScreen:
             return
 
         from unit import Unit
+        card_id = card.card_data.get("id")
+        # Check for player-customized behavior tree override
+        override = game.party_behavior_overrides.get(card_id, {})
+        custom_tree = override.get("tree", None)
         unit_data = {
-            "id": card.card_data.get("id"),
+            "id": card_id,
             "card_type": "NPC Card",
             "states": card.states,
             "data": card_data
         }
+        if custom_tree:
+            unit_data["custom_behavior_tree"] = custom_tree
         unit = Unit(unit_data)
         unit.allegiance = "Allied"
+        # Apply behavior target overrides (stubborn NPCs ignore overrides)
+        if not unit.is_stubborn and override:
+            if override.get("follow_target"):
+                unit.behavior_follow_target = override["follow_target"]
+            if override.get("attack_target"):
+                unit.behavior_attack_target = override["attack_target"]
         game_screen.hex_grid.place_unit(unit, deploy_pos[0], deploy_pos[1])
 
         game_screen.add_to_log(f"{name} deployed to the battlefield!")
@@ -3174,6 +3412,15 @@ class TabbedMenuScreen:
         if distance > 1:
             self.party_info_text.set_text(f"<font color='#FF0000'>{name} must be adjacent to recall!</font>")
             return
+
+        # Save behavior state before removing (unless stubborn)
+        if not getattr(deployed_unit, 'is_stubborn', False):
+            card_id = card.card_data.get("id")
+            game.party_behavior_overrides[card_id] = {
+                "tree": list(deployed_unit.behavior_tree),
+                "follow_target": deployed_unit.behavior_follow_target,
+                "attack_target": deployed_unit.behavior_attack_target,
+            }
 
         game_screen.hex_grid.grid[deployed_unit.position[0]][deployed_unit.position[1]]["unit"] = None
         game_screen.hex_grid.units.remove(deployed_unit)
@@ -3788,6 +4035,7 @@ class GameScreen:
         self.skill_buttons = []     # List of (button, skill_card) tuples
         self.skills_button = None   # Skills menu button
         self.special_attack_button = None  # Special attack button
+        self.super_attack_button = None    # Super attack button (charged)
         self.attack_button = None  # Main "Attack" button that opens submenu
         self.attack_submenu_open = False
         self.attack_submenu_buttons = []  # List of (button, action_type, data)
@@ -3828,6 +4076,10 @@ class GameScreen:
         self.transition_target_cycle = 0
         # Turn cycle counter for autosave timing
         self.turn_cycle_count = 0
+        # Boss encounter tracking
+        self.boss_encounter_phase = 0  # 0=not started, 1=initial boss active, 2=phase-2 bosses spawned, 3=completed
+        self.boss_encounter_phase2_tags = []  # ["phase2_boss_0", ...]
+        self.level_completed = False
         # Save manager
         self.save_manager = SaveManager()
         # Autopan smooth camera state
@@ -3848,6 +4100,9 @@ class GameScreen:
         # Items button / consumable targeting mode
         self.selected_item = None          # Consumable card selected for use
         self.item_targeting_mode = False   # Whether in item targeting mode
+        # Behavior target selection mode (party screen assigns follow/attack targets)
+        self.behavior_target_type = None         # "follow_target" or "attack_target"
+        self.behavior_target_npc_card_id = None  # card_id of NPC being configured
         # Action choice popup (shown when multiple actions available on a unit)
         self.action_choice_open = False
         self.action_choice_buttons = []    # List of (button, action_type, data) tuples
@@ -3962,35 +4217,45 @@ class GameScreen:
     def _build_event_banner_buttons(self):
         """Compute button rects for the current event banner state."""
         self.event_banner_buttons = []
-        btn_y = WINDOW_HEIGHT - 120
         btn_h = 50
+        # Center-screen Y for choice buttons
+        center_btn_y = WINDOW_HEIGHT - 120
+
+        # Position single OK/Continue buttons just above the End Turn button
+        if hasattr(self, 'end_turn_button') and self.end_turn_button:
+            et_rect = self.end_turn_button.rect
+            single_btn_y = et_rect.top - 8 - btn_h
+            single_btn_cx = et_rect.centerx
+        else:
+            single_btn_y = center_btn_y
+            single_btn_cx = WINDOW_WIDTH // 2
 
         if self.event_banner_type == "transition":
-            # Single "OK" button, centered
+            # Single "OK" button, above End Turn
             btn_w = 220
-            btn_x = (WINDOW_WIDTH - btn_w) // 2
+            btn_x = single_btn_cx - btn_w // 2
             self.event_banner_buttons.append({
-                "rect": pygame.Rect(btn_x, btn_y, btn_w, btn_h),
+                "rect": pygame.Rect(btn_x, single_btn_y, btn_w, btn_h),
                 "label": "OK",
                 "action": "ok_transition"
             })
 
         elif self.event_banner_type == "instance":
             if self.event_banner_phase == "result":
-                # Result phase: single Continue button
+                # Result phase: single Continue button, above End Turn
                 btn_w = 220
-                btn_x = (WINDOW_WIDTH - btn_w) // 2
+                btn_x = single_btn_cx - btn_w // 2
                 self.event_banner_buttons.append({
-                    "rect": pygame.Rect(btn_x, btn_y, btn_w, btn_h),
+                    "rect": pygame.Rect(btn_x, single_btn_y, btn_w, btn_h),
                     "label": "Continue",
                     "action": "continue_instance"
                 })
             elif self.event_instance_needs_choice and self.event_instance_choices:
-                # Choice buttons stacked vertically upward from btn_y
+                # Choice buttons stacked vertically upward from center_btn_y (stay centered)
                 btn_w = 360
                 num_choices = len(self.event_instance_choices)
                 total_h = num_choices * (btn_h + 8) - 8
-                start_y = btn_y - total_h + btn_h
+                start_y = center_btn_y - total_h + btn_h
                 btn_x = (WINDOW_WIDTH - btn_w) // 2
                 for i, choice in enumerate(self.event_instance_choices):
                     choice_name = choice.get("name", f"Choice {i+1}")
@@ -4002,11 +4267,11 @@ class GameScreen:
                         "action": i
                     })
             else:
-                # No choice: single Continue button
+                # No choice: single Continue button, above End Turn
                 btn_w = 220
-                btn_x = (WINDOW_WIDTH - btn_w) // 2
+                btn_x = single_btn_cx - btn_w // 2
                 self.event_banner_buttons.append({
-                    "rect": pygame.Rect(btn_x, btn_y, btn_w, btn_h),
+                    "rect": pygame.Rect(btn_x, single_btn_y, btn_w, btn_h),
                     "label": "Continue",
                     "action": "continue_instance"
                 })
@@ -4562,6 +4827,7 @@ class GameScreen:
         self.hex_grid.active_turn_unit = game.player
         self.game_started = True
         self.turn_cycle_count = 0
+        self._detect_boss_encounter()
         self.initialize_screen()
         # Autosave at level start
         self.save_manager.save_game(game, self, save_type="autosave", save_label="Level Start")
@@ -4673,6 +4939,7 @@ class GameScreen:
         self.hex_grid.active_turn_unit = game.players[0]
         self.game_started = True
         self.turn_cycle_count = 0
+        self._detect_boss_encounter()
         self.initialize_screen()
         # Autosave at level start
         self.save_manager.save_game(game, self, save_type="autosave", save_label="Level Start")
@@ -4889,6 +5156,9 @@ class GameScreen:
         # Rebuild saved units
         self.save_manager.rebuild_units(save_data.get("units", []), self.hex_grid)
 
+        # Restore party behavior overrides
+        game.party_behavior_overrides = save_data.get("party_behavior_overrides", {})
+
         # Overlay saved location data
         if save_data.get("location_data"):
             self.save_manager.rebuild_location_data(save_data["location_data"], self.hex_grid)
@@ -4935,9 +5205,76 @@ class GameScreen:
         else:
             self.hex_grid.active_turn_unit = game.player
 
+        # Restore boss encounter state from save
+        self.boss_encounter_phase = save_data.get("boss_encounter_phase", 0)
+        self.boss_encounter_phase2_tags = save_data.get("boss_encounter_phase2_tags", [])
+        self.level_completed = save_data.get("level_completed", False)
+        # If no saved boss state, detect from units
+        if self.boss_encounter_phase == 0:
+            self._detect_boss_encounter()
+
         self.game_started = True
         self.initialize_screen()
         self.add_to_log("Game loaded from save.")
+
+    def _detect_boss_encounter(self):
+        """Detect if the level has a boss encounter and set the initial phase."""
+        if any(u.special_skill == "Repair" and u.repair_value > 0 for u in self.hex_grid.units):
+            self.boss_encounter_phase = 1
+
+    def _trigger_boss_phase_2(self):
+        """All enemy spawn locations destroyed — spawn 3 phase-2 bosses."""
+        self.boss_encounter_phase = 2
+        self.show_turn_banner("Boss Wave Incoming!", "#FF4444")
+
+        boss_cards = [
+            "beta_boss_repair_master",  # Repair boss
+            "beta_boss_war_healer",     # Healer boss
+            "beta_boss_war_chief",      # Attacker boss
+        ]
+        # Preferred spawn positions (right side, near spawn locations)
+        preferred_positions = [(8, 35), (13, 37), (17, 35)]
+
+        self.boss_encounter_phase2_tags = []
+        for i, card_id in enumerate(boss_cards):
+            card_data = load_card(card_id)
+            if not card_data:
+                continue
+            boss = Unit(card_data)
+            boss.boss_encounter_tag = f"phase2_boss_{i}"
+            # Try preferred position, then find nearest empty hex
+            pos = preferred_positions[i]
+            placed = False
+            if (0 <= pos[0] < self.hex_grid.rows and 0 <= pos[1] < self.hex_grid.cols
+                    and self.hex_grid.grid[pos[0]][pos[1]]["unit"] is None
+                    and self.hex_grid.grid[pos[0]][pos[1]]["accessible"]):
+                self.hex_grid.place_unit(boss, pos[0], pos[1])
+                placed = True
+            if not placed:
+                # Find nearest empty accessible hex
+                for r in range(max(0, pos[0]-3), min(self.hex_grid.rows, pos[0]+4)):
+                    for c in range(max(0, pos[1]-3), min(self.hex_grid.cols, pos[1]+4)):
+                        if (self.hex_grid.grid[r][c]["unit"] is None
+                                and self.hex_grid.grid[r][c]["accessible"]):
+                            self.hex_grid.place_unit(boss, r, c)
+                            placed = True
+                            break
+                    if placed:
+                        break
+            self.boss_encounter_phase2_tags.append(boss.boss_encounter_tag)
+            self.add_to_log(f"{boss.name} has appeared!")
+
+    def _check_boss_encounter_completion(self):
+        """Check if all phase-2 bosses are defeated."""
+        if self.boss_encounter_phase != 2 or not self.boss_encounter_phase2_tags:
+            return
+        alive_tags = {u.boss_encounter_tag for u in self.hex_grid.units
+                      if u.boss_encounter_tag and u.hp > 0}
+        if not any(tag in alive_tags for tag in self.boss_encounter_phase2_tags):
+            self.boss_encounter_phase = 3
+            self.level_completed = True
+            self.show_turn_banner("Level Completed!", "#FFD700")
+            self.add_to_log("All bosses defeated! Level Completed!")
 
     def check_level_completion(self):
         """Check if the current level's completion conditions are met."""
@@ -5310,6 +5647,10 @@ class GameScreen:
                 self.add_to_log(msg)
             self._handle_quest_chain()
 
+        # Check boss encounter phase-2 completion
+        if dead_units:
+            self._check_boss_encounter_completion()
+
         # Check for game over
         if game.multiplayer_mode:
             # Log player deaths only once (when HP first reaches 0)
@@ -5441,6 +5782,15 @@ class GameScreen:
                            f"[Special] {current_player.special_attack}", manager)
             self.attack_submenu_buttons.append((btn, "special", None))
             self.special_attack_button = btn
+            y += 34
+
+        # Super attack button (when charged)
+        if current_player.super_attack_ready:
+            btn = UIButton(pygame.Rect(x, y, button_width, 30),
+                           f"[SUPER] {current_player.special_attack}", manager)
+            self.attack_submenu_buttons.append((btn, "super", None))
+            self.super_attack_button = btn
+            y += 34
 
         self.attack_submenu_open = True
 
@@ -5451,6 +5801,7 @@ class GameScreen:
         self.attack_submenu_buttons = []
         self.attack_submenu_open = False
         self.special_attack_button = None
+        self.super_attack_button = None
 
     def initialize_screen(self):
         manager.clear_and_reset()
@@ -5461,7 +5812,7 @@ class GameScreen:
         rp_inner_w = rp_w - 2 * rp_pad  # 214
         toolbar_clearance = 60
         section_header_h = 20
-        player_info_h = 155
+        player_info_h = 175
         stats_h = 175
 
         pi_y = section_header_h + 4  # Below "Player" label
@@ -5516,6 +5867,7 @@ class GameScreen:
         self.attack_submenu_open = False
         self.attack_submenu_buttons = []
         self.special_attack_button = None
+        self.super_attack_button = None
         self.selected_item = None
         self.item_targeting_mode = False
         self.action_choice_open = False
@@ -5575,6 +5927,10 @@ class GameScreen:
         lines.append(f"<font color='#999999'>Action:</font> <font color='{act_color}'>{'Used' if p.action_used else 'Ready'}</font>")
         if p.class_name == "Warrior":
             lines.append(f"<font color='#999999'>Attacks:</font> <font color='#CCCCDD'>{p.warrior_attacks_remaining}/2</font>")
+        # Super charge meter
+        charge_pips = ">" * p.super_charge + "." * (p.super_charge_max - p.super_charge)
+        charge_color = "#FFD700" if p.super_attack_ready else "#888888"
+        lines.append(f"<font color='#999999'>Super:</font> <font color='{charge_color}'>[{charge_pips}]</font>")
         return "<br>".join(lines)
 
     def _handle_quest_chain(self):
@@ -5750,6 +6106,29 @@ class GameScreen:
         if loc_data and loc_data.get("card"):
             loc_name = loc_data["card"].card_data.get("Name", "Unknown")
             lines.append(f"<font color='#FFAA33'>{loc_name}</font>")
+            # Show HP for spawn locations
+            if loc_data.get("is_spawn_location", False) and loc_data.get("health", 0) > 0:
+                hp = loc_data["health"]
+                max_hp = loc_data.get("max_health", hp)
+                hp_ratio = hp / max_hp if max_hp > 0 else 0
+                if hp_ratio > 0.6:
+                    hc = "#66DD66"
+                elif hp_ratio > 0.3:
+                    hc = "#DDDD44"
+                else:
+                    hc = "#DD4444"
+                lines.append(f"<font color='#999999'>HP:</font> <font color='{hc}'>{hp}/{max_hp}</font>")
+            elif loc_data.get("is_npc_spawn_location", False) and loc_data.get("npc_health", 0) > 0:
+                hp = loc_data["npc_health"]
+                max_hp = loc_data.get("npc_max_health", hp)
+                hp_ratio = hp / max_hp if max_hp > 0 else 0
+                if hp_ratio > 0.6:
+                    hc = "#66DD66"
+                elif hp_ratio > 0.3:
+                    hc = "#DDDD44"
+                else:
+                    hc = "#DD4444"
+                lines.append(f"<font color='#999999'>HP:</font> <font color='{hc}'>{hp}/{max_hp}</font>")
         return "<br>".join(lines)
 
     def update_turn_label(self):
@@ -5802,6 +6181,7 @@ class GameScreen:
         self.attack_submenu_open = False
         self.attack_submenu_buttons = []
         self.special_attack_button = None
+        self.super_attack_button = None
 
         # Tool buttons no longer needed on left panel (handled by bottom toolbar)
         self.tool_buttons = []
@@ -6892,6 +7272,7 @@ class GameScreen:
                 for quest, result, msg in quest_results:
                     self.add_to_log(msg)
                 self._handle_quest_chain()
+            self._check_boss_encounter_completion()
             self.player_info_label.set_text(self.get_player_info())
 
         # Defer advance until the Location Defense banner finishes displaying
@@ -7010,6 +7391,7 @@ class GameScreen:
                 if unit in self.hex_grid.units:
                     self.hex_grid.units.remove(unit)
             self.pending_defeats.clear()
+            self._check_boss_encounter_completion()
 
         return animating
 
@@ -7121,6 +7503,55 @@ class GameScreen:
                     self.add_to_log("Cancelled defensive posture selection")
                     return
 
+                # Handle behavior target selection (from party screen)
+                if self.player_mode == "behavior_target_select" and self.behavior_target_type:
+                    card_id = self.behavior_target_npc_card_id
+                    target_ref = None
+                    if self.behavior_target_type == "follow_target":
+                        # Accept player or allied unit
+                        if hex_pos == current_player.position:
+                            target_ref = "player_0"
+                        elif unit and isinstance(unit, Unit) and unit.allegiance == "Allied":
+                            target_ref = unit.card_id
+                        # Check other players in multiplayer
+                        if not target_ref and hasattr(game, 'players') and game.players:
+                            for i, p in enumerate(game.players):
+                                if p.position == hex_pos:
+                                    target_ref = f"player_{i}"
+                                    break
+                    elif self.behavior_target_type == "attack_target":
+                        # Accept hostile unit
+                        if unit and isinstance(unit, Unit) and unit.allegiance == "Hostile":
+                            target_ref = unit.card_id
+                    if target_ref:
+                        # Save target to overrides and deployed unit
+                        if card_id not in game.party_behavior_overrides:
+                            game.party_behavior_overrides[card_id] = {"tree": ["attack_closest"]}
+                        if self.behavior_target_type == "follow_target":
+                            game.party_behavior_overrides[card_id]["follow_target"] = target_ref
+                        else:
+                            game.party_behavior_overrides[card_id]["attack_target"] = target_ref
+                        # Update deployed unit if exists
+                        for u in self.hex_grid.units:
+                            if u.card_id == card_id and u.allegiance == "Allied":
+                                if self.behavior_target_type == "follow_target":
+                                    u.behavior_follow_target = target_ref
+                                else:
+                                    u.behavior_attack_target = target_ref
+                                break
+                        target_name = target_ref
+                        if unit:
+                            target_name = getattr(unit, 'name', target_ref)
+                        elif target_ref.startswith("player_"):
+                            target_name = current_player.name or current_player.class_name
+                        self.add_to_log(f"Behavior target set: {target_name}")
+                    else:
+                        self.add_to_log("Invalid target for this behavior type")
+                    self.player_mode = "movement"
+                    self.behavior_target_type = None
+                    self.behavior_target_npc_card_id = None
+                    return
+
                 # Auto-detect available actions when clicking on a unit (skip in recruit/skill modes)
                 if not self.selected_attack and unit and isinstance(unit, Unit) and self.player_mode not in ("recruit", "skill", "item"):
                     available_actions = []
@@ -7225,6 +7656,9 @@ class GameScreen:
                     if message:
                         self.add_to_log(message)
                     if action_used:
+                        # Check if all enemy spawns destroyed — trigger boss phase 2
+                        if self.boss_encounter_phase == 1 and self.hex_grid.are_all_enemy_spawns_destroyed():
+                            self._trigger_boss_phase_2()
                         self._check_ammo_runout_banner(current_player)
                         self.player_info_label.set_text(self.get_player_info())
                         self.selected_attack = None
@@ -7436,6 +7870,16 @@ class GameScreen:
                         if proj_r and hover_pos in proj_r:
                             p_dmg = cp.attacks["projectile"]["damage"]
                             self.hex_grid.hover_extra_lines.append(f"~Proj: {p_dmg} dmg")
+                    elif self.hex_grid.is_attackable_location(hover_pos[0], hover_pos[1]):
+                        cp = game.current_player
+                        melee_r = cp.get_melee_attack_range(self.hex_grid)
+                        proj_r = cp.get_projectile_attack_range(self.hex_grid, game.current_party)
+                        if melee_r and hover_pos in melee_r:
+                            m_dmg = cp.attacks["melee"]["damage"]
+                            self.hex_grid.hover_extra_lines.append(f"~Melee: {m_dmg} dmg")
+                        if proj_r and hover_pos in proj_r:
+                            p_dmg = cp.attacks["projectile"]["damage"]
+                            self.hex_grid.hover_extra_lines.append(f"~Proj: {p_dmg} dmg")
             else:
                 self.hex_grid.hovered_hex = None
                 self.hex_grid.hover_extra_lines = []
@@ -7572,6 +8016,20 @@ class GameScreen:
                                     self._execute_special_attack(None)
                                 else:
                                     self.add_to_log(f"Select target for {current_player.special_attack}")
+                        elif action_type == "super" and is_player_turn:
+                            if not current_player.super_attack_ready:
+                                self.add_to_log("Super attack not ready")
+                            elif current_player.action_used:
+                                self.add_to_log("Action already used this turn")
+                            else:
+                                message, defeated_units = current_player.use_super_attack(None, self.hex_grid)
+                                self.add_to_log(message)
+                                for defeated_unit in defeated_units:
+                                    self.pending_defeats.append(defeated_unit)
+                                    self.add_to_log(f"{defeated_unit.name} defeated")
+                                    self.add_defeat_notification(defeated_unit.name)
+                                self.player_mode = "movement"
+                                self.player_info_label.set_text(self.get_player_info())
                         self._close_attack_submenu()
                         return
 
@@ -8768,6 +9226,7 @@ class Game:
         self._screen_changed_this_frame = False  # Prevents stray events after screen change
         self.player = None
         self.party = []  # List of allied NPC cards in the player's party (single-player mode)
+        self.party_behavior_overrides = {}  # {card_id: {"tree": [...], "follow_target": ..., "attack_target": ...}}
         self.card_manager = CardManager()
         self.quest_manager = QuestManager(self.card_manager)
         self.instance_manager = InstanceManager(self.card_manager)
@@ -8909,10 +9368,11 @@ while running:
         if e.type == pygame.QUIT:
             running = False
         game.handle_event(e)
-        manager.process_events(e)
-        # If screen changed during event handling, stop processing remaining events
-        # to prevent stray clicks from triggering buttons on the new screen
-        if game._screen_changed_this_frame:
+        # If screen changed during this event, skip passing it to pygame_gui
+        # to prevent the same click from triggering buttons on the new screen
+        if not game._screen_changed_this_frame:
+            manager.process_events(e)
+        else:
             break
     manager.update(time_delta)
     game.draw()

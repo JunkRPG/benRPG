@@ -1,0 +1,16 @@
+{
+  "id": "beta_boss_war_chief",
+  "card_type": "Boss Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "War Chief",
+    "Health": "100",
+    "Movement": "5",
+    "Melee Damage": "20",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Hostile",
+    "Special Skill": ""
+  }
+}

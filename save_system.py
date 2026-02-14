@@ -109,6 +109,14 @@ class SaveManager:
         if game_screen.campaign:
             save_data["campaign"] = game_screen.campaign
 
+        # Party behavior overrides (player-customized behavior trees)
+        save_data["party_behavior_overrides"] = getattr(game_ref, 'party_behavior_overrides', {})
+
+        # Boss encounter state
+        save_data["boss_encounter_phase"] = getattr(game_screen, 'boss_encounter_phase', 0)
+        save_data["boss_encounter_phase2_tags"] = getattr(game_screen, 'boss_encounter_phase2_tags', [])
+        save_data["level_completed"] = getattr(game_screen, 'level_completed', False)
+
         return save_data
 
     def _generate_filepath(self, save_type, level_file):
@@ -164,6 +172,10 @@ class SaveManager:
             "action_used": player.action_used,
             "warrior_attacks_remaining": player.warrior_attacks_remaining,
             "double_attack_active": player.double_attack_active,
+            # Super charge
+            "super_charge": player.super_charge,
+            "super_charge_max": player.super_charge_max,
+            "super_attack_ready": player.super_attack_ready,
         }
 
     def _serialize_inventory_card(self, card):
@@ -219,6 +231,12 @@ class SaveManager:
                 "projectile_damage": unit.projectile_damage,
                 "projectile_range": unit.projectile_range,
                 "garrison_target_location": list(unit.garrison_target_location) if getattr(unit, 'garrison_target_location', None) else None,
+                "behavior_tree": getattr(unit, 'behavior_tree', []),
+                "is_stubborn": getattr(unit, 'is_stubborn', False),
+                "behavior_follow_target": getattr(unit, 'behavior_follow_target', None),
+                "behavior_attack_target": getattr(unit, 'behavior_attack_target', None),
+                "recruit_cooldown": getattr(unit, 'recruit_cooldown', 0),
+                "boss_encounter_tag": getattr(unit, 'boss_encounter_tag', None),
             })
         return units
 
@@ -437,6 +455,11 @@ class SaveManager:
         player.warrior_attacks_remaining = player_data.get("warrior_attacks_remaining", 0)
         player.double_attack_active = player_data.get("double_attack_active", False)
 
+        # Super charge
+        player.super_charge = player_data.get("super_charge", 0)
+        player.super_charge_max = player_data.get("super_charge_max", 5)
+        player.super_attack_ready = player_data.get("super_attack_ready", False)
+
         # Skill cooldowns
         player.skill_cooldowns = player_data.get("skill_cooldowns", {})
         player.active_skill_slots = player_data.get("active_skill_slots", 3)
@@ -560,6 +583,15 @@ class SaveManager:
                 garrison_target = unit_info.get("garrison_target_location")
                 if garrison_target:
                     unit.garrison_target_location = tuple(garrison_target)
+                # Restore behavior tree state
+                saved_tree = unit_info.get("behavior_tree")
+                if saved_tree and isinstance(saved_tree, list):
+                    unit.behavior_tree = saved_tree
+                unit.is_stubborn = unit_info.get("is_stubborn", False)
+                unit.behavior_follow_target = unit_info.get("behavior_follow_target")
+                unit.behavior_attack_target = unit_info.get("behavior_attack_target")
+                unit.recruit_cooldown = unit_info.get("recruit_cooldown", 0)
+                unit.boss_encounter_tag = unit_info.get("boss_encounter_tag")
                 hex_grid.place_unit(unit, pos[0], pos[1])
 
     def rebuild_location_data(self, saved_loc_data, hex_grid):

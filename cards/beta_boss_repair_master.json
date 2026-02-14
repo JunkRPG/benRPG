@@ -1,0 +1,18 @@
+{
+  "id": "beta_boss_repair_master",
+  "card_type": "Boss Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Repair Master",
+    "Health": "80",
+    "Movement": "6",
+    "Melee Damage": "15",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Hostile",
+    "Special Skill": "Repair",
+    "Repair_Value": "15",
+    "Aggro_Range": "15"
+  }
+}

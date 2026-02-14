@@ -402,6 +402,50 @@ class HexGrid:
                 active.append((pos, loc_data))
         return active
 
+    def get_damaged_spawn_locations(self):
+        """Get enemy spawn locations that are damaged or destroyed (need repair).
+        Returns list of ((row, col), loc_data) tuples."""
+        damaged = []
+        for pos, loc_data in self.location_data.items():
+            card = loc_data.get("card")
+            if not card:
+                continue
+            card_data = card.card_data.get("data", {})
+            # Check if this location was/is an enemy spawn location (state 1 property)
+            is_spawn_state1 = str(card_data.get("Is_Spawn_Location", "false")).lower() == "true"
+            if not is_spawn_state1:
+                continue
+            current_state = loc_data.get("state", 1)
+            health = loc_data.get("health", 0)
+            max_health = loc_data.get("max_health", 0)
+            # Needs repair if destroyed (state 2) or damaged (health < max_health)
+            if current_state == 2 or (health < max_health and health > 0):
+                damaged.append((pos, loc_data))
+        return damaged
+
+    def get_all_enemy_spawn_location_positions(self):
+        """Get positions of ALL hexes that are/were enemy spawn locations (checking state 1 card data)."""
+        positions = []
+        for pos, loc_data in self.location_data.items():
+            card = loc_data.get("card")
+            if not card:
+                continue
+            card_data = card.card_data.get("data", {})
+            if str(card_data.get("Is_Spawn_Location", "false")).lower() == "true":
+                positions.append(pos)
+        return positions
+
+    def are_all_enemy_spawns_destroyed(self):
+        """Check if ALL enemy spawn locations are currently destroyed (state 2 or health <= 0)."""
+        spawn_positions = self.get_all_enemy_spawn_location_positions()
+        if not spawn_positions:
+            return False
+        for pos in spawn_positions:
+            loc_data = self.location_data.get(pos)
+            if loc_data and loc_data.get("is_spawn_location", False) and loc_data.get("health", 0) > 0:
+                return False  # At least one still active
+        return True
+
     def damage_location(self, row, col, damage):
         """Apply damage to a spawn location.
         Returns (damage_dealt, destroyed, message)."""
@@ -567,6 +611,58 @@ class HexGrid:
 
         if rebuilt:
             return True, healed, True, f"{loc_name} rebuilt and repaired! ({new_health}/{max_health} HP)"
+        else:
+            return True, healed, False, f"{loc_name} repaired for {healed} HP ({new_health}/{max_health} HP)"
+
+    def repair_spawn_location(self, row, col, heal_amount, can_rebuild=True):
+        """Repair an enemy spawn location.
+        If destroyed (state 2) and can_rebuild=True, rebuild it.
+        Returns (success, healed_amount, rebuilt, message)."""
+        loc_data = self.location_data.get((row, col))
+        if not loc_data:
+            return False, 0, False, "Not a location hex"
+
+        card = loc_data.get("card")
+        if not card:
+            return False, 0, False, "No location card assigned"
+
+        # Check state 1 for enemy spawn location property
+        card_data = card.card_data.get("data", {})
+        is_spawn_state1 = str(card_data.get("Is_Spawn_Location", "false")).lower() == "true"
+
+        if not is_spawn_state1:
+            return False, 0, False, "This location cannot be repaired"
+
+        current_state = loc_data.get("state", 1)
+        current_health = loc_data.get("health", 0)
+        max_health = loc_data.get("max_health", 0)
+
+        # If destroyed (state 2), rebuild first
+        rebuilt = False
+        if current_state == 2 and can_rebuild:
+            card.current_state = 1
+            loc_data["state"] = 1
+            self._init_spawn_location_data((row, col), card.card_data, 1)
+            max_health = loc_data.get("max_health", 0)
+            current_health = 0
+            rebuilt = True
+
+        if max_health <= 0:
+            return False, 0, rebuilt, "Location has no health to repair"
+
+        if current_health >= max_health and not rebuilt:
+            return False, 0, False, "Location already at full health"
+
+        old_health = current_health
+        new_health = min(max_health, current_health + heal_amount)
+        loc_data["health"] = new_health
+        loc_data["is_spawn_location"] = True  # Re-enable spawning
+        healed = new_health - old_health
+
+        loc_name = card.get_current_data().get("Name", "Spawn Location")
+
+        if rebuilt:
+            return True, healed, True, f"{loc_name} rebuilt! ({new_health}/{max_health} HP)"
         else:
             return True, healed, False, f"{loc_name} repaired for {healed} HP ({new_health}/{max_health} HP)"
 
@@ -1962,6 +2058,9 @@ class HexGrid:
             is_npc_spawn = loc_data.get("is_npc_spawn_location", False)
             has_npc_health = loc_data.get("npc_health", 0) > 0
 
+            # Track bottom of building area so the name label goes below it
+            label_top_y = y + self.hex_size * 0.3 * 0.5  # default: just below house body
+
             if loc_data.get("card"):
                 # Draw icons for assigned locations
                 is_upgraded = loc_data.get("state", 1) == 2
@@ -1999,11 +2098,24 @@ class HexGrid:
                         bar_height = 4
                         bar_x = tower_x - bar_width / 2
                         bar_y = tower_y + tower_size * 0.6
-                        pygame.draw.rect(hex_surface, colors['GRAY'],
+                        # Dark outline
+                        pygame.draw.rect(hex_surface, (10, 10, 20),
+                                       (bar_x - 1, bar_y - 1, bar_width + 2, bar_height + 2))
+                        # Dark red background
+                        pygame.draw.rect(hex_surface, (120, 20, 20),
                                        (bar_x, bar_y, bar_width, bar_height))
+                        # Gradient fill based on HP ratio
                         health_ratio = current_health / max_health
-                        pygame.draw.rect(hex_surface, colors['RED'],
-                                       (bar_x, bar_y, bar_width * health_ratio, bar_height))
+                        health_width = max(1, int(bar_width * health_ratio))
+                        if health_ratio > 0.5:
+                            r = int(255 * (1 - health_ratio) * 2)
+                            g = 220
+                        else:
+                            r = 220
+                            g = int(220 * health_ratio * 2)
+                        pygame.draw.rect(hex_surface, (r, g, 30),
+                                       (bar_x, bar_y, health_width, bar_height))
+                    label_top_y = bar_y + bar_height + 2
 
                 elif is_npc_spawn and has_npc_health:
                     # Draw church icon for active NPC spawn locations (blue)
@@ -2042,11 +2154,25 @@ class HexGrid:
                         bar_height = 4
                         bar_x = church_x - bar_width / 2
                         bar_y = church_y + church_size * 0.6
-                        pygame.draw.rect(hex_surface, colors['GRAY'],
+                        # Dark outline
+                        pygame.draw.rect(hex_surface, (10, 10, 20),
+                                       (bar_x - 1, bar_y - 1, bar_width + 2, bar_height + 2))
+                        # Dark blue background
+                        pygame.draw.rect(hex_surface, (20, 20, 120),
                                        (bar_x, bar_y, bar_width, bar_height))
+                        # Gradient fill based on HP ratio
                         health_ratio = current_npc_health / max_npc_health
-                        pygame.draw.rect(hex_surface, colors['BLUE'],
-                                       (bar_x, bar_y, bar_width * health_ratio, bar_height))
+                        health_width = max(1, int(bar_width * health_ratio))
+                        if health_ratio > 0.5:
+                            r = int(255 * (1 - health_ratio) * 2)
+                            g = 220
+                        else:
+                            r = 220
+                            g = int(220 * health_ratio * 2)
+                        pygame.draw.rect(hex_surface, (r, g, 30),
+                                       (bar_x, bar_y, health_width, bar_height))
+                    label_top_y = bar_y + bar_height + 2
+
                 else:
                     # Draw house icon for regular assigned locations
                     icon_color = colors['GREEN'] if is_upgraded else colors['ORANGE']
@@ -2069,15 +2195,14 @@ class HexGrid:
                     pygame.draw.rect(hex_surface, outline_color, base_rect.inflate(2, 2))
                     pygame.draw.rect(hex_surface, icon_color, base_rect)
 
-                # Draw location name with shadow
+                # Draw location name with shadow (below building and health bar)
                 loc_card = loc_data["card"]
                 loc_name = loc_card.get_current_data().get("Name", "")
                 if loc_name:
-                    house_size = self.hex_size * 0.3
                     shadow_color = (10, 10, 20)
                     name_surface = self.font.render(loc_name, True, colors['WHITE'])
                     shadow_surface = self.font.render(loc_name, True, shadow_color)
-                    name_rect = name_surface.get_rect(centerx=x, top=y + house_size * 0.5)
+                    name_rect = name_surface.get_rect(centerx=x, top=label_top_y)
                     for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                         hex_surface.blit(shadow_surface, name_rect.move(dx, dy))
                     hex_surface.blit(name_surface, name_rect)
@@ -2400,6 +2525,11 @@ class HexGrid:
                         loc_name = loc["card"].get_current_data().get("Name", "")
                         if loc_name:
                             tip_lines.append(loc_name)
+                    # Show HP for spawn locations with health
+                    if loc.get("is_spawn_location", False) and loc.get("health", 0) > 0:
+                        tip_lines.append(f"HP: {loc['health']}/{loc.get('max_health', loc['health'])}")
+                    elif loc.get("is_npc_spawn_location", False) and loc.get("npc_health", 0) > 0:
+                        tip_lines.append(f"HP: {loc['npc_health']}/{loc.get('npc_max_health', loc['npc_health'])}")
                 # Append extra lines (e.g. damage preview from game screen)
                 for extra in self.hover_extra_lines:
                     tip_lines.append(extra)
