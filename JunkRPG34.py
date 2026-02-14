@@ -5016,12 +5016,39 @@ class GameScreen:
             return
 
         try:
-            self.hex_grid.load_level(level_file, self.card_manager, game.player)
+            player1 = game.players[0] if game.multiplayer_mode and game.players else game.player
+            self.hex_grid.load_level(level_file, self.card_manager, player1)
             stage_name = stage_data.get("name", f"Stage {self.current_level_idx + 1}")
             self.log.append(f"Loaded {stage_name}: {os.path.basename(level_file)}")
+            # Place remaining multiplayer players at adjacent hexes
+            if game.multiplayer_mode and game.players and player1.position:
+                placed_positions = {player1.position}
+                for player in game.players[1:]:
+                    placed = False
+                    for existing_pos in list(placed_positions):
+                        for n_row, n_col in self.hex_grid.get_neighbors(existing_pos[0], existing_pos[1]):
+                            if (0 <= n_row < self.hex_grid.rows and 0 <= n_col < self.hex_grid.cols and
+                                (n_row, n_col) not in placed_positions and
+                                self.hex_grid.grid[n_row][n_col]["unit"] is None and
+                                self.hex_grid.grid[n_row][n_col]["accessible"]):
+                                self.hex_grid.place_unit(player, n_row, n_col)
+                                placed_positions.add((n_row, n_col))
+                                placed = True
+                                break
+                        if placed:
+                            break
+                    if not placed:
+                        fallback_row = self.hex_grid.rows // 2 + len(placed_positions)
+                        fallback_col = self.hex_grid.cols // 2
+                        self.hex_grid.place_unit(player, fallback_row, fallback_col)
+                        placed_positions.add((fallback_row, fallback_col))
         except Exception as e:
             print(f"Error loading level '{level_file}': {e}")
-            self.hex_grid.place_unit(game.player, self.hex_grid.rows // 2, self.hex_grid.cols // 2)
+            if game.multiplayer_mode and game.players:
+                for i, player in enumerate(game.players):
+                    self.hex_grid.place_unit(player, self.hex_grid.rows // 2 + i, self.hex_grid.cols // 2)
+            else:
+                self.hex_grid.place_unit(game.player, self.hex_grid.rows // 2, self.hex_grid.cols // 2)
             self.log.append(f"Failed to load level {self.current_level_idx + 1}. Starting default level.")
             return
 
@@ -5188,11 +5215,18 @@ class GameScreen:
             if unit.position:
                 self.hex_grid.grid[unit.position[0]][unit.position[1]]["unit"] = None
         self.hex_grid.units.clear()
-        # Clear player from grid (will re-place from save data)
-        if game.player and game.player.position:
-            r, c = game.player.position
-            if 0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols:
-                self.hex_grid.grid[r][c]["unit"] = None
+        # Clear player(s) from grid (will re-place from save data)
+        if multiplayer:
+            for p in game.players:
+                if p and p.position:
+                    r, c = p.position
+                    if 0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols:
+                        self.hex_grid.grid[r][c]["unit"] = None
+        else:
+            if game.player and game.player.position:
+                r, c = game.player.position
+                if 0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols:
+                    self.hex_grid.grid[r][c]["unit"] = None
 
         # Place player(s) from save
         if multiplayer:
@@ -5277,6 +5311,8 @@ class GameScreen:
 
     def _trigger_boss_phase_2(self):
         """All enemy spawn locations destroyed — spawn 3 phase-2 bosses."""
+        if self.boss_encounter_phase >= 2:
+            return  # Already triggered
         self.boss_encounter_phase = 2
         self.show_turn_banner("Boss Wave Incoming!", "#FF4444")
 
@@ -5387,8 +5423,8 @@ class GameScreen:
 
             elif comp_type == "survive_turns":
                 if turn_limit:
-                    # This would need turn tracking - for now, default to defeat all
-                    pass
+                    return self.turn_cycle_count >= turn_limit
+                # No turn limit specified — fall back to defeat all
                 return len([u for u in self.hex_grid.units if u.allegiance == "Hostile"]) == 0
 
         # Old format: transition_to_next string
@@ -5733,7 +5769,6 @@ class GameScreen:
                 quest_results = game.current_quest_manager.update("player_death", {}, self.hex_grid, game.current_player)
                 for quest, result, msg in quest_results:
                     self.add_to_log(msg)
-                self._handle_quest_chain()
                 self.turn_queue.clear()
                 self.pending_defeat = True
                 return True
@@ -5743,7 +5778,6 @@ class GameScreen:
             quest_results = game.current_quest_manager.update("player_death", {}, self.hex_grid, game.current_player)
             for quest, result, msg in quest_results:
                 self.add_to_log(msg)
-            self._handle_quest_chain()
             self.turn_queue.clear()
             self.pending_defeat = True
             return True
