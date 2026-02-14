@@ -69,6 +69,13 @@ class Unit:
         self.aggro_range = int(card_data["data"].get("Aggro_Range", 0) or 0)  # 0 = unlimited
         # Boss encounter tag (set by boss encounter system for phase tracking)
         self.boss_encounter_tag = None
+        # Messenger NPC dialogue
+        self.dialogue_text = card_data["data"].get("Dialogue_Text", "")
+        self.dialogue_delivered = False
+        self.pending_dialogue = None
+        # Gift cards given when dialogue is delivered
+        gift_str = card_data["data"].get("Dialogue_Gift_Cards", "")
+        self.dialogue_gift_cards = [c.strip() for c in gift_str.split(",") if c.strip()] if gift_str else []
 
         if self.states == 2 and "2nd_State_Name" in card_data["data"]:
             self.second_state = {
@@ -438,8 +445,47 @@ class Unit:
                         break
 
         elif self.allegiance == "Neutral":
+            # Messenger NPC: approach player and deliver dialogue
+            if self.special_skill == "Messenger" and self.dialogue_text and not self.dialogue_delivered:
+                targets = [grid.player]
+                if hasattr(grid, 'players') and grid.players:
+                    targets = [p for p in grid.players if p.hp > 0]
+                nearest_player = min(targets, key=lambda p: grid.hex_distance(self.position, p.position))
+                dist = grid.hex_distance(self.position, nearest_player.position)
+
+                if dist <= 1:
+                    # Adjacent — trigger dialogue
+                    self.pending_dialogue = {
+                        "text": self.dialogue_text,
+                        "speaker": self.name,
+                        "gift_card_ids": list(self.dialogue_gift_cards)
+                    }
+                    self.dialogue_delivered = True
+                    return log
+                else:
+                    # Pathfind toward nearest player
+                    path = grid.find_path(self.position, nearest_player.position)
+                    if path and len(path) > 1:
+                        max_steps = min(self.movement, len(path) - 1)
+                        for steps in range(max_steps, 0, -1):
+                            new_pos = path[steps]
+                            if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                                if new_pos != nearest_player.position:
+                                    success, msg = grid.move_unit(self, *new_pos)
+                                    if success:
+                                        log.append(f"{self.name} approaches")
+                                        if grid.hex_distance(self.position, nearest_player.position) <= 1:
+                                            self.pending_dialogue = {
+                                                "text": self.dialogue_text,
+                                                "speaker": self.name,
+                                                "gift_card_ids": list(self.dialogue_gift_cards)
+                                            }
+                                            self.dialogue_delivered = True
+                                break
+                    return log
+
             # Wild mounts wander multiple hexes in a random direction
-            if (self.states == 2 and self.current_state == 1 and
+            elif (self.states == 2 and self.current_state == 1 and
                     self.special_skill == "Mount"):
                 log = self._wild_mount_wander(grid)
             else:

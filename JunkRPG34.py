@@ -4130,6 +4130,10 @@ class GameScreen:
             'PURPLE': PURPLE,  # Added for linked level hexes
             'ORANGE': ORANGE   # Added for location hexes
         }
+        # === Dialogue popup state ===
+        self.dialogue_active = False
+        self.dialogue_text = ""
+        self.dialogue_speaker = ""
         # === Event banner overlay state ===
         self.event_banner_active = False
         self.event_banner_type = ""        # "transition" or "instance"
@@ -4160,6 +4164,55 @@ class GameScreen:
         self.event_result_font = pygame.font.SysFont("Arial", 30, bold=True)
         self.event_btn_font = pygame.font.SysFont("Arial", 22, bold=True)
         self.event_small_font = pygame.font.SysFont("Arial", 18)
+
+    # === Dialogue popup ===
+
+    def _draw_dialogue(self):
+        """Draw a modal dialogue overlay from a Messenger NPC."""
+        if not self.dialogue_active:
+            return
+        # Dim background
+        dim = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)
+        dim.fill((0, 0, 0, 150))
+        screen.blit(dim, (0, 0))
+
+        # Dialogue box (centered, 700x250)
+        box_w, box_h = 700, 250
+        box_x = (WINDOW_WIDTH - box_w) // 2
+        box_y = (WINDOW_HEIGHT - box_h) // 2
+        pygame.draw.rect(screen, (40, 30, 20), (box_x, box_y, box_w, box_h), border_radius=12)
+        pygame.draw.rect(screen, (180, 150, 100), (box_x, box_y, box_w, box_h), 3, border_radius=12)
+
+        # Speaker name
+        speaker_font = pygame.font.SysFont("arial", 22, bold=True)
+        speaker_surf = speaker_font.render(self.dialogue_speaker, True, (255, 220, 150))
+        screen.blit(speaker_surf, (box_x + 20, box_y + 15))
+
+        # Dialogue text (word-wrapped)
+        text_font = pygame.font.SysFont("arial", 18)
+        words = self.dialogue_text.split()
+        lines = []
+        current_line = ""
+        for word in words:
+            test = current_line + (" " if current_line else "") + word
+            if text_font.size(test)[0] < box_w - 40:
+                current_line = test
+            else:
+                lines.append(current_line)
+                current_line = word
+        if current_line:
+            lines.append(current_line)
+
+        y = box_y + 50
+        for line in lines:
+            surf = text_font.render(line, True, (230, 230, 220))
+            screen.blit(surf, (box_x + 20, y))
+            y += 26
+
+        # Dismiss hint
+        hint_font = pygame.font.SysFont("arial", 14)
+        hint = hint_font.render("Click or press any key to continue", True, (150, 150, 140))
+        screen.blit(hint, (box_x + box_w // 2 - hint.get_width() // 2, box_y + box_h - 30))
 
     # === Event banner overlay helpers ===
 
@@ -5312,13 +5365,20 @@ class GameScreen:
 
             elif comp_type == "reach_location":
                 if target:
-                    # Check if player is at a location hex with the target name
-                    player_pos = game.current_player.position if game.current_player else (0, 0)
+                    # Find all location hexes matching the target name
+                    target_positions = set()
                     for loc_hex in self.hex_grid.location_hexes:
-                        if (loc_hex["row"], loc_hex["column"]) == player_pos:
-                            loc_card = loc_hex.get("assigned_location_card")
-                            if loc_card and loc_card.get_current_data().get("Name") == target:
-                                return True
+                        pos = (loc_hex["row"], loc_hex["column"])
+                        loc_data = self.hex_grid.location_data.get(pos)
+                        if loc_data and loc_data.get("card"):
+                            if loc_data["card"].get_current_data().get("Name") == target:
+                                target_positions.add(pos)
+                    if not target_positions:
+                        return False
+                    # All living players must be at a matching location
+                    all_players = game.players if game.multiplayer_mode and game.players else [game.player]
+                    living = [p for p in all_players if p.hp > 0]
+                    return all(p.position in target_positions for p in living)
                 return False
 
             elif comp_type == "survive_turns":
@@ -5741,6 +5801,29 @@ class GameScreen:
                 if self._post_attack_processing(self.current_acting_unit):
                     return
                 self.player_info_label.set_text(self.get_player_info())
+
+        # Check for pending dialogue from Messenger NPCs
+        if self.current_acting_unit and hasattr(self.current_acting_unit, 'pending_dialogue') and self.current_acting_unit.pending_dialogue:
+            dlg = self.current_acting_unit.pending_dialogue
+            self.current_acting_unit.pending_dialogue = None
+            self.dialogue_active = True
+            self.dialogue_speaker = dlg["speaker"]
+            self.dialogue_text = dlg["text"]
+            # Distribute gift cards to all players
+            gift_ids = dlg.get("gift_card_ids", [])
+            if gift_ids:
+                all_players = game.players if game.multiplayer_mode and game.players else [game.player]
+                for card_id in gift_ids:
+                    for p in all_players:
+                        card_data = load_card(card_id)
+                        if card_data:
+                            inv_card = InventoryCard(card_data)
+                            p.inventory.append(inv_card)
+                self.add_to_log(f"{dlg['speaker']} gave you some items!")
+
+        # Block turn queue while dialogue is showing
+        if self.dialogue_active:
+            return
 
         # Check if enough time has passed since last action
         current_time = pygame.time.get_ticks()
@@ -7417,6 +7500,11 @@ class GameScreen:
         if self.event_banner_active:
             self._handle_event_banner(event)
             return
+        # Dialogue popup modal — block ALL other game input
+        if self.dialogue_active:
+            if event.type in (pygame.MOUSEBUTTONDOWN, pygame.KEYDOWN):
+                self.dialogue_active = False
+            return
         # ESC opens pause menu
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             game.current_screen = "pause_menu"
@@ -8336,6 +8424,7 @@ class GameScreen:
             self._pending_advance_after_banner = False
             self.advance_turn()
         self.draw_event_banner()
+        self._draw_dialogue()
         # Check for pending location screen (show after movement animation completes)
         if self.pending_location and not self.animating:
             loc_data = self.pending_location

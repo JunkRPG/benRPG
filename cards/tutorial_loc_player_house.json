@@ -1,0 +1,14 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Your House",
+    "Description": "Your humble home at the edge of the village. A familiar place to rest before the journey ahead.",
+    "Outcomes": "[{\"probability\":60,\"card_type\":\"Junk\",\"deck_file\":\"decks/beta_junk_deck.json\"},{\"probability\":40,\"card_type\":\"None\"}]",
+    "Choices": "[{\"name\":\"Rest\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":20}},{\"name\":\"Search\",\"action\":\"draw_card\",\"costs_action\":true}]",
+    "Shop_Deck": "",
+    "Shop_Size": "",
+    "Is_Spawn_Location": "false"
+  }
+}

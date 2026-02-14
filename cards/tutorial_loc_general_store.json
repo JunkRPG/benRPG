@@ -1,0 +1,14 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "General Store",
+    "Description": "The village shop. Ransacked but some supplies remain.",
+    "Outcomes": "[{\"probability\":70,\"card_type\":\"Junk\",\"deck_file\":\"decks/beta_junk_deck.json\"},{\"probability\":30,\"card_type\":\"Document/Blueprint\"}]",
+    "Choices": "[{\"name\":\"Search Shelves\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Eat Found Rations\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":5}}]",
+    "Shop_Deck": "",
+    "Shop_Size": "",
+    "Is_Spawn_Location": "false"
+  }
+}

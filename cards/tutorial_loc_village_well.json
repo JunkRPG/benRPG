@@ -1,0 +1,14 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Village Well",
+    "Description": "A stone well at the center of the village. The water is cool and refreshing.",
+    "Outcomes": "[{\"probability\":50,\"card_type\":\"Junk\",\"deck_file\":\"decks/beta_junk_deck.json\"},{\"probability\":50,\"card_type\":\"None\"}]",
+    "Choices": "[{\"name\":\"Drink Water\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":10}},{\"name\":\"Search Around Well\",\"action\":\"draw_card\",\"costs_action\":true}]",
+    "Shop_Deck": "",
+    "Shop_Size": "",
+    "Is_Spawn_Location": "false"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Village Square",
+    "Description": "The village gathering place. Signs of a hasty evacuation are everywhere.",
+    "Outcomes": "[{\"probability\":50,\"card_type\":\"Junk\",\"deck_file\":\"decks/beta_junk_deck.json\"},{\"probability\":30,\"card_type\":\"Document/Blueprint\"},{\"probability\":20,\"card_type\":\"None\"}]",
+    "Choices": "[{\"name\":\"Search Debris\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Look Around\",\"action\":\"heal\",\"costs_action\":false,\"params\":{\"amount\":0}}]",
+    "Shop_Deck": "",
+    "Shop_Size": "",
+    "Is_Spawn_Location": "false"
+  }
+}

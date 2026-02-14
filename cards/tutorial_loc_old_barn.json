@@ -1,0 +1,14 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Old Barn",
+    "Description": "A weathered barn where farming tools and old weapons are stored.",
+    "Outcomes": "[{\"probability\":80,\"card_type\":\"Junk\",\"deck_file\":\"decks/beta_junk_deck.json\"},{\"probability\":20,\"card_type\":\"Document/Blueprint\"}]",
+    "Choices": "[{\"name\":\"Search Tools\",\"action\":\"draw_card\",\"costs_action\":true},{\"name\":\"Search Deeper\",\"action\":\"draw_card\",\"costs_action\":true}]",
+    "Shop_Deck": "",
+    "Shop_Size": "",
+    "Is_Spawn_Location": "false"
+  }
+}

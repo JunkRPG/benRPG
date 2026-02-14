@@ -1,0 +1,19 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Village Girl",
+    "Health": "8",
+    "Movement": "4",
+    "Melee Damage": "0",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Neutral",
+    "Special Skill": "Messenger",
+    "Dialogue_Text": "Are you here to help? The scary men took over the town east of here. My papa says there's weapons in the old barn if you need them.",
+    "Dialogue_Gift_Cards": "beta_junk_bent_sword",
+    "Background Image File Path": "",
+    "NPC Image File Path": ""
+  }
+}
