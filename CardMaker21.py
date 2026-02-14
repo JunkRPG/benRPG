@@ -1601,6 +1601,9 @@ class CardCreationScreen:
                     ("Projectile Damage", "text"),
                     ("Projectile Range", "text"),
                     ("range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id
+                    ("Special Skill", "text"),
+                    ("Heal_Amount", "text"),
+                    ("Heal_Range", "text"),
                     ("Background Image File Path", "file"),
                     ("Enemy Image File Path", "file")
                 ]
@@ -1612,6 +1615,9 @@ class CardCreationScreen:
                     ("2nd_State_Projectile Damage", "text"),
                     ("2nd_State_Projectile Range", "text"),
                     ("2nd_state_range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id for 2nd state
+                    ("2nd_State_Special Skill", "text"),
+                    ("2nd_State_Heal_Amount", "text"),
+                    ("2nd_State_Heal_Range", "text"),
                     ("2nd_State_Enemy Image File Path", "file")
                 ]
                 column_width = 300
@@ -1637,6 +1643,9 @@ class CardCreationScreen:
                     ("Projectile Damage", "text"),
                     ("Projectile Range", "text"),
                     ("range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id
+                    ("Special Skill", "text"),
+                    ("Heal_Amount", "text"),
+                    ("Heal_Range", "text"),
                     ("Background Image File Path", "file"),
                     ("Boss Image File Path", "file")
                 ]
@@ -1648,6 +1657,9 @@ class CardCreationScreen:
                     ("2nd_State_Projectile Damage", "text"),
                     ("2nd_State_Projectile Range", "text"),
                     ("2nd_state_range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id for 2nd state
+                    ("2nd_State_Special Skill", "text"),
+                    ("2nd_State_Heal_Amount", "text"),
+                    ("2nd_State_Heal_Range", "text"),
                     ("2nd_State_Boss Image File Path", "file")
                 ]
                 column_width = 300
@@ -1675,6 +1687,8 @@ class CardCreationScreen:
                     ("range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id
                     ("Allegiance (Hostile, Neutral, Allied)", "text"),
                     ("Special Skill", "text"),
+                    ("Heal_Amount", "text"),
+                    ("Heal_Range", "text"),
                     ("Background Image File Path", "file"),
                     ("NPC Image File Path", "file")
                 ]
@@ -1688,6 +1702,8 @@ class CardCreationScreen:
                     ("2nd_state_range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id for 2nd state
                     ("2nd_State_Allegiance (Hostile, Neutral, Allied)", "text"),
                     ("2nd_State_Special Skill", "text"),
+                    ("2nd_State_Heal_Amount", "text"),
+                    ("2nd_State_Heal_Range", "text"),
                     ("2nd_State_NPC Image File Path", "file")
                 ]
                 column_width = 300
@@ -1862,6 +1878,9 @@ class CardCreationScreen:
                     ("Projectile Damage", "text"),
                     ("range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id
                     ("Projectile Range", "text"),
+                    ("Special Skill", "text"),
+                    ("Heal_Amount", "text"),
+                    ("Heal_Range", "text"),
                     ("Background Image File Path", "file"),
                     ("Enemy Image File Path", "file")
                 ]
@@ -1881,6 +1900,9 @@ class CardCreationScreen:
                     ("Projectile Damage", "text"),
                     ("Projectile Range", "text"),
                     ("range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id
+                    ("Special Skill", "text"),
+                    ("Heal_Amount", "text"),
+                    ("Heal_Range", "text"),
                     ("Background Image File Path", "file"),
                     ("Boss Image File Path", "file")
                 ]
@@ -1902,6 +1924,8 @@ class CardCreationScreen:
                     ("range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id
                     ("Allegiance (Hostile, Neutral, Allied)", "text"),
                     ("Special Skill", "text"),
+                    ("Heal_Amount", "text"),
+                    ("Heal_Range", "text"),
                     ("Background Image File Path", "file"),
                     ("NPC Image File Path", "file")
                 ]

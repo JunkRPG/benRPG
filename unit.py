@@ -23,6 +23,8 @@ class Unit:
         self.allegiance = card_data["data"].get("Allegiance (Hostile, Neutral, Allied)", "Hostile")
         self.special_skill = card_data["data"].get("Special Skill", None)
         self.spawn_deck = card_data["data"].get("Spawn_Deck", None)
+        self.heal_amount = int(card_data["data"].get("Heal_Amount", 0) or 0)
+        self.heal_range = int(card_data["data"].get("Heal_Range", 1) or 1)
         self.position = None
         self.card_type = card_data["card_type"]
         self.states = card_data.get("states", 1)
@@ -63,14 +65,21 @@ class Unit:
                 "projectile_damage": int(card_data["data"].get("2nd_State_Projectile Damage", self.projectile_damage)),
                 "projectile_range": int(card_data["data"].get("2nd_State_Projectile Range", self.projectile_range)),
                 "allegiance": card_data["data"].get("2nd_State_Allegiance (Hostile, Neutral, Allied)", self.allegiance),
-                "special_skill": card_data["data"].get("2nd_State_Special Skill", self.special_skill)
+                "special_skill": card_data["data"].get("2nd_State_Special Skill", self.special_skill),
+                "heal_amount": int(card_data["data"].get("2nd_State_Heal_Amount", card_data["data"].get("Heal_Amount", 0)) or 0),
+                "heal_range": int(card_data["data"].get("2nd_State_Heal_Range", card_data["data"].get("Heal_Range", 1)) or 1),
             }
 
     def take_turn(self, grid):
         log = []
         if not self.position:
             return log
-        
+
+        # Healer: heal friendly units before taking other actions
+        if self.special_skill == "Healer" and self.heal_amount > 0:
+            heal_log = self._perform_healing(grid)
+            log.extend(heal_log)
+
         if self.allegiance == "Hostile":
             player = grid.player
             distance_to_player = grid.hex_distance(self.position, player.position)
@@ -495,6 +504,51 @@ class Unit:
                             break
         return log
 
+    def _perform_healing(self, grid):
+        """Healer skill: heal the most damaged friendly unit in range."""
+        log = []
+        if self.heal_amount <= 0:
+            return log
+
+        # Build candidate list based on allegiance
+        candidates = []
+        if self.allegiance == "Hostile":
+            for u in grid.units:
+                if (u.allegiance == "Hostile" and u.hp > 0 and u.hp < u.max_hp
+                        and u is not self and u.position
+                        and grid.hex_distance(self.position, u.position) <= self.heal_range):
+                    candidates.append(u)
+        elif self.allegiance == "Allied":
+            for u in grid.units:
+                if (u.allegiance == "Allied" and u.hp > 0 and u.hp < u.max_hp
+                        and u is not self and u.position
+                        and grid.hex_distance(self.position, u.position) <= self.heal_range):
+                    candidates.append(u)
+            # Also consider healing player(s)
+            players = grid.players if hasattr(grid, 'players') and grid.players else []
+            if not players and hasattr(grid, 'player') and grid.player:
+                players = [grid.player]
+            for p in players:
+                if (p.hp > 0 and p.hp < p.max_hp and p.position
+                        and grid.hex_distance(self.position, p.position) <= self.heal_range):
+                    candidates.append(p)
+
+        if not candidates:
+            return log
+
+        # Pick the most damaged (lowest HP ratio)
+        target = min(candidates, key=lambda u: u.hp / u.max_hp)
+        old_hp = target.hp
+        target.hp = min(target.max_hp, target.hp + self.heal_amount)
+        healed = target.hp - old_hp
+
+        if healed > 0:
+            target_name = getattr(target, 'class_name', None) or getattr(target, 'name', 'Unknown')
+            target.set_damage_text(0, text=f"+{healed}")
+            log.append(f"{self.name} healed {target_name} for {healed} HP")
+
+        return log
+
     def execute_pending_attack(self, grid):
         """Execute a deferred attack after movement animation completes.
         Returns list of log entries."""
@@ -589,6 +643,8 @@ class Unit:
             self.projectile_range = state_data["projectile_range"]
             self.allegiance = state_data["allegiance"]
             self.special_skill = state_data["special_skill"]
+            self.heal_amount = state_data.get("heal_amount", self.heal_amount)
+            self.heal_range = state_data.get("heal_range", self.heal_range)
             return f"{self.name} switched to second state"
         return ""
 
@@ -603,11 +659,12 @@ class Unit:
             stats += f"\nState: {self.current_state}/2"
         return stats
 
-    def set_damage_text(self, damage, delay=0, anim=None):
+    def set_damage_text(self, damage, delay=0, anim=None, text=None):
         """Set the damage text and timestamp when damage is taken.
         delay: ms to wait before showing the text (syncs with attack animations).
-        anim: AttackAnimation object to tie health bar offset to actual animation state."""
-        self.damage_text = f"-{damage}"
+        anim: AttackAnimation object to tie health bar offset to actual animation state.
+        text: custom text override (e.g. '+8' for healing, 'BLOCKED')."""
+        self.damage_text = text if text else f"-{damage}"
         self.damage_time = pygame.time.get_ticks() + delay
         if anim:
             self._pending_damage_anim = anim
