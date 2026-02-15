@@ -2385,5 +2385,138 @@
     "blueprint_subclass": null,
     "states": 1,
     "name": "War Chief"
+  },
+  "tutorial_npc_village_woman1": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Village Woman"
+  },
+  "tutorial_npc_village_woman2": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Village Mother"
+  },
+  "tutorial_npc_village_child1": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Village Boy"
+  },
+  "tutorial_npc_village_child2": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Village Girl"
+  },
+  "tutorial_npc_elder_woman": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Village Elder"
+  },
+  "tutorial_loc_player_house": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Your House"
+  },
+  "tutorial_loc_village_well": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Village Well"
+  },
+  "tutorial_loc_old_barn": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Old Barn"
+  },
+  "tutorial_loc_general_store": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "General Store"
+  },
+  "tutorial_loc_village_square": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Village Square"
+  },
+  "tutorial_loc_road_to_town": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Road to Town"
+  },
+  "tutorial_transition_village_life": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Village Life - Day"
+  },
+  "tutorial_instance_wounded_villagers": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wounded Villagers"
+  },
+  "tutorial_instance_village_foraging": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Village Foraging"
+  },
+  "tutorial_instance_strange_noise": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Strange Noise"
+  },
+  "tutorial_loc_village_watchtower": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Village Watchtower (Unfinished)"
+  },
+  "tutorial_npc_village_archer": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Village Archer"
+  },
+  "tutorial_npc_village_swordsman": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Village Swordsman"
+  },
+  "tutorial_npc_village_father": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Village Father"
   }
 }

@@ -76,6 +76,16 @@ class Unit:
         # Gift cards given when dialogue is delivered
         gift_str = card_data["data"].get("Dialogue_Gift_Cards", "")
         self.dialogue_gift_cards = [c.strip() for c in gift_str.split(",") if c.strip()] if gift_str else []
+        # Carry-over: if True, this NPC transfers to the next campaign level
+        self.carry_to_next_level = False
+        # Dual Strike: allows a second attack per turn (no movement)
+        self.dual_strike = (self.special_skill == "Dual Strike")
+        # Range flash: briefly highlight attack range at start of allied turn
+        self.range_flash_start = 0
+        # Attack proximity range: only engage enemies within this distance (0 = unlimited)
+        self.attack_proximity_range = int(card_data["data"].get("Attack_Proximity_Range", 0) or 0)
+        # Avoid location hexes: never stop on a location hex when following
+        self.avoid_location_hexes = str(card_data["data"].get("Avoid_Location_Hexes", "false")).lower() == "true"
 
         if self.states == 2 and "2nd_State_Name" in card_data["data"]:
             self.second_state = {
@@ -444,6 +454,12 @@ class Unit:
                         log.extend(result)
                         break
 
+            # Dual Strike: attempt a second attack (no movement) after first action
+            if self.dual_strike and log:
+                second_log = self._dual_strike_second_attack(grid)
+                if second_log:
+                    log.extend(second_log)
+
         elif self.allegiance == "Neutral":
             # Messenger NPC: approach player and deliver dialogue
             if self.special_skill == "Messenger" and self.dialogue_text and not self.dialogue_delivered:
@@ -461,6 +477,8 @@ class Unit:
                         "gift_card_ids": list(self.dialogue_gift_cards)
                     }
                     self.dialogue_delivered = True
+                    if self.states == 2:
+                        self.switch_state()
                     return log
                 else:
                     # Pathfind toward nearest player
@@ -481,6 +499,8 @@ class Unit:
                                                 "gift_card_ids": list(self.dialogue_gift_cards)
                                             }
                                             self.dialogue_delivered = True
+                                            if self.states == 2:
+                                                self.switch_state()
                                 break
                     return log
 
@@ -821,6 +841,10 @@ class Unit:
         if not hostiles:
             return None
         target = min(hostiles, key=lambda u: grid.hex_distance(self.position, u.position))
+        # If proximity range is set, only engage if nearest enemy is within range
+        if self.attack_proximity_range > 0:
+            if grid.hex_distance(self.position, target.position) > self.attack_proximity_range:
+                return None  # Too far — skip to next behavior
         return self._chase_and_attack(grid, target)
 
     def _behavior_attack_weakest(self, grid):
@@ -852,6 +876,25 @@ class Unit:
 
         distance = grid.hex_distance(self.position, target_entity.position)
 
+        # If currently standing on a location hex and should avoid them, move off first
+        if self.avoid_location_hexes and self.position in grid.location_data:
+            neighbors = grid.get_neighbors(*self.position)
+            best = None
+            best_dist = float('inf')
+            for pos in neighbors:
+                if (grid.grid[pos[0]][pos[1]]["unit"] is None and
+                        grid.grid[pos[0]][pos[1]].get("accessible", True) and
+                        pos not in grid.location_data):
+                    d = grid.hex_distance(pos, target_entity.position)
+                    if d < best_dist:
+                        best_dist = d
+                        best = pos
+            if best:
+                success, msg = grid.move_unit(self, *best)
+                if success:
+                    return [f"{self.name} steps aside"]
+            return []
+
         # Within 2 hexes — opportunistically attack adjacent enemies
         if distance <= 2:
             hostiles = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
@@ -866,13 +909,16 @@ class Unit:
                 return [f"{self.name} attacked {enemy.name} for {damage} damage"]
             return []  # Staying near target, nothing to do
 
-        # Too far — move toward target
+        # Too far — move toward target, avoiding location hexes
         path = grid.find_path(self.position, target_entity.position)
         if path and len(path) > 1:
             max_steps = min(self.movement, len(path) - 1)
             for steps in range(max_steps, 0, -1):
                 new_pos = path[steps]
                 if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                    # Skip location hexes if avoiding them
+                    if self.avoid_location_hexes and new_pos in grid.location_data:
+                        continue
                     success, msg = grid.move_unit(self, *new_pos)
                     if success:
                         return [f"{self.name} follows toward {getattr(target_entity, 'name', getattr(target_entity, 'class_name', 'target'))}"]
@@ -1052,6 +1098,57 @@ class Unit:
                         return log
                     break
         return None
+
+    def _dual_strike_second_attack(self, grid):
+        """Dual Strike: attempt a second attack from current position (no movement)."""
+        log = []
+        hostiles = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
+        if not hostiles:
+            return log
+
+        # Prefer projectile attack on nearest in-range hostile
+        if self.projectile_damage > 0:
+            in_range = [u for u in hostiles if
+                        1 < grid.hex_distance(self.position, u.position) <= self.projectile_range and
+                        grid.is_aligned(self.position, u.position, self.projectile_range) and
+                        grid.has_clear_line_of_sight(self.position, u.position)]
+            if in_range:
+                target = min(in_range, key=lambda u: grid.hex_distance(self.position, u.position))
+                damage = self.projectile_damage
+                anim = None
+                delay = 0
+                if hasattr(grid, 'attack_anims'):
+                    src = grid.get_hex_center(*self.position)
+                    tgt = grid.get_hex_center(*target.position)
+                    anim = grid.attack_anims.create_projectile(src, tgt)
+                    delay = grid.attack_anims.get_max_remaining_ms()
+                target.hp -= damage
+                target.set_damage_text(damage, delay, anim=anim)
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks() + delay
+                log.append(f"{self.name} (Dual Strike) attacked {target.name} with projectile for {damage} damage")
+                return log
+
+        # Melee attack on adjacent hostile
+        adjacent = [u for u in hostiles if grid.hex_distance(self.position, u.position) == 1]
+        if adjacent:
+            target = random.choice(adjacent)
+            damage = self.melee_damage
+            anim = None
+            delay = 0
+            if hasattr(grid, 'attack_anims'):
+                src = grid.get_hex_center(*self.position)
+                tgt = grid.get_hex_center(*target.position)
+                anim = grid.attack_anims.create_melee(src, tgt)
+                delay = grid.attack_anims.get_max_remaining_ms()
+            target.hp -= damage
+            target.set_damage_text(damage, delay, anim=anim)
+            self.attack_flash = True
+            self.flash_start = pygame.time.get_ticks() + delay
+            log.append(f"{self.name} (Dual Strike) attacked {target.name} for {damage} damage")
+            return log
+
+        return log
 
     def execute_pending_attack(self, grid):
         """Execute a deferred attack after movement animation completes.

@@ -1,0 +1,18 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Village Archer",
+    "Description": "A keen-eyed villager who volunteered to defend the watchtower. Years of hunting have made her an excellent shot.",
+    "Health": "20",
+    "Movement": "3",
+    "Melee Damage": "3",
+    "Projectile Damage": "8",
+    "Projectile Range": "4",
+    "Range_Type": "line_of_sight",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "",
+    "Image Path": ""
+  }
+}

@@ -811,6 +811,13 @@ class LocationScreen:
         )
 
     def handle_event(self, event):
+        # Handle window X button (same as Close)
+        if event.type == pygame_gui.UI_WINDOW_CLOSE:
+            if event.ui_element == self.window:
+                game.current_screen = "game"
+                game_screen.initialize_screen()
+                return
+
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             # Handle close button
             if event.ui_element == self.close_button:
@@ -4890,6 +4897,7 @@ class GameScreen:
         # Reset game state
         self.hex_grid = HexGrid(16, 24, 30, WINDOW_WIDTH, WINDOW_HEIGHT)
         self.hex_grid.players = game.players  # Set players list on hex_grid
+        self.hex_grid._num_players = len(game.players)
         self.current_level_file = level_file
         self.campaign_file = None
         self.log.clear()
@@ -5017,6 +5025,21 @@ class GameScreen:
 
         try:
             player1 = game.players[0] if game.multiplayer_mode and game.players else game.player
+            # Collect carry-over NPCs before loading new level (which clears the grid)
+            carry_over_npcs = []
+            for unit in self.hex_grid.units:
+                if getattr(unit, 'carry_to_next_level', False) and unit.hp > 0:
+                    carry_over_npcs.append({
+                        "card_id": unit.card_id,
+                        "hp": unit.hp,
+                        "max_hp": unit.max_hp,
+                        "behavior_follow_target": unit.behavior_follow_target,
+                        "carry_to_next_level": True,
+                        "behavior_tree": list(unit.behavior_tree),
+                    })
+            # Set multiplayer state so load_level can filter multiplayer_only units
+            num_players = len(game.players) if game.multiplayer_mode and game.players else 1
+            self.hex_grid._num_players = num_players
             self.hex_grid.load_level(level_file, self.card_manager, player1)
             stage_name = stage_data.get("name", f"Stage {self.current_level_idx + 1}")
             self.log.append(f"Loaded {stage_name}: {os.path.basename(level_file)}")
@@ -5042,8 +5065,56 @@ class GameScreen:
                         fallback_col = self.hex_grid.cols // 2
                         self.hex_grid.place_unit(player, fallback_row, fallback_col)
                         placed_positions.add((fallback_row, fallback_col))
+            # Respawn carry-over NPCs near their follow targets
+            if carry_over_npcs:
+                all_players = game.players if game.multiplayer_mode and game.players else [game.player]
+                for npc_info in carry_over_npcs:
+                    card_data = load_card(npc_info["card_id"])
+                    if not card_data:
+                        continue
+                    unit = Unit(card_data)
+                    unit.hp = npc_info["hp"]
+                    unit.max_hp = npc_info["max_hp"]
+                    unit.carry_to_next_level = True
+                    unit.behavior_tree = npc_info["behavior_tree"]
+                    if npc_info.get("behavior_follow_target"):
+                        unit.behavior_follow_target = npc_info["behavior_follow_target"]
+                    # Find the follow target player to spawn near
+                    spawn_near = player1
+                    if unit.behavior_follow_target and unit.behavior_follow_target.startswith("player_"):
+                        try:
+                            idx = int(unit.behavior_follow_target.split("_")[1])
+                            if idx < len(all_players) and all_players[idx].hp > 0:
+                                spawn_near = all_players[idx]
+                        except (ValueError, IndexError):
+                            pass
+                    # Find empty neighbor hex near the target player
+                    placed = False
+                    if spawn_near.position:
+                        for n_row, n_col in self.hex_grid.get_neighbors(*spawn_near.position):
+                            if (0 <= n_row < self.hex_grid.rows and 0 <= n_col < self.hex_grid.cols and
+                                self.hex_grid.grid[n_row][n_col]["unit"] is None and
+                                self.hex_grid.grid[n_row][n_col]["accessible"]):
+                                self.hex_grid.place_unit(unit, n_row, n_col)
+                                self.add_to_log(f"{unit.name} continues with the party")
+                                placed = True
+                                break
+                    if not placed:
+                        # Fallback: place near center
+                        for r in range(self.hex_grid.rows):
+                            for c in range(self.hex_grid.cols):
+                                if (self.hex_grid.grid[r][c]["unit"] is None and
+                                    self.hex_grid.grid[r][c]["accessible"]):
+                                    self.hex_grid.place_unit(unit, r, c)
+                                    self.add_to_log(f"{unit.name} continues with the party")
+                                    placed = True
+                                    break
+                            if placed:
+                                break
         except Exception as e:
             print(f"Error loading level '{level_file}': {e}")
+            import traceback
+            traceback.print_exc()
             if game.multiplayer_mode and game.players:
                 for i, player in enumerate(game.players):
                     self.hex_grid.place_unit(player, self.hex_grid.rows // 2 + i, self.hex_grid.cols // 2)
@@ -5446,6 +5517,73 @@ class GameScreen:
         # Default: defeat all enemies
         return len([u for u in self.hex_grid.units if u.allegiance == "Hostile"]) == 0
 
+    def _check_reach_location_instant(self, pos):
+        """Check if stepping on this location hex should trigger instant level transition.
+        Returns True if campaign completion type is reach_location and all living players
+        are on matching target location hexes."""
+        if not self.campaign:
+            return False
+        stages = self.campaign.get("stages") or self.campaign.get("levels", [])
+        if not stages or self.current_level_idx >= len(stages):
+            return False
+        stage_data = stages[self.current_level_idx]
+        completion = stage_data.get("completion_conditions", {})
+        if not completion or completion.get("type") != "reach_location":
+            return False
+        target = completion.get("target", "")
+        if not target:
+            return False
+        # Build set of matching location positions
+        target_positions = set()
+        for loc_hex in self.hex_grid.location_hexes:
+            lpos = (loc_hex["row"], loc_hex["column"])
+            loc_data = self.hex_grid.location_data.get(lpos)
+            if loc_data and loc_data.get("card"):
+                if loc_data["card"].get_current_data().get("Name") == target:
+                    target_positions.add(lpos)
+        if not target_positions:
+            return False
+        # Check if all living players are on a target location
+        all_players = game.players if game.multiplayer_mode and game.players else [game.player]
+        living = [p for p in all_players if p.hp > 0]
+        return all(p.position in target_positions for p in living)
+
+    def _trigger_instant_level_transition(self):
+        """Trigger an immediate level transition without waiting for the turn cycle."""
+        self.add_to_log("Reached destination! Moving to next area...")
+        # Autosave before level transition
+        self.save_manager.save_game(game, self, save_type="autosave", save_label="Level Complete")
+        self.current_level_idx += 1
+        stages = self.campaign.get("stages") or self.campaign.get("levels", []) if self.campaign else []
+        if self.campaign and self.current_level_idx < len(stages):
+            prev_level_file = self.current_level_file
+            self.load_campaign_level()
+            if game.multiplayer_mode:
+                self.turn_phase = "multiplayer_player"
+                game.current_player_index = 0
+                self.hex_grid.active_turn_unit = game.players[0]
+                self.rebuild_left_panel()
+            else:
+                self.turn_phase = "player"
+                self.hex_grid.active_turn_unit = game.player
+            self.is_player_turn = True
+            self._start_player_turn()
+            # Autosave at new level start
+            self.turn_cycle_count = 0
+            self.save_manager.save_game(game, self, save_type="autosave", save_label="Level Start")
+            # Show confirmation about deleting previous level saves
+            self._pending_delete_level_saves = prev_level_file
+            game.current_screen = "confirmation"
+            confirmation_screen.initialize_screen(
+                "New autosave created for this level.\nDelete save data from the previous level?",
+                options=["Yes", "No"],
+                callback=self._handle_delete_prev_saves
+            )
+        else:
+            self.add_to_log("Campaign Completed!")
+            game.current_screen = "main_menu"
+            main_menu.initialize_buttons()
+
     def _setup_multiplayer_player_phase(self):
         """Set up the correct player phase, skipping dead players."""
         for i, player in enumerate(game.players):
@@ -5708,6 +5846,10 @@ class GameScreen:
             return
 
         self.last_action_time = pygame.time.get_ticks()
+
+        # Range flash: briefly highlight allied NPC's projectile range at turn start
+        if unit.allegiance == "Allied" and unit.projectile_range > 0 and unit.position:
+            unit.range_flash_start = pygame.time.get_ticks()
 
         # Track position before turn for quest movement detection
         position_before = unit.position
@@ -8320,6 +8462,26 @@ class GameScreen:
                         "inset": 0.40
                     })
 
+        # Range flash for allied NPCs during their turn (brief 800ms highlight)
+        RANGE_FLASH_DURATION = 800
+        for unit in self.hex_grid.units:
+            if (unit.allegiance == "Allied" and unit.range_flash_start > 0 and
+                    unit.projectile_range > 0 and unit.position):
+                elapsed = pygame.time.get_ticks() - unit.range_flash_start
+                if elapsed < RANGE_FLASH_DURATION:
+                    flash_alpha = max(40, int(120 * (1 - elapsed / RANGE_FLASH_DURATION)))
+                    flash_range = self.hex_grid.calculate_range(
+                        unit.position, unit.projectile_range, "line_of_sight", False, False)
+                    if flash_range:
+                        attack_ranges.append({
+                            "range": flash_range,
+                            "color": (100, 180, 255, flash_alpha),
+                            "outline": (60, 120, 200, flash_alpha),
+                            "inset": 0.60
+                        })
+                else:
+                    unit.range_flash_start = 0
+
         if is_player_turn and player_alive and not current_player.action_used and not self.animating and self.player_mode not in ("recruit", "item"):
             melee_range = current_player.get_melee_attack_range(self.hex_grid)
             if melee_range:
@@ -8475,6 +8637,11 @@ class GameScreen:
         # Check for pending location screen (show after movement animation completes)
         if self.pending_location and not self.animating:
             loc_data = self.pending_location
+            # Check if this location triggers instant campaign level transition
+            if self.campaign and self._check_reach_location_instant(loc_data["pos"]):
+                self.pending_location = None
+                self._trigger_instant_level_transition()
+                return
             self.pending_location = None
             # Draw location card now if deferred from movement
             if loc_data.get("needs_draw"):

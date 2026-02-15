@@ -1,0 +1,21 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Village Father",
+    "Description": "A protective father who refused to leave his family behind. Armed with sword and throwing axes, he fights with the desperation of a man with everything to lose.",
+    "Health": "25",
+    "Movement": "4",
+    "Melee Damage": "5",
+    "Projectile Damage": "7",
+    "Projectile Range": "3",
+    "Range_Type": "line_of_sight",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "Dual Strike",
+    "Image Path": "",
+    "Default_Behavior_Tree": "[\"attack_closest\", \"follow_target\"]",
+    "Attack_Proximity_Range": "9",
+    "Avoid_Location_Hexes": "true"
+  }
+}

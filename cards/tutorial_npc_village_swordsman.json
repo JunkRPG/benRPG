@@ -1,0 +1,17 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Village Swordsman",
+    "Description": "A stout villager with a battered sword and a stubborn streak. He patrols the village perimeter looking for trouble.",
+    "Health": "30",
+    "Movement": "3",
+    "Melee Damage": "10",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "",
+    "Image Path": ""
+  }
+}

@@ -34,6 +34,7 @@ class HexGrid:
         self.grid = [[{"unit": None, "accessible": True, "terrain": "grass"} for _ in range(cols)] for _ in range(rows)]
         self.player = None
         self.players = []  # For multiplayer mode - list of players
+        self._num_players = 1  # Number of players (for multiplayer_only unit filtering)
         self.units = []
         self.selected_hex = None
         self.hovered_hex = None  # Hex currently under mouse cursor
@@ -71,6 +72,7 @@ class HexGrid:
             self.hex_size = level_data.get("hex_size", 30)  # Default to 30 if not specified
             # Rebuild the grid with the new dimensions
             self.grid = [[{"unit": None, "accessible": True, "terrain": "grass"} for _ in range(self.cols)] for _ in range(self.rows)]
+            self.units = []  # Clear all units from previous level
             self.card_drawing_hexes = level_data.get("card_drawing_hexes", [])
 
             # Load terrain data if present
@@ -116,13 +118,26 @@ class HexGrid:
                         print(f"Warning: Starting inventory card '{card_id}' not found")
 
             # Load and place units
+            # Determine multiplayer state for multiplayer_only filtering
+            num_players = getattr(self, '_num_players', 1)
             for unit_data in level_data.get("units", []):
+                # Skip multiplayer_only units in single-player
+                if unit_data.get("multiplayer_only") and num_players <= 1:
+                    continue
                 card_id = unit_data.get("card_id")
                 card_data = load_card(card_id)
                 if card_data is None:
                     print(f"Skipping unit: card '{card_id}' not found")
                     continue
                 unit = Unit(card_data)
+                # Apply optional level JSON fields
+                if unit_data.get("behavior_follow_target"):
+                    unit.behavior_follow_target = unit_data["behavior_follow_target"]
+                    # Ensure follow_target is in behavior tree
+                    if "follow_target" not in unit.behavior_tree:
+                        unit.behavior_tree.insert(0, "follow_target")
+                if unit_data.get("carry_to_next_level"):
+                    unit.carry_to_next_level = True
                 self.place_unit(unit, unit_data["position"]["row"], unit_data["position"]["column"])
                 card_manager.track_card_usage(unit.card_id, {
                     "action": "spawned",
@@ -184,6 +199,18 @@ class HexGrid:
                         self._init_spawn_location_data((row, col), card_data, loc_hex.get("location_state", 1))
                     else:
                         print(f"Warning: Location card '{card_id}' not found")
+                # Load garrison NPCs from level JSON if specified
+                if loc_hex.get("garrison_npcs"):
+                    for gnpc in loc_hex["garrison_npcs"]:
+                        self.location_data[(row, col)]["garrison_npcs"].append({
+                            "id": gnpc.get("id", ""),
+                            "name": gnpc.get("name", "Garrison NPC"),
+                            "hp": gnpc.get("hp", 20),
+                            "max_hp": gnpc.get("max_hp", 20),
+                            "melee_damage": gnpc.get("melee_damage", 5),
+                            "projectile_damage": gnpc.get("projectile_damage", 0),
+                            "allegiance": gnpc.get("allegiance", "Allied")
+                        })
                 # Preload location deck
                 if loc_hex.get("location_deck_file"):
                     deck_file = resolve_deck_path(loc_hex["location_deck_file"])
