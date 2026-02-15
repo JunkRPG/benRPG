@@ -44,8 +44,8 @@ PRESET_CLASSES = {
     "Ranger": {
         "stats": {"hp": 5, "movement": 5, "projectile_range": 5, "melee_damage": 4, "projectile_damage": 8},
         "special": "Piercing Shot",
-        "melee_name": "Punch",
-        "proj_name": "Sling",
+        "melee_name": "Fist",
+        "proj_name": "Throw Rock",
         "kit": [
             {"card_id": "starter_ranger_bow", "state": 1},
             {"card_id": "starter_ranger_bowstring", "state": 1},
@@ -57,7 +57,7 @@ PRESET_CLASSES = {
     "Warrior": {
         "stats": {"hp": 10, "movement": 4, "projectile_range": 4, "melee_damage": 6, "projectile_damage": 6},
         "special": "Dual Strike",
-        "melee_name": "Kick",
+        "melee_name": "Fist",
         "proj_name": "Throw Rock",
         "kit": [
             {"card_id": "starter_warrior_combat_bow", "state": 1},
@@ -71,8 +71,8 @@ PRESET_CLASSES = {
     "Tank": {
         "stats": {"hp": 15, "movement": 3, "projectile_range": 3, "melee_damage": 8, "projectile_damage": 4},
         "special": "Spin Punch",
-        "melee_name": "Head-butt",
-        "proj_name": "Spit",
+        "melee_name": "Fist",
+        "proj_name": "Throw Rock",
         "kit": [
             {"card_id": "starter_tank_sledgehammer_plans", "state": 1},
             {"card_id": "starter_tank_hammer_head", "state": 1},
@@ -317,10 +317,10 @@ class CharacterCreator:
         y += 24
         self.proj_name_entry = UITextEntryLine(
             relative_rect=pygame.Rect(center_x, y, half_w, 32),
-            manager=self.manager, placeholder_text="Throw")
+            manager=self.manager, placeholder_text="Throw Rock")
         self.melee_name_entry = UITextEntryLine(
             relative_rect=pygame.Rect(center_x + half_w + 10, y, half_w, 32),
-            manager=self.manager, placeholder_text="Punch")
+            manager=self.manager, placeholder_text="Fist")
         y += 44
 
         # Starting kit
@@ -704,8 +704,8 @@ class CharacterCreator:
 
     def _build_save_data(self):
         name = self.name_entry.get_text().strip()
-        proj_name = self.proj_name_entry.get_text().strip() or "Throw"
-        melee_name = self.melee_name_entry.get_text().strip() or "Punch"
+        proj_name = self.proj_name_entry.get_text().strip() or "Throw Rock"
+        melee_name = self.melee_name_entry.get_text().strip() or "Fist"
 
         return {
             "version": 1,

@@ -55,6 +55,8 @@ class Unit:
         # Path-based animation
         self.animation_path = []  # List of hex positions to animate through
         self.animation_path_index = 0  # Current target in the path
+        # Death processing flag: True once death cleanup has run (body stays on board)
+        self._death_processed = False
 
         # Behavior tree: ordered list of behavior names for Allied units
         self.behavior_tree = self._init_behavior_tree(card_data)
@@ -700,12 +702,56 @@ class Unit:
         return log
 
     def _perform_healing(self, grid):
-        """Healer skill: heal the most damaged friendly unit in range."""
+        """Healer skill: revive dead allies or heal the most damaged friendly unit in range."""
         log = []
         if self.heal_amount <= 0:
             return log
 
-        # Build candidate list based on allegiance
+        # --- Revive phase: check for dead allies in range ---
+        if self.allegiance == "Allied":
+            revive_candidates = []
+            for u in grid.units:
+                if (u.hp <= 0 and getattr(u, '_death_processed', False)
+                        and u is not self and u.position
+                        and grid.hex_distance(self.position, u.position) <= self.heal_range):
+                    # Revive allies (and neutral units that were friendly)
+                    if u.allegiance in ("Allied", "Neutral"):
+                        revive_candidates.append(u)
+            # Also check dead players
+            players = grid.players if hasattr(grid, 'players') and grid.players else []
+            if not players and hasattr(grid, 'player') and grid.player:
+                players = [grid.player]
+            for p in players:
+                if (p.hp <= 0 and p.position
+                        and grid.hex_distance(self.position, p.position) <= self.heal_range):
+                    revive_candidates.append(p)
+
+            if revive_candidates:
+                target = revive_candidates[0]
+                revive_hp = max(1, target.max_hp // 4)
+                target.hp = revive_hp
+                target._death_processed = False
+                if hasattr(target, '_death_logged'):
+                    target._death_logged = False
+                target_name = getattr(target, 'class_name', None) or getattr(target, 'name', 'Unknown')
+                # Re-occupy grid cell if empty, else find nearby empty hex
+                if target.position:
+                    tr, tc = target.position
+                    if grid.grid[tr][tc]["unit"] is None:
+                        grid.grid[tr][tc]["unit"] = target
+                    else:
+                        # Find a nearby empty accessible hex
+                        neighbors = grid.get_neighbors(tr, tc)
+                        for nr, nc in neighbors:
+                            if grid.grid[nr][nc]["accessible"] and grid.grid[nr][nc]["unit"] is None:
+                                target.position = (nr, nc)
+                                grid.grid[nr][nc]["unit"] = target
+                                break
+                target.set_damage_text(0, text=f"+{revive_hp}")
+                log.append(f"{self.name} revived {target_name} with {revive_hp} HP!")
+                return log  # Don't also heal on same turn
+
+        # --- Heal phase: heal the most damaged friendly unit in range ---
         candidates = []
         if self.allegiance == "Hostile":
             for u in grid.units:

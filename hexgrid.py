@@ -2299,8 +2299,11 @@ class HexGrid:
                 else:
                     pos = self.get_hex_center(*unit.position)
 
+                # Check if this is a dead NPC (for grayed-out rendering)
+                is_dead_unit = not isinstance(unit, Player) and unit.hp <= 0
+
                 # Draw active turn glow ring
-                is_active = (self.active_turn_unit is not None and unit is self.active_turn_unit)
+                is_active = (self.active_turn_unit is not None and unit is self.active_turn_unit and unit.hp > 0)
                 if is_active:
                     # Determine glow color based on unit type
                     if isinstance(unit, Player):
@@ -2346,6 +2349,8 @@ class HexGrid:
                             color = (100, 100, 100)  # Gray for dead players
                         else:
                             color = unit.player_color if hasattr(unit, 'player_color') else colors['GREEN']
+                    elif is_dead_unit:
+                        color = (100, 100, 100)  # Grey for dead NPCs
                     elif unit.allegiance == "Hostile":
                         color = colors['RED']
                     elif unit.allegiance == "Allied":
@@ -2361,7 +2366,7 @@ class HexGrid:
                     # Dark outline
                     pygame.draw.circle(hex_surface, (10, 10, 20), (cx, cy), radius + 2)
                     # Player gets a thin gold ring around the token
-                    if isinstance(unit, Player) and not is_dead_player:
+                    if isinstance(unit, Player) and not is_dead_player and not is_dead_unit:
                         pygame.draw.circle(hex_surface, (200, 170, 50), (cx, cy), radius + 1)
                     # Main token
                     pygame.draw.circle(hex_surface, draw_color, (cx, cy), radius)
@@ -2471,8 +2476,8 @@ class HexGrid:
 
                 unit.draw_health_bar(hex_surface, (pos[0], health_bar_y))
 
-                # Draw defeated X marker for dead players
-                if is_dead_player:
+                # Draw defeated X marker for dead players or dead NPCs
+                if is_dead_player or is_dead_unit:
                     x_radius = max(8, int(self.hex_size / 4))
                     cx, cy = int(pos[0]), int(pos[1])
                     x_surf = pygame.Surface((x_radius * 2 + 4, x_radius * 2 + 4), pygame.SRCALPHA)

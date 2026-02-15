@@ -7,7 +7,7 @@ import random
 CHARACTER_CLASSES = {
     "Ranger": {
         "hp": 50, "movement": 5, "projectile_range": 5,
-        "attacks": {"Sling": 8, "Punch": 4},
+        "attacks": {"Throw Rock": 8, "Fist": 4},
         "special_attack": "Piercing Shot",
         "starting_kit": [
             {"card_id": "starter_ranger_bow", "state": 1},
@@ -19,7 +19,7 @@ CHARACTER_CLASSES = {
     },
     "Warrior": {
         "hp": 100, "movement": 4, "projectile_range": 4,
-        "attacks": {"Throw Rock": 6, "Kick": 6},
+        "attacks": {"Throw Rock": 6, "Fist": 6},
         "special_attack": "Dual Strike",
         "starting_kit": [
             {"card_id": "starter_warrior_combat_bow", "state": 1},
@@ -32,7 +32,7 @@ CHARACTER_CLASSES = {
     },
     "Tank": {
         "hp": 150, "movement": 3, "projectile_range": 3,
-        "attacks": {"Spit": 4, "Head-butt": 8},
+        "attacks": {"Throw Rock": 4, "Fist": 8},
         "special_attack": "Spin Punch",
         "starting_kit": [
             {"card_id": "starter_tank_sledgehammer_plans", "state": 1},
@@ -62,8 +62,8 @@ class Player:
             self.projectile_range = cstats.get("projectile_range", 4)
             attacks = custom_data.get("attacks", {})
             self.attacks = {
-                "projectile": attacks.get("projectile", {"name": "Throw", "damage": 5}),
-                "melee": attacks.get("melee", {"name": "Punch", "damage": 5})
+                "projectile": attacks.get("projectile", {"name": "Throw Rock", "damage": 5}),
+                "melee": attacks.get("melee", {"name": "Fist", "damage": 5})
             }
             self.special_attack = custom_data.get("special_ability", "Spin Punch")
             self.starting_kit = custom_data.get("starting_kit", [])
@@ -130,6 +130,11 @@ class Player:
         self.projectile_exclude_adj = False           # Exclude adjacent hexes (for sniper-type weapons)
         # Piercing Shot passive: projectile shots go through units
         self.piercing_projectile = (self.special_attack == "Piercing Shot")
+
+        # Super special attack charge system
+        self.super_charge = 0
+        self.super_charge_max = 5
+        self.super_attack_ready = False
 
         # Defensive posture
         self.defensive_posture = False      # Currently defending?
@@ -349,6 +354,9 @@ class Player:
         if not hit_units:
             return "No targets hit", False
 
+        # Piercing shot hit targets — charge super attack
+        self.add_super_charge()
+
         self._mark_attack_used(is_projectile=True)
         self.attack_flash = True
         self.flash_start = pygame.time.get_ticks() + delay
@@ -439,6 +447,7 @@ class Player:
             self.warrior_attacks_remaining -= 1
             if self.warrior_attacks_remaining <= 0:
                 self.action_used = True
+                self.add_super_charge()  # Completed both Dual Strike attacks
         else:
             self.action_used = True
 
@@ -490,6 +499,24 @@ class Player:
             self.double_attack_active = False
         self.double_attack_melee_used = False
         self.double_attack_projectile_used = False
+
+    def add_super_charge(self):
+        """Add one charge toward the super special attack."""
+        if self.super_charge < self.super_charge_max:
+            self.super_charge += 1
+            if self.super_charge >= self.super_charge_max:
+                self.super_attack_ready = True
+
+    def use_super_attack(self, target, grid):
+        """Placeholder super special attack — consumes charge, logs message. Actual effects TBD."""
+        if not self.super_attack_ready:
+            return "Super attack not ready", []
+        if self.action_used:
+            return "Action already used this turn", []
+        self.super_charge = 0
+        self.super_attack_ready = False
+        self.action_used = True
+        return f"{self.name} unleashes a SUPER {self.special_attack}! (Effect coming soon)", []
 
     def use_special_attack(self, target, grid):
         """
@@ -635,7 +662,7 @@ class Player:
     def _spin_punch(self, grid):
         """
         Tank special: Hit all adjacent enemies with melee damage.
-        No target selection needed - automatically hits all adjacent hostiles.
+        Requires 2+ adjacent hostile targets to activate.
         """
         damage = self.attacks["melee"]["damage"]
         messages = []
@@ -643,6 +670,17 @@ class Player:
 
         # Get all adjacent hexes (distance 1)
         adjacent_hexes = grid.get_hexes_at_distance(self.position, 1)
+
+        # Count adjacent hostile targets first — require 2+
+        hostile_count = 0
+        for hex_pos in adjacent_hexes:
+            row, col = hex_pos
+            if 0 <= row < grid.rows and 0 <= col < grid.cols:
+                unit = grid.grid[row][col].get("unit")
+                if unit and hasattr(unit, 'allegiance') and unit.allegiance == "Hostile" and unit.hp > 0:
+                    hostile_count += 1
+        if hostile_count < 2:
+            return "Spin Punch requires 2 or more adjacent enemies", []
 
         targets_hit = 0
         delay = 300  # melee animation duration
@@ -666,8 +704,9 @@ class Player:
                     if unit.hp <= 0:
                         defeated.append(unit)
 
-        if targets_hit == 0:
-            return "No adjacent enemies to hit with Spin Punch", []
+        # Charge super attack if we hit targets
+        if targets_hit > 0:
+            self.add_super_charge()
 
         self.action_used = True
         self.attack_flash = True

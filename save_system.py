@@ -237,6 +237,8 @@ class SaveManager:
                 "behavior_attack_target": getattr(unit, 'behavior_attack_target', None),
                 "recruit_cooldown": getattr(unit, 'recruit_cooldown', 0),
                 "boss_encounter_tag": getattr(unit, 'boss_encounter_tag', None),
+                "dialogue_delivered": getattr(unit, 'dialogue_delivered', False),
+                "_death_processed": getattr(unit, '_death_processed', False),
             })
         return units
 
@@ -592,7 +594,14 @@ class SaveManager:
                 unit.behavior_attack_target = unit_info.get("behavior_attack_target")
                 unit.recruit_cooldown = unit_info.get("recruit_cooldown", 0)
                 unit.boss_encounter_tag = unit_info.get("boss_encounter_tag")
-                hex_grid.place_unit(unit, pos[0], pos[1])
+                unit.dialogue_delivered = unit_info.get("dialogue_delivered", False)
+                unit._death_processed = unit_info.get("_death_processed", False)
+                if unit._death_processed:
+                    # Dead unit: set position but don't occupy grid cell
+                    unit.position = (pos[0], pos[1])
+                    hex_grid.units.append(unit)
+                else:
+                    hex_grid.place_unit(unit, pos[0], pos[1])
 
     def rebuild_location_data(self, saved_loc_data, hex_grid):
         """Overlay saved location data onto the reloaded hex grid locations."""

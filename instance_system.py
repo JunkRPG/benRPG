@@ -309,12 +309,12 @@ class InstanceManager:
         if not hex_grid:
             return ""
 
-        targets = [u for u in hex_grid.units if u.allegiance == allegiance]
+        targets = [u for u in hex_grid.units if u.allegiance == allegiance and u.hp > 0]
 
         if not targets and spawn_deck:
             # Ambush scenario: spawn an enemy first, then damage it
             self._spawn_units(spawn_deck, "player", 1, allegiance, hex_grid, player)
-            targets = [u for u in hex_grid.units if u.allegiance == allegiance]
+            targets = [u for u in hex_grid.units if u.allegiance == allegiance and u.hp > 0]
 
         if not targets:
             return f"No {allegiance.lower()} units to damage."

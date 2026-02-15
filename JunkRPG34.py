@@ -78,9 +78,9 @@ if not os.path.exists(INDEX_FILE):
 
 # Character classes
 CHARACTER_CLASSES = {
-    "Ranger": {"hp": 50, "movement": 5, "projectile_range": 5, "attacks": {"Sling": 8, "Punch": 4}, "special_attack": "Piercing Shot"},
-    "Warrior": {"hp": 100, "movement": 4, "projectile_range": 4, "attacks": {"Throw Rock": 6, "Kick": 6}, "special_attack": "Double Attack"},
-    "Tank": {"hp": 150, "movement": 3, "projectile_range": 3, "attacks": {"Spit": 4, "Head-butt": 8}, "special_attack": "Spin Punch"}
+    "Ranger": {"hp": 50, "movement": 5, "projectile_range": 5, "attacks": {"Throw Rock": 8, "Fist": 4}, "special_attack": "Piercing Shot"},
+    "Warrior": {"hp": 100, "movement": 4, "projectile_range": 4, "attacks": {"Throw Rock": 6, "Fist": 6}, "special_attack": "Double Attack"},
+    "Tank": {"hp": 150, "movement": 3, "projectile_range": 3, "attacks": {"Throw Rock": 4, "Fist": 8}, "special_attack": "Spin Punch"}
 }
 
 
@@ -1562,6 +1562,95 @@ class RecruitmentScreen:
         # Return to game
         game.current_screen = "game"
         game_screen.initialize_screen()
+
+    def draw(self):
+        screen.fill(DARK_CHARCOAL)
+        manager.draw_ui(screen)
+
+
+class CardGivingScreen:
+    """Screen for giving a card from current player to another player in multiplayer."""
+    def __init__(self):
+        self.window = None
+        self.target_player = None
+        self.card_list = None
+        self.card_name_to_card = {}
+        self.info_text = None
+        self.give_button = None
+        self.cancel_button = None
+
+    def initialize_screen(self, target_player):
+        """Initialize the card giving screen for a target player."""
+        self.target_player = target_player
+        self.card_name_to_card = {}
+
+        manager.clear_and_reset()
+
+        window_rect = pygame.Rect((WINDOW_WIDTH - 700) // 2, (WINDOW_HEIGHT - 500) // 2, 700, 500)
+        self.window = pygame_gui.elements.UIWindow(window_rect, manager, "Give Card to Player")
+
+        target_name = target_player.name or target_player.class_name
+        pygame_gui.elements.UILabel(
+            pygame.Rect(10, 5, 680, 30), f"Give a card to {target_name}", manager, container=self.window
+        )
+
+        # Build list of all cards in current player's inventory
+        card_items = []
+        for card in game.current_player.inventory:
+            card_data = card.get_current_data()
+            name = card_data.get("Name", "Unnamed")
+            card_type = card.card_data.get("card_type", "")
+            state_info = f" [State {card.current_state}]" if card.states == 2 else ""
+            display = f"{name} ({card_type}){state_info}"
+            card_items.append(display)
+            self.card_name_to_card[display] = card
+
+        self.card_list = pygame_gui.elements.UISelectionList(
+            pygame.Rect(10, 40, 680, 320),
+            card_items if card_items else ["No cards in inventory"],
+            manager, container=self.window,
+            allow_multi_select=False
+        )
+
+        self.info_text = pygame_gui.elements.UITextBox(
+            "<font color='#FFFFFF'>Select a card to give.</font>",
+            pygame.Rect(10, 370, 680, 50), manager, container=self.window
+        )
+
+        self.give_button = pygame_gui.elements.UIButton(
+            pygame.Rect(180, 430, 150, 40), "Give", manager, container=self.window
+        )
+        self.cancel_button = pygame_gui.elements.UIButton(
+            pygame.Rect(370, 430, 150, 40), "Cancel", manager, container=self.window
+        )
+
+    def handle_event(self, event):
+        if event.type == pygame_gui.UI_WINDOW_CLOSE:
+            if event.ui_element == self.window:
+                game.current_screen = "game"
+                game_screen.initialize_screen()
+                return
+
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.ui_element == self.cancel_button:
+                game.current_screen = "game"
+                game_screen.initialize_screen()
+            elif event.ui_element == self.give_button:
+                selected = self.card_list.get_single_selection()
+                if selected and selected in self.card_name_to_card:
+                    card = self.card_name_to_card[selected]
+                    # Transfer card: remove from giver, add to receiver
+                    game.current_player.inventory.remove(card)
+                    self.target_player.inventory.append(card)
+                    # Log the transfer
+                    giver_name = game.current_player.name or game.current_player.class_name
+                    receiver_name = self.target_player.name or self.target_player.class_name
+                    card_name = card.get_current_data().get("Name", "Unnamed")
+                    game_screen.add_to_log(f"{giver_name} gave {card_name} to {receiver_name}")
+                    game.current_screen = "game"
+                    game_screen.initialize_screen()
+                else:
+                    self.info_text.set_text("<font color='#FF0000'>Select a card first.</font>")
 
     def draw(self):
         screen.fill(DARK_CHARCOAL)
@@ -3639,14 +3728,16 @@ class PlayerCountScreen:
     def __init__(self):
         self.ui_elements = []
         self.level_file = None
+        self.campaign_file = None
         self.mode_buttons = []
         self.selected_mode = "survival"
 
-    def initialize_screen(self, level_file=None):
+    def initialize_screen(self, level_file=None, campaign_file=None):
         self.level_file = level_file
+        self.campaign_file = campaign_file
         self.selected_mode = "survival"  # Reset to default
         manager.clear_and_reset()
-        level_name = os.path.basename(level_file) if level_file else "Unknown"
+        level_name = os.path.basename(campaign_file or level_file) if (campaign_file or level_file) else "Unknown"
 
         # Mode selection
         mode_label = UILabel(pygame.Rect(0, 50, WINDOW_WIDTH, 30), "Select Game Mode", manager, anchors={'centerx': 'centerx'})
@@ -3690,19 +3781,19 @@ class PlayerCountScreen:
             elif event.ui_element == self.ui_elements[2]:  # 1 Player
                 game.game_mode = self.selected_mode
                 game.current_screen = "character_creation"
-                character_creation_screen.initialize_screen(level_file=self.level_file)
+                character_creation_screen.initialize_screen(level_file=self.level_file, campaign_file=self.campaign_file)
             elif event.ui_element == self.ui_elements[3]:  # 2 Players
                 game.game_mode = self.selected_mode
                 game.current_screen = "multiplayer_character_creation"
-                multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file, num_players=2)
+                multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file, campaign_file=self.campaign_file, num_players=2)
             elif event.ui_element == self.ui_elements[4]:  # 3 Players
                 game.game_mode = self.selected_mode
                 game.current_screen = "multiplayer_character_creation"
-                multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file, num_players=3)
+                multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file, campaign_file=self.campaign_file, num_players=3)
             elif event.ui_element == self.ui_elements[5]:  # 4 Players
                 game.game_mode = self.selected_mode
                 game.current_screen = "multiplayer_character_creation"
-                multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file, num_players=4)
+                multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file, campaign_file=self.campaign_file, num_players=4)
             elif event.ui_element == self.ui_elements[6]:  # Back
                 game.current_screen = "main_menu"
                 main_menu.initialize_buttons()
@@ -3743,8 +3834,8 @@ class MainMenu:
                 file_path = filedialog.askopenfilename(initialdir="campaigns", filetypes=[("JSON files", "*.json")])
                 root.destroy()
                 if file_path:
-                    game.current_screen = "character_creation"
-                    character_creation_screen.initialize_screen(campaign_file=file_path)
+                    game.current_screen = "player_count"
+                    player_count_screen.initialize_screen(campaign_file=file_path)
                 else:
                     print("No campaign file selected")
             elif text == "Load Level":
@@ -3903,10 +3994,12 @@ class MultiplayerCharacterCreationScreen:
         self.num_players = 2
         self.player_selections = []  # List of {"class": ..., "name": ...}
         self.level_file = None
+        self.campaign_file = None
         self.name_entry = None
 
-    def initialize_screen(self, level_file=None, num_players=2):
+    def initialize_screen(self, level_file=None, campaign_file=None, num_players=2):
         self.level_file = level_file
+        self.campaign_file = campaign_file
         self.num_players = num_players
         self.current_player_selecting = 1
         self.player_selections = []
@@ -3988,7 +4081,7 @@ class MultiplayerCharacterCreationScreen:
 
         # Start the game
         game.current_screen = "game"
-        game_screen.start_new_game_multiplayer(level_file=self.level_file)
+        game_screen.start_new_game_multiplayer(level_file=self.level_file, campaign_file=self.campaign_file)
 
     def draw(self):
         screen.fill(DARK_CHARCOAL)
@@ -4892,14 +4985,14 @@ class GameScreen:
         # Autosave at level start
         self.save_manager.save_game(game, self, save_type="autosave", save_label="Level Start")
 
-    def start_new_game_multiplayer(self, level_file=None):
+    def start_new_game_multiplayer(self, level_file=None, campaign_file=None):
         """Start a new multiplayer game with 2-4 players."""
         # Reset game state
         self.hex_grid = HexGrid(16, 24, 30, WINDOW_WIDTH, WINDOW_HEIGHT)
         self.hex_grid.players = game.players  # Set players list on hex_grid
         self.hex_grid._num_players = len(game.players)
         self.current_level_file = level_file
-        self.campaign_file = None
+        self.campaign_file = campaign_file
         self.log.clear()
         self.turn_phase = "multiplayer_player"  # Start with first player's turn
         game.current_player_index = 0
@@ -4925,10 +5018,21 @@ class GameScreen:
         game.transition_manager = TransitionManager(self.card_manager, game.instance_manager)
         game.transition_manager.load_transition_card("test_transition_forest")
 
-        # Load level or use default placement
+        # Load campaign, level, or use default placement
         player1 = game.players[0]
 
-        if level_file:
+        if campaign_file:
+            try:
+                with open(campaign_file, 'r') as f:
+                    self.campaign = json.load(f)
+                self.load_campaign_level()
+                self.log.append(f"Loaded campaign: {campaign_file}")
+            except Exception as e:
+                print(f"Error loading campaign file '{campaign_file}': {e}")
+                for i, player in enumerate(game.players):
+                    self.hex_grid.place_unit(player, self.hex_grid.rows // 2 + i, self.hex_grid.cols // 2)
+                self.log.append("Failed to load campaign. Starting default level.")
+        elif level_file:
             try:
                 # Load level with player 1 first
                 self.hex_grid.load_level(level_file, self.card_manager, player1)
@@ -5457,13 +5561,13 @@ class GameScreen:
                 return False
 
             if comp_type == "defeat_all_enemies":
-                return len([u for u in self.hex_grid.units if u.allegiance == "Hostile"]) == 0
+                return len([u for u in self.hex_grid.units if u.allegiance == "Hostile" and u.hp > 0]) == 0
 
             elif comp_type == "defeat_boss":
                 if target:
-                    return not any(u.name == target and u.allegiance == "Hostile" for u in self.hex_grid.units)
+                    return not any(u.name == target and u.allegiance == "Hostile" and u.hp > 0 for u in self.hex_grid.units)
                 # If no target specified, check for any boss-type units
-                return len([u for u in self.hex_grid.units if u.allegiance == "Hostile"]) == 0
+                return len([u for u in self.hex_grid.units if u.allegiance == "Hostile" and u.hp > 0]) == 0
 
             elif comp_type == "collect_item":
                 if target:
@@ -5799,7 +5903,7 @@ class GameScreen:
         if allegiance == "Hostile":
             self._cache_defense_ranges()
 
-        units_to_process = [unit for unit in self.hex_grid.units if unit.allegiance == allegiance]
+        units_to_process = [unit for unit in self.hex_grid.units if unit.allegiance == allegiance and unit.hp > 0]
         if not units_to_process:
             # No units of this allegiance - immediately advance to next phase
             if allegiance == "Hostile":
@@ -5880,11 +5984,22 @@ class GameScreen:
         """Handle post-attack cleanup: dead units, game over, state switch.
         Returns True if game over was triggered (caller should return early)."""
         # Check for any units killed
-        dead_units = [u for u in self.hex_grid.units if u.hp <= 0]
+        dead_units = [u for u in self.hex_grid.units if u.hp <= 0 and not getattr(u, '_death_processed', False)]
         for dead_unit in dead_units:
             if dead_unit.position:
-                self.hex_grid.grid[dead_unit.position[0]][dead_unit.position[1]]["unit"] = None
-            self.hex_grid.units.remove(dead_unit)
+                row, col = dead_unit.position
+                if self.hex_grid.grid[row][col]["unit"] is dead_unit:
+                    self.hex_grid.grid[row][col]["unit"] = None
+                # Displace body off location hex
+                if dead_unit.position in self.hex_grid.location_data:
+                    neighbors = self.hex_grid.get_neighbors(row, col)
+                    for nr, nc in neighbors:
+                        if ((nr, nc) not in self.hex_grid.location_data
+                                and self.hex_grid.grid[nr][nc]["accessible"]
+                                and self.hex_grid.grid[nr][nc]["unit"] is None):
+                            dead_unit.position = (nr, nc)
+                            break
+            dead_unit._death_processed = True
             self.add_to_log(f"{dead_unit.name} defeated")
             self.add_defeat_notification(dead_unit.name)
             self.card_manager.track_card_usage(dead_unit.card_id, {"action": "defeated", "screen": "game"})
@@ -6507,7 +6622,7 @@ class GameScreen:
         if p.melee_weapon:
             melee_name = p.melee_weapon.get_current_data().get("Name", "???")
         else:
-            melee_name = "---"
+            melee_name = p.attacks.get("melee", {}).get("name", "Fist")
         # Projectile slot label
         if p.projectile_weapon:
             if p.melee_weapon and p.projectile_weapon is p.melee_weapon:
@@ -6515,7 +6630,7 @@ class GameScreen:
             else:
                 proj_name = p.projectile_weapon.get_current_data().get("Name", "???")
         else:
-            proj_name = "---"
+            proj_name = p.attacks.get("projectile", {}).get("name", "Throw Rock")
         # Tool slot label
         tool_names = []
         if p.equipped_tools:
@@ -7087,6 +7202,9 @@ class GameScreen:
             self.player_info_label.set_text(self.get_player_info())
             if current_player.action_used and not current_player.movement_used:
                 self.player_mode = "movement"
+        elif action_type == "give_to_player":
+            game.current_screen = "card_giving"
+            card_giving_screen.initialize_screen(data)
 
     def _handle_equip_popup_selection(self, slot_type, data):
         """Handle equip/unequip from the popup menu."""
@@ -7530,11 +7648,22 @@ class GameScreen:
 
         # Process deaths from defense attacks
         if attacks_fired:
-            dead_units = [u for u in self.hex_grid.units if u.hp <= 0]
+            dead_units = [u for u in self.hex_grid.units if u.hp <= 0 and not getattr(u, '_death_processed', False)]
             for dead_unit in dead_units:
                 if dead_unit.position:
-                    self.hex_grid.grid[dead_unit.position[0]][dead_unit.position[1]]["unit"] = None
-                self.hex_grid.units.remove(dead_unit)
+                    row, col = dead_unit.position
+                    if self.hex_grid.grid[row][col]["unit"] is dead_unit:
+                        self.hex_grid.grid[row][col]["unit"] = None
+                    # Displace body off location hex
+                    if dead_unit.position in self.hex_grid.location_data:
+                        neighbors = self.hex_grid.get_neighbors(row, col)
+                        for nr, nc in neighbors:
+                            if ((nr, nc) not in self.hex_grid.location_data
+                                    and self.hex_grid.grid[nr][nc]["accessible"]
+                                    and self.hex_grid.grid[nr][nc]["unit"] is None):
+                                dead_unit.position = (nr, nc)
+                                break
+                dead_unit._death_processed = True
                 self.add_to_log(f"{dead_unit.name} defeated")
                 self.add_defeat_notification(dead_unit.name)
                 self.card_manager.track_card_usage(dead_unit.card_id, {"action": "defeated", "screen": "game"})
@@ -7654,12 +7783,22 @@ class GameScreen:
         # Process deferred unit removals once all animations finish
         if not animating and self.pending_defeats:
             for unit in self.pending_defeats:
+                if getattr(unit, '_death_processed', False):
+                    continue
                 if unit.position:
                     row, col = unit.position
                     if self.hex_grid.grid[row][col]["unit"] is unit:
                         self.hex_grid.grid[row][col]["unit"] = None
-                if unit in self.hex_grid.units:
-                    self.hex_grid.units.remove(unit)
+                    # Displace body off location hex
+                    if unit.position in self.hex_grid.location_data:
+                        neighbors = self.hex_grid.get_neighbors(row, col)
+                        for nr, nc in neighbors:
+                            if ((nr, nc) not in self.hex_grid.location_data
+                                    and self.hex_grid.grid[nr][nc]["accessible"]
+                                    and self.hex_grid.grid[nr][nc]["unit"] is None):
+                                unit.position = (nr, nc)
+                                break
+                unit._death_processed = True
             self.pending_defeats.clear()
             self._check_boss_encounter_completion()
 
@@ -7874,6 +8013,15 @@ class GameScreen:
                     elif len(available_actions) >= 2:
                         self._open_action_choice_popup(unit, hex_pos, available_actions)
                         return
+                # Give card to adjacent player in multiplayer
+                if (not self.selected_attack and unit and isinstance(unit, Player)
+                    and unit is not current_player and game.multiplayer_mode
+                    and self.hex_grid.hex_distance(current_player.position, hex_pos) == 1
+                    and self.player_mode not in ("recruit", "skill", "item")):
+                    target_name = unit.name or unit.class_name
+                    actions = [(f"Give to {target_name}", "give_to_player", unit)]
+                    self._open_action_choice_popup(unit, hex_pos, actions)
+                    return
                 if self.player_mode == "attack" and self.selected_attack and unit and isinstance(unit, Unit):
                     message, result = current_player.attack(unit, self.selected_attack, self.hex_grid, game.current_party)
                     self.add_to_log(message)
@@ -9553,6 +9701,7 @@ class Game:
             "inventory": inventory_screen,
             "location": location_screen,
             "recruitment": recruitment_screen,
+            "card_giving": card_giving_screen,
             "party": party_screen,
             "skills": skills_screen,
             "quest": quest_screen,
@@ -9634,6 +9783,7 @@ crafting_screen = CraftingScreen()
 inventory_screen = InventoryScreen()
 location_screen = LocationScreen()
 recruitment_screen = RecruitmentScreen()
+card_giving_screen = CardGivingScreen()
 party_screen = PartyScreen()
 skills_screen = SkillsScreen()
 quest_screen = QuestScreen()
@@ -9653,13 +9803,13 @@ parser.add_argument("--campaign", type=str, help="Path to campaign file to load"
 parser.add_argument("--level", type=str, help="Path to level file to load")
 args, _ = parser.parse_known_args()
 
-# If campaign or level specified via command line, go directly to character creation
+# If campaign or level specified via command line, go to player count selection
 if args.campaign:
-    game.current_screen = "character_creation"
-    character_creation_screen.initialize_screen(campaign_file=args.campaign)
+    game.current_screen = "player_count"
+    player_count_screen.initialize_screen(campaign_file=args.campaign)
 elif args.level:
-    game.current_screen = "character_creation"
-    character_creation_screen.initialize_screen(level_file=args.level)
+    game.current_screen = "player_count"
+    player_count_screen.initialize_screen(level_file=args.level)
 
 # Main game loop
 clock = pygame.time.Clock()
