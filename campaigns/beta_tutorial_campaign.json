@@ -1,0 +1,49 @@
+{
+  "campaign_id": "beta_tutorial",
+  "name": "Tutorial Campaign",
+  "description": "Begin your journey in a peaceful village, then face the enemy camp.",
+  "stages": [
+    {
+      "stage_id": "tutorial_village",
+      "name": "The Village",
+      "level_file": "beta_test_level1.json",
+      "deck_config": {
+        "transition_deck": "decks/tutorial_village_transition_deck.json",
+        "quest_deck": "",
+        "instance_deck": "decks/tutorial_village_instance_deck.json",
+        "junk_deck": "decks/beta_junk_deck.json"
+      },
+      "completion_conditions": {
+        "type": "reach_location",
+        "target": "Road to Town",
+        "turn_limit": null
+      },
+      "next_stage": "frontier"
+    },
+    {
+      "stage_id": "frontier",
+      "name": "The Frontier",
+      "level_file": "beta_test_small.json",
+      "deck_config": {
+        "transition_deck": "decks/beta_transition_deck.json",
+        "quest_deck": "decks/beta_quest_deck.json",
+        "instance_deck": "decks/beta_instance_deck.json",
+        "junk_deck": "decks/beta_junk_deck.json"
+      },
+      "completion_conditions": {
+        "type": "defeat_all_enemies",
+        "target": "",
+        "turn_limit": null
+      },
+      "next_stage": null
+    }
+  ],
+  "teleport_links": [
+    {
+      "pad_a": { "pad_id": "village_to_frontier", "level_file": "beta_test_level1.json", "stage_id": "tutorial_village" },
+      "pad_b": { "pad_id": "frontier_to_village", "level_file": "beta_test_small.json", "stage_id": "frontier" },
+      "display_name_a": "The Frontier",
+      "display_name_b": "The Village"
+    }
+  ]
+}

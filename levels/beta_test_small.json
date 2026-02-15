@@ -1364,5 +1364,8 @@
   ],
   "inaccessible_hexes": [],
   "card_drawing_hexes": [],
-  "obstacles": []
+  "obstacles": [],
+  "teleport_pads": [
+    { "row": 10, "column": 3, "pad_id": "frontier_to_village" }
+  ]
 }

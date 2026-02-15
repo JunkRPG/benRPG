@@ -4191,6 +4191,8 @@ class GameScreen:
         self.autopan_start_time = 0
         self.autopan_duration = 0
         self.autopan_callback = None
+        # Teleport pad state
+        self.pending_teleport = None  # Dict with pad/destination info when awaiting confirmation
         # Equipment toolbar (bottom of screen)
         self.equip_toolbar_buttons = []    # 6 UIButtons for Melee/Proj/Acc/Tool/Action/Items slots
         self.equip_action_tool = None      # Reference to the equipped tool providing the current action
@@ -5285,6 +5287,21 @@ class GameScreen:
         game.current_screen = "game"
         self.initialize_screen()
 
+    def _show_campaign_complete(self):
+        """Show a victory dialog instead of immediately dumping to main menu."""
+        self.add_to_log("Campaign Completed!")
+        game.current_screen = "confirmation"
+        confirmation_screen.initialize_screen(
+            "Campaign Complete!\nCongratulations, you have finished the campaign!",
+            options=["Return to Main Menu"],
+            callback=self._handle_campaign_complete
+        )
+
+    def _handle_campaign_complete(self, choice):
+        """Callback for campaign complete dialog."""
+        game.current_screen = "main_menu"
+        main_menu.initialize_buttons()
+
     def _handle_restart_confirm(self, choice):
         """Callback for 'Are you sure you want to restart?' confirmation."""
         if choice == "Yes":
@@ -5621,6 +5638,256 @@ class GameScreen:
         # Default: defeat all enemies
         return len([u for u in self.hex_grid.units if u.allegiance == "Hostile"]) == 0
 
+    def _find_teleport_destination(self, pad_id):
+        """Find the destination for a teleport pad from campaign teleport_links.
+        Returns dict {dest_pad_id, dest_level_file, dest_stage_id, dest_name} or None."""
+        if not self.campaign:
+            return None
+        for link in self.campaign.get("teleport_links", []):
+            if link["pad_a"]["pad_id"] == pad_id:
+                return {
+                    "dest_pad_id": link["pad_b"]["pad_id"],
+                    "dest_level_file": link["pad_b"]["level_file"],
+                    "dest_stage_id": link["pad_b"]["stage_id"],
+                    "dest_name": link.get("display_name_a", link["pad_b"]["level_file"])
+                }
+            elif link["pad_b"]["pad_id"] == pad_id:
+                return {
+                    "dest_pad_id": link["pad_a"]["pad_id"],
+                    "dest_level_file": link["pad_a"]["level_file"],
+                    "dest_stage_id": link["pad_a"]["stage_id"],
+                    "dest_name": link.get("display_name_b", link["pad_a"]["level_file"])
+                }
+        return None
+
+    def _handle_teleport_confirm(self, choice):
+        """Callback for teleport pad confirmation dialog."""
+        if choice == "Yes" and self.pending_teleport:
+            # Collect alive allied NPCs from grid
+            allied_npcs = [u for u in self.hex_grid.units
+                          if u.allegiance == "Allied" and u.hp > 0
+                          and not isinstance(u, Player)]
+            if allied_npcs:
+                game.current_screen = "teleport_party"
+                teleport_party_screen.initialize_screen(
+                    allied_npcs,
+                    callback=self._execute_teleport,
+                    cancel_callback=self._cancel_teleport
+                )
+            else:
+                self._execute_teleport([])
+        else:
+            self._cancel_teleport()
+
+    def _cancel_teleport(self):
+        """Cancel a pending teleport — return player to pre-move position."""
+        if self.pending_teleport:
+            tp = self.pending_teleport
+            player = tp["player"]
+            pre_pos = tp["player_pre_pos"]
+            # Move player back
+            if player.position:
+                r, c = player.position
+                if self.hex_grid.grid[r][c]["unit"] is player:
+                    self.hex_grid.grid[r][c]["unit"] = None
+            player.position = pre_pos
+            self.hex_grid.grid[pre_pos[0]][pre_pos[1]]["unit"] = player
+            player.movement_used = False
+            player.action_used = False
+            self.pending_teleport = None
+        game.current_screen = "game"
+        self.initialize_screen()
+
+    def _place_unit_near(self, unit, center_pos, placed_positions):
+        """Place a unit on the nearest empty accessible hex near center_pos using BFS.
+        Updates placed_positions set. Returns True if placed successfully."""
+        visited = set()
+        queue = deque([center_pos])
+        visited.add(center_pos)
+        while queue:
+            pos = queue.popleft()
+            row, col = pos
+            if col % 2 == 0:
+                offsets = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1)]
+            else:
+                offsets = [(-1, 0), (1, 0), (0, -1), (0, 1), (1, -1), (1, 1)]
+            for dr, dc in offsets:
+                nr, nc = row + dr, col + dc
+                if (nr, nc) in visited:
+                    continue
+                visited.add((nr, nc))
+                if not (0 <= nr < self.hex_grid.rows and 0 <= nc < self.hex_grid.cols):
+                    continue
+                if ((nr, nc) not in placed_positions
+                        and self.hex_grid.grid[nr][nc]["unit"] is None
+                        and self.hex_grid.grid[nr][nc]["accessible"]):
+                    self.hex_grid.place_unit(unit, nr, nc)
+                    placed_positions.add((nr, nc))
+                    return True
+                queue.append((nr, nc))
+        # Last resort: place at center_pos itself
+        cr, cc = center_pos
+        if self.hex_grid.grid[cr][cc]["unit"] is None:
+            self.hex_grid.place_unit(unit, cr, cc)
+            placed_positions.add(center_pos)
+            return True
+        self.add_to_log(f"Warning: Could not place {getattr(unit, 'name', 'unit')} near teleport pad")
+        return False
+
+    def _execute_teleport(self, selected_npcs):
+        """Execute teleport: load destination level, place players and selected NPCs."""
+        tp = self.pending_teleport
+        if not tp:
+            game.current_screen = "game"
+            self.initialize_screen()
+            return
+
+        dest_level_file = tp["dest_level_file"]
+        dest_pad_id = tp["dest_pad_id"]
+        dest_stage_id = tp["dest_stage_id"]
+        dest_name = tp["dest_name"]
+
+        # Normalize level file path
+        if not dest_level_file.startswith("levels"):
+            dest_level_file = os.path.join("levels", dest_level_file)
+
+        if not os.path.exists(dest_level_file):
+            self.add_to_log(f"Destination level file not found: {dest_level_file}")
+            self._cancel_teleport()
+            return
+
+        # Autosave before teleporting
+        self.save_manager.save_game(game, self, save_type="autosave", save_label="Pre-Teleport")
+
+        # Collect selected NPC data
+        carry_npcs = []
+        for npc in selected_npcs:
+            carry_npcs.append({
+                "card_id": npc.card_id,
+                "hp": npc.hp,
+                "max_hp": npc.max_hp,
+                "allegiance": npc.allegiance,
+                "behavior_follow_target": npc.behavior_follow_target,
+                "behavior_tree": list(npc.behavior_tree),
+                "carry_to_next_level": getattr(npc, 'carry_to_next_level', False),
+            })
+
+        # Find destination stage for deck config
+        dest_stage = None
+        stages = self.campaign.get("stages") or self.campaign.get("levels", [])
+        for i, stage in enumerate(stages):
+            if stage.get("stage_id") == dest_stage_id:
+                dest_stage = stage
+                self.current_level_idx = i
+                break
+
+        # Get all players
+        all_players = game.players if game.multiplayer_mode and game.players else [game.player]
+        player1 = all_players[0]
+
+        # Load the new level
+        num_players = len(all_players)
+        self.hex_grid._num_players = num_players
+        self.hex_grid.load_level(dest_level_file, self.card_manager, player1)
+        self.current_level_file = dest_level_file
+
+        # Find destination pad position
+        dest_pad_pos = None
+        for pad in self.hex_grid.teleport_pads:
+            if pad["pad_id"] == dest_pad_id:
+                dest_pad_pos = (pad["row"], pad["column"])
+                break
+
+        if not dest_pad_pos:
+            self.add_to_log("Destination teleport pad not found in level!")
+            dest_pad_pos = player1.position or (self.hex_grid.rows // 2, self.hex_grid.cols // 2)
+
+        # Place players on accessible neighbors of destination pad
+        placed_positions = set()
+        placed_positions.add(dest_pad_pos)  # Reserve the pad hex itself
+
+        for player in all_players:
+            if player.hp <= 0:
+                continue
+            # Clear old position if any
+            if player.position:
+                r, c = player.position
+                if (0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols
+                        and self.hex_grid.grid[r][c]["unit"] is player):
+                    self.hex_grid.grid[r][c]["unit"] = None
+                player.position = None
+            self._place_unit_near(player, dest_pad_pos, placed_positions)
+
+        # Spawn selected NPCs near their follow-target player
+        for npc_info in carry_npcs:
+            card_data = load_card(npc_info["card_id"])
+            if not card_data:
+                continue
+            unit = Unit(card_data)
+            unit.hp = npc_info["hp"]
+            unit.max_hp = npc_info["max_hp"]
+            unit.allegiance = npc_info["allegiance"]
+            unit.behavior_tree = npc_info["behavior_tree"]
+            if npc_info.get("behavior_follow_target"):
+                unit.behavior_follow_target = npc_info["behavior_follow_target"]
+            unit.carry_to_next_level = npc_info.get("carry_to_next_level", False)
+
+            # Find follow target player to spawn near
+            spawn_near_pos = dest_pad_pos
+            if unit.behavior_follow_target and unit.behavior_follow_target.startswith("player_"):
+                try:
+                    idx = int(unit.behavior_follow_target.split("_")[1])
+                    if idx < len(all_players) and all_players[idx].hp > 0 and all_players[idx].position:
+                        spawn_near_pos = all_players[idx].position
+                except (ValueError, IndexError):
+                    pass
+
+            self._place_unit_near(unit, spawn_near_pos, placed_positions)
+            self.add_to_log(f"{unit.name} teleported with the party")
+
+        # Apply deck config from destination stage
+        if dest_stage:
+            deck_config = dest_stage.get("deck_config", {})
+            self._load_stage_decks(deck_config)
+
+        # Reset player turn state
+        for player in all_players:
+            player.movement_used = False
+            player.action_used = False
+            if hasattr(player, 'reset_double_attack'):
+                player.reset_double_attack()
+
+        # Reset turn phase
+        if game.multiplayer_mode:
+            self.turn_phase = "multiplayer_player"
+            game.current_player_index = 0
+            if game.players:
+                self.hex_grid.active_turn_unit = game.players[0]
+        else:
+            self.turn_phase = "player"
+            self.hex_grid.active_turn_unit = game.player
+
+        self.is_player_turn = True
+        self.pending_teleport = None
+        self.turn_cycle_count = 0
+        self._detect_boss_encounter()
+
+        self.add_to_log(f"Teleported to {dest_name}")
+
+        # Snap camera to center on destination pad (avoid slow drift from old position)
+        pad_row, pad_col = dest_pad_pos
+        pixel_x = pad_col * self.hex_grid.hex_size * 1.5
+        pixel_y = pad_row * self.hex_grid.hex_size * 1.732 + (pad_col % 2) * self.hex_grid.hex_size * 0.866
+        self.hex_grid.view_offset_x = WINDOW_WIDTH / 2 - pixel_x
+        self.hex_grid.view_offset_y = WINDOW_HEIGHT / 2 - pixel_y
+        self.autopan_active = False
+
+        game.current_screen = "game"
+        self.initialize_screen()
+
+        # Autosave at new level
+        self.save_manager.save_game(game, self, save_type="autosave", save_label="Level Start (Teleport)")
+
     def _check_reach_location_instant(self, pos):
         """Check if stepping on this location hex should trigger instant level transition.
         Returns True if campaign completion type is reach_location and all living players
@@ -5684,9 +5951,7 @@ class GameScreen:
                 callback=self._handle_delete_prev_saves
             )
         else:
-            self.add_to_log("Campaign Completed!")
-            game.current_screen = "main_menu"
-            main_menu.initialize_buttons()
+            self._show_campaign_complete()
 
     def _setup_multiplayer_player_phase(self):
         """Set up the correct player phase, skipping dead players."""
@@ -5849,9 +6114,7 @@ class GameScreen:
                         callback=self._handle_delete_prev_saves
                     )
                 else:
-                    self.add_to_log("Campaign Completed!")
-                    game.current_screen = "main_menu"
-                    main_menu.initialize_buttons()
+                    self._show_campaign_complete()
             else:
                 # Start new turn cycle
                 if game.multiplayer_mode:
@@ -7513,10 +7776,7 @@ class GameScreen:
                         self.hex_grid.active_turn_unit = game.players[0]
                         self.rebuild_left_panel()
                 else:
-                    self.add_to_log("Campaign Completed!")
-                    print("[DEBUG] Campaign completed - going to main_menu!")
-                    game.current_screen = "main_menu"
-                    main_menu.initialize_buttons()
+                    self._show_campaign_complete()
                     return
 
             # Move to player phase (or first living player in multiplayer)
@@ -7571,9 +7831,7 @@ class GameScreen:
                 self.is_player_turn = True
                 self._start_player_turn()
             else:
-                self.add_to_log("Campaign Completed!")
-                game.current_screen = "main_menu"
-                main_menu.initialize_buttons()
+                self._show_campaign_complete()
                 return
 
         # Advance to player phase (or first living player in multiplayer)
@@ -8174,6 +8432,7 @@ class GameScreen:
                     path = self.hex_grid.find_path(current_player.position, hex_pos)
                     effective_movement = current_player.get_effective_movement(game.current_party)
                     if path and len(path) - 1 <= effective_movement:
+                        pre_move_pos = current_player.position  # Save before moving
                         success, msg = self.hex_grid.move_unit(current_player, *hex_pos)
                         if success:
                             self.add_to_log(msg)
@@ -8218,6 +8477,37 @@ class GameScreen:
                                         else:
                                             self.add_to_log(f"Linked level file not found: {hex_data['linked_level']}")
                                     break  # Exit loop after handling this hex
+                            # Check for teleport pad
+                            if self.hex_grid.is_teleport_pad(hex_pos[0], hex_pos[1]):
+                                pad_id = self.hex_grid.get_teleport_pad_id(hex_pos[0], hex_pos[1])
+                                dest = self._find_teleport_destination(pad_id)
+                                if dest:
+                                    self.pending_teleport = {
+                                        "pad_id": pad_id,
+                                        "dest_pad_id": dest["dest_pad_id"],
+                                        "dest_level_file": dest["dest_level_file"],
+                                        "dest_stage_id": dest["dest_stage_id"],
+                                        "dest_name": dest["dest_name"],
+                                        "player_pre_pos": pre_move_pos,
+                                        "player": current_player
+                                    }
+                                    game.current_screen = "confirmation"
+                                    confirmation_screen.initialize_screen(
+                                        f"Teleport to {dest['dest_name']}?",
+                                        options=["Yes", "No"],
+                                        callback=self._handle_teleport_confirm
+                                    )
+                                    return
+                                else:
+                                    self.add_to_log(f"Teleport pad '{pad_id}' is not linked to any destination")
+                                    # Cancel move
+                                    if current_player.position:
+                                        r, c = current_player.position
+                                        if self.hex_grid.grid[r][c]["unit"] is current_player:
+                                            self.hex_grid.grid[r][c]["unit"] = None
+                                    current_player.position = pre_move_pos
+                                    self.hex_grid.grid[pre_move_pos[0]][pre_move_pos[1]]["unit"] = current_player
+                                    current_player.movement_used = False
                             # Check for location hex
                             if self.hex_grid.is_location_hex(hex_pos[0], hex_pos[1]):
                                 loc_data = self.hex_grid.location_data.get((hex_pos[0], hex_pos[1]))
@@ -8978,6 +9268,73 @@ class PauseMenuScreen:
         manager.draw_ui(screen)
 
 
+class TeleportPartyScreen:
+    """Screen for selecting which party NPCs to bring through a teleport pad."""
+
+    def __init__(self):
+        self.ui_elements = []
+        self.npc_buttons = []
+        self.npc_selected = []
+        self.npcs = []
+        self.confirm_btn = None
+        self.cancel_btn = None
+        self.callback = None
+        self.cancel_callback = None
+
+    def initialize_screen(self, allied_npcs, callback, cancel_callback):
+        self.callback = callback
+        self.cancel_callback = cancel_callback
+        self.npcs = allied_npcs
+        self.npc_selected = [True] * len(allied_npcs)
+        manager.clear_and_reset()
+        self.ui_elements = []
+        self.npc_buttons = []
+
+        msg_width = min(600, WINDOW_WIDTH - 100)
+        msg_x = (WINDOW_WIDTH - msg_width) // 2
+        msg_y = WINDOW_HEIGHT // 5
+
+        self.ui_elements.append(
+            UITextBox(f"<font color='#FFFFFF' size=4>Select party members to bring:</font>",
+                      pygame.Rect(msg_x, msg_y, msg_width, 50), manager))
+
+        y_offset = msg_y + 60
+        for i, npc in enumerate(allied_npcs):
+            btn = UIButton(
+                pygame.Rect(msg_x + 20, y_offset + i * 40, msg_width - 40, 35),
+                f"[X] {npc.name} (HP: {npc.hp}/{npc.max_hp})", manager)
+            self.npc_buttons.append(btn)
+            self.ui_elements.append(btn)
+
+        btn_y = y_offset + len(allied_npcs) * 40 + 20
+        self.confirm_btn = UIButton(
+            pygame.Rect(msg_x + 50, btn_y, 200, 50), "Teleport", manager)
+        self.cancel_btn = UIButton(
+            pygame.Rect(msg_x + msg_width - 250, btn_y, 200, 50), "Cancel", manager)
+        self.ui_elements.extend([self.confirm_btn, self.cancel_btn])
+
+    def handle_event(self, event):
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            for i, btn in enumerate(self.npc_buttons):
+                if event.ui_element == btn:
+                    self.npc_selected[i] = not self.npc_selected[i]
+                    npc = self.npcs[i]
+                    marker = "[X]" if self.npc_selected[i] else "[ ]"
+                    btn.set_text(f"{marker} {npc.name} (HP: {npc.hp}/{npc.max_hp})")
+                    return
+            if event.ui_element == self.confirm_btn:
+                selected = [npc for npc, sel in zip(self.npcs, self.npc_selected) if sel]
+                if self.callback:
+                    self.callback(selected)
+            elif event.ui_element == self.cancel_btn:
+                if self.cancel_callback:
+                    self.cancel_callback()
+
+    def draw(self):
+        screen.fill(DARK_CHARCOAL)
+        manager.draw_ui(screen)
+
+
 class ConfirmationScreen:
     """A simple centered screen with a message and option buttons. Accepts a callback."""
 
@@ -9711,6 +10068,7 @@ class Game:
             "npc_browser": npc_browser_screen,
             "pause_menu": pause_menu_screen,
             "confirmation": confirmation_screen,
+            "teleport_party": teleport_party_screen,
             "save_load": save_load_screen
         }
         game_screen.set_card_manager(self.card_manager)
@@ -9789,6 +10147,7 @@ skills_screen = SkillsScreen()
 quest_screen = QuestScreen()
 pause_menu_screen = PauseMenuScreen()
 confirmation_screen = ConfirmationScreen()
+teleport_party_screen = TeleportPartyScreen()
 save_load_screen = SaveLoadScreen()
 defeat_screen = DefeatScreen()
 card_browser_screen = CardBrowserScreen()

@@ -208,6 +208,15 @@ Turn-based: Player turn → Transition card turn → Enemy/NPC turns → Loop. A
 ### Hex Grid Coordinate System
 Uses (row, col) offset coordinates with 6 directional adjacency. HexGrid class handles distance calculation, line-of-sight checks, and centered view rendering.
 
+## Deferred Work Tracking
+
+When a plan is scoped down and some features are deferred, **always save the deferred items to `BACKLOG.md`** with:
+- What was deferred and a brief description
+- Which plan it was deferred from and when
+- Enough detail to pick up the work later without re-discussing
+
+Check `BACKLOG.md` at the start of related work to see if there are pending items.
+
 ## Development Workflow
 
 1. **CardMaker** → Create cards (saved to `cards/*.json`)

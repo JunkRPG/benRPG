@@ -44,6 +44,9 @@ class HexGrid:
         # Location hex system
         self.location_hexes = []
         self.location_data = {}  # {(row,col): {"card": InventoryCard, "shop": [], "turns": 0, "visited": False}}
+        # Teleport pad system
+        self.teleport_pads = []
+        self.teleport_pad_positions = {}  # {(row, col): pad_id}
         # Calculate initial offsets based on provided dimensions
         grid_width = self.cols * self.hex_size * 1.5
         grid_height = self.rows * self.hex_size * 1.732
@@ -74,6 +77,9 @@ class HexGrid:
             self.grid = [[{"unit": None, "accessible": True, "terrain": "grass"} for _ in range(self.cols)] for _ in range(self.rows)]
             self.units = []  # Clear all units from previous level
             self.card_drawing_hexes = level_data.get("card_drawing_hexes", [])
+            # Load teleport pads
+            self.teleport_pads = level_data.get("teleport_pads", [])
+            self.teleport_pad_positions = {(p["row"], p["column"]): p["pad_id"] for p in self.teleport_pads}
 
             # Load terrain data if present
             terrain_data = level_data.get("terrain", [])
@@ -320,6 +326,14 @@ class HexGrid:
     def is_location_hex(self, row, col):
         """Check if a hex is designated as a location hex."""
         return (row, col) in self.location_data
+
+    def is_teleport_pad(self, row, col):
+        """Check if a hex is a teleport pad."""
+        return (row, col) in self.teleport_pad_positions
+
+    def get_teleport_pad_id(self, row, col):
+        """Get the pad_id for a teleport pad hex, or None."""
+        return self.teleport_pad_positions.get((row, col))
 
     def _init_spawn_location_data(self, pos, card_data, state=1):
         """Initialize spawn location data from a location card (both enemy and NPC spawns)."""
@@ -2023,6 +2037,21 @@ class HexGrid:
                         # Pulsing border
                         pygame.draw.polygon(hex_surface, border_color, points, 3)
                         break
+                # Draw teleport pad indicators with pulsing cyan glow
+                if (row, col) in self.teleport_pad_positions:
+                    tp_pulse = (math.sin(pygame.time.get_ticks() / 400.0) + 1) / 2
+                    tp_alpha = int(100 + tp_pulse * 155)
+                    tp_glow = (0, 220, 220, int(tp_pulse * 30))
+                    tp_border = (0, 220, 220, tp_alpha)
+                    pygame.draw.polygon(hex_surface, tp_glow, points, 0)
+                    pygame.draw.polygon(hex_surface, tp_border, points, 3)
+                    # Diamond portal icon in center
+                    d_size = self.hex_size * 0.25
+                    d_pts = [(x, y - d_size), (x + d_size, y), (x, y + d_size), (x - d_size, y)]
+                    pygame.draw.polygon(hex_surface, (0, int(180 + tp_pulse * 75), int(180 + tp_pulse * 75)), d_pts, 0)
+                    d_inner = self.hex_size * 0.12
+                    d_inner_pts = [(x, y - d_inner), (x + d_inner, y), (x, y + d_inner), (x - d_inner, y)]
+                    pygame.draw.polygon(hex_surface, (0, 80, 80), d_inner_pts, 0)
                 # Draw location hex indicators
                 if (row, col) in self.location_data:
                     loc_data = self.location_data[(row, col)]
@@ -2562,6 +2591,10 @@ class HexGrid:
                         tip_lines.append(f"HP: {loc['health']}/{loc.get('max_health', loc['health'])}")
                     elif loc.get("is_npc_spawn_location", False) and loc.get("npc_health", 0) > 0:
                         tip_lines.append(f"HP: {loc['npc_health']}/{loc.get('npc_max_health', loc['npc_health'])}")
+                # Check teleport pad
+                pad_id = self.teleport_pad_positions.get((h_row, h_col))
+                if pad_id:
+                    tip_lines.append(f"Teleport: {pad_id}")
                 # Append extra lines (e.g. damage preview from game screen)
                 for extra in self.hover_extra_lines:
                     tip_lines.append(extra)

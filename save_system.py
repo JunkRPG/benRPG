@@ -84,6 +84,7 @@ class SaveManager:
 
         # Serialize card_drawing_hex state
         save_data["card_drawing_hexes"] = game_screen.hex_grid.card_drawing_hexes
+        save_data["teleport_pads"] = game_screen.hex_grid.teleport_pads
 
         # Serialize quest manager
         save_data["quest_manager"] = self._serialize_quest_manager(game_ref.quest_manager)

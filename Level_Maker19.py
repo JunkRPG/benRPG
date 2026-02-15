@@ -176,6 +176,29 @@ class EditorHexGrid:
                         pygame.draw.polygon(surface, ORANGE, roof_points)
                         pygame.draw.rect(surface, ORANGE, base_rect)
                         break
+                # Draw teleport pad indicator
+                CYAN = (0, 220, 220)
+                for pad in level_editor.teleport_pads:
+                    if pad["row"] == row and pad["column"] == col:
+                        pygame.draw.polygon(surface, CYAN, points, 3)
+                        # Diamond portal icon
+                        d_size = self.hex_size * 0.3
+                        d_pts = [
+                            (center[0], center[1] - d_size),
+                            (center[0] + d_size, center[1]),
+                            (center[0], center[1] + d_size),
+                            (center[0] - d_size, center[1])
+                        ]
+                        pygame.draw.polygon(surface, CYAN, d_pts, 0)
+                        d_inner = d_size * 0.5
+                        d_inner_pts = [
+                            (center[0], center[1] - d_inner),
+                            (center[0] + d_inner, center[1]),
+                            (center[0], center[1] + d_inner),
+                            (center[0] - d_inner, center[1])
+                        ]
+                        pygame.draw.polygon(surface, (0, 100, 100), d_inner_pts, 0)
+                        break
         for hex_data in level_editor.card_drawing_hexes:
             row, col = hex_data["row"], hex_data["column"]
             center = self.get_hex_center(row, col)
@@ -221,6 +244,8 @@ class LevelEditor:
         self.unit_cards = {"Enemy": [], "Boss": [], "NPC": []}
         # Location hex system
         self.location_hexes = []
+        # Teleport pad system
+        self.teleport_pads = []
         self._extra_level_data = {}  # Preserve fields we don't edit (starting_inventory, obstacles)
         self.location_deck_files = []  # Decks containing Location cards
         self.setup_ui()
@@ -387,6 +412,20 @@ class LevelEditor:
                                                 text="Set Location", manager=manager)
         self.remove_location_button = UIButton(relative_rect=pygame.Rect(110, left_y_pos, 90, 30),
                                                text="Remove Loc", manager=manager)
+        left_y_pos += 40
+
+        # Teleport pad UI elements
+        self.teleport_label = UILabel(relative_rect=pygame.Rect(10, left_y_pos, 190, 25),
+                                      text="Teleport Pads:", manager=manager)
+        left_y_pos += 28
+        self.teleport_pad_id_entry = UITextEntryLine(
+            relative_rect=pygame.Rect(10, left_y_pos, 190, 30),
+            manager=manager, placeholder_text="Pad ID e.g. village_exit")
+        left_y_pos += 35
+        self.set_teleport_pad_button = UIButton(relative_rect=pygame.Rect(10, left_y_pos, 90, 30),
+                                                text="Set Pad", manager=manager)
+        self.remove_teleport_pad_button = UIButton(relative_rect=pygame.Rect(110, left_y_pos, 90, 30),
+                                                   text="Remove Pad", manager=manager)
 
         self.save_button = UIButton(relative_rect=pygame.Rect(10, WINDOW_HEIGHT - 40, 100, 30),
                                     text="Save Level", manager=manager)
@@ -436,6 +475,11 @@ class LevelEditor:
                     deck_file = loc_hex.get("location_deck_file", "")
                     deck_name = self.filename_to_deck_data.get(deck_file, {}).get("deck_name", deck_file)
                     text += f" [Location: {deck_name}]"
+                    break
+            # Check for teleport pad
+            for pad in self.teleport_pads:
+                if (pad["row"], pad["column"]) == self.selected_hex:
+                    text += f" [Teleport: {pad['pad_id']}]"
                     break
         else:
             text = "No hex selected"
@@ -549,6 +593,8 @@ class LevelEditor:
                                                  for hex in self.card_drawing_hexes if hex["deck_file"]}
                         self.location_hexes = [loc for loc in self.location_hexes
                                               if 0 <= loc["row"] < rows and 0 <= loc["column"] < cols]
+                        self.teleport_pads = [p for p in self.teleport_pads
+                                             if 0 <= p["row"] < rows and 0 <= p["column"] < cols]
                         self.units = [u for u in self.units if 0 <= u["position"][0] < rows and 0 <= u["position"][1] < cols]
                         if self.player_start and (self.player_start[0] >= rows or self.player_start[1] >= cols):
                             self.player_start = None
@@ -724,6 +770,38 @@ class LevelEditor:
                     self.status_label.set_text(f"Removed location from {self.selected_hex}")
                 else:
                     self.status_label.set_text("No location at this hex")
+            elif event.ui_element == self.set_teleport_pad_button and self.selected_hex:
+                pad_id = self.teleport_pad_id_entry.get_text().strip()
+                if not pad_id:
+                    self.status_label.set_text("Enter a pad ID first")
+                elif not self.accessible[self.selected_hex[0]][self.selected_hex[1]]:
+                    self.status_label.set_text("Cannot set teleport pad on inaccessible hex")
+                else:
+                    # Check for duplicate pad_id at a different position
+                    duplicate = any(p["pad_id"] == pad_id and
+                                   (p["row"], p["column"]) != self.selected_hex
+                                   for p in self.teleport_pads)
+                    if duplicate:
+                        self.status_label.set_text(f"Pad ID '{pad_id}' already exists at another hex")
+                    else:
+                        self.teleport_pads = [p for p in self.teleport_pads
+                                             if (p["row"], p["column"]) != self.selected_hex]
+                        self.teleport_pads.append({
+                            "row": self.selected_hex[0],
+                            "column": self.selected_hex[1],
+                            "pad_id": pad_id
+                        })
+                        self.update_info_label()
+                        self.status_label.set_text(f"Set teleport pad '{pad_id}' at {self.selected_hex}")
+            elif event.ui_element == self.remove_teleport_pad_button and self.selected_hex:
+                old_count = len(self.teleport_pads)
+                self.teleport_pads = [p for p in self.teleport_pads
+                                     if (p["row"], p["column"]) != self.selected_hex]
+                if len(self.teleport_pads) < old_count:
+                    self.update_info_label()
+                    self.status_label.set_text(f"Removed teleport pad at {self.selected_hex}")
+                else:
+                    self.status_label.set_text("No teleport pad at this hex")
             elif event.ui_element == self.save_button:
                 self.save_level()
             elif event.ui_element == self.load_button:
@@ -757,6 +835,7 @@ class LevelEditor:
                          for u in self.units],
                 "card_drawing_hexes": self.card_drawing_hexes,
                 "location_hexes": self.location_hexes,
+                "teleport_pads": self.teleport_pads,
                 "starting_inventory": self._extra_level_data.get("starting_inventory", []),
                 "obstacles": self._extra_level_data.get("obstacles", [])
             }
@@ -811,6 +890,7 @@ class LevelEditor:
                 self.card_drawing_dict = {(hex["row"], hex["column"]): hex["deck_file"]
                                          for hex in self.card_drawing_hexes if hex.get("deck_file")}
                 self.location_hexes = level_data.get("location_hexes", [])
+                self.teleport_pads = level_data.get("teleport_pads", [])
                 self.selected_hex = None
                 self.rows_entry.set_text(str(rows))
                 self.cols_entry.set_text(str(cols))
