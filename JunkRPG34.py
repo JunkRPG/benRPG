@@ -1536,8 +1536,10 @@ class RecruitmentScreen:
             if card in game.current_player.inventory:
                 game.current_player.inventory.remove(card)
 
-        # Change NPC allegiance to Allied
+        # Change NPC allegiance to Allied and set follow/carry behavior
         self.target_unit.allegiance = "Allied"
+        self.target_unit.carry_to_next_level = True
+        self.target_unit.behavior_follow_target = f"player_{game.current_player_index}"
 
         # Create party card for the NPC
         npc_card_data = {
@@ -4931,6 +4933,21 @@ class GameScreen:
             try:
                 self.hex_grid.load_level(level_file, self.card_manager, game.player)
                 self.log.append(f"Loaded level: {level_file}")
+                # Read optional player/unit transition fields from level JSON
+                try:
+                    with open(level_file, 'r') as f:
+                        level_data = json.load(f)
+                    pt_card = level_data.get("player_transition_card")
+                    if pt_card:
+                        game.transition_manager.load_player_transition_card(pt_card)
+                    ut_card = level_data.get("unit_transition_card")
+                    if ut_card:
+                        game.transition_manager.load_unit_transition_card(ut_card)
+                    ut_chance = level_data.get("unit_transition_trigger_chance")
+                    if ut_chance is not None:
+                        game.transition_manager.set_unit_transition_trigger_chance(ut_chance)
+                except Exception as e:
+                    print(f"Error reading transition fields from level: {e}")
             except Exception as e:
                 print(f"Error loading level '{level_file}': {e}")
                 self.hex_grid.place_unit(game.player, self.hex_grid.rows // 2, self.hex_grid.cols // 2)
@@ -5276,6 +5293,38 @@ class GameScreen:
             if os.path.exists(deck_path):
                 self.current_junk_deck = deck_path
                 self.log.append(f"Loaded junk deck: {os.path.basename(deck_path)}")
+
+        # Load player transition deck
+        player_transition_deck = deck_config.get("player_transition_deck", "")
+        if player_transition_deck:
+            try:
+                deck_path = resolve_deck_path(player_transition_deck)
+                if os.path.exists(deck_path):
+                    with open(deck_path, 'r') as f:
+                        deck_data = json.load(f)
+                    card_ids = deck_data.get("cards", [])
+                    if card_ids:
+                        card_id = card_ids[0]
+                        if game.transition_manager.load_player_transition_card(card_id):
+                            self.log.append(f"Loaded player transition card: {game.transition_manager.player_transition.name}")
+            except Exception as e:
+                print(f"Error loading player transition deck: {e}")
+
+        # Load unit transition deck
+        unit_transition_deck = deck_config.get("unit_transition_deck", "")
+        if unit_transition_deck:
+            try:
+                deck_path = resolve_deck_path(unit_transition_deck)
+                if os.path.exists(deck_path):
+                    with open(deck_path, 'r') as f:
+                        deck_data = json.load(f)
+                    card_ids = deck_data.get("cards", [])
+                    if card_ids:
+                        card_id = card_ids[0]
+                        if game.transition_manager.load_unit_transition_card(card_id):
+                            self.log.append(f"Loaded unit transition card: {game.transition_manager.unit_transition.name}")
+            except Exception as e:
+                print(f"Error loading unit transition deck: {e}")
 
     def _handle_delete_prev_saves(self, choice):
         """Callback for the level transition save deletion confirmation."""
@@ -5961,6 +6010,7 @@ class GameScreen:
                 game.current_player_index = i
                 self.hex_grid.active_turn_unit = player
                 self.rebuild_left_panel()
+                # Player transition will be processed after _start_player_turn is called
                 return
         # All dead - trigger defeat
         self.turn_phase = "multiplayer_player"
@@ -6045,6 +6095,8 @@ class GameScreen:
                 # Apply Turn_Start passives for next player
                 for msg in game.players[next_idx].apply_passive_skills(self.hex_grid, "Turn_Start"):
                     self.add_to_log(msg)
+                # Process player transition card for next player
+                self._process_player_transition(game.players[next_idx])
             else:
                 # All players done, move to allied phase
                 self.turn_phase = "allied"
@@ -6132,6 +6184,9 @@ class GameScreen:
                 for msg in current_player.apply_passive_skills(self.hex_grid, "Turn_Start"):
                     self.add_to_log(msg)
 
+                # Process player transition card at turn start
+                self._process_player_transition(current_player)
+
                 # Periodic autosave every 5 turn cycles
                 if self.turn_cycle_count > 0 and self.turn_cycle_count % 5 == 0:
                     self.save_manager.save_game(game, self, save_type="autosave", save_label=f"Turn {self.turn_cycle_count}")
@@ -6213,6 +6268,23 @@ class GameScreen:
             return
 
         self.last_action_time = pygame.time.get_ticks()
+
+        # Check for unit transition event (trip_fall, etc.)
+        if game.transition_manager.has_unit_transition():
+            unit_trans_result = game.transition_manager.process_unit_transition_turn(self.hex_grid, unit)
+            if unit_trans_result:
+                outcome_type, result_text, log_msgs = unit_trans_result
+                for msg in log_msgs:
+                    self.add_to_log(msg)
+                if outcome_type == "trip_fall":
+                    unit.skip_turn = True
+                    # Unit loses its turn — check if it died from damage
+                    if unit.hp <= 0:
+                        self._post_attack_processing(unit)
+                    else:
+                        self.player_info_label.set_text(self.get_player_info())
+                        self.waiting_for_animation = True
+                    return  # Skip unit's normal turn
 
         # Range flash: briefly highlight allied NPC's projectile range at turn start
         if unit.allegiance == "Allied" and unit.projectile_range > 0 and unit.position:
@@ -6385,6 +6457,29 @@ class GameScreen:
                             inv_card = InventoryCard(card_data)
                             p.inventory.append(inv_card)
                 self.add_to_log(f"{dlg['speaker']} gave you some items!")
+
+        # Check for pending quest offer from quest giver NPCs
+        if (self.current_acting_unit and
+            hasattr(self.current_acting_unit, 'pending_quest_offer') and
+            self.current_acting_unit.pending_quest_offer):
+            if self.event_banner_active:
+                return  # Wait for banner to clear
+            offer = self.current_acting_unit.pending_quest_offer
+            self.current_acting_unit.pending_quest_offer = None
+            # Store offer data and show Accept/Decline popup
+            self._pending_quest_offer = {
+                "quest_card_id": offer["quest_card_id"],
+                "offering_unit": self.current_acting_unit,
+                "speaker": offer.get("speaker", "NPC")
+            }
+            speaker = offer.get("speaker", "A mysterious traveler")
+            game.current_screen = "confirmation"
+            confirmation_screen.initialize_screen(
+                f"{speaker} offers you a quest. Accept?",
+                ["Accept", "Decline"],
+                self._handle_quest_offer_response
+            )
+            return
 
         # Block turn queue while dialogue is showing
         if self.dialogue_active:
@@ -6627,6 +6722,32 @@ class GameScreen:
             self.add_to_log("Quest chain declined.")
         if hasattr(self, '_pending_chain_offer'):
             del self._pending_chain_offer
+
+    def _handle_quest_offer_response(self, choice):
+        """Callback for quest NPC offer (Accept/Decline)."""
+        game.current_screen = "game"
+        if choice == "Accept" and hasattr(self, '_pending_quest_offer'):
+            offer = self._pending_quest_offer
+            quest_card_id = offer["quest_card_id"]
+            card_data = load_card(quest_card_id)
+            if card_data:
+                inv_card = InventoryCard(card_data)
+                success, msg = game.current_quest_manager.activate_quest(
+                    inv_card, self.hex_grid, game.current_player
+                )
+                self.add_to_log(msg)
+                # Clear the offering unit's quest data so it doesn't re-offer
+                offering_unit = offer.get("offering_unit")
+                if offering_unit:
+                    offering_unit.quest_offer_card_id = None
+                    offering_unit.quest_offer_target = None
+            else:
+                self.add_to_log(f"Quest card '{quest_card_id}' not found.")
+        else:
+            speaker = self._pending_quest_offer.get("speaker", "NPC") if hasattr(self, '_pending_quest_offer') else "NPC"
+            self.add_to_log(f"Declined quest from {speaker}.")
+        if hasattr(self, '_pending_quest_offer'):
+            del self._pending_quest_offer
 
     def _get_log_color(self, message):
         """Return an HTML color based on message content."""
@@ -7649,21 +7770,34 @@ class GameScreen:
             quest_count = len(game.current_quest_manager.active_quests)
             self.quest_button.set_text(f"Quests ({quest_count}/5)")
 
-    def _get_adjacent_neutral_npcs(self):
-        """Get list of neutral NPCs adjacent to the player."""
+    def _is_recruitable(self, unit):
+        """Check if a unit can be recruited. Neutral NPCs are always recruitable.
+        Allied NPCs are recruitable if not already in the current party."""
+        if not unit or not hasattr(unit, 'allegiance'):
+            return False
+        if unit.allegiance == "Neutral":
+            return True
+        if unit.allegiance == "Allied":
+            # Already in party? Check card_id against party card IDs
+            party_ids = {card.card_data.get("id") for card in game.current_party}
+            return unit.card_id not in party_ids
+        return False
+
+    def _get_adjacent_recruitable_npcs(self):
+        """Get list of recruitable NPCs adjacent to the player."""
         if not game.current_player or not game.current_player.position:
             return []
 
         adjacent_hexes = self.hex_grid.get_adjacent_hexes(*game.current_player.position)
-        neutral_npcs = []
+        recruitable_npcs = []
 
         for row, col in adjacent_hexes:
             if 0 <= row < self.hex_grid.rows and 0 <= col < self.hex_grid.cols:
                 unit = self.hex_grid.grid[row][col].get("unit")
-                if unit and hasattr(unit, 'allegiance') and unit.allegiance == "Neutral":
-                    neutral_npcs.append(unit)
+                if unit and self._is_recruitable(unit):
+                    recruitable_npcs.append(unit)
 
-        return neutral_npcs
+        return recruitable_npcs
 
     def _calculate_recruitment_cost(self, unit):
         """Calculate recruitment cost based on NPC stats: HP/10 + melee + ranged + movement + 5"""
@@ -8011,6 +8145,23 @@ class GameScreen:
             self.is_player_turn = True
             self.update_turn_label()
 
+    def _process_player_transition(self, player):
+        """Process the player transition card at the start of a player's turn."""
+        if not game.transition_manager.has_player_transition():
+            return
+        result = game.transition_manager.process_player_transition_turn(self.hex_grid, player)
+        if result is None:
+            return  # Outcome was 'none', no banner
+        selected_index, outcome_text, result_text, log_messages = result
+        for msg in log_messages:
+            self.add_to_log(msg)
+        self.player_info_label.set_text(self.get_player_info())
+        # Show banner using the player transition card data
+        transition_card = game.transition_manager.player_transition
+        all_outcomes = transition_card.get_current_outcomes()
+        player_name = getattr(player, 'name', None) or getattr(player, 'class_name', '')
+        self._show_transition_banner(transition_card, all_outcomes, selected_index, result_text, player_name)
+
     def check_animations(self):
         animating = False
         # Update animations for all players (multiplayer or single player)
@@ -8240,7 +8391,7 @@ class GameScreen:
                             proj_dmg = current_player.attacks["projectile"]["damage"]
                             available_actions.append((f"Proj: {proj_name} ({proj_dmg} dmg)", "projectile", None))
                     # Recruit option available regardless of action_used
-                    if unit.allegiance == "Neutral" and self.hex_grid.hex_distance(current_player.position, hex_pos) == 1:
+                    if self._is_recruitable(unit) and self.hex_grid.hex_distance(current_player.position, hex_pos) == 1:
                         cost = self._calculate_recruitment_cost(unit)
                         available_actions.append((f"Recruit {unit.name} (Cost: {cost})", "recruit", unit))
                     # Feed option for taming wild mounts
@@ -8393,14 +8544,14 @@ class GameScreen:
                         self.item_targeting_mode = False
                         self.player_mode = "movement"
                 elif self.player_mode == "recruit" and unit and isinstance(unit, Unit):
-                    # Check if clicked unit is adjacent and neutral
+                    # Check if clicked unit is adjacent and recruitable
                     distance = self.hex_grid.hex_distance(current_player.position, hex_pos)
-                    if distance == 1 and unit.allegiance == "Neutral":
+                    if distance == 1 and self._is_recruitable(unit):
                         # Open recruitment screen
                         game.current_screen = "recruitment"
                         recruitment_screen.initialize_screen(unit)
-                    elif unit.allegiance != "Neutral":
-                        self.add_to_log(f"{unit.name} is not a neutral NPC")
+                    elif not self._is_recruitable(unit):
+                        self.add_to_log(f"{unit.name} cannot be recruited")
                     else:
                         self.add_to_log("NPC is not adjacent to you")
                 elif self.player_mode == "special_attack" and unit and isinstance(unit, Unit):
@@ -8930,7 +9081,7 @@ class GameScreen:
 
         # Show white rings around recruitable adjacent NPCs (always visible on player turn)
         if is_player_turn:
-            adjacent_neutrals = self._get_adjacent_neutral_npcs()
+            adjacent_neutrals = self._get_adjacent_recruitable_npcs()
             recruit_hexes = {npc_unit.position for npc_unit in adjacent_neutrals if npc_unit.position}
             if recruit_hexes:
                 attack_ranges.append({"range": recruit_hexes, "color": (255, 255, 255, 220), "outline": (180, 180, 180, 220), "inset": 0.75})

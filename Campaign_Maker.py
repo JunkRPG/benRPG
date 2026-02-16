@@ -10,7 +10,7 @@ import sys
 import pygame_gui
 from pygame_gui.elements import (
     UIButton, UITextEntryLine, UISelectionList, UILabel,
-    UIDropDownMenu, UITextBox, UIPanel
+    UIDropDownMenu, UITextBox, UIPanel, UIWindow
 )
 from pygame import display, event
 import math
@@ -200,13 +200,25 @@ class CampaignMaker:
             "campaign_id": str(uuid.uuid4())[:8],
             "name": "New Campaign",
             "description": "",
-            "stages": []
+            "stages": [],
+            "teleport_links": []
         }
         self.current_stage_index = -1
         self.level_files = []
         self.deck_files = []
         self.filename_to_level_data = {}
         self.filename_to_deck_data = {}
+
+        # Teleport link popup state
+        self.add_link_window = None
+        self.link_stage_a_dropdown = None
+        self.link_pad_a_dropdown = None
+        self.link_display_a_entry = None
+        self.link_stage_b_dropdown = None
+        self.link_pad_b_dropdown = None
+        self.link_display_b_entry = None
+        self.link_save_button = None
+        self.link_cancel_button = None
 
         # Preview grid
         preview_x = 220
@@ -368,6 +380,22 @@ class CampaignMaker:
             manager=manager
         )
 
+        UILabel(pygame.Rect(10, 700, 150, 20), "Player Transition:", manager=manager)
+        self.player_transition_deck_dropdown = UIDropDownMenu(
+            options_list=deck_options,
+            starting_option="-- None --",
+            relative_rect=pygame.Rect(10, 720, left_panel_width - 20, 25),
+            manager=manager
+        )
+
+        UILabel(pygame.Rect(10, 750, 150, 20), "Unit Transition:", manager=manager)
+        self.unit_transition_deck_dropdown = UIDropDownMenu(
+            options_list=deck_options,
+            starting_option="-- None --",
+            relative_rect=pygame.Rect(10, 770, left_panel_width - 20, 25),
+            manager=manager
+        )
+
         # === RIGHT PANEL (Stage Config) ===
         right_x = WINDOW_WIDTH - 210
 
@@ -434,6 +462,24 @@ class CampaignMaker:
         self.level_info_text = UITextBox(
             html_text="<font color='#FFFFFF'>Select a level to see info</font>",
             relative_rect=pygame.Rect(right_x, 445, 200, 150),
+            manager=manager
+        )
+
+        # === TELEPORT LINKS SECTION (right panel, below level info) ===
+        UILabel(pygame.Rect(right_x, 605, 200, 25), "Teleport Links:", manager=manager)
+        self.teleport_link_list = UISelectionList(
+            relative_rect=pygame.Rect(right_x, 630, 200, 120),
+            item_list=["No links"],
+            manager=manager
+        )
+        self.add_link_button = UIButton(
+            relative_rect=pygame.Rect(right_x, 755, 95, 30),
+            text="Add Link",
+            manager=manager
+        )
+        self.remove_link_button = UIButton(
+            relative_rect=pygame.Rect(right_x + 105, 755, 95, 30),
+            text="Remove",
             manager=manager
         )
 
@@ -526,6 +572,8 @@ class CampaignMaker:
         self._set_deck_dropdown(self.quest_deck_dropdown, deck_config.get("quest_deck", ""))
         self._set_deck_dropdown(self.instance_deck_dropdown, deck_config.get("instance_deck", ""))
         self._set_deck_dropdown(self.junk_deck_dropdown, deck_config.get("junk_deck", ""))
+        self._set_deck_dropdown(self.player_transition_deck_dropdown, deck_config.get("player_transition_deck", ""))
+        self._set_deck_dropdown(self.unit_transition_deck_dropdown, deck_config.get("unit_transition_deck", ""))
 
     def _set_deck_dropdown(self, dropdown, deck_path):
         """Set a deck dropdown to the correct value."""
@@ -550,6 +598,8 @@ class CampaignMaker:
         self.quest_deck_dropdown.selected_option = ("-- None --", "-- None --")
         self.instance_deck_dropdown.selected_option = ("-- None --", "-- None --")
         self.junk_deck_dropdown.selected_option = ("-- None --", "-- None --")
+        self.player_transition_deck_dropdown.selected_option = ("-- None --", "-- None --")
+        self.unit_transition_deck_dropdown.selected_option = ("-- None --", "-- None --")
 
     def _update_level_info(self, level_file):
         """Update the level info display."""
@@ -563,12 +613,14 @@ class CampaignMaker:
         units = len(level_data.get("units", []))
         locations = len(level_data.get("location_hexes", []))
         card_hexes = len(level_data.get("card_drawing_hexes", []))
+        teleport_pads = len(level_data.get("teleport_pads", []))
 
         info = f"""<font color='#FFFFFF'>
 Grid: {rows}x{cols}<br>
 Units: {units}<br>
 Locations: {locations}<br>
-Card Hexes: {card_hexes}
+Card Hexes: {card_hexes}<br>
+Teleport Pads: {teleport_pads}
 </font>"""
         self.level_info_text.set_text(info)
 
@@ -594,7 +646,9 @@ Card Hexes: {card_hexes}
                 "transition_deck": "",
                 "quest_deck": "",
                 "instance_deck": "",
-                "junk_deck": ""
+                "junk_deck": "",
+                "player_transition_deck": "",
+                "unit_transition_deck": ""
             },
             "completion_conditions": {
                 "type": "defeat_all_enemies"
@@ -698,7 +752,9 @@ Card Hexes: {card_hexes}
             "transition_deck": self._get_deck_path_from_dropdown(self.transition_deck_dropdown),
             "quest_deck": self._get_deck_path_from_dropdown(self.quest_deck_dropdown),
             "instance_deck": self._get_deck_path_from_dropdown(self.instance_deck_dropdown),
-            "junk_deck": self._get_deck_path_from_dropdown(self.junk_deck_dropdown)
+            "junk_deck": self._get_deck_path_from_dropdown(self.junk_deck_dropdown),
+            "player_transition_deck": self._get_deck_path_from_dropdown(self.player_transition_deck_dropdown),
+            "unit_transition_deck": self._get_deck_path_from_dropdown(self.unit_transition_deck_dropdown)
         }
 
         # Warn about missing completion targets
@@ -717,13 +773,15 @@ Card Hexes: {card_hexes}
             "campaign_id": str(uuid.uuid4())[:8],
             "name": "New Campaign",
             "description": "",
-            "stages": []
+            "stages": [],
+            "teleport_links": []
         }
         self.current_stage_index = -1
         self.name_entry.set_text("New Campaign")
         self.desc_entry.set_text("")
         self.update_stage_list()
         self.update_stage_config_ui()
+        self._update_teleport_link_list()
         self.status_label.set_text("Created new campaign")
 
     def save_campaign(self):
@@ -769,11 +827,15 @@ Card Hexes: {card_hexes}
                 if "levels" in self.campaign_data and "stages" not in self.campaign_data:
                     self._convert_old_format()
 
+                # Ensure teleport_links exists
+                if "teleport_links" not in self.campaign_data:
+                    self.campaign_data["teleport_links"] = []
                 self.name_entry.set_text(self.campaign_data.get("name", "Unnamed"))
                 self.desc_entry.set_text(self.campaign_data.get("description", ""))
                 self.current_stage_index = 0 if self.campaign_data.get("stages") else -1
                 self.update_stage_list()
                 self.update_stage_config_ui()
+                self._update_teleport_link_list()
                 self.status_label.set_text(f"Loaded: {os.path.basename(file_path)}")
             except Exception as e:
                 self.status_label.set_text(f"Error loading: {e}")
@@ -792,7 +854,9 @@ Card Hexes: {card_hexes}
                     "transition_deck": "",
                     "quest_deck": "",
                     "instance_deck": "",
-                    "junk_deck": ""
+                    "junk_deck": "",
+                    "player_transition_deck": "",
+                    "unit_transition_deck": ""
                 },
                 "completion_conditions": {"type": "defeat_all_enemies"},
                 "next_stage": f"stage_{i+2}" if i < len(old_levels) - 1 else None
@@ -896,6 +960,18 @@ Card Hexes: {card_hexes}
                 sys.exit()
             elif e.ui_element == self.browse_level_button:
                 self._browse_level()
+            elif e.ui_element == self.add_link_button:
+                self._open_add_link_window()
+            elif e.ui_element == self.remove_link_button:
+                self._remove_selected_link()
+            elif self.link_save_button and e.ui_element == self.link_save_button:
+                self._save_teleport_link()
+            elif self.link_cancel_button and e.ui_element == self.link_cancel_button:
+                self._close_add_link_window()
+
+        elif e.type == pygame_gui.UI_WINDOW_CLOSE:
+            if self.add_link_window and e.ui_element == self.add_link_window:
+                self._close_add_link_window()
 
         elif e.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
             if e.ui_element == self.stage_list:
@@ -919,6 +995,10 @@ Card Hexes: {card_hexes}
                 else:
                     self.preview_grid.level_data = None
                     self.level_info_text.set_text("<font color='#FFFFFF'>Select a level to see info</font>")
+            elif self.link_stage_a_dropdown and e.ui_element == self.link_stage_a_dropdown:
+                self._update_pad_dropdown("a")
+            elif self.link_stage_b_dropdown and e.ui_element == self.link_stage_b_dropdown:
+                self._update_pad_dropdown("b")
 
     def _browse_level(self):
         """Browse for a level file."""
@@ -954,6 +1034,246 @@ Card Hexes: {card_hexes}
             # Load preview
             self.preview_grid.load_level(file_path)
             self._update_level_info(filename)
+
+    # === Teleport Link Methods ===
+
+    def _get_teleport_pads_for_stage(self, stage_data):
+        """Get teleport pad IDs from a stage's level data."""
+        level_file = stage_data.get("level_file", "")
+        if not level_file or level_file not in self.filename_to_level_data:
+            return []
+        level_data = self.filename_to_level_data[level_file]
+        pads = level_data.get("teleport_pads", [])
+        return [p.get("pad_id", "") for p in pads if p.get("pad_id")]
+
+    def _find_stage_from_dropdown_text(self, text):
+        """Map dropdown label like '1. Stage Name' to stage dict."""
+        if not text or text == "-- Select Stage --":
+            return None
+        try:
+            idx = int(text.split(".")[0]) - 1
+            if 0 <= idx < len(self.campaign_data["stages"]):
+                return self.campaign_data["stages"][idx]
+        except (ValueError, IndexError):
+            pass
+        return None
+
+    def _update_pad_dropdown(self, side):
+        """Refresh pad dropdown when stage changes. side is 'a' or 'b'."""
+        if side == "a":
+            stage_dropdown = self.link_stage_a_dropdown
+            old_pad_dropdown = self.link_pad_a_dropdown
+        else:
+            stage_dropdown = self.link_stage_b_dropdown
+            old_pad_dropdown = self.link_pad_b_dropdown
+
+        if not stage_dropdown or not self.add_link_window:
+            return
+
+        selected_text = stage_dropdown.selected_option
+        if isinstance(selected_text, tuple):
+            selected_text = selected_text[0]
+
+        stage = self._find_stage_from_dropdown_text(selected_text)
+        pad_ids = self._get_teleport_pads_for_stage(stage) if stage else []
+        pad_options = ["-- Select Pad --"] + pad_ids if pad_ids else ["-- No Pads --"]
+
+        # Kill old dropdown and recreate
+        if old_pad_dropdown:
+            old_pad_dropdown.kill()
+
+        x_offset = 10 if side == "a" else 260
+        new_dropdown = UIDropDownMenu(
+            options_list=pad_options,
+            starting_option=pad_options[0],
+            relative_rect=pygame.Rect(x_offset, 70, 230, 25),
+            manager=manager,
+            container=self.add_link_window
+        )
+
+        if side == "a":
+            self.link_pad_a_dropdown = new_dropdown
+        else:
+            self.link_pad_b_dropdown = new_dropdown
+
+    def _update_teleport_link_list(self):
+        """Refresh the teleport link selection list display."""
+        links = self.campaign_data.get("teleport_links", [])
+        if not links:
+            self.teleport_link_list.set_item_list(["No links"])
+            return
+        items = []
+        for i, link in enumerate(links):
+            pad_a = link.get("pad_a", {}).get("pad_id", "?")
+            pad_b = link.get("pad_b", {}).get("pad_id", "?")
+            items.append(f"{i+1}. {pad_a} \u2194 {pad_b}")
+        self.teleport_link_list.set_item_list(items)
+
+    def _open_add_link_window(self):
+        """Open popup window for adding a teleport link."""
+        if self.add_link_window:
+            return
+
+        win_w, win_h = 510, 230
+        win_x = (WINDOW_WIDTH - win_w) // 2
+        win_y = (WINDOW_HEIGHT - win_h) // 2
+        self.add_link_window = UIWindow(
+            rect=pygame.Rect(win_x, win_y, win_w, win_h),
+            manager=manager,
+            window_display_title="Add Teleport Link"
+        )
+
+        # Build stage options
+        stage_options = ["-- Select Stage --"]
+        for i, stage in enumerate(self.campaign_data["stages"]):
+            stage_options.append(f"{i+1}. {stage.get('name', 'Stage')}")
+
+        # Side A
+        UILabel(pygame.Rect(10, 5, 230, 20), "Side A:", manager=manager, container=self.add_link_window)
+        self.link_stage_a_dropdown = UIDropDownMenu(
+            options_list=stage_options,
+            starting_option="-- Select Stage --",
+            relative_rect=pygame.Rect(10, 25, 230, 25),
+            manager=manager,
+            container=self.add_link_window
+        )
+        self.link_pad_a_dropdown = UIDropDownMenu(
+            options_list=["-- Select Pad --"],
+            starting_option="-- Select Pad --",
+            relative_rect=pygame.Rect(10, 70, 230, 25),
+            manager=manager,
+            container=self.add_link_window
+        )
+        UILabel(pygame.Rect(10, 100, 100, 20), "Display Name:", manager=manager, container=self.add_link_window)
+        self.link_display_a_entry = UITextEntryLine(
+            relative_rect=pygame.Rect(10, 120, 230, 25),
+            manager=manager,
+            container=self.add_link_window
+        )
+
+        # Side B
+        UILabel(pygame.Rect(260, 5, 230, 20), "Side B:", manager=manager, container=self.add_link_window)
+        self.link_stage_b_dropdown = UIDropDownMenu(
+            options_list=stage_options,
+            starting_option="-- Select Stage --",
+            relative_rect=pygame.Rect(260, 25, 230, 25),
+            manager=manager,
+            container=self.add_link_window
+        )
+        self.link_pad_b_dropdown = UIDropDownMenu(
+            options_list=["-- Select Pad --"],
+            starting_option="-- Select Pad --",
+            relative_rect=pygame.Rect(260, 70, 230, 25),
+            manager=manager,
+            container=self.add_link_window
+        )
+        UILabel(pygame.Rect(260, 100, 100, 20), "Display Name:", manager=manager, container=self.add_link_window)
+        self.link_display_b_entry = UITextEntryLine(
+            relative_rect=pygame.Rect(260, 120, 230, 25),
+            manager=manager,
+            container=self.add_link_window
+        )
+
+        # Buttons
+        self.link_save_button = UIButton(
+            relative_rect=pygame.Rect(120, 155, 120, 30),
+            text="Save Link",
+            manager=manager,
+            container=self.add_link_window
+        )
+        self.link_cancel_button = UIButton(
+            relative_rect=pygame.Rect(260, 155, 120, 30),
+            text="Cancel",
+            manager=manager,
+            container=self.add_link_window
+        )
+
+    def _save_teleport_link(self):
+        """Validate inputs and save a new teleport link."""
+        if not self.add_link_window:
+            return
+
+        # Get selections
+        stage_a_text = self.link_stage_a_dropdown.selected_option
+        if isinstance(stage_a_text, tuple):
+            stage_a_text = stage_a_text[0]
+        stage_b_text = self.link_stage_b_dropdown.selected_option
+        if isinstance(stage_b_text, tuple):
+            stage_b_text = stage_b_text[0]
+
+        pad_a_text = self.link_pad_a_dropdown.selected_option
+        if isinstance(pad_a_text, tuple):
+            pad_a_text = pad_a_text[0]
+        pad_b_text = self.link_pad_b_dropdown.selected_option
+        if isinstance(pad_b_text, tuple):
+            pad_b_text = pad_b_text[0]
+
+        # Validate
+        stage_a = self._find_stage_from_dropdown_text(stage_a_text)
+        stage_b = self._find_stage_from_dropdown_text(stage_b_text)
+        if not stage_a or not stage_b:
+            self.status_label.set_text("Select stages for both sides")
+            return
+        if pad_a_text in ("-- Select Pad --", "-- No Pads --") or pad_b_text in ("-- Select Pad --", "-- No Pads --"):
+            self.status_label.set_text("Select pads for both sides")
+            return
+
+        display_a = self.link_display_a_entry.get_text() or pad_a_text
+        display_b = self.link_display_b_entry.get_text() or pad_b_text
+
+        link = {
+            "pad_a": {
+                "pad_id": pad_a_text,
+                "level_file": stage_a.get("level_file", ""),
+                "stage_id": stage_a.get("stage_id", "")
+            },
+            "pad_b": {
+                "pad_id": pad_b_text,
+                "level_file": stage_b.get("level_file", ""),
+                "stage_id": stage_b.get("stage_id", "")
+            },
+            "display_name_a": display_a,
+            "display_name_b": display_b
+        }
+
+        if "teleport_links" not in self.campaign_data:
+            self.campaign_data["teleport_links"] = []
+        self.campaign_data["teleport_links"].append(link)
+        self._update_teleport_link_list()
+        self._close_add_link_window()
+        self.status_label.set_text(f"Added teleport link: {pad_a_text} \u2194 {pad_b_text}")
+
+    def _remove_selected_link(self):
+        """Remove the selected teleport link."""
+        selected = self.teleport_link_list.get_single_selection()
+        if not selected or selected == "No links":
+            self.status_label.set_text("No link selected")
+            return
+        try:
+            idx = int(selected.split(".")[0]) - 1
+            links = self.campaign_data.get("teleport_links", [])
+            if 0 <= idx < len(links):
+                removed = links.pop(idx)
+                pad_a = removed.get("pad_a", {}).get("pad_id", "?")
+                pad_b = removed.get("pad_b", {}).get("pad_id", "?")
+                self._update_teleport_link_list()
+                self.status_label.set_text(f"Removed link: {pad_a} \u2194 {pad_b}")
+        except (ValueError, IndexError):
+            pass
+
+    def _close_add_link_window(self):
+        """Close the add link popup and reset state."""
+        if self.add_link_window:
+            self.add_link_window.kill()
+        self.add_link_window = None
+        self.link_stage_a_dropdown = None
+        self.link_pad_a_dropdown = None
+        self.link_display_a_entry = None
+        self.link_stage_b_dropdown = None
+        self.link_pad_b_dropdown = None
+        self.link_display_b_entry = None
+        self.link_save_button = None
+        self.link_cancel_button = None
 
     def draw(self):
         """Draw the application."""

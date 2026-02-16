@@ -88,6 +88,12 @@ class Unit:
         self.attack_proximity_range = int(card_data["data"].get("Attack_Proximity_Range", 0) or 0)
         # Avoid location hexes: never stop on a location hex when following
         self.avoid_location_hexes = str(card_data["data"].get("Avoid_Location_Hexes", "false")).lower() == "true"
+        # Skip turn: set by trip_fall, cleared after skipping one turn
+        self.skip_turn = False
+        # Quest giver: quest card to offer when adjacent to target
+        self.quest_offer_card_id = None
+        self.quest_offer_target = None  # "player_0" / "player_1"
+        self.pending_quest_offer = None
 
         if self.states == 2 and "2nd_State_Name" in card_data["data"]:
             self.second_state = {
@@ -158,6 +164,11 @@ class Unit:
         log = []
         if not self.position:
             return log
+
+        # Skip turn if stunned (e.g. from trip_fall)
+        if self.skip_turn:
+            self.skip_turn = False
+            return [f"{self.name} is stunned and loses their turn!"]
 
         # Healer: heal friendly units before taking other actions (non-Allied only;
         # Allied healers are handled by their behavior tree)
@@ -505,6 +516,57 @@ class Unit:
                                                 self.switch_state()
                                 break
                     return log
+
+            # Quest giver NPC: approach target player and offer quest
+            elif self.quest_offer_card_id and self.quest_offer_target:
+                targets = [grid.player]
+                if hasattr(grid, 'players') and grid.players:
+                    targets = [p for p in grid.players if p.hp > 0]
+                # Resolve target player from quest_offer_target string
+                target_player = None
+                if self.quest_offer_target.startswith("player_"):
+                    try:
+                        idx = int(self.quest_offer_target.split("_")[1])
+                        players = grid.players if hasattr(grid, 'players') and grid.players else []
+                        if not players and hasattr(grid, 'player') and grid.player:
+                            players = [grid.player]
+                        if idx < len(players) and players[idx].hp > 0:
+                            target_player = players[idx]
+                    except (ValueError, IndexError):
+                        pass
+                if not target_player:
+                    target_player = targets[0] if targets else None
+                if target_player and target_player.position:
+                    dist = grid.hex_distance(self.position, target_player.position)
+                    if dist <= 1:
+                        # Adjacent — trigger quest offer
+                        self.pending_quest_offer = {
+                            "quest_card_id": self.quest_offer_card_id,
+                            "speaker": self.name
+                        }
+                        return log
+                    else:
+                        # Pathfind toward target player
+                        path = grid.find_path(self.position, target_player.position)
+                        if path and len(path) > 1:
+                            max_steps = min(self.movement, len(path) - 1)
+                            for steps in range(max_steps, 0, -1):
+                                new_pos = path[steps]
+                                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                                    if new_pos != target_player.position:
+                                        # Avoid location hexes if configured
+                                        if self.avoid_location_hexes and new_pos in grid.location_data:
+                                            continue
+                                        success, msg = grid.move_unit(self, *new_pos)
+                                        if success:
+                                            log.append(f"{self.name} approaches")
+                                            if grid.hex_distance(self.position, target_player.position) <= 1:
+                                                self.pending_quest_offer = {
+                                                    "quest_card_id": self.quest_offer_card_id,
+                                                    "speaker": self.name
+                                                }
+                                    break
+                        return log
 
             # Wild mounts wander multiple hexes in a random direction
             elif (self.states == 2 and self.current_state == 1 and

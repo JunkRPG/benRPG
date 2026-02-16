@@ -108,6 +108,9 @@ class TransitionManager:
         self.active_transition = None  # The current transition card in the cycle
         self.weather_effect = None  # Current active weather effect
         self.weather_modifiers = {}  # Active stat modifiers from weather
+        self.player_transition = None          # TransitionCard for player events
+        self.unit_transition = None            # TransitionCard for unit events
+        self.unit_transition_trigger_chance = 0.20  # Probability gate (0.0-1.0)
 
     def set_instance_manager(self, instance_manager):
         """Set reference to instance manager for triggering instance events."""
@@ -131,6 +134,40 @@ class TransitionManager:
         if transition_id:
             return self.load_transition_card(transition_id)
         return False
+
+    def load_player_transition_card(self, card_id):
+        """Load a transition card for player turn events."""
+        card_data = load_card(card_id)
+        if not card_data:
+            return False
+        if card_data.get("card_type") == "Transition Card":
+            self.player_transition = TransitionCard(card_data)
+            print(f"Loaded player transition card: {self.player_transition.name}")
+            return True
+        return False
+
+    def load_unit_transition_card(self, card_id):
+        """Load a transition card for unit turn events."""
+        card_data = load_card(card_id)
+        if not card_data:
+            return False
+        if card_data.get("card_type") == "Transition Card":
+            self.unit_transition = TransitionCard(card_data)
+            print(f"Loaded unit transition card: {self.unit_transition.name}")
+            return True
+        return False
+
+    def set_unit_transition_trigger_chance(self, chance):
+        """Set the probability gate for unit transition events."""
+        self.unit_transition_trigger_chance = max(0.0, min(1.0, float(chance)))
+
+    def has_player_transition(self):
+        """Check if there's an active player transition card."""
+        return self.player_transition is not None
+
+    def has_unit_transition(self):
+        """Check if there's an active unit transition card."""
+        return self.unit_transition is not None
 
     def set_transition_card(self, transition_card):
         """Set a transition card directly."""
@@ -188,6 +225,65 @@ class TransitionManager:
             log_messages.append(result)
 
         return selected_index, result_text, log_messages
+
+    def process_player_transition_turn(self, hex_grid, player):
+        """Process the player transition card at the start of a player's turn.
+        Returns (selected_index, outcome_text, result_text, log_messages) or None if outcome is 'none'."""
+        if not self.player_transition:
+            return None
+
+        outcome, selected_index = self.player_transition.roll_outcome_with_index()
+        outcome_type = outcome.get("type", "none")
+        outcome_text = outcome.get("text", "")
+        params = outcome.get("params", {})
+
+        if outcome_type == "none":
+            return None
+
+        log_messages = [f"[{self.player_transition.get_current_name()}] {outcome_text}"]
+
+        result = self.apply_outcome(outcome_type, params, hex_grid, player)
+        result_text = outcome_text
+        if result:
+            result_text += f"\n{result}"
+            log_messages.append(result)
+
+        return selected_index, outcome_text, result_text, log_messages
+
+    def process_unit_transition_turn(self, hex_grid, unit):
+        """Process the unit transition card at the start of a unit's turn.
+        Returns (outcome_type, result_text, log_messages) or None."""
+        if not self.unit_transition:
+            return None
+
+        # Probability gate check
+        if random.random() > self.unit_transition_trigger_chance:
+            return None
+
+        outcome, _ = self.unit_transition.roll_outcome_with_index()
+        outcome_type = outcome.get("type", "none")
+        outcome_text = outcome.get("text", "")
+        params = outcome.get("params", {})
+
+        if outcome_type == "none":
+            return None
+
+        if outcome_type == "trip_fall":
+            damage = params.get("damage", 3)
+            unit.hp -= damage
+            result_text = f"{unit.name} trips and falls! ({damage} damage)"
+            log_messages = [result_text]
+            return "trip_fall", result_text, log_messages
+
+        # For other outcome types, apply normally
+        log_messages = [f"[{self.unit_transition.get_current_name()}] {outcome_text}"]
+        result = self.apply_outcome(outcome_type, params, hex_grid, None)
+        result_text = outcome_text
+        if result:
+            result_text += f"\n{result}"
+            log_messages.append(result)
+
+        return outcome_type, result_text, log_messages
 
     def apply_outcome(self, outcome_type, params, hex_grid, player):
         """Apply a transition outcome. Returns result message."""
@@ -260,6 +356,19 @@ class TransitionManager:
             deck = params.get("deck", None)
             count = params.get("count", 1)
             return self._spawn_wild_mount(hex_grid, deck, count)
+
+        elif outcome_type == "quest_npc_spawn":
+            npc_deck = params.get("npc_deck", "")
+            quest_deck = params.get("quest_deck", "")
+            if npc_deck and quest_deck:
+                return self._spawn_quest_npc(npc_deck, quest_deck, hex_grid, player)
+            return "Missing npc_deck or quest_deck for quest NPC spawn."
+
+        elif outcome_type == "trip_fall":
+            # Handled directly in process_unit_transition_turn for unit context
+            # If called from world transition, just return text
+            damage = params.get("damage", 3)
+            return f"A stumble in the darkness... ({damage} damage)"
 
         return ""
 
@@ -520,6 +629,64 @@ class TransitionManager:
         if spawned:
             return f"A wild creature appears: {', '.join(spawned)}"
         return "No wild animals appeared."
+
+    def _spawn_quest_npc(self, npc_deck, quest_deck, hex_grid, player):
+        """Spawn a quest-giving NPC who approaches the player and offers a quest."""
+        from unit import Unit
+
+        # Draw NPC card from npc_deck
+        npc_deck_path = resolve_deck_path(npc_deck)
+        npc_card = self.card_manager.draw_from_deck(npc_deck_path)
+        if not npc_card:
+            return "No NPC card available for quest giver."
+
+        # Draw quest card ID from quest_deck
+        quest_card_id = None
+        try:
+            quest_deck_path = resolve_deck_path(quest_deck)
+            if os.path.exists(quest_deck_path):
+                with open(quest_deck_path, 'r') as f:
+                    deck_data = json.load(f)
+                card_ids = deck_data.get("cards", [])
+                if card_ids:
+                    quest_card_id = random.choice(card_ids)
+        except Exception as e:
+            print(f"Error reading quest deck for quest NPC: {e}")
+
+        if not quest_card_id:
+            return "No quest card available for quest giver."
+
+        # Create unit from NPC card
+        card_data = npc_card.card_data.copy()
+        if "data" in card_data:
+            card_data["data"] = card_data["data"].copy()
+            card_data["data"]["Allegiance (Hostile, Neutral, Allied)"] = "Neutral"
+
+        unit = Unit(card_data)
+        unit.quest_offer_card_id = quest_card_id
+        unit.avoid_location_hexes = True
+
+        # Set follow target to the player
+        if player and hasattr(player, 'position'):
+            # Determine player index for target reference
+            if hasattr(hex_grid, 'players') and hex_grid.players:
+                for i, p in enumerate(hex_grid.players):
+                    if p is player:
+                        unit.quest_offer_target = f"player_{i}"
+                        break
+                else:
+                    unit.quest_offer_target = "player_0"
+            else:
+                unit.quest_offer_target = "player_0"
+            unit.behavior_follow_target = unit.quest_offer_target
+
+        # Spawn at map edge
+        spawn_pos = hex_grid.get_edge_spawn_position("random")
+        if not spawn_pos:
+            return "No valid spawn position for quest NPC."
+
+        hex_grid.place_unit(unit, *spawn_pos)
+        return f"A quest giver ({unit.name}) has appeared!"
 
     def _draw_cards(self, card_type, deck_file, count, player):
         """Draw cards to player inventory."""
