@@ -1302,23 +1302,36 @@ class LocationScreen:
         )
 
         if npc_data:
-            # Create an InventoryCard for the NPC
-            card_data = {
-                "id": npc_data.get("id", "recruited_npc"),
-                "card_type": npc_data.get("card_type", "NPC Card"),
-                "states": 1,
-                "data": {
-                    "Name": npc_data.get("name", "Unknown"),
-                    "Health": str(npc_data.get("max_hp", 10)),
-                    "Movement": str(npc_data.get("movement", 3)),
-                    "Melee Damage": str(npc_data.get("melee_damage", 5)),
-                    "Projectile Damage": str(npc_data.get("projectile_damage", 0)),
-                    "Projectile Range": str(npc_data.get("projectile_range", 0)),
-                    "Allegiance (Hostile, Neutral, Allied)": npc_data.get("allegiance", "Allied")
+            # Try loading full card data to preserve Special Skill, heal fields, state 2, etc.
+            full_card = load_card(npc_data.get("id"), silent=True)
+            if full_card:
+                full_card["data"]["Allegiance (Hostile, Neutral, Allied)"] = "Allied"
+                if full_card.get("states", 1) >= 2 and "2nd_State_Allegiance (Hostile, Neutral, Allied)" in full_card.get("data", {}):
+                    full_card["data"]["2nd_State_Allegiance (Hostile, Neutral, Allied)"] = "Allied"
+                from inventory_card import InventoryCard
+                npc_card = InventoryCard(full_card)
+                # Restore state from stored data
+                stored_state = npc_data.get("current_state", 1)
+                if stored_state == 2:
+                    npc_card.current_state = 2
+            else:
+                # Fallback: bare-bones card if card file can't be loaded
+                card_data = {
+                    "id": npc_data.get("id", "recruited_npc"),
+                    "card_type": npc_data.get("card_type", "NPC Card"),
+                    "states": 1,
+                    "data": {
+                        "Name": npc_data.get("name", "Unknown"),
+                        "Health": str(npc_data.get("max_hp", 10)),
+                        "Movement": str(npc_data.get("movement", 3)),
+                        "Melee Damage": str(npc_data.get("melee_damage", 5)),
+                        "Projectile Damage": str(npc_data.get("projectile_damage", 0)),
+                        "Projectile Range": str(npc_data.get("projectile_range", 0)),
+                        "Allegiance (Hostile, Neutral, Allied)": npc_data.get("allegiance", "Allied")
+                    }
                 }
-            }
-            from inventory_card import InventoryCard
-            npc_card = InventoryCard(card_data)
+                from inventory_card import InventoryCard
+                npc_card = InventoryCard(card_data)
             game.current_party.append(npc_card)
 
             game_screen.add_to_log(msg)
@@ -1541,21 +1554,32 @@ class RecruitmentScreen:
         self.target_unit.carry_to_next_level = True
         self.target_unit.behavior_follow_target = f"player_{game.current_player_index}"
 
-        # Create party card for the NPC
-        npc_card_data = {
-            "id": self.target_unit.card_id,
-            "card_type": "NPC Card",
-            "data": {
-                "Name": self.target_unit.name,
-                "Health": str(self.target_unit.max_hp),
-                "Movement": str(self.target_unit.movement),
-                "Melee Damage": str(self.target_unit.melee_damage),
-                "Projectile Damage": str(self.target_unit.projectile_damage),
-                "Projectile Range": str(self.target_unit.projectile_range),
-                "Allegiance (Hostile, Neutral, Allied)": "Allied"
+        # Create party card for the NPC — use full card data to preserve Special Skill, heal fields, state 2, etc.
+        full_card = load_card(self.target_unit.card_id, silent=True)
+        if full_card:
+            full_card["data"]["Allegiance (Hostile, Neutral, Allied)"] = "Allied"
+            if full_card.get("states", 1) >= 2 and "2nd_State_Allegiance (Hostile, Neutral, Allied)" in full_card.get("data", {}):
+                full_card["data"]["2nd_State_Allegiance (Hostile, Neutral, Allied)"] = "Allied"
+            npc_card = InventoryCard(full_card)
+            # Match the unit's current state (e.g., Elder flipped to state 2 = Healer)
+            if hasattr(self.target_unit, 'current_state') and self.target_unit.current_state == 2:
+                npc_card.current_state = 2
+        else:
+            # Fallback: bare-bones card if card file can't be loaded
+            npc_card_data = {
+                "id": self.target_unit.card_id,
+                "card_type": "NPC Card",
+                "data": {
+                    "Name": self.target_unit.name,
+                    "Health": str(self.target_unit.max_hp),
+                    "Movement": str(self.target_unit.movement),
+                    "Melee Damage": str(self.target_unit.melee_damage),
+                    "Projectile Damage": str(self.target_unit.projectile_damage),
+                    "Projectile Range": str(self.target_unit.projectile_range),
+                    "Allegiance (Hostile, Neutral, Allied)": "Allied"
+                }
             }
-        }
-        npc_card = InventoryCard(npc_card_data)
+            npc_card = InventoryCard(npc_card_data)
         game.current_party.append(npc_card)
 
         # Log the recruitment

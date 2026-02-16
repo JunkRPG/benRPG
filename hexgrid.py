@@ -1049,7 +1049,12 @@ class HexGrid:
             "melee_damage": unit.melee_damage,
             "projectile_damage": unit.projectile_damage,
             "projectile_range": unit.projectile_range,
-            "allegiance": unit.allegiance
+            "allegiance": unit.allegiance,
+            # Preserve special abilities
+            "special_skill": getattr(unit, 'special_skill', ''),
+            "heal_amount": getattr(unit, 'heal_amount', 0),
+            "heal_range": getattr(unit, 'heal_range', 0),
+            "current_state": getattr(unit, 'current_state', 1),
         }
 
         # Add to location's available NPCs
