@@ -3193,15 +3193,10 @@ class TabbedMenuScreen:
         # Behavior tree buttons (initially hidden, shown when non-stubborn member selected)
         self.party_bt_move_up = self._add(UIButton(pygame.Rect(bt_x, y + 275, 135, 30), "Move Up", manager))
         self.party_bt_move_down = self._add(UIButton(pygame.Rect(bt_x + 145, y + 275, 135, 30), "Move Down", manager))
-        self.party_bt_remove_button = self._add(UIButton(pygame.Rect(bt_x, y + 310, 280, 30), "Remove Selected", manager))
-
-        # Add behavior dropdown and button
-        from unit import Unit
-        self.party_bt_add_dropdown = self._add(pygame_gui.elements.UIDropDownMenu(
-            ["-- Add Behavior --"], "-- Add Behavior --",
-            pygame.Rect(bt_x, y + 345, 200, 30), manager))
-        self.party_bt_add_button = self._add(UIButton(pygame.Rect(bt_x + 205, y + 345, 75, 30), "Add", manager))
-        self.party_bt_set_target = self._add(UIButton(pygame.Rect(bt_x, y + 380, 280, 30), "Set Target on Map", manager))
+        self.party_bt_remove_button = None
+        self.party_bt_add_dropdown = None
+        self.party_bt_add_button = None
+        self.party_bt_set_target = self._add(UIButton(pygame.Rect(bt_x, y + 310, 280, 30), "Set Target on Map", manager))
         self.party_bt_set_target.hide()
 
         # Action buttons
@@ -3255,18 +3250,10 @@ class TabbedMenuScreen:
         if is_stubborn:
             if self.party_bt_move_up: self.party_bt_move_up.hide()
             if self.party_bt_move_down: self.party_bt_move_down.hide()
-            if self.party_bt_remove_button: self.party_bt_remove_button.hide()
-            if self.party_bt_add_dropdown: self.party_bt_add_dropdown.hide()
-            if self.party_bt_add_button: self.party_bt_add_button.hide()
             if self.party_bt_set_target: self.party_bt_set_target.hide()
         else:
             if self.party_bt_move_up: self.party_bt_move_up.show()
             if self.party_bt_move_down: self.party_bt_move_down.show()
-            if self.party_bt_remove_button: self.party_bt_remove_button.show()
-            if self.party_bt_add_dropdown: self.party_bt_add_dropdown.show()
-            if self.party_bt_add_button: self.party_bt_add_button.show()
-            # Update available behaviors in dropdown
-            self._update_bt_add_dropdown(card)
             # Show set target button if tree has follow_target or attack_target
             if "follow_target" in tree or "attack_target" in tree:
                 if self.party_bt_set_target: self.party_bt_set_target.show()
@@ -3341,12 +3328,6 @@ class TabbedMenuScreen:
                         return
                     if self.party_bt_move_down and event.ui_element == self.party_bt_move_down:
                         self._party_bt_move(card, tree, 1)
-                        return
-                    if self.party_bt_remove_button and event.ui_element == self.party_bt_remove_button:
-                        self._party_bt_remove(card, tree)
-                        return
-                    if self.party_bt_add_button and event.ui_element == self.party_bt_add_button:
-                        self._party_bt_add(card, tree)
                         return
                     if self.party_bt_set_target and event.ui_element == self.party_bt_set_target:
                         self._party_bt_enter_target_mode(card, tree)

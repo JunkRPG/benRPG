@@ -189,6 +189,8 @@ JSON_FIELDS = {
     "Rewards",
     "Upgrade_Material_Cost",
     "Chain_Config",
+    "Default_Behavior_Tree",
+    "2nd_State_Default_Behavior_Tree",
 }
 
 # Valid values for weapon/ammunition system fields
@@ -292,7 +294,9 @@ def validate_card_json_fields(card_data):
         "Outcomes", "2nd_state_Outcomes",
         "Choices", "2nd_state_Choices",
         "Placeholders",
-        "Success_Conditions", "Failure_Conditions"
+        "Success_Conditions", "Failure_Conditions",
+        "Default_Behavior_Tree",
+        "2nd_State_Default_Behavior_Tree"
     }
 
     # Fields that should be objects

@@ -110,10 +110,12 @@ class Unit:
                 "is_stubborn": str(card_data["data"].get("2nd_State_Stubborn", card_data["data"].get("Stubborn", "false"))).lower() == "true",
                 "repair_value": int(card_data["data"].get("2nd_State_Repair_Value", card_data["data"].get("Repair_Value", 0)) or 0),
                 "aggro_range": int(card_data["data"].get("2nd_State_Aggro_Range", card_data["data"].get("Aggro_Range", 0)) or 0),
+                "behavior_tree_str": card_data["data"].get("2nd_State_Default_Behavior_Tree", ""),
             }
 
     # Behavior registry: defines available behaviors with labels and restrictions
     BEHAVIOR_REGISTRY = {
+        "revive_ally":    {"label": "Revive Ally",       "restrict_skill": "Healer"},
         "healing":        {"label": "Heal Allies",       "restrict_skill": "Healer"},
         "patrol":         {"label": "Patrol (Wander)"},
         "guard":          {"label": "Guard Position"},
@@ -144,6 +146,7 @@ class Unit:
         # Smart fallback based on unit properties
         default = []
         if card_data["data"].get("Special Skill") == "Healer" and int(card_data["data"].get("Heal_Amount", 0) or 0) > 0:
+            default.append("revive_ally")
             default.append("healing")
         if card_data["data"].get("Special Skill") == "Mount":
             default.append("graze")
@@ -859,6 +862,7 @@ class Unit:
     def _execute_behavior(self, behavior, grid):
         """Try to execute a behavior. Returns log list if executed, None if conditions not met."""
         dispatch = {
+            "revive_ally": self._behavior_revive_ally,
             "healing": self._behavior_healing,
             "patrol": self._behavior_patrol,
             "guard": self._behavior_guard,
@@ -936,12 +940,146 @@ class Unit:
         # Couldn't path — let tree try next behavior
         return None
 
-    def _behavior_healing(self, grid):
-        """Heal the most damaged friendly unit in range."""
+    def _do_revive(self, grid, target):
+        """Revive a dead ally/player. Returns log list."""
+        log = []
+        revive_hp = max(1, target.max_hp // 4)
+        target.hp = revive_hp
+        target._death_processed = False
+        if hasattr(target, '_death_logged'):
+            target._death_logged = False
+        target_name = getattr(target, 'class_name', None) or getattr(target, 'name', 'Unknown')
+        # Re-occupy grid cell if empty, else find nearby empty hex
+        if target.position:
+            tr, tc = target.position
+            if grid.grid[tr][tc]["unit"] is None:
+                grid.grid[tr][tc]["unit"] = target
+            else:
+                neighbors = grid.get_neighbors(tr, tc)
+                for nr, nc in neighbors:
+                    if grid.grid[nr][nc]["accessible"] and grid.grid[nr][nc]["unit"] is None:
+                        target.position = (nr, nc)
+                        grid.grid[nr][nc]["unit"] = target
+                        break
+        target.set_damage_text(0, text=f"+{revive_hp}")
+        log.append(f"{self.name} revived {target_name} with {revive_hp} HP!")
+        return log
+
+    def _behavior_revive_ally(self, grid):
+        """Find and revive dead allies/players, pathfinding toward them if needed."""
         if self.special_skill != "Healer" or self.heal_amount <= 0:
             return None
-        result = self._perform_healing(grid)
-        return result if result else None
+
+        # Find all dead allies/players on the board
+        dead_targets = []
+        for u in grid.units:
+            if (u.hp <= 0 and getattr(u, '_death_processed', False)
+                    and u is not self and u.position
+                    and u.allegiance in ("Allied", "Neutral")):
+                dead_targets.append(u)
+        players = grid.players if hasattr(grid, 'players') and grid.players else []
+        if not players and hasattr(grid, 'player') and grid.player:
+            players = [grid.player]
+        for p in players:
+            if p.hp <= 0 and p.position:
+                dead_targets.append(p)
+
+        if not dead_targets:
+            return None  # No dead allies — fall through to next behavior
+
+        # Sort by distance
+        dead_targets.sort(key=lambda t: grid.hex_distance(self.position, t.position))
+        nearest = dead_targets[0]
+        dist = grid.hex_distance(self.position, nearest.position)
+
+        # In range — revive immediately
+        if dist <= self.heal_range:
+            return self._do_revive(grid, nearest)
+
+        # Out of range — pathfind toward nearest dead ally
+        path = grid.find_path(self.position, nearest.position)
+        if path and len(path) > 1:
+            max_steps = min(self.movement, len(path) - 1)
+            for steps in range(max_steps, 0, -1):
+                new_pos = path[steps]
+                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                    success, msg = grid.move_unit(self, *new_pos)
+                    if success:
+                        log = [f"{self.name} moves toward fallen ally"]
+                        # Check if now in range after moving
+                        new_dist = grid.hex_distance(self.position, nearest.position)
+                        if new_dist <= self.heal_range:
+                            log.extend(self._do_revive(grid, nearest))
+                        return log
+                    break
+
+        # Can't pathfind but dead allies exist — consume action, don't fall through
+        return []
+
+    def _behavior_healing(self, grid):
+        """Heal the most damaged alive ally, pathfinding toward them if needed."""
+        if self.special_skill != "Healer" or self.heal_amount <= 0:
+            return None
+
+        # Find all damaged (alive) allies anywhere on board
+        candidates = []
+        for u in grid.units:
+            if (u.allegiance == "Allied" and u.hp > 0 and u.hp < u.max_hp
+                    and u is not self and u.position):
+                candidates.append(u)
+        players = grid.players if hasattr(grid, 'players') and grid.players else []
+        if not players and hasattr(grid, 'player') and grid.player:
+            players = [grid.player]
+        for p in players:
+            if p.hp > 0 and p.hp < p.max_hp and p.position:
+                candidates.append(p)
+
+        if not candidates:
+            return None  # No damaged allies — fall through to next behavior
+
+        # Pick the most damaged (lowest HP ratio)
+        most_damaged = min(candidates, key=lambda u: u.hp / u.max_hp)
+        dist = grid.hex_distance(self.position, most_damaged.position)
+
+        # In range — heal immediately
+        if dist <= self.heal_range:
+            old_hp = most_damaged.hp
+            most_damaged.hp = min(most_damaged.max_hp, most_damaged.hp + self.heal_amount)
+            healed = most_damaged.hp - old_hp
+            if healed > 0:
+                target_name = getattr(most_damaged, 'class_name', None) or getattr(most_damaged, 'name', 'Unknown')
+                most_damaged.set_damage_text(0, text=f"+{healed}")
+                return [f"{self.name} healed {target_name} for {healed} HP"]
+            return []
+
+        # Out of range — pathfind toward nearest damaged ally
+        nearest = min(candidates, key=lambda u: grid.hex_distance(self.position, u.position))
+        path = grid.find_path(self.position, nearest.position)
+        if path and len(path) > 1:
+            max_steps = min(self.movement, len(path) - 1)
+            for steps in range(max_steps, 0, -1):
+                new_pos = path[steps]
+                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                    success, msg = grid.move_unit(self, *new_pos)
+                    if success:
+                        log = [f"{self.name} moves toward wounded ally"]
+                        # Re-check: heal most damaged ally now in range
+                        in_range_now = [c for c in candidates if
+                                        grid.hex_distance(self.position, c.position) <= self.heal_range]
+                        if in_range_now:
+                            target = min(in_range_now, key=lambda u: u.hp / u.max_hp)
+                            old_hp = target.hp
+                            target.hp = min(target.max_hp, target.hp + self.heal_amount)
+                            healed = target.hp - old_hp
+                            if healed > 0:
+                                target_name = getattr(target, 'class_name', None) or getattr(target, 'name', 'Unknown')
+                                target.set_damage_text(0, text=f"+{healed}")
+                                log.append(f"{self.name} healed {target_name} for {healed} HP")
+                        return log
+                    break
+
+        # Can't pathfind but damaged allies exist — consume action
+        return []
 
     def _behavior_attack_closest(self, grid):
         """Chase and attack the nearest hostile unit."""
@@ -1373,6 +1511,26 @@ class Unit:
             self.heal_amount = state_data.get("heal_amount", self.heal_amount)
             self.heal_range = state_data.get("heal_range", self.heal_range)
             self.is_stubborn = state_data.get("is_stubborn", self.is_stubborn)
+            # Reinitialize behavior tree from 2nd state config
+            bt_str = state_data.get("behavior_tree_str", "")
+            if bt_str:
+                try:
+                    tree = json.loads(bt_str)
+                    if isinstance(tree, list) and len(tree) > 0:
+                        self.behavior_tree = tree
+                except (json.JSONDecodeError, TypeError):
+                    pass
+            if not bt_str or not hasattr(self, '_bt_updated'):
+                # Rebuild smart fallback from new state properties
+                default = []
+                if self.special_skill == "Healer" and self.heal_amount > 0:
+                    default.append("revive_ally")
+                    default.append("healing")
+                if self.special_skill == "Mount":
+                    default.append("graze")
+                default.append("attack_closest")
+                if not bt_str:
+                    self.behavior_tree = default
             return f"{self.name} switched to second state"
         return ""
 

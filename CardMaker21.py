@@ -1604,6 +1604,8 @@ class CardCreationScreen:
                     ("Special Skill", "text"),
                     ("Heal_Amount", "text"),
                     ("Heal_Range", "text"),
+                    ("Default_Behavior_Tree", "text"),
+                    ("Stubborn", "text"),
                     ("Background Image File Path", "file"),
                     ("Enemy Image File Path", "file")
                 ]
@@ -1618,6 +1620,8 @@ class CardCreationScreen:
                     ("2nd_State_Special Skill", "text"),
                     ("2nd_State_Heal_Amount", "text"),
                     ("2nd_State_Heal_Range", "text"),
+                    ("2nd_State_Default_Behavior_Tree", "text"),
+                    ("2nd_State_Stubborn", "text"),
                     ("2nd_State_Enemy Image File Path", "file")
                 ]
                 column_width = 300
@@ -1646,6 +1650,8 @@ class CardCreationScreen:
                     ("Special Skill", "text"),
                     ("Heal_Amount", "text"),
                     ("Heal_Range", "text"),
+                    ("Default_Behavior_Tree", "text"),
+                    ("Stubborn", "text"),
                     ("Background Image File Path", "file"),
                     ("Boss Image File Path", "file")
                 ]
@@ -1660,6 +1666,8 @@ class CardCreationScreen:
                     ("2nd_State_Special Skill", "text"),
                     ("2nd_State_Heal_Amount", "text"),
                     ("2nd_State_Heal_Range", "text"),
+                    ("2nd_State_Default_Behavior_Tree", "text"),
+                    ("2nd_State_Stubborn", "text"),
                     ("2nd_State_Boss Image File Path", "file")
                 ]
                 column_width = 300
@@ -1689,6 +1697,8 @@ class CardCreationScreen:
                     ("Special Skill", "text"),
                     ("Heal_Amount", "text"),
                     ("Heal_Range", "text"),
+                    ("Default_Behavior_Tree", "text"),
+                    ("Stubborn", "text"),
                     ("Background Image File Path", "file"),
                     ("NPC Image File Path", "file")
                 ]
@@ -1704,6 +1714,8 @@ class CardCreationScreen:
                     ("2nd_State_Special Skill", "text"),
                     ("2nd_State_Heal_Amount", "text"),
                     ("2nd_State_Heal_Range", "text"),
+                    ("2nd_State_Default_Behavior_Tree", "text"),
+                    ("2nd_State_Stubborn", "text"),
                     ("2nd_State_NPC Image File Path", "file")
                 ]
                 column_width = 300
@@ -1881,6 +1893,8 @@ class CardCreationScreen:
                     ("Special Skill", "text"),
                     ("Heal_Amount", "text"),
                     ("Heal_Range", "text"),
+                    ("Default_Behavior_Tree", "text"),
+                    ("Stubborn", "text"),
                     ("Background Image File Path", "file"),
                     ("Enemy Image File Path", "file")
                 ]
@@ -1903,6 +1917,8 @@ class CardCreationScreen:
                     ("Special Skill", "text"),
                     ("Heal_Amount", "text"),
                     ("Heal_Range", "text"),
+                    ("Default_Behavior_Tree", "text"),
+                    ("Stubborn", "text"),
                     ("Background Image File Path", "file"),
                     ("Boss Image File Path", "file")
                 ]
@@ -1926,6 +1942,8 @@ class CardCreationScreen:
                     ("Special Skill", "text"),
                     ("Heal_Amount", "text"),
                     ("Heal_Range", "text"),
+                    ("Default_Behavior_Tree", "text"),
+                    ("Stubborn", "text"),
                     ("Background Image File Path", "file"),
                     ("NPC Image File Path", "file")
                 ]

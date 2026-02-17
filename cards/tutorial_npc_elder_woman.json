@@ -1,7 +1,7 @@
 {
   "card_type": "NPC Card",
   "subclass": null,
-  "states": 1,
+  "states": 2,
   "data": {
     "Name": "Village Elder",
     "Health": "12",
@@ -14,6 +14,18 @@
     "Dialogue_Text": "Traveler, listen well. The enemy has fortified positions in the town to the east. Search the village - the general store and old barn have supplies. When you're ready, take the road east.",
     "Dialogue_Gift_Cards": "win_guide",
     "Background Image File Path": "",
-    "NPC Image File Path": ""
+    "NPC Image File Path": "",
+    "2nd_State_Name": "Village Elder (Healer)",
+    "2nd_State_Health": "15",
+    "2nd_State_Movement": "2",
+    "2nd_State_Melee Damage": "0",
+    "2nd_State_Projectile Damage": "0",
+    "2nd_State_Projectile Range": "0",
+    "2nd_State_Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "2nd_State_Special Skill": "Healer",
+    "2nd_State_Heal_Amount": "5",
+    "2nd_State_Heal_Range": "3",
+    "2nd_State_Default_Behavior_Tree": "[\"revive_ally\", \"healing\", \"attack_closest\"]",
+    "2nd_State_NPC Image File Path": ""
   }
 }
