@@ -280,7 +280,7 @@ class CardEditor:
             return "dropdown"
         elif field == "2nd_state_Use_Placeholder" and card_data.get("subclass") == "Junk_to_Consumable_Item":
             return "dropdown"
-        elif field in ["range_id", "2nd_state_range_id"]:
+        elif field in ["range_id", "2nd_state_range_id", "2nd_State_range_id"]:
             return "dropdown"
         elif "image" in field.lower() or "file" in field.lower():
             return "file"
@@ -474,7 +474,7 @@ class CardEditor:
                     elif field == "2nd_state_Use_Placeholder":
                         options = PLACEHOLDER_OPTIONS
                         default = value if isinstance(value, str) and value in options else (value[0] if isinstance(value, list) and value and value[0] in options else options[0])
-                    elif field in ["range_id", "2nd_state_range_id"]:
+                    elif field in ["range_id", "2nd_state_range_id", "2nd_State_range_id"]:
                         options = RANGE_OPTIONS
                         default = value if value in options else "None"
                     else:
@@ -1265,6 +1265,7 @@ class CardCreationScreen:
                         ("2nd_state_Effect_Exclude_Adjacent", "dropdown", BOOL_OPTIONS, "false"),
                         # Tool belt/accessory fields
                         ("2nd_state_Extra_Tool_Slots", "dropdown", TOOL_SLOT_OPTIONS, "0"),
+                        ("2nd_state_Defense_Value", "text"),
                         ("2nd_state_Tool Image", "file"),
                     ]
                 elif self.selected_subclass == "Junk_to_Consumable_Item":
@@ -1274,6 +1275,7 @@ class CardCreationScreen:
                         ("2nd_state_Use_HP", "dropdown", HP_OPTIONS, "+15HP"),
                         ("2nd_state_Revert_Chance", "text"),
                         ("2nd_state_Use_Placeholder", "dropdown", PLACEHOLDER_OPTIONS, "TBD"),
+                        ("2nd_state_Revival", "text"),
                         # Range properties for ranged consumables (healing potions thrown at allies, etc.)
                         ("2nd_state_Effect_Range_Type", "dropdown", RANGE_TYPES, "line_of_sight"),
                         ("2nd_state_Effect_Range_Distance", "text"),
@@ -1356,6 +1358,7 @@ class CardCreationScreen:
                         ("2nd_state_Tool_Action", "text"),  # e.g., "Build", "Dig", "Prune"
                         # Tool belt/accessory fields
                         ("2nd_state_Extra_Tool_Slots", "dropdown", TOOL_SLOT_OPTIONS, "0"),
+                        ("2nd_state_Defense_Value", "text"),
                         ("2nd_state_Tool Image", "file"),
                     ]
                 elif self.selected_blueprint_subclass == "Blueprint_to_Consumable_Item":
@@ -1374,6 +1377,7 @@ class CardCreationScreen:
                         ("2nd_state_Use_HP", "dropdown", HP_OPTIONS, "+15HP"),
                         ("2nd_state_Revert_Chance", "text"),
                         ("2nd_state_Use_Placeholder", "dropdown", PLACEHOLDER_OPTIONS, "TBD"),
+                        ("2nd_state_Revival", "text"),
                         # Ammunition-specific fields (used when Type is Ammunition)
                         ("2nd_state_Ammo_Type", "dropdown", AMMO_TYPES, "None"),
                         ("2nd_state_Ammo_Damage", "text"),
@@ -1606,6 +1610,10 @@ class CardCreationScreen:
                     ("Heal_Range", "text"),
                     ("Default_Behavior_Tree", "text"),
                     ("Stubborn", "text"),
+                    ("Spawn_Deck", "text"),
+                    ("Repair_Value", "text"),
+                    ("Aggro_Range", "text"),
+                    ("Attack_Proximity_Range", "text"),
                     ("Background Image File Path", "file"),
                     ("Enemy Image File Path", "file")
                 ]
@@ -1616,12 +1624,15 @@ class CardCreationScreen:
                     ("2nd_State_Melee Damage", "text"),
                     ("2nd_State_Projectile Damage", "text"),
                     ("2nd_State_Projectile Range", "text"),
-                    ("2nd_state_range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id for 2nd state
+                    ("2nd_State_range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id for 2nd state
                     ("2nd_State_Special Skill", "text"),
                     ("2nd_State_Heal_Amount", "text"),
                     ("2nd_State_Heal_Range", "text"),
                     ("2nd_State_Default_Behavior_Tree", "text"),
                     ("2nd_State_Stubborn", "text"),
+                    ("2nd_State_Spawn_Deck", "text"),
+                    ("2nd_State_Repair_Value", "text"),
+                    ("2nd_State_Aggro_Range", "text"),
                     ("2nd_State_Enemy Image File Path", "file")
                 ]
                 column_width = 300
@@ -1652,6 +1663,10 @@ class CardCreationScreen:
                     ("Heal_Range", "text"),
                     ("Default_Behavior_Tree", "text"),
                     ("Stubborn", "text"),
+                    ("Spawn_Deck", "text"),
+                    ("Repair_Value", "text"),
+                    ("Aggro_Range", "text"),
+                    ("Attack_Proximity_Range", "text"),
                     ("Background Image File Path", "file"),
                     ("Boss Image File Path", "file")
                 ]
@@ -1662,12 +1677,15 @@ class CardCreationScreen:
                     ("2nd_State_Melee Damage", "text"),
                     ("2nd_State_Projectile Damage", "text"),
                     ("2nd_State_Projectile Range", "text"),
-                    ("2nd_state_range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id for 2nd state
+                    ("2nd_State_range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id for 2nd state
                     ("2nd_State_Special Skill", "text"),
                     ("2nd_State_Heal_Amount", "text"),
                     ("2nd_State_Heal_Range", "text"),
                     ("2nd_State_Default_Behavior_Tree", "text"),
                     ("2nd_State_Stubborn", "text"),
+                    ("2nd_State_Spawn_Deck", "text"),
+                    ("2nd_State_Repair_Value", "text"),
+                    ("2nd_State_Aggro_Range", "text"),
                     ("2nd_State_Boss Image File Path", "file")
                 ]
                 column_width = 300
@@ -1699,6 +1717,13 @@ class CardCreationScreen:
                     ("Heal_Range", "text"),
                     ("Default_Behavior_Tree", "text"),
                     ("Stubborn", "text"),
+                    ("Dialogue_Text", "text"),
+                    ("Dialogue_Gift_Cards", "text"),
+                    ("Attack_Proximity_Range", "text"),
+                    ("Avoid_Location_Hexes", "text"),
+                    ("Mount_Movement", "text"),
+                    ("Mount_Melee_Damage", "text"),
+                    ("Mount_Projectile_Range", "text"),
                     ("Background Image File Path", "file"),
                     ("NPC Image File Path", "file")
                 ]
@@ -1709,12 +1734,15 @@ class CardCreationScreen:
                     ("2nd_State_Melee Damage", "text"),
                     ("2nd_State_Projectile Damage", "text"),
                     ("2nd_State_Projectile Range", "text"),
-                    ("2nd_state_range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id for 2nd state
+                    ("2nd_State_range_id", "dropdown", RANGE_OPTIONS, "None"),  # Added range_id for 2nd state
                     ("2nd_State_Allegiance (Hostile, Neutral, Allied)", "text"),
                     ("2nd_State_Special Skill", "text"),
                     ("2nd_State_Heal_Amount", "text"),
                     ("2nd_State_Heal_Range", "text"),
                     ("2nd_State_Default_Behavior_Tree", "text"),
+                    ("2nd_State_Mount_Movement", "text"),
+                    ("2nd_State_Mount_Melee_Damage", "text"),
+                    ("2nd_State_Mount_Projectile_Range", "text"),
                     ("2nd_State_Stubborn", "text"),
                     ("2nd_State_NPC Image File Path", "file")
                 ]

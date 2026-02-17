@@ -3260,27 +3260,6 @@ class TabbedMenuScreen:
             else:
                 if self.party_bt_set_target: self.party_bt_set_target.hide()
 
-    def _update_bt_add_dropdown(self, card):
-        """Update the add-behavior dropdown with behaviors available to this unit."""
-        from unit import Unit
-        card_data = card.get_current_data()
-        special_skill = card_data.get("Special Skill", "")
-        available = []
-        for key, info in Unit.BEHAVIOR_REGISTRY.items():
-            skill_req = info.get("restrict_skill")
-            if skill_req and special_skill != skill_req:
-                continue
-            available.append(info.get("label", key))
-        if not available:
-            available = ["(none available)"]
-        options = ["-- Add Behavior --"] + available
-        # Recreate dropdown (pygame_gui dropdowns can't easily update options)
-        if self.party_bt_add_dropdown:
-            rect = self.party_bt_add_dropdown.relative_rect
-            self.party_bt_add_dropdown.kill()
-            self.party_bt_add_dropdown = self._add(pygame_gui.elements.UIDropDownMenu(
-                options, options[0], rect, manager))
-
     def _save_party_behavior_tree(self, card, tree, follow_target=None, attack_target=None):
         """Save a modified behavior tree to both the deployed unit and overrides."""
         card_id = card.card_data.get("id")
@@ -3380,40 +3359,6 @@ class TabbedMenuScreen:
                     tree[i], tree[new_idx] = tree[new_idx], tree[i]
                     self._save_party_behavior_tree(card, tree)
                     self._refresh_party_behavior_panel(card)
-                return
-
-    def _party_bt_remove(self, card, tree):
-        """Remove the selected behavior from the tree."""
-        from unit import Unit
-        if not self.party_bt_list:
-            return
-        selection = self.party_bt_list.get_single_selection()
-        if not selection:
-            return
-        for i, b in enumerate(tree):
-            info = Unit.BEHAVIOR_REGISTRY.get(b, {})
-            if info.get("label", b) == selection:
-                tree.pop(i)
-                self._save_party_behavior_tree(card, tree)
-                self._refresh_party_behavior_panel(card)
-                return
-
-    def _party_bt_add(self, card, tree):
-        """Add a behavior from the dropdown to the tree."""
-        from unit import Unit
-        if not self.party_bt_add_dropdown:
-            return
-        selected_label = self.party_bt_add_dropdown.selected_option
-        if isinstance(selected_label, tuple):
-            selected_label = selected_label[0]
-        if selected_label == "-- Add Behavior --" or selected_label == "(none available)":
-            return
-        # Find the key from the label
-        for key, info in Unit.BEHAVIOR_REGISTRY.items():
-            if info.get("label", key) == selected_label:
-                tree.append(key)
-                self._save_party_behavior_tree(card, tree)
-                self._refresh_party_behavior_panel(card)
                 return
 
     def _party_bt_enter_target_mode(self, card, tree):
@@ -9887,7 +9832,7 @@ class CardBrowserScreen:
             data = card_data.get("data", {})
             lines.append("<b>State 1:</b>")
             for key, value in data.items():
-                if value and not key.startswith("2nd_state_") and key not in ["id"]:
+                if value and not key.startswith("2nd_state_") and not key.startswith("2nd_State_") and key not in ["id"]:
                     # Truncate long values
                     str_val = str(value)
                     if len(str_val) > 50:
@@ -9895,12 +9840,12 @@ class CardBrowserScreen:
                     lines.append(f"  {key}: {str_val}")
 
             # Show state 2 data if exists
-            state2_fields = {k: v for k, v in data.items() if k.startswith("2nd_state_") and v}
+            state2_fields = {k: v for k, v in data.items() if (k.startswith("2nd_state_") or k.startswith("2nd_State_")) and v}
             if state2_fields:
                 lines.append("")
                 lines.append("<b>State 2:</b>")
                 for key, value in state2_fields.items():
-                    display_key = key.replace("2nd_state_", "")
+                    display_key = key.replace("2nd_State_", "").replace("2nd_state_", "")
                     str_val = str(value)
                     if len(str_val) > 50:
                         str_val = str_val[:50] + "..."
@@ -10100,7 +10045,7 @@ class NpcBrowserScreen:
 
             data = card_data.get("data", {})
             for key, value in data.items():
-                if value and not key.startswith("2nd_state_") and key not in ["id"]:
+                if value and not key.startswith("2nd_state_") and not key.startswith("2nd_State_") and key not in ["id"]:
                     str_val = str(value)
                     if len(str_val) > 50:
                         str_val = str_val[:50] + "..."

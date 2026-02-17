@@ -12,7 +12,7 @@
     "Allegiance (Hostile, Neutral, Allied)": "Neutral",
     "Special Skill": "Mount",
     "Mount_Movement": "9",
-    "Mount_Melee": "6",
+    "Mount_Melee_Damage": "6",
     "Background Image File Path": "",
     "NPC Image File Path": "",
     "2nd_State_Name": "Warhorse",
@@ -24,7 +24,7 @@
     "2nd_State_Allegiance (Hostile, Neutral, Allied)": "Allied",
     "2nd_State_Special Skill": "Mount",
     "2nd_State_Mount_Movement": "9",
-    "2nd_State_Mount_Melee": "6",
+    "2nd_State_Mount_Melee_Damage": "6",
     "2nd_State_NPC Image File Path": ""
   }
 }
