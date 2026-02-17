@@ -177,6 +177,8 @@ class SaveManager:
             "super_charge": player.super_charge,
             "super_charge_max": player.super_charge_max,
             "super_attack_ready": player.super_attack_ready,
+            # Per-player party (used in multiplayer)
+            "party": [self._serialize_inventory_card(c) for c in player.party],
         }
 
     def _serialize_inventory_card(self, card):
@@ -521,6 +523,13 @@ class SaveManager:
         accessory_ref = player_data.get("equipped_accessory")
         if accessory_ref:
             player.equipped_accessory = self._rebuild_inventory_card(accessory_ref)
+
+        # Rebuild per-player party (used in multiplayer)
+        player.party = []
+        for card_ref in player_data.get("party", []):
+            card = self._rebuild_inventory_card(card_ref)
+            if card:
+                player.party.append(card)
 
         return player
 

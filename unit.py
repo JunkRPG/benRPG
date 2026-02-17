@@ -1508,19 +1508,24 @@ class Unit:
             self.projectile_range = state_data["projectile_range"]
             self.allegiance = state_data["allegiance"]
             self.special_skill = state_data["special_skill"]
+            self.dual_strike = (self.special_skill == "Dual Strike")
             self.heal_amount = state_data.get("heal_amount", self.heal_amount)
             self.heal_range = state_data.get("heal_range", self.heal_range)
             self.is_stubborn = state_data.get("is_stubborn", self.is_stubborn)
+            self.repair_value = state_data.get("repair_value", self.repair_value)
+            self.aggro_range = state_data.get("aggro_range", self.aggro_range)
             # Reinitialize behavior tree from 2nd state config
             bt_str = state_data.get("behavior_tree_str", "")
+            bt_set = False
             if bt_str:
                 try:
                     tree = json.loads(bt_str)
                     if isinstance(tree, list) and len(tree) > 0:
                         self.behavior_tree = tree
+                        bt_set = True
                 except (json.JSONDecodeError, TypeError):
                     pass
-            if not bt_str or not hasattr(self, '_bt_updated'):
+            if not bt_set:
                 # Rebuild smart fallback from new state properties
                 default = []
                 if self.special_skill == "Healer" and self.heal_amount > 0:
@@ -1529,8 +1534,7 @@ class Unit:
                 if self.special_skill == "Mount":
                     default.append("graze")
                 default.append("attack_closest")
-                if not bt_str:
-                    self.behavior_tree = default
+                self.behavior_tree = default
             return f"{self.name} switched to second state"
         return ""
 

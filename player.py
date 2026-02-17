@@ -94,8 +94,6 @@ class Player:
         # Dual Strike passive: always gets 2 attacks per turn (any combination of melee/projectile)
         self.warrior_attacks_remaining = 2 if self.special_attack == "Dual Strike" else 0
         self.double_attack_active = (self.special_attack == "Dual Strike")
-        self.double_attack_melee_used = False
-        self.double_attack_projectile_used = False
         self.position = (0, 0)
         self.animating = False
         self.render_pos = None
@@ -497,8 +495,6 @@ class Player:
             self.warrior_attacks_remaining = 2
         else:
             self.double_attack_active = False
-        self.double_attack_melee_used = False
-        self.double_attack_projectile_used = False
 
     def add_super_charge(self):
         """Add one charge toward the super special attack."""
@@ -650,8 +646,6 @@ class Player:
             return "Action already used this turn", []
 
         self.double_attack_active = True
-        self.double_attack_melee_used = False
-        self.double_attack_projectile_used = False
 
         return f"{self.class_name} activated Double Attack! Can use both melee and projectile this turn.", []
 

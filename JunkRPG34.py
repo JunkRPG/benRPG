@@ -5616,7 +5616,7 @@ class GameScreen:
                 if turn_limit:
                     return self.turn_cycle_count >= turn_limit
                 # No turn limit specified — fall back to defeat all
-                return len([u for u in self.hex_grid.units if u.allegiance == "Hostile"]) == 0
+                return len([u for u in self.hex_grid.units if u.allegiance == "Hostile" and u.hp > 0]) == 0
 
         # Old format: transition_to_next string
         transition = stage_data.get("transition_to_next")
@@ -7829,7 +7829,6 @@ class GameScreen:
 
     def resume_after_instance(self):
         """Called after an instance event is resolved to continue the turn."""
-        print(f"[DEBUG] resume_after_instance: turn_phase={self.turn_phase}, campaign={bool(self.campaign)}")
         # Show defeat notifications for any units killed by the instance event
         for name in game.instance_manager.defeated_units:
             self.add_defeat_notification(name)
@@ -7837,7 +7836,6 @@ class GameScreen:
         # If we're still in transition phase (instance was triggered by transition card),
         # complete the transition and move to player phase
         if self.turn_phase == "transition":
-            print("[DEBUG] In transition phase, completing transition...")
             # Complete transition phase processing
             self.hex_grid.on_turn_end()
             quest_results = game.current_quest_manager.update("turn_end", {}, self.hex_grid, game.current_player)
@@ -7847,11 +7845,9 @@ class GameScreen:
 
             # Check level completion (only matters for campaigns)
             level_complete = self.check_level_completion()
-            print(f"[DEBUG] check_level_completion() returned {level_complete}")
             if level_complete:
                 self.current_level_idx += 1
                 stages = self.campaign.get("stages") or self.campaign.get("levels", []) if self.campaign else []
-                print(f"[DEBUG] Incremented level_idx to {self.current_level_idx}, campaign stages={len(stages)}")
                 if self.campaign and self.current_level_idx < len(stages):
                     self.load_campaign_level()
                     if game.multiplayer_mode:
@@ -7872,14 +7868,12 @@ class GameScreen:
             self.is_player_turn = True
             self.hex_grid.reset_location_visits()
             self._start_player_turn()
-            print("[DEBUG] Moved to player phase")
 
         # Apply Turn_Start passives
         for msg in game.current_player.apply_passive_skills(self.hex_grid, "Turn_Start"):
             self.add_to_log(msg)
         self.update_turn_label()
         self.animating = self.check_animations()
-        print(f"[DEBUG] resume_after_instance complete, current_screen={game._current_screen}")
 
     def resume_after_transition(self):
         """Called after transition event screen is dismissed to continue the turn."""
@@ -10188,13 +10182,6 @@ class Game:
             # buttons on the new screen. This is critical for preventing the bug where
             # clicking Continue on instance screen accidentally triggers Main Menu.
             pygame.event.clear([pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION])
-            # Debug: log screen transitions to help track down main_menu bug
-            if value == "main_menu" and old_screen not in ("", None):
-                import traceback
-                print(f"\n[DEBUG] Screen changed to main_menu from {old_screen}")
-                print("Stack trace:")
-                traceback.print_stack()
-                print()
 
     def reset_frame_flags(self):
         """Called at start of each frame to reset per-frame state."""

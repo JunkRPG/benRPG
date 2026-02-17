@@ -124,36 +124,28 @@ class InstanceManager:
 
     def resolve_instance(self, instance_card, hex_grid, player):
         """Roll for outcome and apply effects. Returns (outcome_text, needs_player_choice)."""
-        print(f"[DEBUG] resolve_instance START", flush=True)
         if not instance_card:
-            print("[DEBUG] resolve_instance: no instance_card, returning", flush=True)
             return "Nothing happens.", False
 
-        print("[DEBUG] resolve_instance: rolling outcome...", flush=True)
         outcome = instance_card.roll_outcome()
         self.pending_outcome = outcome
 
         outcome_type = outcome.get("type", "none")
         outcome_text = outcome.get("text", "Something happens...")
         params = outcome.get("params", {})
-        print(f"[DEBUG] resolve_instance: outcome_type={outcome_type}, text={outcome_text[:50]}...", flush=True)
 
         # Check if this outcome requires player choice
         if outcome_type == "player_choice":
             self.pending_choice = params.get("choices", [])
-            print("[DEBUG] resolve_instance: player_choice, returning True", flush=True)
             return outcome_text, True
 
         # Apply the outcome immediately
-        print(f"[DEBUG] resolve_instance: calling apply_outcome({outcome_type})...", flush=True)
         result_text = self.apply_outcome(outcome_type, params, hex_grid, player)
-        print(f"[DEBUG] resolve_instance: apply_outcome returned: {result_text[:50] if result_text else 'None'}...", flush=True)
         self.last_result_text = result_text
         self.pending_instance = None
         self.pending_instance_player = None
         self.pending_outcome = None
 
-        print("[DEBUG] resolve_instance END", flush=True)
         return f"{outcome_text}\n{result_text}" if result_text else outcome_text, False
 
     def resolve_player_choice(self, choice_index, hex_grid, player):
@@ -271,37 +263,28 @@ class InstanceManager:
 
     def _draw_card(self, card_type, deck_file, player=None):
         """Draw a card from a deck or by type."""
-        print(f"[DEBUG] _draw_card: card_type={card_type}, deck_file={deck_file}", flush=True)
         from inventory_card import InventoryCard
 
         if deck_file:
             # Draw from specific deck
             deck_path = resolve_deck_path(deck_file)
-            print(f"[DEBUG] _draw_card: drawing from deck {deck_path}", flush=True)
             card = self.card_manager.draw_from_deck(deck_path)
             if card:
-                # Add to player inventory using passed reference instead of import
-                print(f"[DEBUG] _draw_card: got card, adding to inventory", flush=True)
                 if player:
                     player.inventory.append(card)
                     play_card_acquired_sound(card)
                 return card
         else:
             # Draw random card of type from all available
-            print(f"[DEBUG] _draw_card: getting cards of type {card_type}", flush=True)
             cards = self.card_manager.get_cards_for_game(card_type=card_type)
-            print(f"[DEBUG] _draw_card: found {len(cards) if cards else 0} cards", flush=True)
             if cards:
                 card_data = random.choice(cards)
                 card = InventoryCard(card_data)
-                # Add to player inventory using passed reference instead of import
-                print(f"[DEBUG] _draw_card: created card, adding to inventory", flush=True)
                 if player:
                     player.inventory.append(card)
                     play_card_acquired_sound(card)
                 return card
 
-        print("[DEBUG] _draw_card: returning None", flush=True)
         return None
 
     def _apply_damage_to_units(self, damage, target_mode, allegiance, hex_grid, player, spawn_deck=None):
