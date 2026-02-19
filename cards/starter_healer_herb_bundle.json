@@ -1,0 +1,14 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Dried Herb Bundle",
+    "Description": "A bundle of dried medicinal herbs wrapped in cloth. Useful as a crafting material for potions and herb-tipped ammunition.",
+    "Raw Material Value": "3",
+    "Refined Material Value": "2",
+    "Metal Value": "0",
+    "Wood Value": "1",
+    "Price": "3"
+  }
+}

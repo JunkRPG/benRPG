@@ -1,0 +1,26 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Builder's Scrap Iron",
+    "Description": "A chunk of scrap iron that could be fashioned into a serviceable hammer. A builder's most important tool.",
+    "Raw Material Value": "1",
+    "Refined Material Value": "1",
+    "Metal Value": "5",
+    "Wood Value": "1",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "1",
+    "Requirements: Refined Materials": "0",
+    "Requirements: Wood": "2",
+    "Requirements: Metal": "3",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Builder's Hammer",
+    "2nd_state_Type": "Tool",
+    "2nd_state_Subtype": "Building",
+    "2nd_state_Use": "Required for building locations. Builder's essential tool.",
+    "2nd_state_Tool_Action": "Build",
+    "2nd_state_Tool Image": ""
+  }
+}

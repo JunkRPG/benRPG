@@ -41,6 +41,31 @@ CHARACTER_CLASSES = {
             {"card_id": "win_guide", "state": 1},
             {"card_id": "beta_junk_tool_scavengers_kit", "state": 2}
         ]
+    },
+    "Healer": {
+        "hp": 50, "movement": 5, "projectile_range": 3,
+        "attacks": {"Throw Rock": 4, "Fist": 4},
+        "special_attack": "Heal",
+        "starting_kit": [
+            {"card_id": "starter_healer_bow", "state": 1},
+            {"card_id": "starter_healer_bowstring", "state": 1},
+            {"card_id": "starter_healer_quiver_plans", "state": 1},
+            {"card_id": "starter_healer_herb_bundle", "state": 1},
+            {"card_id": "win_guide", "state": 1},
+            {"card_id": "beta_junk_tool_scavengers_kit", "state": 2}
+        ]
+    },
+    "Builder": {
+        "hp": 100, "movement": 4, "projectile_range": 4,
+        "attacks": {"Throw Rock": 6, "Fist": 6},
+        "special_attack": "Master Builder",
+        "starting_kit": [
+            {"card_id": "starter_builder_hammer", "state": 1},
+            {"card_id": "starter_builder_axe", "state": 1},
+            {"card_id": "starter_builder_archer_tower_plans", "state": 1},
+            {"card_id": "win_guide", "state": 1},
+            {"card_id": "beta_junk_tool_scavengers_kit", "state": 2}
+        ]
     }
 }
 
@@ -128,6 +153,8 @@ class Player:
         self.projectile_exclude_adj = False           # Exclude adjacent hexes (for sniper-type weapons)
         # Piercing Shot passive: projectile shots go through units
         self.piercing_projectile = (self.special_attack == "Piercing Shot")
+        # Healer passive: melee becomes heal when no melee weapon equipped
+        self.is_healer = (self.special_attack == "Heal")
 
         # Super special attack charge system
         self.super_charge = 0
@@ -179,7 +206,65 @@ class Player:
         """Return projectile range including mount bonus."""
         return self.projectile_range + self.get_mount_range_bonus(party)
 
+    def heal_target(self, target, grid):
+        """Healer ability: heal an adjacent target (or self) for 20 HP.
+        Works on any unit/player regardless of allegiance."""
+        HEAL_AMOUNT = 20
+
+        # Check action availability
+        if self.double_attack_active:
+            if self.warrior_attacks_remaining <= 0:
+                return "No actions remaining", False
+        elif self.action_used:
+            return "Action already used this turn", False
+
+        # Check distance (0 = self, 1 = adjacent)
+        if target is self:
+            distance = 0
+        else:
+            distance = grid.hex_distance(self.position, target.position)
+        if distance > 1:
+            return "Target must be adjacent or self", False
+
+        # Cannot heal dead targets (use Revive instead)
+        if target.hp <= 0:
+            return "Target is defeated - use Revive super ability instead", False
+
+        # Check if target is already at full HP
+        max_hp = target.max_hp if hasattr(target, 'max_hp') else target.hp
+        if target.hp >= max_hp:
+            target_name = "You are" if target is self else f"{getattr(target, 'name', 'Target')} is"
+            return f"{target_name} already at full HP", False
+
+        # Apply heal
+        old_hp = target.hp
+        target.hp = min(max_hp, target.hp + HEAL_AMOUNT)
+        actual_heal = target.hp - old_hp
+
+        # Show green heal text
+        target.set_damage_text(0, text=f"+{actual_heal}")
+
+        # Mark action used
+        if self.double_attack_active:
+            self.warrior_attacks_remaining -= 1
+            if self.warrior_attacks_remaining <= 0:
+                self.action_used = True
+        else:
+            self.action_used = True
+
+        # Charge toward revive super
+        self.add_super_charge()
+
+        target_name = "self" if target is self else getattr(target, 'name', 'target')
+        return f"{self.name or self.class_name} healed {target_name} for {actual_heal} HP ({old_hp} -> {target.hp})", False
+
     def attack(self, enemy, attack_name, grid, party=None):
+        # Healer redirect: melee without weapon becomes heal
+        if self.is_healer and self.melee_weapon is None:
+            is_melee = attack_name == self.attacks["melee"]["name"]
+            if is_melee:
+                return self.heal_target(enemy, grid)
+
         is_projectile = attack_name == self.attacks["projectile"]["name"]
         is_melee = attack_name == self.attacks["melee"]["name"]
         if party is None:
@@ -504,11 +589,55 @@ class Player:
                 self.super_attack_ready = True
 
     def use_super_attack(self, target, grid):
-        """Placeholder super special attack — consumes charge, logs message. Actual effects TBD."""
+        """Execute super special attack. Healer: Revive a dead adjacent target at 10 HP."""
         if not self.super_attack_ready:
             return "Super attack not ready", []
         if self.action_used:
             return "Action already used this turn", []
+
+        # Healer super: Revive
+        if self.is_healer and target:
+            distance = grid.hex_distance(self.position, target.position)
+            if distance > 1:
+                return "Target must be adjacent to revive", []
+            if target.hp > 0:
+                return "Target is still alive - Revive only works on defeated units", []
+
+            # Revive at 10 HP
+            target.hp = 10
+            if hasattr(target, '_death_processed'):
+                target._death_processed = False
+            if hasattr(target, '_death_logged'):
+                target._death_logged = False
+
+            # Re-place on grid if hex is occupied by something else
+            row, col = target.position
+            cell_unit = grid.grid[row][col].get("unit")
+            if cell_unit is None or cell_unit is target:
+                grid.grid[row][col]["unit"] = target
+            else:
+                # Find an empty adjacent hex
+                placed = False
+                for neighbor in grid.get_neighbors(row, col):
+                    nr, nc = neighbor
+                    if 0 <= nr < grid.rows and 0 <= nc < grid.cols:
+                        if grid.grid[nr][nc].get("unit") is None:
+                            target.position = (nr, nc)
+                            grid.grid[nr][nc]["unit"] = target
+                            placed = True
+                            break
+                if not placed:
+                    # Last resort: place on same hex anyway
+                    grid.grid[row][col]["unit"] = target
+
+            target.set_damage_text(0, text="+10 REVIVED")
+
+            self.super_charge = 0
+            self.super_attack_ready = False
+            self.action_used = True
+            target_name = getattr(target, 'name', 'target')
+            return f"{self.name or self.class_name} REVIVED {target_name}! (10 HP)", []
+
         self.super_charge = 0
         self.super_attack_ready = False
         self.action_used = True
@@ -536,6 +665,10 @@ class Player:
             if self.action_used:
                 return "Action already used this turn", []
             return self._spin_punch(grid)
+        elif self.special_attack == "Heal":
+            return "Heal is a passive ability - melee attack heals when no weapon is equipped. Charge 5 heals for Revive!", []
+        elif self.special_attack == "Master Builder":
+            return "Master Builder is a passive ability - Wood requirements auto-fulfilled when on forest terrain.", []
         else:
             return f"Unknown special attack: {self.special_attack}", []
 
@@ -1492,12 +1625,13 @@ class Player:
             return True
         return False
 
-    def can_build(self, location_plan_card):
+    def can_build(self, location_plan_card, terrain=None):
         """
         Check if player can build a location from a Location_Plan card.
 
         Args:
             location_plan_card: The Location_Plan card to check
+            terrain: Optional terrain type at current position (for Builder wood perk)
 
         Returns:
             tuple: (can_build: bool, missing_requirements: list of strings)
@@ -1515,6 +1649,9 @@ class Player:
         # Check for building tool
         if not self.has_building_tool():
             missing.append("Need a hammer/building tool equipped")
+
+        # Builder perk: Wood auto-fulfilled on forest terrain
+        builder_wood_perk = (self.special_attack == "Master Builder" and terrain == "forest")
 
         # Get requirements from the plan
         plan_data = location_plan_card.get_current_data()
@@ -1539,6 +1676,9 @@ class Player:
         for material, required in req_materials.items():
             required = int(required or 0)
             if required <= 0:
+                continue
+            # Builder perk: skip Wood requirement on forest terrain
+            if material == "Wood" and builder_wood_perk:
                 continue
             available = totals.get(material, 0)
             if available < required:

@@ -1,0 +1,27 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Herbalist Quiver Recipe",
+    "Description": "Instructions for crafting a quiver of herb-tipped arrows. The arrows are designed to deliver medicinal compounds at range, but they pack a surprising punch too.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "2",
+    "Requirements: Metal": "1",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Herbalist Quiver",
+    "2nd_state_Type": "Ammunition",
+    "2nd_state_Use_HP": "+0HP",
+    "2nd_state_Revert_Chance": "0",
+    "2nd_state_Use_Placeholder": "",
+    "2nd_state_Ammo_Type": "Arrow",
+    "2nd_state_Ammo_Damage": "8",
+    "2nd_state_Runout_Chance": "15",
+    "2nd_state_Compatible_Weapons": "Healer's Shortbow, Ranger's Shortbow, Hunting Bow",
+    "2nd_state_Item Image": ""
+  }
+}

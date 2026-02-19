@@ -80,8 +80,22 @@ if not os.path.exists(INDEX_FILE):
 CHARACTER_CLASSES = {
     "Ranger": {"hp": 50, "movement": 5, "projectile_range": 5, "attacks": {"Throw Rock": 8, "Fist": 4}, "special_attack": "Piercing Shot"},
     "Warrior": {"hp": 100, "movement": 4, "projectile_range": 4, "attacks": {"Throw Rock": 6, "Fist": 6}, "special_attack": "Double Attack"},
-    "Tank": {"hp": 150, "movement": 3, "projectile_range": 3, "attacks": {"Throw Rock": 4, "Fist": 8}, "special_attack": "Spin Punch"}
+    "Tank": {"hp": 150, "movement": 3, "projectile_range": 3, "attacks": {"Throw Rock": 4, "Fist": 8}, "special_attack": "Spin Punch"},
+    "Healer": {"hp": 50, "movement": 5, "projectile_range": 3, "attacks": {"Throw Rock": 4, "Fist": 4}, "special_attack": "Heal"},
+    "Builder": {"hp": 100, "movement": 4, "projectile_range": 4, "attacks": {"Throw Rock": 6, "Fist": 6}, "special_attack": "Master Builder"}
 }
+
+
+def _check_builder_wood_perk():
+    """Returns True if current player is a Master Builder standing on forest terrain."""
+    player = game.current_player
+    if player.special_attack != "Master Builder":
+        return False
+    pos = player.position
+    if pos is None:
+        return False
+    terrain = game_screen.hex_grid.grid[pos[0]][pos[1]].get("terrain", "grass")
+    return terrain == "forest"
 
 
 def add_card_to_player(card):
@@ -2384,6 +2398,7 @@ class CraftingScreen:
             self.requirements_info.set_text("<font color='#FFFFFF' size=4>Requirements</font>")
             return
         state1_data = self.selected_to_craft.get_state_data(1)
+        builder_wood_perk = _check_builder_wood_perk()
 
         # Calculate provided totals from selected materials
         provided_totals = {val_key: 0 for val_key in self.REQUIREMENT_TO_VALUE.values()}
@@ -2405,6 +2420,12 @@ class CraftingScreen:
             required = int(state1_data.get(req_key, 0) or 0)
             provided = provided_totals[val_key]
             material_type = req_key.split(": ")[1]
+
+            # Builder wood perk: show Wood as auto-fulfilled on forest terrain
+            if builder_wood_perk and req_key == "Requirements: Wood" and required > 0:
+                padded_type = material_type.ljust(18)
+                requirements_text += f"{padded_type}<font color='#00CCFF'>AUTO</font>   <font color='#FFAA00'>{required:>3}</font><br>"
+                continue
 
             # Color code: green if met, red if not
             if provided >= required:
@@ -2495,8 +2516,12 @@ class CraftingScreen:
     def check_requirements(self):
         if not self.selected_to_craft:
             return False
+        builder_wood_perk = _check_builder_wood_perk()
         state1_data = self.selected_to_craft.get_state_data(1)
         for req_key, val_key in self.REQUIREMENT_TO_VALUE.items():
+            # Builder wood perk: skip Wood requirement on forest terrain
+            if builder_wood_perk and req_key == "Requirements: Wood":
+                continue
             required_amount = int(state1_data.get(req_key, 0) or 0)  # Handle empty or None values
             provided_amount = sum(int(material.get_current_data().get(val_key, 0) or 0) for material in self.selected_materials)
             if provided_amount < required_amount:
@@ -2913,6 +2938,7 @@ class TabbedMenuScreen:
             self.craft_requirements_info.set_text("<font color='#FFFFFF' size=4>Requirements</font>")
             return
         state1_data = self.craft_selected_to_craft.get_state_data(1)
+        builder_wood_perk = _check_builder_wood_perk()
 
         provided_totals = {val_key: 0 for val_key in self.REQUIREMENT_TO_VALUE.values()}
         for material in self.craft_selected_materials:
@@ -2932,6 +2958,12 @@ class TabbedMenuScreen:
             required = int(state1_data.get(req_key, 0) or 0)
             provided = provided_totals[val_key]
             material_type = req_key.split(": ")[1]
+
+            # Builder wood perk: show Wood as auto-fulfilled on forest terrain
+            if builder_wood_perk and req_key == "Requirements: Wood" and required > 0:
+                padded_type = material_type.ljust(18)
+                requirements_text += f"{padded_type}<font color='#00CCFF'>AUTO</font>   <font color='#FFAA00'>{required:>3}</font><br>"
+                continue
 
             if provided >= required:
                 have_color = "#00FF00"
@@ -2970,8 +3002,12 @@ class TabbedMenuScreen:
     def _craft_check_requirements(self):
         if not self.craft_selected_to_craft:
             return False
+        builder_wood_perk = _check_builder_wood_perk()
         state1_data = self.craft_selected_to_craft.get_state_data(1)
         for req_key, val_key in self.REQUIREMENT_TO_VALUE.items():
+            # Builder wood perk: skip Wood requirement on forest terrain
+            if builder_wood_perk and req_key == "Requirements: Wood":
+                continue
             required_amount = int(state1_data.get(req_key, 0) or 0)
             provided_amount = sum(int(material.get_current_data().get(val_key, 0) or 0) for material in self.craft_selected_materials)
             if provided_amount < required_amount:
@@ -6463,14 +6499,21 @@ class GameScreen:
         for attack_key, outline_color in attack_order:
             attack = current_player.attacks.get(attack_key)
             if attack:
-                btn = UIButton(pygame.Rect(x, y, button_width, 30),
-                               f"{attack['name']} ({attack['damage']} dmg)", manager)
-                btn._outline_color = outline_color
+                # Healer with no melee weapon: show "Heal (20 HP)" instead of melee damage
+                if attack_key == "melee" and current_player.is_healer and current_player.melee_weapon is None:
+                    btn = UIButton(pygame.Rect(x, y, button_width, 30),
+                                   "Heal (20 HP)", manager)
+                    btn._outline_color = (0, 200, 0)  # Green for healing
+                else:
+                    btn = UIButton(pygame.Rect(x, y, button_width, 30),
+                                   f"{attack['name']} ({attack['damage']} dmg)", manager)
+                    btn._outline_color = outline_color
                 self.attack_submenu_buttons.append((btn, "attack", attack))
                 y += 34
 
-        # Special attack (Warrior's Dual Strike and Ranger's Piercing Shot are passive - no button needed)
-        if current_player.special_attack not in ("Dual Strike", "Piercing Shot"):
+        # Special attack (passive specials don't need a button)
+        passive_specials = ("Dual Strike", "Piercing Shot", "Heal", "Master Builder")
+        if current_player.special_attack not in passive_specials:
             btn = UIButton(pygame.Rect(x, y, button_width, 30),
                            f"[Special] {current_player.special_attack}", manager)
             self.attack_submenu_buttons.append((btn, "special", None))
@@ -6479,8 +6522,13 @@ class GameScreen:
 
         # Super attack button (when charged)
         if current_player.super_attack_ready:
+            # Healer super: Revive (needs targeting mode)
+            if current_player.is_healer:
+                super_label = "[SUPER] Revive"
+            else:
+                super_label = f"[SUPER] {current_player.special_attack}"
             btn = UIButton(pygame.Rect(x, y, button_width, 30),
-                           f"[SUPER] {current_player.special_attack}", manager)
+                           super_label, manager)
             self.attack_submenu_buttons.append((btn, "super", None))
             self.super_attack_button = btn
             y += 34
@@ -6620,10 +6668,19 @@ class GameScreen:
         lines.append(f"<font color='#999999'>Action:</font> <font color='{act_color}'>{'Used' if p.action_used else 'Ready'}</font>")
         if p.class_name == "Warrior":
             lines.append(f"<font color='#999999'>Attacks:</font> <font color='#CCCCDD'>{p.warrior_attacks_remaining}/2</font>")
+        # Healer info: show heal mode and revive charge
+        if p.is_healer:
+            if p.melee_weapon is None:
+                lines.append(f"<font color='#00CC00'>Heal Mode (20 HP)</font>")
+            else:
+                lines.append(f"<font color='#999999'>Melee weapon equipped</font>")
         # Super charge meter
         charge_pips = ">" * p.super_charge + "." * (p.super_charge_max - p.super_charge)
         charge_color = "#FFD700" if p.super_attack_ready else "#888888"
-        lines.append(f"<font color='#999999'>Super:</font> <font color='{charge_color}'>[{charge_pips}]</font>")
+        if p.is_healer:
+            lines.append(f"<font color='#999999'>Revive:</font> <font color='{charge_color}'>[{charge_pips}]</font>")
+        else:
+            lines.append(f"<font color='#999999'>Super:</font> <font color='{charge_color}'>[{charge_pips}]</font>")
         return "<br>".join(lines)
 
     def _handle_quest_chain(self):
@@ -7035,7 +7092,10 @@ class GameScreen:
                 self.add_to_log("Need a hammer/building tool equipped")
             else:
                 plan = plans[0]
-                can, missing = current_player.can_build(plan)
+                # Pass terrain for Builder's wood perk
+                player_pos = current_player.position
+                terrain = self.hex_grid.grid[player_pos[0]][player_pos[1]].get("terrain", "grass")
+                can, missing = current_player.can_build(plan, terrain=terrain)
                 if can:
                     material_cards = [c for c in current_player.inventory
                                      if c.get_current_data().get("Metal Value") or
@@ -7536,6 +7596,12 @@ class GameScreen:
             self.player_info_label.set_text(self.get_player_info())
             if current_player.action_used and not current_player.movement_used:
                 self.player_mode = "movement"
+        elif action_type == "heal_player":
+            # Healer healing another player in multiplayer
+            message, _ = current_player.heal_target(target, self.hex_grid)
+            self.add_to_log(message)
+            self.player_info_label.set_text(self.get_player_info())
+            self._create_equipment_toolbar()
         elif action_type == "give_to_player":
             game.current_screen = "card_giving"
             card_giving_screen.initialize_screen(data)
@@ -8327,9 +8393,13 @@ class GameScreen:
                         melee_range = current_player.get_melee_attack_range(self.hex_grid)
                         proj_range = current_player.get_projectile_attack_range(self.hex_grid, game.current_party)
                         if melee_range and hex_pos in melee_range:
-                            melee_name = current_player.attacks["melee"]["name"]
-                            melee_dmg = current_player.attacks["melee"]["damage"]
-                            available_actions.append((f"Melee: {melee_name} ({melee_dmg} dmg)", "melee", None))
+                            # Healer with no melee weapon: show heal label
+                            if current_player.is_healer and current_player.melee_weapon is None:
+                                available_actions.append(("Heal (20 HP)", "melee", None))
+                            else:
+                                melee_name = current_player.attacks["melee"]["name"]
+                                melee_dmg = current_player.attacks["melee"]["damage"]
+                                available_actions.append((f"Melee: {melee_name} ({melee_dmg} dmg)", "melee", None))
                         if proj_range and hex_pos in proj_range:
                             proj_name = current_player.attacks["projectile"]["name"]
                             proj_dmg = current_player.attacks["projectile"]["damage"]
@@ -8366,13 +8436,24 @@ class GameScreen:
                     elif len(available_actions) >= 2:
                         self._open_action_choice_popup(unit, hex_pos, available_actions)
                         return
-                # Give card to adjacent player in multiplayer
+                # Give card / Heal adjacent player in multiplayer
                 if (not self.selected_attack and unit and isinstance(unit, Player)
                     and unit is not current_player and game.multiplayer_mode
                     and self.hex_grid.hex_distance(current_player.position, hex_pos) == 1
                     and self.player_mode not in ("recruit", "skill", "item")):
                     target_name = unit.name or unit.class_name
                     actions = [(f"Give to {target_name}", "give_to_player", unit)]
+                    # Healer can heal other players
+                    if (current_player.is_healer and current_player.melee_weapon is None
+                        and not current_player.action_used and unit.hp > 0 and unit.hp < unit.max_hp):
+                        actions.insert(0, ("Heal (20 HP)", "heal_player", unit))
+                    if len(actions) == 1:
+                        if actions[0][1] == "heal_player":
+                            message, _ = current_player.heal_target(unit, self.hex_grid)
+                            self.add_to_log(message)
+                            self.player_info_label.set_text(self.get_player_info())
+                            self._create_equipment_toolbar()
+                            return
                     self._open_action_choice_popup(unit, hex_pos, actions)
                     return
                 if self.player_mode == "attack" and self.selected_attack and unit and isinstance(unit, Unit):
@@ -8498,9 +8579,36 @@ class GameScreen:
                         self.add_to_log(f"{unit.name} cannot be recruited")
                     else:
                         self.add_to_log("NPC is not adjacent to you")
+                elif self.player_mode == "super_attack":
+                    # Healer Revive: find dead unit/player at clicked hex
+                    revive_target = None
+                    # Check units (including dead ones stored with positions)
+                    for u in self.hex_grid.units:
+                        if u.position == hex_pos and u.hp <= 0:
+                            revive_target = u
+                            break
+                    # Check other players in multiplayer
+                    if not revive_target and game.multiplayer_mode:
+                        for p in game.players:
+                            if p is not current_player and p.position == hex_pos and p.hp <= 0:
+                                revive_target = p
+                                break
+                    if revive_target:
+                        message, defeated_units = current_player.use_super_attack(revive_target, self.hex_grid)
+                        self.add_to_log(message)
+                        self.player_info_label.set_text(self.get_player_info())
+                    else:
+                        self.add_to_log("No dead unit at that location to revive")
+                    self.player_mode = "movement"
                 elif self.player_mode == "special_attack" and unit and isinstance(unit, Unit):
                     # Execute special attack on target
                     self._execute_special_attack(unit)
+                elif hex_pos == current_player.position and current_player.is_healer and current_player.melee_weapon is None and not current_player.action_used and current_player.hp < current_player.max_hp:
+                    # Healer self-heal: clicking own hex heals self
+                    message, _ = current_player.heal_target(current_player, self.hex_grid)
+                    self.add_to_log(message)
+                    self.player_info_label.set_text(self.get_player_info())
+                    self._create_equipment_toolbar()
                 elif hex_pos == current_player.position and self.hex_grid.is_location_hex(hex_pos[0], hex_pos[1]):
                     # Clicked on current position which is a location - reopen location screen
                     loc_data = self.hex_grid.location_data.get(hex_pos)
@@ -8829,6 +8937,12 @@ class GameScreen:
                                 self.add_to_log("Super attack not ready")
                             elif current_player.action_used:
                                 self.add_to_log("Action already used this turn")
+                            elif current_player.is_healer:
+                                # Healer super: enter targeting mode to select dead unit to revive
+                                self.player_mode = "super_attack"
+                                self.selected_attack = None
+                                self.selected_skill = None
+                                self.add_to_log("Select an adjacent dead unit to Revive (click on them)")
                             else:
                                 message, defeated_units = current_player.use_super_attack(None, self.hex_grid)
                                 self.add_to_log(message)

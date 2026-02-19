@@ -37,6 +37,16 @@ SPECIAL_ABILITIES = {
         "description": "Active ability: Hit ALL adjacent hostile enemies with melee damage.",
         "type": "active",
         "summary": "AoE melee hitting all adjacent enemies"
+    },
+    "Heal": {
+        "description": "Melee becomes Heal (20 HP) when no melee weapon equipped. Targets self or any adjacent unit.",
+        "type": "passive",
+        "summary": "Heal instead of melee (20 HP to any adjacent)"
+    },
+    "Master Builder": {
+        "description": "Wood requirements in crafting/building auto-fulfilled when on forest terrain.",
+        "type": "passive",
+        "summary": "Wood auto-fulfilled on forest terrain"
     }
 }
 
@@ -80,6 +90,33 @@ PRESET_CLASSES = {
             {"card_id": "win_guide", "state": 1},
             {"card_id": "beta_junk_tool_scavengers_kit", "state": 2}
         ]
+    },
+    "Healer": {
+        "stats": {"hp": 5, "movement": 5, "projectile_range": 3, "melee_damage": 4, "projectile_damage": 4},
+        "special": "Heal",
+        "melee_name": "Fist",
+        "proj_name": "Throw Rock",
+        "kit": [
+            {"card_id": "starter_healer_bow", "state": 1},
+            {"card_id": "starter_healer_bowstring", "state": 1},
+            {"card_id": "starter_healer_quiver_plans", "state": 1},
+            {"card_id": "starter_healer_herb_bundle", "state": 1},
+            {"card_id": "win_guide", "state": 1},
+            {"card_id": "beta_junk_tool_scavengers_kit", "state": 2}
+        ]
+    },
+    "Builder": {
+        "stats": {"hp": 10, "movement": 4, "projectile_range": 4, "melee_damage": 6, "projectile_damage": 6},
+        "special": "Master Builder",
+        "melee_name": "Fist",
+        "proj_name": "Throw Rock",
+        "kit": [
+            {"card_id": "starter_builder_hammer", "state": 1},
+            {"card_id": "starter_builder_axe", "state": 1},
+            {"card_id": "starter_builder_archer_tower_plans", "state": 1},
+            {"card_id": "win_guide", "state": 1},
+            {"card_id": "beta_junk_tool_scavengers_kit", "state": 2}
+        ]
     }
 }
 
@@ -96,10 +133,18 @@ SUGGESTED_KITS = {
         "starter_tank_sledgehammer_plans", "starter_tank_hammer_head", "starter_tank_branch",
         "win_guide", "beta_junk_tool_scavengers_kit"
     ],
+    "Healer Kit": [
+        "starter_healer_bow", "starter_healer_bowstring", "starter_healer_quiver_plans",
+        "starter_healer_herb_bundle", "win_guide", "beta_junk_tool_scavengers_kit"
+    ],
+    "Builder Kit": [
+        "starter_builder_hammer", "starter_builder_axe", "starter_builder_archer_tower_plans",
+        "win_guide", "beta_junk_tool_scavengers_kit"
+    ],
     "Empty": []
 }
 
-MAX_KIT_CARDS = 5
+MAX_KIT_CARDS = 6
 
 DARK_CHARCOAL = (35, 35, 40)
 PANEL_BG = (26, 26, 46)

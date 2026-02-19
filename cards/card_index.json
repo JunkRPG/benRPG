@@ -2518,5 +2518,124 @@
     "blueprint_subclass": null,
     "states": 1,
     "name": "Village Father"
+  },
+  "ab5f561d-c605-45f2-822d-708932e48a5d": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": " #1"
+  },
+  "60768028-ea43-4a42-b648-41420537fdd8": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": " #2"
+  },
+  "84c46f18-2524-4452-b098-cadec1e3d926": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": " #3"
+  },
+  "8d033edc-8e2b-4724-a8d7-04c26464da82": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": " #4"
+  },
+  "5bc55305-3a74-4936-8e59-637ab3d0a4d5": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": " #5"
+  },
+  "3ebafb48-1c4e-4c9c-9c5c-67aec24462af": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": " #6"
+  },
+  "813d35f4-775d-4683-b7b7-48cde84227d0": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": " #7"
+  },
+  "8a87fc6f-901c-4cd6-977c-fe04fab1000f": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": " #8"
+  },
+  "1d6dff98-b1d6-4532-a1b3-208e616ef1a0": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": " #9"
+  },
+  "501e88ce-9bd7-467e-9c9a-be20d3ac166b": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": " #10"
+  },
+  "starter_healer_bow": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Willow Branch Bow"
+  },
+  "starter_healer_bowstring": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Twisted Sinew String"
+  },
+  "starter_healer_quiver_plans": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Consumable_Item",
+    "states": 2,
+    "name": "Herbalist Quiver Recipe"
+  },
+  "starter_healer_herb_bundle": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Dried Herb Bundle"
+  },
+  "starter_builder_hammer": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Builder's Scrap Iron"
+  },
+  "starter_builder_axe": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rusted Hatchet Head"
+  },
+  "starter_builder_archer_tower_plans": {
+    "type": "Document Card",
+    "subclass": "Location_Plan",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Archer Tower Blueprint"
   }
 }

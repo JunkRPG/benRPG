@@ -177,6 +177,8 @@ class SaveManager:
             "super_charge": player.super_charge,
             "super_charge_max": player.super_charge_max,
             "super_attack_ready": player.super_attack_ready,
+            # Healer flag
+            "is_healer": player.is_healer,
             # Per-player party (used in multiplayer)
             "party": [self._serialize_inventory_card(c) for c in player.party],
         }
@@ -464,6 +466,9 @@ class SaveManager:
         player.super_charge = player_data.get("super_charge", 0)
         player.super_charge_max = player_data.get("super_charge_max", 5)
         player.super_attack_ready = player_data.get("super_attack_ready", False)
+
+        # Healer flag (backwards compatible: derive from special_attack if not saved)
+        player.is_healer = player_data.get("is_healer", player.special_attack == "Heal")
 
         # Skill cooldowns
         player.skill_cooldowns = player_data.get("skill_cooldowns", {})
