@@ -239,10 +239,15 @@ class SaveManager:
                 "projectile_range": unit.projectile_range,
                 "garrison_target_location": list(unit.garrison_target_location) if getattr(unit, 'garrison_target_location', None) else None,
                 "behavior_tree": getattr(unit, 'behavior_tree', []),
+                "hostile_behavior_tree": getattr(unit, 'hostile_behavior_tree', None),
+                "neutral_behavior_tree": getattr(unit, 'neutral_behavior_tree', None),
+                "allied_behavior_tree": getattr(unit, 'allied_behavior_tree', None),
                 "is_stubborn": getattr(unit, 'is_stubborn', False),
                 "behavior_follow_target": getattr(unit, 'behavior_follow_target', None),
                 "behavior_attack_target": getattr(unit, 'behavior_attack_target', None),
                 "recruit_cooldown": getattr(unit, 'recruit_cooldown', 0),
+                "allegiance_priority": getattr(unit, 'allegiance_priority', None),
+                "convert_cooldown": getattr(unit, 'convert_cooldown', 0),
                 "boss_encounter_tag": getattr(unit, 'boss_encounter_tag', None),
                 "dialogue_delivered": getattr(unit, 'dialogue_delivered', False),
                 "_death_processed": getattr(unit, '_death_processed', False),
@@ -591,7 +596,6 @@ class SaveManager:
             unit.current_state = unit_info.get("current_state", 1)
             unit.hp = unit_info.get("hp", unit.hp)
             unit.max_hp = unit_info.get("max_hp", unit.max_hp)
-            unit.allegiance = unit_info.get("allegiance", unit.allegiance)
             unit.name = unit_info.get("name", unit.name)
             unit.movement = unit_info.get("movement", unit.movement)
             unit.melee_damage = unit_info.get("melee_damage", unit.melee_damage)
@@ -607,14 +611,23 @@ class SaveManager:
                 garrison_target = unit_info.get("garrison_target_location")
                 if garrison_target:
                     unit.garrison_target_location = tuple(garrison_target)
-                # Restore behavior tree state
+                # Restore per-allegiance behavior trees (backwards compat: old saves may not have these)
+                unit.hostile_behavior_tree = unit_info.get("hostile_behavior_tree") or unit.hostile_behavior_tree
+                unit.neutral_behavior_tree = unit_info.get("neutral_behavior_tree") or unit.neutral_behavior_tree
+                unit.allied_behavior_tree = unit_info.get("allied_behavior_tree") or unit.allied_behavior_tree
+                # Restore active behavior tree
                 saved_tree = unit_info.get("behavior_tree")
                 if saved_tree and isinstance(saved_tree, list):
                     unit.behavior_tree = saved_tree
+                # Use set_allegiance to select the right active tree
+                unit.set_allegiance(unit_info.get("allegiance", unit.allegiance))
                 unit.is_stubborn = unit_info.get("is_stubborn", False)
                 unit.behavior_follow_target = unit_info.get("behavior_follow_target")
                 unit.behavior_attack_target = unit_info.get("behavior_attack_target")
                 unit.recruit_cooldown = unit_info.get("recruit_cooldown", 0)
+                if unit_info.get("allegiance_priority"):
+                    unit.allegiance_priority = unit_info["allegiance_priority"]
+                unit.convert_cooldown = unit_info.get("convert_cooldown", 0)
                 unit.boss_encounter_tag = unit_info.get("boss_encounter_tag")
                 unit.dialogue_delivered = unit_info.get("dialogue_delivered", False)
                 unit.carry_to_next_level = unit_info.get("carry_to_next_level", False)

@@ -58,8 +58,6 @@ class Unit:
         # Death processing flag: True once death cleanup has run (body stays on board)
         self._death_processed = False
 
-        # Behavior tree: ordered list of behavior names for Allied units
-        self.behavior_tree = self._init_behavior_tree(card_data)
         self.is_stubborn = str(card_data["data"].get("Stubborn", "false")).lower() == "true"
         # Target references for follow/attack behaviors
         self.behavior_follow_target = None   # card_id or "player_0"/"player_1"
@@ -98,6 +96,18 @@ class Unit:
         self.quest_offer_target = None  # "player_0" / "player_1"
         self.pending_quest_offer = None
 
+        # Allegiance priority list (defines advancement order)
+        self.allegiance_priority = self._parse_allegiance_priority(card_data)
+        # Convert cooldown (turns remaining before convert_enemy can be used again)
+        self.convert_cooldown = 0
+
+        # Per-allegiance behavior trees (loaded after all attributes they depend on)
+        self.hostile_behavior_tree = self._load_behavior_tree_field(card_data, "Hostile_Behavior_Tree")
+        self.neutral_behavior_tree = self._load_behavior_tree_field(card_data, "Neutral_Behavior_Tree")
+        self.allied_behavior_tree = self._load_behavior_tree_field(card_data, "Allied_Behavior_Tree")
+        # Active behavior tree (selected based on current allegiance)
+        self.behavior_tree = self._select_behavior_tree()
+
         if self.states == 2 and "2nd_State_Name" in card_data["data"]:
             self.second_state = {
                 "name": card_data["data"]["2nd_State_Name"],
@@ -114,47 +124,190 @@ class Unit:
                 "repair_value": int(card_data["data"].get("2nd_State_Repair_Value", card_data["data"].get("Repair_Value", 0)) or 0),
                 "aggro_range": int(card_data["data"].get("2nd_State_Aggro_Range", card_data["data"].get("Aggro_Range", 0)) or 0),
                 "behavior_tree_str": card_data["data"].get("2nd_State_Default_Behavior_Tree", ""),
+                "hostile_bt_str": card_data["data"].get("2nd_State_Hostile_Behavior_Tree", ""),
+                "neutral_bt_str": card_data["data"].get("2nd_State_Neutral_Behavior_Tree", ""),
+                "allied_bt_str": card_data["data"].get("2nd_State_Allied_Behavior_Tree", ""),
+                "allegiance_priority_str": card_data["data"].get("2nd_State_Allegiance_Priority", ""),
             }
 
     # Behavior registry: defines available behaviors with labels and restrictions
     BEHAVIOR_REGISTRY = {
-        "revive_ally":    {"label": "Revive Ally",       "restrict_skill": "Healer"},
-        "healing":        {"label": "Heal Allies",       "restrict_skill": "Healer"},
-        "patrol":         {"label": "Patrol (Wander)"},
-        "guard":          {"label": "Guard Position"},
-        "recruit":        {"label": "Recruit Neutrals"},
-        "follow_target":  {"label": "Follow Target",     "needs_target": "follow"},
-        "attack_target":  {"label": "Attack Target",     "needs_target": "attack"},
-        "attack_closest": {"label": "Attack Closest"},
-        "attack_weakest": {"label": "Attack Weakest"},
-        "flee":           {"label": "Flee from Enemies"},
-        "graze":          {"label": "Graze (Recover HP)", "restrict_skill": "Mount"},
+        "revive_ally":        {"label": "Revive Ally",         "restrict_skill": "Healer"},
+        "healing":            {"label": "Heal Allies",         "restrict_skill": "Healer"},
+        "patrol":             {"label": "Patrol (Wander)"},
+        "guard":              {"label": "Guard Position"},
+        "recruit":            {"label": "Recruit Neutrals"},
+        "follow_target":      {"label": "Follow Target",       "needs_target": "follow"},
+        "attack_target":      {"label": "Attack Target",       "needs_target": "attack"},
+        "attack_closest":     {"label": "Attack Closest"},
+        "attack_weakest":     {"label": "Attack Weakest"},
+        "flee":               {"label": "Flee from Enemies"},
+        "graze":              {"label": "Graze (Recover HP)",  "restrict_skill": "Mount"},
+        "garrison_tower":     {"label": "Garrison Tower"},
+        "repair_location":    {"label": "Repair Location",     "restrict_skill": "Repair"},
+        "aggro_gate":         {"label": "Aggro Range Gate"},
+        "attack_tower":       {"label": "Attack Tower"},
+        "attack_player":      {"label": "Attack Player"},
+        "attack_locations":   {"label": "Attack Locations"},
+        "summon_minion":      {"label": "Summon Minion",       "restrict_skill": "Summon Minion"},
+        "messenger_deliver":  {"label": "Deliver Message",     "restrict_skill": "Messenger"},
+        "quest_offer":        {"label": "Offer Quest"},
+        "wild_mount_wander":  {"label": "Wild Mount Wander",   "restrict_skill": "Mount"},
+        "convert_enemy":      {"label": "Convert Enemy",       "restrict_skill": "Healer"},
     }
 
-    def _init_behavior_tree(self, card_data):
-        """Initialize behavior tree from card data or build smart default."""
-        # Runtime custom override (set by player via party screen, passed at deploy)
-        custom_tree = card_data.get("custom_behavior_tree", None)
-        if custom_tree and isinstance(custom_tree, list):
-            return list(custom_tree)
-        # Card's Default_Behavior_Tree (JSON string)
-        default_str = card_data["data"].get("Default_Behavior_Tree", "")
-        if default_str:
+    def _load_behavior_tree_field(self, card_data, field_name):
+        """Load a per-allegiance behavior tree from card data.
+        Returns parsed list or None (meaning 'use default')."""
+        # Runtime custom override applies to allied tree only
+        if field_name == "Allied_Behavior_Tree":
+            custom_tree = card_data.get("custom_behavior_tree", None)
+            if custom_tree and isinstance(custom_tree, list):
+                return list(custom_tree)
+        # Try the per-allegiance field first
+        bt_str = card_data["data"].get(field_name, "")
+        if bt_str:
             try:
-                tree = json.loads(default_str)
+                tree = json.loads(bt_str)
                 if isinstance(tree, list) and len(tree) > 0:
                     return tree
             except (json.JSONDecodeError, TypeError):
                 pass
-        # Smart fallback based on unit properties
+        # For Allied tree, fall back to legacy Default_Behavior_Tree
+        if field_name == "Allied_Behavior_Tree":
+            legacy_str = card_data["data"].get("Default_Behavior_Tree", "")
+            if legacy_str:
+                try:
+                    tree = json.loads(legacy_str)
+                    if isinstance(tree, list) and len(tree) > 0:
+                        return tree
+                except (json.JSONDecodeError, TypeError):
+                    pass
+        return None  # Will use smart default
+
+    def _parse_allegiance_priority(self, card_data):
+        """Parse Allegiance_Priority from card data. Returns ordered list."""
+        raw = card_data["data"].get("Allegiance_Priority", "")
+        if raw:
+            try:
+                parsed = json.loads(raw)
+                if isinstance(parsed, list) and len(parsed) >= 1:
+                    return parsed
+            except (json.JSONDecodeError, TypeError):
+                pass
+        # Smart defaults based on starting allegiance
+        if self.allegiance == "Hostile":
+            return ["Hostile", "Neutral", "Allied"]
+        elif self.allegiance == "Neutral":
+            return ["Neutral", "Allied"]
+        else:
+            return ["Allied"]
+
+    def _select_behavior_tree(self):
+        """Select the active behavior tree based on current allegiance."""
+        if self.allegiance == "Hostile":
+            if self.hostile_behavior_tree:
+                return list(self.hostile_behavior_tree)
+            return self._default_hostile_tree()
+        elif self.allegiance == "Neutral":
+            if self.neutral_behavior_tree:
+                return list(self.neutral_behavior_tree)
+            return self._default_neutral_tree()
+        else:  # Allied
+            if self.allied_behavior_tree:
+                return list(self.allied_behavior_tree)
+            return self._default_allied_tree()
+
+    def _default_hostile_tree(self):
+        """Smart default behavior tree for hostile units."""
+        tree = []
+        if self.special_skill == "Repair" and self.repair_value > 0:
+            tree.append("repair_location")
+        if self.aggro_range > 0:
+            tree.append("aggro_gate")
+        if self.special_skill == "Healer" and self.heal_amount > 0:
+            tree.append("healing")
+        tree.append("attack_tower")
+        tree.append("attack_player")
+        tree.append("attack_closest")
+        tree.append("attack_locations")
+        if self.special_skill == "Summon Minion" and self.spawn_deck:
+            tree.append("summon_minion")
+        tree.append("patrol")
+        return tree
+
+    def _default_neutral_tree(self):
+        """Smart default behavior tree for neutral units."""
+        if self.special_skill == "Messenger" and self.dialogue_text:
+            return ["messenger_deliver", "patrol"]
+        if self.quest_offer_card_id:
+            return ["quest_offer", "patrol"]
+        if self.states == 2 and self.current_state == 1 and self.special_skill == "Mount":
+            return ["wild_mount_wander"]
+        return ["patrol"]
+
+    def _default_allied_tree(self):
+        """Smart default behavior tree for allied units."""
         default = []
-        if card_data["data"].get("Special Skill") == "Healer" and int(card_data["data"].get("Heal_Amount", 0) or 0) > 0:
+        if self.special_skill == "Healer" and self.heal_amount > 0:
             default.append("revive_ally")
             default.append("healing")
-        if card_data["data"].get("Special Skill") == "Mount":
+        if self.special_skill == "Mount":
             default.append("graze")
         default.append("attack_closest")
         return default
+
+    def set_allegiance(self, new_allegiance):
+        """Change allegiance and activate the corresponding behavior tree."""
+        self.allegiance = new_allegiance
+        self.behavior_tree = self._select_behavior_tree()
+
+    def advance_allegiance(self):
+        """Advance to next allegiance in priority list. Returns (old, new, changed)."""
+        old = self.allegiance
+        if old not in self.allegiance_priority:
+            return (old, old, False)
+        idx = self.allegiance_priority.index(old)
+        if idx >= len(self.allegiance_priority) - 1:
+            return (old, old, False)  # Already at end
+        new = self.allegiance_priority[idx + 1]
+        self.set_allegiance(new)
+        return (old, new, True)
+
+    def _get_enemies(self, grid):
+        """Units hostile to me based on my allegiance."""
+        if self.allegiance == "Hostile":
+            enemies = [u for u in grid.units if u.allegiance == "Allied" and u.hp > 0 and u.position]
+            # Also include players as enemies
+            players = grid.players if hasattr(grid, 'players') and grid.players else []
+            if not players and hasattr(grid, 'player') and grid.player:
+                players = [grid.player]
+            enemies.extend([p for p in players if p.hp > 0 and p.position])
+            return enemies
+        elif self.allegiance == "Allied":
+            return [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
+        return []  # Neutral has no automatic enemies
+
+    def _get_friendlies(self, grid):
+        """Units friendly to me based on my allegiance."""
+        friendlies = [u for u in grid.units if u.allegiance == self.allegiance and u.hp > 0 and u.position and u is not self]
+        # Allied units also consider players as friendlies
+        if self.allegiance == "Allied":
+            players = grid.players if hasattr(grid, 'players') and grid.players else []
+            if not players and hasattr(grid, 'player') and grid.player:
+                players = [grid.player]
+            friendlies.extend([p for p in players if p.hp > 0 and p.position])
+        return friendlies
+
+    def _get_dead_enemies(self, grid):
+        """Dead units hostile to me (for convert_enemy)."""
+        if self.allegiance == "Allied":
+            return [u for u in grid.units if u.allegiance == "Hostile" and u.hp <= 0
+                    and getattr(u, '_death_processed', False) and u.position]
+        elif self.allegiance == "Hostile":
+            return [u for u in grid.units if u.allegiance == "Allied" and u.hp <= 0
+                    and getattr(u, '_death_processed', False) and u.position]
+        return []
 
     def get_available_behaviors(self):
         """Return list of behavior keys this unit can use."""
@@ -176,527 +329,49 @@ class Unit:
             self.skip_turn = False
             return [f"{self.name} is stunned and loses their turn!"]
 
-        # Healer: heal friendly units before taking other actions (non-Allied only;
-        # Allied healers are handled by their behavior tree)
-        if self.special_skill == "Healer" and self.heal_amount > 0 and self.allegiance != "Allied":
-            heal_log = self._perform_healing(grid)
-            log.extend(heal_log)
+        # Recruit cooldown tick
+        if self.recruit_cooldown > 0:
+            self.recruit_cooldown -= 1
+        # Convert cooldown tick
+        if self.convert_cooldown > 0:
+            self.convert_cooldown -= 1
 
-        if self.allegiance == "Hostile":
-            # === Repair Boss: prioritize repairing enemy spawn locations ===
-            if self.special_skill == "Repair" and self.repair_value > 0:
-                damaged_locations = grid.get_damaged_spawn_locations()
-                if damaged_locations:
-                    # Find nearest damaged location
-                    nearest_loc = min(damaged_locations, key=lambda x: grid.hex_distance(self.position, x[0]))
-                    dist_to_loc = grid.hex_distance(self.position, nearest_loc[0])
-                    if dist_to_loc <= 1:
-                        # Adjacent — repair it
-                        success, healed, rebuilt, msg = grid.repair_spawn_location(
-                            nearest_loc[0][0], nearest_loc[0][1], self.repair_value)
-                        if success:
-                            delay = 0
-                            if hasattr(grid, 'attack_anims'):
-                                src = grid.get_hex_center(*self.position)
-                                tgt = grid.get_hex_center(*nearest_loc[0])
-                                grid.attack_anims.create_melee(src, tgt)
-                                delay = grid.attack_anims.get_max_remaining_ms()
-                            self.attack_flash = True
-                            self.flash_start = pygame.time.get_ticks() + delay
-                            log.append(msg)
-                            return log
-                    else:
-                        # Pathfind toward damaged location
-                        path = grid.find_path(self.position, nearest_loc[0])
-                        if path and len(path) > 1:
-                            max_steps = min(self.movement, len(path) - 1)
-                            for steps in range(max_steps, 0, -1):
-                                new_pos = path[steps]
-                                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                                    loc_card = nearest_loc[1].get("card")
-                                    loc_name = loc_card.get_current_data().get("Name", "location") if loc_card else "location"
-                                    success, move_msg = grid.move_unit(self, *new_pos)
-                                    if success:
-                                        log.append(f"{self.name} moves to repair {loc_name}")
-                                        # Check if now adjacent after move
-                                        new_dist = grid.hex_distance(self.position, nearest_loc[0])
-                                        if new_dist <= 1:
-                                            self.pending_attack = {
-                                                "type": "repair",
-                                                "target_pos": nearest_loc[0],
-                                                "repair_value": self.repair_value
-                                            }
-                                    break
-                            return log
-
-            # === Aggro range check: skip attack if no targets in range ===
-            player = grid.player
-            distance_to_player = grid.hex_distance(self.position, player.position)
-
-            if self.aggro_range > 0:
-                # Check if any valid target is within aggro range
-                targets_in_range = distance_to_player <= self.aggro_range
-                if not targets_in_range:
-                    allied_units = [u for u in grid.units if u.allegiance == "Allied" and u.hp > 0]
-                    targets_in_range = any(grid.hex_distance(self.position, u.position) <= self.aggro_range for u in allied_units)
-                if not targets_in_range:
-                    return log  # No targets in aggro range — idle
-
-            # If player is manning a tower, redirect attacks to the tower
-            if hasattr(player, 'manning_location') and player.manning_location is not None:
-                tower_pos = player.manning_location
-                dist_to_tower = grid.hex_distance(self.position, tower_pos)
-                tower_attacked = False
-                # Try melee attack on tower
-                if dist_to_tower == 1:
-                    damage = self.melee_damage
-                    # Try NPC spawn location first, then regular spawn location
-                    if grid.is_attackable_npc_location(tower_pos[0], tower_pos[1]):
-                        damage_dealt, destroyed, msg = grid.damage_npc_location(tower_pos[0], tower_pos[1], damage)
-                    elif grid.is_attackable_location(tower_pos[0], tower_pos[1]):
-                        damage_dealt, destroyed, msg = grid.damage_location(tower_pos[0], tower_pos[1], damage)
-                    else:
-                        damage_dealt, destroyed, msg = 0, False, ""
-                    if damage_dealt > 0:
-                        delay = 0
-                        if hasattr(grid, 'attack_anims'):
-                            src = grid.get_hex_center(*self.position)
-                            tgt = grid.get_hex_center(*tower_pos)
-                            grid.attack_anims.create_melee(src, tgt)
-                            delay = grid.attack_anims.get_max_remaining_ms()
-                        self.attack_flash = True
-                        self.flash_start = pygame.time.get_ticks() + delay
-                        log.append(msg)
-                        if destroyed:
-                            player.leave_manning()
-                            log.append(f"{player.name or player.class_name} ejected from destroyed tower!")
-                        return log
-                    tower_attacked = True
-                # Try projectile attack on tower
-                elif (self.projectile_damage > 0 and
-                      1 < dist_to_tower <= self.projectile_range and
-                      grid.is_aligned(self.position, tower_pos, self.projectile_range) and
-                      grid.has_clear_line_of_sight(self.position, tower_pos)):
-                    damage = self.projectile_damage
-                    if grid.is_attackable_npc_location(tower_pos[0], tower_pos[1]):
-                        damage_dealt, destroyed, msg = grid.damage_npc_location(tower_pos[0], tower_pos[1], damage)
-                    elif grid.is_attackable_location(tower_pos[0], tower_pos[1]):
-                        damage_dealt, destroyed, msg = grid.damage_location(tower_pos[0], tower_pos[1], damage)
-                    else:
-                        damage_dealt, destroyed, msg = 0, False, ""
-                    if damage_dealt > 0:
-                        delay = 0
-                        if hasattr(grid, 'attack_anims'):
-                            src = grid.get_hex_center(*self.position)
-                            tgt = grid.get_hex_center(*tower_pos)
-                            grid.attack_anims.create_projectile(src, tgt)
-                            delay = grid.attack_anims.get_max_remaining_ms()
-                        self.attack_flash = True
-                        self.flash_start = pygame.time.get_ticks() + delay
-                        log.append(msg)
-                        if destroyed:
-                            player.leave_manning()
-                            log.append(f"{player.name or player.class_name} ejected from destroyed tower!")
-                        return log
-                    tower_attacked = True
-                # Can't attack tower - pathfind toward it
-                if not tower_attacked:
-                    path = grid.find_path(self.position, tower_pos)
-                    if path and len(path) > 1:
-                        max_steps = min(self.movement, len(path) - 1)
-                        for steps in range(max_steps, 0, -1):
-                            new_pos = path[steps]
-                            if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                                success, move_msg = grid.move_unit(self, *new_pos)
-                                if success:
-                                    log.append(move_msg)
-                                break
-                # Skip player-attack code, fall through to allied unit targeting
-                allied_units = [u for u in grid.units if u.allegiance == "Allied" and u.hp > 0]
-                allied_melee = [u for u in allied_units if grid.hex_distance(self.position, u.position) == 1]
-                if allied_melee:
-                    target = random.choice(allied_melee)
-                    damage = self.melee_damage
-                    anim = None
-                    delay = 0
-                    if hasattr(grid, 'attack_anims'):
-                        src = grid.get_hex_center(*self.position)
-                        tgt = grid.get_hex_center(*target.position)
-                        anim = grid.attack_anims.create_melee(src, tgt)
-                        delay = grid.attack_anims.get_max_remaining_ms()
-                    target.hp -= damage
-                    target.set_damage_text(damage, delay, anim=anim)
-                    self.attack_flash = True
-                    self.flash_start = pygame.time.get_ticks() + delay
-                    log.append(f"{self.name} attacked {target.name} for {damage} damage")
-                    return log
-                return log
-
-            melee_possible_player = distance_to_player == 1
-            projectile_possible_player = (self.projectile_damage > 0 and
-                                          1 < distance_to_player <= self.projectile_range and
-                                          grid.is_aligned(self.position, player.position, self.projectile_range) and
-                                          grid.has_clear_line_of_sight(self.position, player.position))
-
-            if melee_possible_player:
-                damage = self.melee_damage
-                # Trigger melee animation
-                anim = None
-                delay = 0
-                if hasattr(grid, 'attack_anims'):
-                    src = grid.get_hex_center(*self.position)
-                    tgt = grid.get_hex_center(*player.position)
-                    anim = grid.attack_anims.create_melee(src, tgt)
-                    delay = grid.attack_anims.get_max_remaining_ms()
-                actual_damage, blocked, shield_broken = player.take_damage(damage, self.position, grid)
-                if blocked:
-                    player.set_damage_text(0, delay, anim=anim, text="BLOCKED")
-                    self.attack_flash = True
-                    self.flash_start = pygame.time.get_ticks() + delay
-                    log.append(f"{self.name} attacked {player.class_name} — blocked by defense!")
-                    return log
-                if shield_broken:
-                    absorbed = damage - actual_damage
-                    log.append(f"{player.class_name}'s shield broke! (absorbed {absorbed} damage)")
-                player.set_damage_text(actual_damage, delay, anim=anim)
-                self.attack_flash = True
-                self.flash_start = pygame.time.get_ticks() + delay
-                log.append(f"{self.name} attacked {player.class_name} for {actual_damage} damage")
-                if self.special_skill == "Life Drain":
-                    heal = actual_damage // 2
-                    self.hp = min(self.hp + heal, self.max_hp)
-                    log.append(f"{self.name} drained {heal} HP!")
-                if player.hp <= 0:
-                    # Only game over if ALL players are dead (multiplayer support)
-                    all_players = grid.players if grid.players else [grid.player]
-                    if all(p.hp <= 0 for p in all_players):
-                        grid.game_over = True
-                return log
-            elif projectile_possible_player:
-                damage = self.projectile_damage
-                # Trigger projectile animation
-                anim = None
-                delay = 0
-                if hasattr(grid, 'attack_anims'):
-                    src = grid.get_hex_center(*self.position)
-                    tgt = grid.get_hex_center(*player.position)
-                    anim = grid.attack_anims.create_projectile(src, tgt)
-                    delay = grid.attack_anims.get_max_remaining_ms()
-                actual_damage, blocked, shield_broken = player.take_damage(damage, self.position, grid)
-                if blocked:
-                    player.set_damage_text(0, delay, anim=anim, text="BLOCKED")
-                    self.attack_flash = True
-                    self.flash_start = pygame.time.get_ticks() + delay
-                    log.append(f"{self.name} attacked {player.class_name} with projectile — blocked by defense!")
-                    return log
-                if shield_broken:
-                    absorbed = damage - actual_damage
-                    log.append(f"{player.class_name}'s shield broke! (absorbed {absorbed} damage)")
-                player.set_damage_text(actual_damage, delay, anim=anim)
-                self.attack_flash = True
-                self.flash_start = pygame.time.get_ticks() + delay
-                log.append(f"{self.name} attacked {player.class_name} with projectile for {actual_damage} damage")
-                if player.hp <= 0:
-                    all_players = grid.players if grid.players else [grid.player]
-                    if all(p.hp <= 0 for p in all_players):
-                        grid.game_over = True
-                return log
+        # Quest-driven override (Allied with quest target)
+        if self.allegiance == "Allied" and self.quest_target_position:
+            hostile_units = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0]
+            use_rush = (self.quest_movement_priority == "rush" and hostile_units)
+            if use_rush:
+                log = self._allied_rush_turn(grid, hostile_units)
+            elif hostile_units:
+                log = self._allied_fight_turn(grid, hostile_units)
             else:
-                allied_units = [u for u in grid.units if u.allegiance == "Allied" and u.hp > 0]
-                allied_melee = [u for u in allied_units if grid.hex_distance(self.position, u.position) == 1]
-                if allied_melee:
-                    target = random.choice(allied_melee)
-                    damage = self.melee_damage
-                    # Trigger melee animation
-                    anim = None
-                    delay = 0
-                    if hasattr(grid, 'attack_anims'):
-                        src = grid.get_hex_center(*self.position)
-                        tgt = grid.get_hex_center(*target.position)
-                        anim = grid.attack_anims.create_melee(src, tgt)
-                        delay = grid.attack_anims.get_max_remaining_ms()
-                    target.hp -= damage
-                    target.set_damage_text(damage, delay, anim=anim)
-                    self.attack_flash = True
-                    self.flash_start = pygame.time.get_ticks() + delay
-                    log.append(f"{self.name} attacked {target.name} for {damage} damage")
-                    if self.special_skill == "Life Drain":
-                        heal = damage // 2
-                        self.hp = min(self.hp + heal, self.max_hp)
-                        log.append(f"{self.name} drained {heal} HP!")
-                    return log
-                
-                allied_projectile = [u for u in allied_units if
-                                     self.projectile_damage > 0 and
-                                     1 < grid.hex_distance(self.position, u.position) <= self.projectile_range and
-                                     grid.is_aligned(self.position, u.position, self.projectile_range) and
-                                     grid.has_clear_line_of_sight(self.position, u.position)]
-                if allied_projectile:
-                    target = min(allied_projectile, key=lambda u: grid.hex_distance(self.position, u.position))
-                    damage = self.projectile_damage
-                    # Trigger projectile animation
-                    anim = None
-                    delay = 0
-                    if hasattr(grid, 'attack_anims'):
-                        src = grid.get_hex_center(*self.position)
-                        tgt = grid.get_hex_center(*target.position)
-                        anim = grid.attack_anims.create_projectile(src, tgt)
-                        delay = grid.attack_anims.get_max_remaining_ms()
-                    target.hp -= damage
-                    target.set_damage_text(damage, delay, anim=anim)
-                    self.attack_flash = True
-                    self.flash_start = pygame.time.get_ticks() + delay
-                    log.append(f"{self.name} attacked {target.name} with projectile for {damage} damage")
-                    return log
-
-                # Check for NPC spawn locations (churches) to attack
-                npc_spawn_locations = grid.get_active_npc_spawn_locations()
-                for loc_pos, loc_data in npc_spawn_locations:
-                    distance_to_loc = grid.hex_distance(self.position, loc_pos)
-                    # Check melee attack on church
-                    if distance_to_loc == 1:
-                        damage = self.melee_damage
-                        damage_dealt, destroyed, msg = grid.damage_npc_location(loc_pos[0], loc_pos[1], damage)
-                        if damage_dealt > 0:
-                            delay = 0
-                            if hasattr(grid, 'attack_anims'):
-                                src = grid.get_hex_center(*self.position)
-                                tgt = grid.get_hex_center(*loc_pos)
-                                grid.attack_anims.create_melee(src, tgt)
-                                delay = grid.attack_anims.get_max_remaining_ms()
-                            self.attack_flash = True
-                            self.flash_start = pygame.time.get_ticks() + delay
-                            log.append(msg)
-                            return log
-                    # Check projectile attack on church
-                    elif (self.projectile_damage > 0 and
-                          1 < distance_to_loc <= self.projectile_range and
-                          grid.is_aligned(self.position, loc_pos, self.projectile_range) and
-                          grid.has_clear_line_of_sight(self.position, loc_pos)):
-                        damage = self.projectile_damage
-                        damage_dealt, destroyed, msg = grid.damage_npc_location(loc_pos[0], loc_pos[1], damage)
-                        if damage_dealt > 0:
-                            delay = 0
-                            if hasattr(grid, 'attack_anims'):
-                                src = grid.get_hex_center(*self.position)
-                                tgt = grid.get_hex_center(*loc_pos)
-                                grid.attack_anims.create_projectile(src, tgt)
-                                delay = grid.attack_anims.get_max_remaining_ms()
-                            self.attack_flash = True
-                            self.flash_start = pygame.time.get_ticks() + delay
-                            log.append(msg)
-                            return log
-
-                path = grid.find_path(self.position, player.position)
-                if path and len(path) > 1:
-                    max_steps = min(self.movement, len(path) - 1)
-                    for steps in range(max_steps, 0, -1):
-                        new_pos = path[steps]
-                        if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                            success, msg = grid.move_unit(self, *new_pos)
-                            if success:
-                                log.append(msg)
-                                distance_after = grid.hex_distance(self.position, player.position)
-                                if distance_after == 1:
-                                    # Defer melee attack until after movement animation
-                                    self.pending_attack = {
-                                        "target": player,
-                                        "damage": self.melee_damage,
-                                        "type": "melee",
-                                        "is_player": True
-                                    }
-                                elif (self.projectile_damage > 0 and
-                                      1 < distance_after <= self.projectile_range and
-                                      grid.is_aligned(self.position, player.position, self.projectile_range) and
-                                      grid.has_clear_line_of_sight(self.position, player.position)):
-                                    # Defer projectile attack until after movement animation
-                                    self.pending_attack = {
-                                        "target": player,
-                                        "damage": self.projectile_damage,
-                                        "type": "projectile",
-                                        "is_player": True
-                                    }
-                            break
-
-                # Boss ability: Summon Minion when no other action taken
-                if not log and self.special_skill == "Summon Minion" and self.spawn_deck:
-                    neighbors = grid.get_neighbors(*self.position)
-                    empty = [p for p in neighbors if grid.grid[p[0]][p[1]]["unit"] is None]
-                    if empty:
-                        deck_path = resolve_deck_path(self.spawn_deck)
-                        try:
-                            with open(deck_path) as f:
-                                deck_data = json.load(f)
-                            card_ids = deck_data.get("cards", [])
-                            if card_ids:
-                                card_id = random.choice(card_ids)
-                                card_data = load_card(card_id)
-                                if card_data:
-                                    minion = Unit(card_data)
-                                    spawn_pos = random.choice(empty)
-                                    grid.place_unit(minion, *spawn_pos)
-                                    log.append(f"{self.name} summoned {minion.name}!")
-                        except Exception:
-                            pass
-
-        elif self.allegiance == "Allied":
-            if self.recruit_cooldown > 0:
-                self.recruit_cooldown -= 1
-
-            # Quest-driven behavior overrides behavior tree
-            if self.quest_target_position:
-                hostile_units = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0]
-                use_rush = (self.quest_movement_priority == "rush" and hostile_units)
-                if use_rush:
-                    log = self._allied_rush_turn(grid, hostile_units)
-                elif hostile_units:
-                    log = self._allied_fight_turn(grid, hostile_units)
-                else:
-                    log = self._allied_idle_turn(grid)
-            elif self.garrison_target_location:
+                log = self._allied_idle_turn(grid)
+        elif self.garrison_target_location:
+            # Garrison override
+            loc = grid.location_data.get(self.garrison_target_location)
+            if not loc or loc.get("state", 1) != 2 or len(loc.get("garrison_npcs", [])) >= 3:
+                self.garrison_target_location = None
+            if self.garrison_target_location:
                 log = self._allied_idle_turn(grid)
             else:
-                # Behavior tree execution
                 for behavior in self.behavior_tree:
                     result = self._execute_behavior(behavior, grid)
                     if result is not None:
                         log.extend(result)
                         break
+        else:
+            # Universal behavior tree execution
+            for behavior in self.behavior_tree:
+                result = self._execute_behavior(behavior, grid)
+                if result is not None:
+                    log.extend(result)
+                    break
 
-            # Dual Strike: attempt a second attack (no movement) after first action
-            if self.dual_strike and log:
-                second_log = self._dual_strike_second_attack(grid)
-                if second_log:
-                    log.extend(second_log)
-
-        elif self.allegiance == "Neutral":
-            # Messenger NPC: approach player and deliver dialogue
-            if self.special_skill == "Messenger" and self.dialogue_text and not self.dialogue_delivered:
-                targets = [grid.player]
-                if hasattr(grid, 'players') and grid.players:
-                    targets = [p for p in grid.players if p.hp > 0]
-                nearest_player = min(targets, key=lambda p: grid.hex_distance(self.position, p.position))
-                dist = grid.hex_distance(self.position, nearest_player.position)
-
-                if dist <= 1:
-                    # Adjacent — trigger dialogue
-                    self.pending_dialogue = {
-                        "text": self.dialogue_text,
-                        "speaker": self.name,
-                        "gift_card_ids": list(self.dialogue_gift_cards)
-                    }
-                    self.dialogue_delivered = True
-                    if self.states == 2:
-                        self.switch_state()
-                    return log
-                else:
-                    # Pathfind toward nearest player
-                    path = grid.find_path(self.position, nearest_player.position)
-                    if path and len(path) > 1:
-                        max_steps = min(self.movement, len(path) - 1)
-                        for steps in range(max_steps, 0, -1):
-                            new_pos = path[steps]
-                            if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                                if new_pos != nearest_player.position:
-                                    success, msg = grid.move_unit(self, *new_pos)
-                                    if success:
-                                        log.append(f"{self.name} approaches")
-                                        if grid.hex_distance(self.position, nearest_player.position) <= 1:
-                                            self.pending_dialogue = {
-                                                "text": self.dialogue_text,
-                                                "speaker": self.name,
-                                                "gift_card_ids": list(self.dialogue_gift_cards)
-                                            }
-                                            self.dialogue_delivered = True
-                                            if self.states == 2:
-                                                self.switch_state()
-                                break
-                    return log
-
-            # Quest giver NPC: approach target player and offer quest
-            elif self.quest_offer_card_id and self.quest_offer_target:
-                targets = [grid.player]
-                if hasattr(grid, 'players') and grid.players:
-                    targets = [p for p in grid.players if p.hp > 0]
-                # Resolve target player from quest_offer_target string
-                target_player = None
-                if self.quest_offer_target.startswith("player_"):
-                    try:
-                        idx = int(self.quest_offer_target.split("_")[1])
-                        players = grid.players if hasattr(grid, 'players') and grid.players else []
-                        if not players and hasattr(grid, 'player') and grid.player:
-                            players = [grid.player]
-                        if idx < len(players) and players[idx].hp > 0:
-                            target_player = players[idx]
-                    except (ValueError, IndexError):
-                        pass
-                if not target_player:
-                    target_player = targets[0] if targets else None
-                if target_player and target_player.position:
-                    dist = grid.hex_distance(self.position, target_player.position)
-                    if dist <= 1:
-                        # Adjacent — trigger quest offer
-                        self.pending_quest_offer = {
-                            "quest_card_id": self.quest_offer_card_id,
-                            "speaker": self.name
-                        }
-                        return log
-                    else:
-                        # Pathfind toward target player
-                        path = grid.find_path(self.position, target_player.position)
-                        if path and len(path) > 1:
-                            max_steps = min(self.movement, len(path) - 1)
-                            for steps in range(max_steps, 0, -1):
-                                new_pos = path[steps]
-                                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                                    if new_pos != target_player.position:
-                                        # Avoid location hexes if configured
-                                        if self.avoid_location_hexes and new_pos in grid.location_data:
-                                            continue
-                                        success, msg = grid.move_unit(self, *new_pos)
-                                        if success:
-                                            log.append(f"{self.name} approaches")
-                                            if grid.hex_distance(self.position, target_player.position) <= 1:
-                                                self.pending_quest_offer = {
-                                                    "quest_card_id": self.quest_offer_card_id,
-                                                    "speaker": self.name
-                                                }
-                                    break
-                        return log
-
-            # Wild mounts wander multiple hexes in a random direction
-            elif (self.states == 2 and self.current_state == 1 and
-                    self.special_skill == "Mount"):
-                if self._planned_move_dest:
-                    dest = self._planned_move_dest
-                    self._planned_move_dest = None
-                    r, c = dest
-                    if (0 <= r < grid.rows and 0 <= c < grid.cols and
-                            grid.grid[r][c]["accessible"] and
-                            grid.grid[r][c]["unit"] is None):
-                        success, msg = grid.move_unit(self, r, c)
-                        if success:
-                            log.append(msg)
-                    else:
-                        log = self._wild_mount_wander(grid)
-                else:
-                    log = self._wild_mount_wander(grid)
-            else:
-                if self._planned_move_dest:
-                    dest = self._planned_move_dest
-                    self._planned_move_dest = None
-                    if grid.grid[dest[0]][dest[1]]["unit"] is None:
-                        success, msg = grid.move_unit(self, *dest)
-                        if success:
-                            log.append(msg)
-                else:
-                    neighbors = grid.get_neighbors(*self.position)
-                    empty_neighbors = [pos for pos in neighbors if grid.grid[pos[0]][pos[1]]["unit"] is None]
-                    if empty_neighbors:
-                        new_pos = random.choice(empty_neighbors)
-                        success, msg = grid.move_unit(self, *new_pos)
-                        if success:
-                            log.append(msg)
+        # Dual Strike second attack
+        if self.dual_strike and log:
+            second_log = self._dual_strike_second_attack(grid)
+            if second_log:
+                log.extend(second_log)
 
         return log
 
@@ -886,24 +561,14 @@ class Unit:
         if self.heal_amount <= 0:
             return log
 
-        # --- Revive phase: check for dead allies in range ---
-        if self.allegiance == "Allied":
-            revive_candidates = []
-            for u in grid.units:
-                if (u.hp <= 0 and getattr(u, '_death_processed', False)
-                        and u is not self and u.position
-                        and grid.hex_distance(self.position, u.position) <= self.heal_range):
-                    # Revive allies (and neutral units that were friendly)
-                    if u.allegiance in ("Allied", "Neutral"):
-                        revive_candidates.append(u)
-            # Also check dead players
-            players = grid.players if hasattr(grid, 'players') and grid.players else []
-            if not players and hasattr(grid, 'player') and grid.player:
-                players = [grid.player]
-            for p in players:
-                if (p.hp <= 0 and p.position
-                        and grid.hex_distance(self.position, p.position) <= self.heal_range):
-                    revive_candidates.append(p)
+        # --- Revive phase: check for dead friendlies in range ---
+        revive_candidates = []
+        friendlies = self._get_friendlies(grid)
+        for u in friendlies:
+            if (u.hp <= 0 and getattr(u, '_death_processed', False)
+                    and u.position
+                    and grid.hex_distance(self.position, u.position) <= self.heal_range):
+                revive_candidates.append(u)
 
             if revive_candidates:
                 target = revive_candidates[0]
@@ -932,26 +597,11 @@ class Unit:
 
         # --- Heal phase: heal the most damaged friendly unit in range ---
         candidates = []
-        if self.allegiance == "Hostile":
-            for u in grid.units:
-                if (u.allegiance == "Hostile" and u.hp > 0 and u.hp < u.max_hp
-                        and u is not self and u.position
-                        and grid.hex_distance(self.position, u.position) <= self.heal_range):
-                    candidates.append(u)
-        elif self.allegiance == "Allied":
-            for u in grid.units:
-                if (u.allegiance == "Allied" and u.hp > 0 and u.hp < u.max_hp
-                        and u is not self and u.position
-                        and grid.hex_distance(self.position, u.position) <= self.heal_range):
-                    candidates.append(u)
-            # Also consider healing player(s)
-            players = grid.players if hasattr(grid, 'players') and grid.players else []
-            if not players and hasattr(grid, 'player') and grid.player:
-                players = [grid.player]
-            for p in players:
-                if (p.hp > 0 and p.hp < p.max_hp and p.position
-                        and grid.hex_distance(self.position, p.position) <= self.heal_range):
-                    candidates.append(p)
+        friendlies = self._get_friendlies(grid)
+        for u in friendlies:
+            if (u.hp > 0 and u.hp < u.max_hp and u.position
+                    and grid.hex_distance(self.position, u.position) <= self.heal_range):
+                candidates.append(u)
 
         if not candidates:
             return log
@@ -987,6 +637,17 @@ class Unit:
             "attack_weakest": self._behavior_attack_weakest,
             "flee": self._behavior_flee,
             "graze": self._behavior_graze,
+            "garrison_tower": self._behavior_garrison_tower,
+            "repair_location": self._behavior_repair_location,
+            "aggro_gate": self._behavior_aggro_gate,
+            "attack_tower": self._behavior_attack_tower,
+            "attack_player": self._behavior_attack_player,
+            "attack_locations": self._behavior_attack_locations,
+            "summon_minion": self._behavior_summon_minion,
+            "messenger_deliver": self._behavior_messenger_deliver,
+            "quest_offer": self._behavior_quest_offer,
+            "wild_mount_wander": self._behavior_wild_mount_wander,
+            "convert_enemy": self._behavior_convert_enemy,
         }
         handler = dispatch.get(behavior)
         if handler:
@@ -1080,23 +741,17 @@ class Unit:
         return log
 
     def _behavior_revive_ally(self, grid):
-        """Find and revive dead allies/players, pathfinding toward them if needed."""
+        """Find and revive dead friendlies, pathfinding toward them if needed (allegiance-aware)."""
         if self.special_skill != "Healer" or self.heal_amount <= 0:
             return None
 
-        # Find all dead allies/players on the board
+        # Find all dead friendlies on the board
         dead_targets = []
-        for u in grid.units:
+        friendlies = self._get_friendlies(grid)
+        for u in friendlies:
             if (u.hp <= 0 and getattr(u, '_death_processed', False)
-                    and u is not self and u.position
-                    and u.allegiance in ("Allied", "Neutral")):
+                    and u.position):
                 dead_targets.append(u)
-        players = grid.players if hasattr(grid, 'players') and grid.players else []
-        if not players and hasattr(grid, 'player') and grid.player:
-            players = [grid.player]
-        for p in players:
-            if p.hp <= 0 and p.position:
-                dead_targets.append(p)
 
         if not dead_targets:
             return None  # No dead allies — fall through to next behavior
@@ -1130,23 +785,61 @@ class Unit:
         # Can't pathfind but dead allies exist — consume action, don't fall through
         return []
 
+    def _behavior_convert_enemy(self, grid):
+        """Find dead enemies, revive them, then advance their allegiance. 4-turn cooldown."""
+        if self.special_skill != "Healer" or self.heal_amount <= 0:
+            return None
+        if self.convert_cooldown > 0:
+            return None
+
+        dead_enemies = self._get_dead_enemies(grid)
+        if not dead_enemies:
+            return None
+
+        # Sort by distance
+        dead_enemies.sort(key=lambda t: grid.hex_distance(self.position, t.position))
+        nearest = dead_enemies[0]
+        dist = grid.hex_distance(self.position, nearest.position)
+
+        # In range — revive and convert
+        if dist <= self.heal_range:
+            log = self._do_revive(grid, nearest)
+            old, new, changed = nearest.advance_allegiance()
+            if changed:
+                log.append(f"{nearest.name}'s allegiance changed from {old} to {new}!")
+            self.convert_cooldown = 4
+            return log
+
+        # Out of range — pathfind toward nearest dead enemy
+        path = grid.find_path(self.position, nearest.position)
+        if path and len(path) > 1:
+            max_steps = min(self.movement, len(path) - 1)
+            for steps in range(max_steps, 0, -1):
+                new_pos = path[steps]
+                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                    success, msg = grid.move_unit(self, *new_pos)
+                    if success:
+                        log = [f"{self.name} moves toward fallen enemy to convert"]
+                        new_dist = grid.hex_distance(self.position, nearest.position)
+                        if new_dist <= self.heal_range:
+                            log.extend(self._do_revive(grid, nearest))
+                            old, new_alleg, changed = nearest.advance_allegiance()
+                            if changed:
+                                log.append(f"{nearest.name}'s allegiance changed from {old} to {new_alleg}!")
+                            self.convert_cooldown = 4
+                        return log
+                    break
+
+        return []  # Dead enemies exist but can't reach — consume action
+
     def _behavior_healing(self, grid):
-        """Heal the most damaged alive ally, pathfinding toward them if needed."""
+        """Heal the most damaged alive friendly unit, pathfinding toward them if needed (allegiance-aware)."""
         if self.special_skill != "Healer" or self.heal_amount <= 0:
             return None
 
-        # Find all damaged (alive) allies anywhere on board
-        candidates = []
-        for u in grid.units:
-            if (u.allegiance == "Allied" and u.hp > 0 and u.hp < u.max_hp
-                    and u is not self and u.position):
-                candidates.append(u)
-        players = grid.players if hasattr(grid, 'players') and grid.players else []
-        if not players and hasattr(grid, 'player') and grid.player:
-            players = [grid.player]
-        for p in players:
-            if p.hp > 0 and p.hp < p.max_hp and p.position:
-                candidates.append(p)
+        # Find all damaged (alive) friendlies anywhere on board
+        friendlies = self._get_friendlies(grid)
+        candidates = [u for u in friendlies if u.hp > 0 and u.hp < u.max_hp and u.position]
 
         if not candidates:
             return None  # No damaged allies — fall through to next behavior
@@ -1196,11 +889,11 @@ class Unit:
         return []
 
     def _behavior_attack_closest(self, grid):
-        """Chase and attack the nearest hostile unit."""
-        hostiles = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
-        if not hostiles:
+        """Chase and attack the nearest enemy unit (allegiance-aware)."""
+        enemies = self._get_enemies(grid)
+        if not enemies:
             return None
-        target = min(hostiles, key=lambda u: grid.hex_distance(self.position, u.position))
+        target = min(enemies, key=lambda u: grid.hex_distance(self.position, u.position))
         # If proximity range is set, only engage if nearest enemy is within range
         if self.attack_proximity_range > 0:
             if grid.hex_distance(self.position, target.position) > self.attack_proximity_range:
@@ -1208,11 +901,11 @@ class Unit:
         return self._chase_and_attack(grid, target)
 
     def _behavior_attack_weakest(self, grid):
-        """Chase and attack the lowest-HP hostile unit."""
-        hostiles = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
-        if not hostiles:
+        """Chase and attack the lowest-HP enemy unit (allegiance-aware)."""
+        enemies = self._get_enemies(grid)
+        if not enemies:
             return None
-        target = min(hostiles, key=lambda u: u.hp)
+        target = min(enemies, key=lambda u: u.hp)
         return self._chase_and_attack(grid, target)
 
     def _behavior_attack_target(self, grid):
@@ -1257,8 +950,8 @@ class Unit:
 
         # Within 2 hexes — opportunistically attack adjacent enemies
         if distance <= 2:
-            hostiles = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
-            adjacent = [u for u in hostiles if grid.hex_distance(self.position, u.position) == 1]
+            enemies = self._get_enemies(grid)
+            adjacent = [u for u in enemies if grid.hex_distance(self.position, u.position) == 1]
             if adjacent:
                 enemy = random.choice(adjacent)
                 damage = self.melee_damage
@@ -1310,10 +1003,10 @@ class Unit:
     def _behavior_guard(self, grid):
         """Stay in place, attack adjacent/ranged enemies only. Never skips."""
         log = []
-        hostiles = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
+        enemies = self._get_enemies(grid)
 
         # Melee: attack a random adjacent enemy
-        adjacent = [u for u in hostiles if grid.hex_distance(self.position, u.position) == 1]
+        adjacent = [u for u in enemies if grid.hex_distance(self.position, u.position) == 1]
         if adjacent:
             target = random.choice(adjacent)
             damage = self.melee_damage
@@ -1326,7 +1019,7 @@ class Unit:
 
         # Projectile: shoot nearest in-range enemy
         if self.projectile_damage > 0:
-            in_range = [u for u in hostiles if
+            in_range = [u for u in enemies if
                         1 < grid.hex_distance(self.position, u.position) <= self.projectile_range and
                         grid.is_aligned(self.position, u.position, self.projectile_range) and
                         grid.has_clear_line_of_sight(self.position, u.position)]
@@ -1363,11 +1056,11 @@ class Unit:
         return []  # Always executes
 
     def _behavior_flee(self, grid):
-        """Move away from the nearest hostile, don't attack."""
-        hostiles = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
-        if not hostiles:
+        """Move away from the nearest enemy, don't attack (allegiance-aware)."""
+        enemies = self._get_enemies(grid)
+        if not enemies:
             return None
-        nearest = min(hostiles, key=lambda u: grid.hex_distance(self.position, u.position))
+        nearest = min(enemies, key=lambda u: grid.hex_distance(self.position, u.position))
         neighbors = grid.get_neighbors(*self.position)
         empty = [pos for pos in neighbors if grid.grid[pos[0]][pos[1]]["unit"] is None
                  and grid.grid[pos[0]][pos[1]].get("accessible", True)]
@@ -1394,8 +1087,7 @@ class Unit:
             chance = max(10, min(70, 30 + self.max_hp - target.max_hp))
             roll = random.randint(1, 100)
             if roll <= chance:
-                target.allegiance = "Allied"
-                target.behavior_tree = ["attack_closest"]
+                target.set_allegiance("Allied")
                 self.recruit_cooldown = 3
                 return [f"{self.name} recruited {target.name}! (rolled {roll} vs {chance}%)"]
             else:
@@ -1467,6 +1159,539 @@ class Unit:
                     break
         return None
 
+    def _behavior_garrison_tower(self, grid):
+        """Garrison tower behavior: find a defensive location that needs NPCs and pathfind to it."""
+        # If already assigned a garrison target, let the garrison override handle it
+        if self.garrison_target_location:
+            return None
+
+        # Find all defensive locations in state 2 with requires_npc defenses and room
+        candidates = []
+        # Get positions where players are manning (exclude those)
+        player_manning = set()
+        players = grid.players if hasattr(grid, 'players') and grid.players else []
+        if not players and hasattr(grid, 'player') and grid.player:
+            players = [grid.player]
+        for p in players:
+            if hasattr(p, 'manning_location') and p.manning_location:
+                player_manning.add(tuple(p.manning_location))
+
+        for pos, loc_data in grid.location_data.items():
+            if loc_data.get("state", 1) != 2:
+                continue
+            if pos in player_manning:
+                continue
+            defenses = loc_data.get("defenses", [])
+            has_npc_defense = any(d.get("requires_npc") for d in defenses)
+            if not has_npc_defense:
+                continue
+            garrison = loc_data.get("garrison_npcs", [])
+            if len(garrison) >= 3:
+                continue
+            # Check no other allied unit is already targeting this tower
+            already_targeted = False
+            for u in grid.units:
+                if u is not self and u.hp > 0 and getattr(u, 'garrison_target_location', None) == pos:
+                    already_targeted = True
+                    break
+            # Still allow if tower has room for more (count existing + targeting)
+            targeting_count = sum(1 for u in grid.units if u is not self and u.hp > 0 and getattr(u, 'garrison_target_location', None) == pos)
+            if len(garrison) + targeting_count >= 3:
+                continue
+            candidates.append(pos)
+
+        if not candidates:
+            return None  # Fall through to next behavior
+
+        # Pick closest tower
+        closest = min(candidates, key=lambda p: grid.hex_distance(self.position, p))
+        self.garrison_target_location = closest
+        return []  # Action consumed — garrison override handles pathfinding next turn
+
+    # ============================
+    # Hostile/Neutral Behavior Handlers
+    # ============================
+
+    def _behavior_repair_location(self, grid):
+        """Boss repair: prioritize repairing enemy spawn locations."""
+        if self.special_skill != "Repair" or self.repair_value <= 0:
+            return None
+        damaged_locations = grid.get_damaged_spawn_locations()
+        if not damaged_locations:
+            return None
+        nearest_loc = min(damaged_locations, key=lambda x: grid.hex_distance(self.position, x[0]))
+        dist_to_loc = grid.hex_distance(self.position, nearest_loc[0])
+        if dist_to_loc <= 1:
+            success, healed, rebuilt, msg = grid.repair_spawn_location(
+                nearest_loc[0][0], nearest_loc[0][1], self.repair_value)
+            if success:
+                delay = 0
+                if hasattr(grid, 'attack_anims'):
+                    src = grid.get_hex_center(*self.position)
+                    tgt = grid.get_hex_center(*nearest_loc[0])
+                    grid.attack_anims.create_melee(src, tgt)
+                    delay = grid.attack_anims.get_max_remaining_ms()
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks() + delay
+                return [msg]
+            return []
+        # Pathfind toward damaged location
+        path = grid.find_path(self.position, nearest_loc[0])
+        if path and len(path) > 1:
+            max_steps = min(self.movement, len(path) - 1)
+            for steps in range(max_steps, 0, -1):
+                new_pos = path[steps]
+                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                    loc_card = nearest_loc[1].get("card")
+                    loc_name = loc_card.get_current_data().get("Name", "location") if loc_card else "location"
+                    success, move_msg = grid.move_unit(self, *new_pos)
+                    if success:
+                        log = [f"{self.name} moves to repair {loc_name}"]
+                        new_dist = grid.hex_distance(self.position, nearest_loc[0])
+                        if new_dist <= 1:
+                            self.pending_attack = {
+                                "type": "repair",
+                                "target_pos": nearest_loc[0],
+                                "repair_value": self.repair_value
+                            }
+                        return log
+                    break
+        return []
+
+    def _behavior_aggro_gate(self, grid):
+        """Aggro range gate: skip turn if no targets in aggro_range. Returns [] to idle, None to fall through."""
+        if self.aggro_range <= 0:
+            return None  # No aggro range set, fall through
+        enemies = self._get_enemies(grid)
+        # Check units (excluding players which are in _get_enemies for Hostile)
+        for e in enemies:
+            if grid.hex_distance(self.position, e.position) <= self.aggro_range:
+                return None  # Target in range, fall through to next behavior
+        return []  # No targets in aggro range — idle
+
+    def _behavior_attack_tower(self, grid):
+        """Attack tower that player is manning."""
+        player = grid.player
+        if not (hasattr(player, 'manning_location') and player.manning_location is not None):
+            return None
+        tower_pos = player.manning_location
+        dist_to_tower = grid.hex_distance(self.position, tower_pos)
+        log = []
+        tower_attacked = False
+        # Try melee attack on tower
+        if dist_to_tower == 1:
+            damage = self.melee_damage
+            if grid.is_attackable_npc_location(tower_pos[0], tower_pos[1]):
+                damage_dealt, destroyed, msg = grid.damage_npc_location(tower_pos[0], tower_pos[1], damage)
+            elif grid.is_attackable_location(tower_pos[0], tower_pos[1]):
+                damage_dealt, destroyed, msg = grid.damage_location(tower_pos[0], tower_pos[1], damage)
+            else:
+                damage_dealt, destroyed, msg = 0, False, ""
+            if damage_dealt > 0:
+                delay = 0
+                if hasattr(grid, 'attack_anims'):
+                    src = grid.get_hex_center(*self.position)
+                    tgt = grid.get_hex_center(*tower_pos)
+                    grid.attack_anims.create_melee(src, tgt)
+                    delay = grid.attack_anims.get_max_remaining_ms()
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks() + delay
+                log.append(msg)
+                if destroyed:
+                    player.leave_manning()
+                    log.append(f"{player.name or player.class_name} ejected from destroyed tower!")
+                return log
+            tower_attacked = True
+        # Try projectile attack on tower
+        elif (self.projectile_damage > 0 and
+              1 < dist_to_tower <= self.projectile_range and
+              grid.is_aligned(self.position, tower_pos, self.projectile_range) and
+              grid.has_clear_line_of_sight(self.position, tower_pos)):
+            damage = self.projectile_damage
+            if grid.is_attackable_npc_location(tower_pos[0], tower_pos[1]):
+                damage_dealt, destroyed, msg = grid.damage_npc_location(tower_pos[0], tower_pos[1], damage)
+            elif grid.is_attackable_location(tower_pos[0], tower_pos[1]):
+                damage_dealt, destroyed, msg = grid.damage_location(tower_pos[0], tower_pos[1], damage)
+            else:
+                damage_dealt, destroyed, msg = 0, False, ""
+            if damage_dealt > 0:
+                delay = 0
+                if hasattr(grid, 'attack_anims'):
+                    src = grid.get_hex_center(*self.position)
+                    tgt = grid.get_hex_center(*tower_pos)
+                    grid.attack_anims.create_projectile(src, tgt)
+                    delay = grid.attack_anims.get_max_remaining_ms()
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks() + delay
+                log.append(msg)
+                if destroyed:
+                    player.leave_manning()
+                    log.append(f"{player.name or player.class_name} ejected from destroyed tower!")
+                return log
+            tower_attacked = True
+        # Can't attack tower - pathfind toward it
+        if not tower_attacked:
+            path = grid.find_path(self.position, tower_pos)
+            if path and len(path) > 1:
+                max_steps = min(self.movement, len(path) - 1)
+                for steps in range(max_steps, 0, -1):
+                    new_pos = path[steps]
+                    if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                        success, move_msg = grid.move_unit(self, *new_pos)
+                        if success:
+                            log.append(move_msg)
+                        break
+        # Also try attacking adjacent allied units while near tower
+        allied_units = [u for u in grid.units if u.allegiance == "Allied" and u.hp > 0]
+        allied_melee = [u for u in allied_units if grid.hex_distance(self.position, u.position) == 1]
+        if allied_melee:
+            target = random.choice(allied_melee)
+            damage = self.melee_damage
+            anim = None
+            delay = 0
+            if hasattr(grid, 'attack_anims'):
+                src = grid.get_hex_center(*self.position)
+                tgt = grid.get_hex_center(*target.position)
+                anim = grid.attack_anims.create_melee(src, tgt)
+                delay = grid.attack_anims.get_max_remaining_ms()
+            target.hp -= damage
+            target.set_damage_text(damage, delay, anim=anim)
+            self.attack_flash = True
+            self.flash_start = pygame.time.get_ticks() + delay
+            log.append(f"{self.name} attacked {target.name} for {damage} damage")
+        return log
+
+    def _behavior_attack_player(self, grid):
+        """Attack the player with melee/projectile, or pathfind toward them."""
+        player = grid.player
+        # Skip if player is manning a tower (attack_tower handles that)
+        if hasattr(player, 'manning_location') and player.manning_location is not None:
+            return None
+        distance_to_player = grid.hex_distance(self.position, player.position)
+        melee_possible = distance_to_player == 1
+        projectile_possible = (self.projectile_damage > 0 and
+                               1 < distance_to_player <= self.projectile_range and
+                               grid.is_aligned(self.position, player.position, self.projectile_range) and
+                               grid.has_clear_line_of_sight(self.position, player.position))
+
+        if melee_possible:
+            damage = self.melee_damage
+            anim = None
+            delay = 0
+            if hasattr(grid, 'attack_anims'):
+                src = grid.get_hex_center(*self.position)
+                tgt = grid.get_hex_center(*player.position)
+                anim = grid.attack_anims.create_melee(src, tgt)
+                delay = grid.attack_anims.get_max_remaining_ms()
+            actual_damage, blocked, shield_broken = player.take_damage(damage, self.position, grid)
+            log = []
+            if blocked:
+                player.set_damage_text(0, delay, anim=anim, text="BLOCKED")
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks() + delay
+                log.append(f"{self.name} attacked {player.class_name} — blocked by defense!")
+                return log
+            if shield_broken:
+                absorbed = damage - actual_damage
+                log.append(f"{player.class_name}'s shield broke! (absorbed {absorbed} damage)")
+            player.set_damage_text(actual_damage, delay, anim=anim)
+            self.attack_flash = True
+            self.flash_start = pygame.time.get_ticks() + delay
+            log.append(f"{self.name} attacked {player.class_name} for {actual_damage} damage")
+            if self.special_skill == "Life Drain":
+                heal = actual_damage // 2
+                self.hp = min(self.hp + heal, self.max_hp)
+                log.append(f"{self.name} drained {heal} HP!")
+            if player.hp <= 0:
+                all_players = grid.players if grid.players else [grid.player]
+                if all(p.hp <= 0 for p in all_players):
+                    grid.game_over = True
+            return log
+        elif projectile_possible:
+            damage = self.projectile_damage
+            anim = None
+            delay = 0
+            if hasattr(grid, 'attack_anims'):
+                src = grid.get_hex_center(*self.position)
+                tgt = grid.get_hex_center(*player.position)
+                anim = grid.attack_anims.create_projectile(src, tgt)
+                delay = grid.attack_anims.get_max_remaining_ms()
+            actual_damage, blocked, shield_broken = player.take_damage(damage, self.position, grid)
+            log = []
+            if blocked:
+                player.set_damage_text(0, delay, anim=anim, text="BLOCKED")
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks() + delay
+                log.append(f"{self.name} attacked {player.class_name} with projectile — blocked by defense!")
+                return log
+            if shield_broken:
+                absorbed = damage - actual_damage
+                log.append(f"{player.class_name}'s shield broke! (absorbed {absorbed} damage)")
+            player.set_damage_text(actual_damage, delay, anim=anim)
+            self.attack_flash = True
+            self.flash_start = pygame.time.get_ticks() + delay
+            log.append(f"{self.name} attacked {player.class_name} with projectile for {actual_damage} damage")
+            if player.hp <= 0:
+                all_players = grid.players if grid.players else [grid.player]
+                if all(p.hp <= 0 for p in all_players):
+                    grid.game_over = True
+            return log
+        else:
+            # Try attacking adjacent allied units
+            allied_units = [u for u in grid.units if u.allegiance == "Allied" and u.hp > 0]
+            allied_melee = [u for u in allied_units if grid.hex_distance(self.position, u.position) == 1]
+            if allied_melee:
+                target = random.choice(allied_melee)
+                damage = self.melee_damage
+                anim = None
+                delay = 0
+                if hasattr(grid, 'attack_anims'):
+                    src = grid.get_hex_center(*self.position)
+                    tgt = grid.get_hex_center(*target.position)
+                    anim = grid.attack_anims.create_melee(src, tgt)
+                    delay = grid.attack_anims.get_max_remaining_ms()
+                target.hp -= damage
+                target.set_damage_text(damage, delay, anim=anim)
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks() + delay
+                log = [f"{self.name} attacked {target.name} for {damage} damage"]
+                if self.special_skill == "Life Drain":
+                    heal = damage // 2
+                    self.hp = min(self.hp + heal, self.max_hp)
+                    log.append(f"{self.name} drained {heal} HP!")
+                return log
+
+            allied_projectile = [u for u in allied_units if
+                                 self.projectile_damage > 0 and
+                                 1 < grid.hex_distance(self.position, u.position) <= self.projectile_range and
+                                 grid.is_aligned(self.position, u.position, self.projectile_range) and
+                                 grid.has_clear_line_of_sight(self.position, u.position)]
+            if allied_projectile:
+                target = min(allied_projectile, key=lambda u: grid.hex_distance(self.position, u.position))
+                damage = self.projectile_damage
+                anim = None
+                delay = 0
+                if hasattr(grid, 'attack_anims'):
+                    src = grid.get_hex_center(*self.position)
+                    tgt = grid.get_hex_center(*target.position)
+                    anim = grid.attack_anims.create_projectile(src, tgt)
+                    delay = grid.attack_anims.get_max_remaining_ms()
+                target.hp -= damage
+                target.set_damage_text(damage, delay, anim=anim)
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks() + delay
+                return [f"{self.name} attacked {target.name} with projectile for {damage} damage"]
+
+            # Pathfind toward player
+            path = grid.find_path(self.position, player.position)
+            if path and len(path) > 1:
+                max_steps = min(self.movement, len(path) - 1)
+                for steps in range(max_steps, 0, -1):
+                    new_pos = path[steps]
+                    if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                        success, msg = grid.move_unit(self, *new_pos)
+                        if success:
+                            log = [msg]
+                            distance_after = grid.hex_distance(self.position, player.position)
+                            if distance_after == 1:
+                                self.pending_attack = {
+                                    "target": player,
+                                    "damage": self.melee_damage,
+                                    "type": "melee",
+                                    "is_player": True
+                                }
+                            elif (self.projectile_damage > 0 and
+                                  1 < distance_after <= self.projectile_range and
+                                  grid.is_aligned(self.position, player.position, self.projectile_range) and
+                                  grid.has_clear_line_of_sight(self.position, player.position)):
+                                self.pending_attack = {
+                                    "target": player,
+                                    "damage": self.projectile_damage,
+                                    "type": "projectile",
+                                    "is_player": True
+                                }
+                            return log
+                        break
+        return None  # Couldn't do anything — fall through
+
+    def _behavior_attack_locations(self, grid):
+        """Attack NPC spawn locations (churches)."""
+        npc_spawn_locations = grid.get_active_npc_spawn_locations()
+        if not npc_spawn_locations:
+            return None
+        for loc_pos, loc_data in npc_spawn_locations:
+            distance_to_loc = grid.hex_distance(self.position, loc_pos)
+            if distance_to_loc == 1:
+                damage = self.melee_damage
+                damage_dealt, destroyed, msg = grid.damage_npc_location(loc_pos[0], loc_pos[1], damage)
+                if damage_dealt > 0:
+                    delay = 0
+                    if hasattr(grid, 'attack_anims'):
+                        src = grid.get_hex_center(*self.position)
+                        tgt = grid.get_hex_center(*loc_pos)
+                        grid.attack_anims.create_melee(src, tgt)
+                        delay = grid.attack_anims.get_max_remaining_ms()
+                    self.attack_flash = True
+                    self.flash_start = pygame.time.get_ticks() + delay
+                    return [msg]
+            elif (self.projectile_damage > 0 and
+                  1 < distance_to_loc <= self.projectile_range and
+                  grid.is_aligned(self.position, loc_pos, self.projectile_range) and
+                  grid.has_clear_line_of_sight(self.position, loc_pos)):
+                damage = self.projectile_damage
+                damage_dealt, destroyed, msg = grid.damage_npc_location(loc_pos[0], loc_pos[1], damage)
+                if damage_dealt > 0:
+                    delay = 0
+                    if hasattr(grid, 'attack_anims'):
+                        src = grid.get_hex_center(*self.position)
+                        tgt = grid.get_hex_center(*loc_pos)
+                        grid.attack_anims.create_projectile(src, tgt)
+                        delay = grid.attack_anims.get_max_remaining_ms()
+                    self.attack_flash = True
+                    self.flash_start = pygame.time.get_ticks() + delay
+                    return [msg]
+        return None  # No locations attackable — fall through
+
+    def _behavior_summon_minion(self, grid):
+        """Boss ability: summon a minion from spawn deck."""
+        if self.special_skill != "Summon Minion" or not self.spawn_deck:
+            return None
+        neighbors = grid.get_neighbors(*self.position)
+        empty = [p for p in neighbors if grid.grid[p[0]][p[1]]["unit"] is None]
+        if not empty:
+            return None
+        deck_path = resolve_deck_path(self.spawn_deck)
+        try:
+            with open(deck_path) as f:
+                deck_data = json.load(f)
+            card_ids = deck_data.get("cards", [])
+            if card_ids:
+                card_id = random.choice(card_ids)
+                card_data = load_card(card_id)
+                if card_data:
+                    minion = Unit(card_data)
+                    spawn_pos = random.choice(empty)
+                    grid.place_unit(minion, *spawn_pos)
+                    return [f"{self.name} summoned {minion.name}!"]
+        except Exception:
+            pass
+        return None
+
+    def _behavior_messenger_deliver(self, grid):
+        """Messenger NPC: approach player and deliver dialogue."""
+        if self.special_skill != "Messenger" or not self.dialogue_text or self.dialogue_delivered:
+            return None
+        targets = [grid.player]
+        if hasattr(grid, 'players') and grid.players:
+            targets = [p for p in grid.players if p.hp > 0]
+        nearest_player = min(targets, key=lambda p: grid.hex_distance(self.position, p.position))
+        dist = grid.hex_distance(self.position, nearest_player.position)
+
+        if dist <= 1:
+            self.pending_dialogue = {
+                "text": self.dialogue_text,
+                "speaker": self.name,
+                "gift_card_ids": list(self.dialogue_gift_cards)
+            }
+            self.dialogue_delivered = True
+            if self.states == 2:
+                self.switch_state()
+                self.set_allegiance("Allied")
+            return []
+        else:
+            path = grid.find_path(self.position, nearest_player.position)
+            if path and len(path) > 1:
+                max_steps = min(self.movement, len(path) - 1)
+                for steps in range(max_steps, 0, -1):
+                    new_pos = path[steps]
+                    if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                        if new_pos != nearest_player.position:
+                            success, msg = grid.move_unit(self, *new_pos)
+                            if success:
+                                log = [f"{self.name} approaches"]
+                                if grid.hex_distance(self.position, nearest_player.position) <= 1:
+                                    self.pending_dialogue = {
+                                        "text": self.dialogue_text,
+                                        "speaker": self.name,
+                                        "gift_card_ids": list(self.dialogue_gift_cards)
+                                    }
+                                    self.dialogue_delivered = True
+                                    if self.states == 2:
+                                        self.switch_state()
+                                        self.set_allegiance("Allied")
+                                return log
+                        break
+            return []
+
+    def _behavior_quest_offer(self, grid):
+        """Quest giver NPC: approach target player and offer quest."""
+        if not self.quest_offer_card_id or not self.quest_offer_target:
+            return None
+        targets = [grid.player]
+        if hasattr(grid, 'players') and grid.players:
+            targets = [p for p in grid.players if p.hp > 0]
+        target_player = None
+        if self.quest_offer_target.startswith("player_"):
+            try:
+                idx = int(self.quest_offer_target.split("_")[1])
+                players = grid.players if hasattr(grid, 'players') and grid.players else []
+                if not players and hasattr(grid, 'player') and grid.player:
+                    players = [grid.player]
+                if idx < len(players) and players[idx].hp > 0:
+                    target_player = players[idx]
+            except (ValueError, IndexError):
+                pass
+        if not target_player:
+            target_player = targets[0] if targets else None
+        if not target_player or not target_player.position:
+            return None
+        dist = grid.hex_distance(self.position, target_player.position)
+        if dist <= 1:
+            self.pending_quest_offer = {
+                "quest_card_id": self.quest_offer_card_id,
+                "speaker": self.name
+            }
+            return []
+        else:
+            path = grid.find_path(self.position, target_player.position)
+            if path and len(path) > 1:
+                max_steps = min(self.movement, len(path) - 1)
+                for steps in range(max_steps, 0, -1):
+                    new_pos = path[steps]
+                    if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
+                        if new_pos != target_player.position:
+                            if self.avoid_location_hexes and new_pos in grid.location_data:
+                                continue
+                            success, msg = grid.move_unit(self, *new_pos)
+                            if success:
+                                log = [f"{self.name} approaches"]
+                                if grid.hex_distance(self.position, target_player.position) <= 1:
+                                    self.pending_quest_offer = {
+                                        "quest_card_id": self.quest_offer_card_id,
+                                        "speaker": self.name
+                                    }
+                                return log
+                        break
+            return []
+
+    def _behavior_wild_mount_wander(self, grid):
+        """Wild mount wander: multi-hex directional wander."""
+        if not (self.states == 2 and self.current_state == 1 and self.special_skill == "Mount"):
+            return None
+        if self._planned_move_dest:
+            dest = self._planned_move_dest
+            self._planned_move_dest = None
+            r, c = dest
+            if (0 <= r < grid.rows and 0 <= c < grid.cols and
+                    grid.grid[r][c]["accessible"] and
+                    grid.grid[r][c]["unit"] is None):
+                success, msg = grid.move_unit(self, r, c)
+                if success:
+                    return [msg]
+                return []
+            return self._wild_mount_wander(grid)
+        return self._wild_mount_wander(grid)
+
     # ============================
     # Turn Planning (Read-only Preview)
     # ============================
@@ -1481,20 +1706,20 @@ class Unit:
         if self.skip_turn:
             return idle
 
-        # Healer pre-check (non-Allied only; Allied healers use behavior tree)
-        if self.special_skill == "Healer" and self.heal_amount > 0 and self.allegiance != "Allied":
-            heal_plan = self._plan_healing_action(grid)
-            if heal_plan:
-                return heal_plan
+        # Route based on behavior tree content rather than allegiance name
+        hostile_behaviors = {"attack_player", "attack_tower", "attack_locations", "repair_location", "summon_minion", "aggro_gate"}
+        neutral_behaviors = {"messenger_deliver", "quest_offer", "wild_mount_wander"}
 
-        if self.allegiance == "Hostile":
+        tree_set = set(self.behavior_tree)
+        if tree_set & hostile_behaviors:
+            # Has hostile-specific behaviors — use hostile plan
             return self._plan_hostile(grid)
-        elif self.allegiance == "Allied":
-            return self._plan_allied(grid)
-        elif self.allegiance == "Neutral":
+        elif tree_set & neutral_behaviors:
+            # Has neutral-specific behaviors — use neutral plan
             return self._plan_neutral(grid)
-
-        return idle
+        else:
+            # Default: use allied plan (behavior tree preview)
+            return self._plan_allied(grid)
 
     def _find_move_dest(self, grid, path):
         """Find the furthest reachable empty hex along a path (read-only)."""
@@ -1506,47 +1731,22 @@ class Unit:
         return None
 
     def _plan_healing_action(self, grid):
-        """Read-only: check if healer would heal or revive. Returns plan dict or None."""
+        """Read-only: check if healer would heal or revive (allegiance-aware). Returns plan dict or None."""
         if self.heal_amount <= 0:
             return None
 
-        # Revive phase (Allied only)
-        if self.allegiance == "Allied":
-            for u in grid.units:
-                if (u.hp <= 0 and getattr(u, '_death_processed', False)
-                        and u is not self and u.position
-                        and grid.hex_distance(self.position, u.position) <= self.heal_range
-                        and u.allegiance in ("Allied", "Neutral")):
-                    return {"action": "revive", "move_dest": None, "target_pos": u.position}
-            players = grid.players if hasattr(grid, 'players') and grid.players else []
-            if not players and hasattr(grid, 'player') and grid.player:
-                players = [grid.player]
-            for p in players:
-                if (p.hp <= 0 and p.position
-                        and grid.hex_distance(self.position, p.position) <= self.heal_range):
-                    return {"action": "revive", "move_dest": None, "target_pos": p.position}
+        # Revive phase
+        friendlies = self._get_friendlies(grid)
+        for u in friendlies:
+            if (u.hp <= 0 and getattr(u, '_death_processed', False)
+                    and u.position
+                    and grid.hex_distance(self.position, u.position) <= self.heal_range):
+                return {"action": "revive", "move_dest": None, "target_pos": u.position}
 
         # Heal phase
-        candidates = []
-        if self.allegiance == "Hostile":
-            for u in grid.units:
-                if (u.allegiance == "Hostile" and u.hp > 0 and u.hp < u.max_hp
-                        and u is not self and u.position
-                        and grid.hex_distance(self.position, u.position) <= self.heal_range):
-                    candidates.append(u)
-        elif self.allegiance == "Allied":
-            for u in grid.units:
-                if (u.allegiance == "Allied" and u.hp > 0 and u.hp < u.max_hp
-                        and u is not self and u.position
-                        and grid.hex_distance(self.position, u.position) <= self.heal_range):
-                    candidates.append(u)
-            players = grid.players if hasattr(grid, 'players') and grid.players else []
-            if not players and hasattr(grid, 'player') and grid.player:
-                players = [grid.player]
-            for p in players:
-                if (p.hp > 0 and p.hp < p.max_hp and p.position
-                        and grid.hex_distance(self.position, p.position) <= self.heal_range):
-                    candidates.append(p)
+        candidates = [u for u in friendlies
+                      if u.hp > 0 and u.hp < u.max_hp and u.position
+                      and grid.hex_distance(self.position, u.position) <= self.heal_range]
 
         if candidates:
             target = min(candidates, key=lambda u: u.hp / u.max_hp)
@@ -1683,9 +1883,12 @@ class Unit:
             else:
                 return self._plan_allied_idle(grid)
 
-        # Garrison
+        # Garrison (validate target is still valid)
         if self.garrison_target_location:
-            return self._plan_allied_idle(grid)
+            loc = grid.location_data.get(self.garrison_target_location)
+            if loc and loc.get("state", 1) == 2 and len(loc.get("garrison_npcs", [])) < 3:
+                return self._plan_allied_idle(grid)
+            # Target invalid — fall through to behavior tree
 
         # Behavior tree
         for behavior in self.behavior_tree:
@@ -1796,6 +1999,8 @@ class Unit:
             "attack_weakest": self._plan_behavior_attack_weakest,
             "flee": self._plan_behavior_flee,
             "graze": self._plan_behavior_graze,
+            "garrison_tower": self._plan_behavior_garrison_tower,
+            "convert_enemy": self._plan_behavior_convert_enemy,
         }
         handler = dispatch.get(behavior)
         if handler:
@@ -1806,17 +2011,11 @@ class Unit:
         if self.special_skill != "Healer" or self.heal_amount <= 0:
             return None
         dead_targets = []
-        for u in grid.units:
+        friendlies = self._get_friendlies(grid)
+        for u in friendlies:
             if (u.hp <= 0 and getattr(u, '_death_processed', False)
-                    and u is not self and u.position
-                    and u.allegiance in ("Allied", "Neutral")):
+                    and u.position):
                 dead_targets.append(u)
-        players = grid.players if hasattr(grid, 'players') and grid.players else []
-        if not players and hasattr(grid, 'player') and grid.player:
-            players = [grid.player]
-        for p in players:
-            if p.hp <= 0 and p.position:
-                dead_targets.append(p)
         if not dead_targets:
             return None
         dead_targets.sort(key=lambda t: grid.hex_distance(self.position, t.position))
@@ -1831,20 +2030,32 @@ class Unit:
                 return {"action": "move", "move_dest": dest, "target_pos": None}
         return {"action": "idle", "move_dest": None, "target_pos": None}
 
+    def _plan_behavior_convert_enemy(self, grid):
+        """Preview: find dead enemies to convert."""
+        if self.special_skill != "Healer" or self.heal_amount <= 0:
+            return None
+        if self.convert_cooldown > 0:
+            return None
+        dead_enemies = self._get_dead_enemies(grid)
+        if not dead_enemies:
+            return None
+        dead_enemies.sort(key=lambda t: grid.hex_distance(self.position, t.position))
+        nearest = dead_enemies[0]
+        dist = grid.hex_distance(self.position, nearest.position)
+        if dist <= self.heal_range:
+            return {"action": "convert_enemy", "move_dest": None, "target_pos": nearest.position}
+        path = grid.find_path(self.position, nearest.position)
+        if path and len(path) > 1:
+            dest = self._find_move_dest(grid, path)
+            if dest:
+                return {"action": "move", "move_dest": dest, "target_pos": None}
+        return {"action": "idle", "move_dest": None, "target_pos": None}
+
     def _plan_behavior_healing(self, grid):
         if self.special_skill != "Healer" or self.heal_amount <= 0:
             return None
-        candidates = []
-        for u in grid.units:
-            if (u.allegiance == "Allied" and u.hp > 0 and u.hp < u.max_hp
-                    and u is not self and u.position):
-                candidates.append(u)
-        players = grid.players if hasattr(grid, 'players') and grid.players else []
-        if not players and hasattr(grid, 'player') and grid.player:
-            players = [grid.player]
-        for p in players:
-            if p.hp > 0 and p.hp < p.max_hp and p.position:
-                candidates.append(p)
+        friendlies = self._get_friendlies(grid)
+        candidates = [u for u in friendlies if u.hp > 0 and u.hp < u.max_hp and u.position]
         if not candidates:
             return None
         most_damaged = min(candidates, key=lambda u: u.hp / u.max_hp)
@@ -1860,20 +2071,20 @@ class Unit:
         return {"action": "idle", "move_dest": None, "target_pos": None}
 
     def _plan_behavior_attack_closest(self, grid):
-        hostiles = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
-        if not hostiles:
+        enemies = self._get_enemies(grid)
+        if not enemies:
             return None
-        target = min(hostiles, key=lambda u: grid.hex_distance(self.position, u.position))
+        target = min(enemies, key=lambda u: grid.hex_distance(self.position, u.position))
         if self.attack_proximity_range > 0:
             if grid.hex_distance(self.position, target.position) > self.attack_proximity_range:
                 return None
         return self._plan_chase_and_attack(grid, target)
 
     def _plan_behavior_attack_weakest(self, grid):
-        hostiles = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
-        if not hostiles:
+        enemies = self._get_enemies(grid)
+        if not enemies:
             return None
-        target = min(hostiles, key=lambda u: u.hp)
+        target = min(enemies, key=lambda u: u.hp)
         return self._plan_chase_and_attack(grid, target)
 
     def _plan_behavior_attack_target(self, grid):
@@ -1906,8 +2117,8 @@ class Unit:
 
         # Within 2 hexes — attack adjacent enemies
         if distance <= 2:
-            hostiles = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
-            adjacent = [u for u in hostiles if grid.hex_distance(self.position, u.position) == 1]
+            enemies = self._get_enemies(grid)
+            adjacent = [u for u in enemies if grid.hex_distance(self.position, u.position) == 1]
             if adjacent:
                 return {"action": "melee", "move_dest": None, "target_pos": adjacent[0].position}
             return {"action": "idle", "move_dest": None, "target_pos": None}
@@ -1925,12 +2136,12 @@ class Unit:
         return {"action": "idle", "move_dest": None, "target_pos": None}
 
     def _plan_behavior_guard(self, grid):
-        hostiles = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
-        adjacent = [u for u in hostiles if grid.hex_distance(self.position, u.position) == 1]
+        enemies = self._get_enemies(grid)
+        adjacent = [u for u in enemies if grid.hex_distance(self.position, u.position) == 1]
         if adjacent:
             return {"action": "melee", "move_dest": None, "target_pos": adjacent[0].position}
         if self.projectile_damage > 0:
-            in_range = [u for u in hostiles if
+            in_range = [u for u in enemies if
                         1 < grid.hex_distance(self.position, u.position) <= self.projectile_range and
                         grid.is_aligned(self.position, u.position, self.projectile_range) and
                         grid.has_clear_line_of_sight(self.position, u.position)]
@@ -1950,10 +2161,10 @@ class Unit:
         return {"action": "idle", "move_dest": None, "target_pos": None}
 
     def _plan_behavior_flee(self, grid):
-        hostiles = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
-        if not hostiles:
+        enemies = self._get_enemies(grid)
+        if not enemies:
             return None
-        nearest = min(hostiles, key=lambda u: grid.hex_distance(self.position, u.position))
+        nearest = min(enemies, key=lambda u: grid.hex_distance(self.position, u.position))
         neighbors = grid.get_neighbors(*self.position)
         empty = [pos for pos in neighbors if grid.grid[pos[0]][pos[1]]["unit"] is None
                  and grid.grid[pos[0]][pos[1]].get("accessible", True)]
@@ -2007,6 +2218,41 @@ class Unit:
             if dest:
                 return {"action": "move", "move_dest": dest, "target_pos": None}
         return None
+
+    def _plan_behavior_garrison_tower(self, grid):
+        """Plan preview for garrison tower behavior."""
+        if self.garrison_target_location:
+            return None  # Already assigned, garrison override handles it
+
+        # Same search logic as _behavior_garrison_tower
+        player_manning = set()
+        players = grid.players if hasattr(grid, 'players') and grid.players else []
+        if not players and hasattr(grid, 'player') and grid.player:
+            players = [grid.player]
+        for p in players:
+            if hasattr(p, 'manning_location') and p.manning_location:
+                player_manning.add(tuple(p.manning_location))
+
+        candidates = []
+        for pos, loc_data in grid.location_data.items():
+            if loc_data.get("state", 1) != 2:
+                continue
+            if pos in player_manning:
+                continue
+            defenses = loc_data.get("defenses", [])
+            if not any(d.get("requires_npc") for d in defenses):
+                continue
+            garrison = loc_data.get("garrison_npcs", [])
+            targeting_count = sum(1 for u in grid.units if u is not self and u.hp > 0 and getattr(u, 'garrison_target_location', None) == pos)
+            if len(garrison) + targeting_count >= 3:
+                continue
+            candidates.append(pos)
+
+        if not candidates:
+            return None
+
+        closest = min(candidates, key=lambda p: grid.hex_distance(self.position, p))
+        return {"action": "move", "move_dest": closest, "target_pos": None}
 
     def _plan_neutral(self, grid):
         """Read-only preview of neutral unit decision tree."""
@@ -2105,13 +2351,13 @@ class Unit:
     def _dual_strike_second_attack(self, grid):
         """Dual Strike: attempt a second attack from current position (no movement)."""
         log = []
-        hostiles = [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
-        if not hostiles:
+        enemies = self._get_enemies(grid)
+        if not enemies:
             return log
 
-        # Prefer projectile attack on nearest in-range hostile
+        # Prefer projectile attack on nearest in-range enemy
         if self.projectile_damage > 0:
-            in_range = [u for u in hostiles if
+            in_range = [u for u in enemies if
                         1 < grid.hex_distance(self.position, u.position) <= self.projectile_range and
                         grid.is_aligned(self.position, u.position, self.projectile_range) and
                         grid.has_clear_line_of_sight(self.position, u.position)]
@@ -2132,8 +2378,8 @@ class Unit:
                 log.append(f"{self.name} (Dual Strike) attacked {target.name} with projectile for {damage} damage")
                 return log
 
-        # Melee attack on adjacent hostile
-        adjacent = [u for u in hostiles if grid.hex_distance(self.position, u.position) == 1]
+        # Melee attack on adjacent enemy
+        adjacent = [u for u in enemies if grid.hex_distance(self.position, u.position) == 1]
         if adjacent:
             target = random.choice(adjacent)
             damage = self.melee_damage
@@ -2263,7 +2509,7 @@ class Unit:
             self.melee_damage = state_data["melee_damage"]
             self.projectile_damage = state_data["projectile_damage"]
             self.projectile_range = state_data["projectile_range"]
-            self.allegiance = state_data["allegiance"]
+            # Allegiance is NOT changed by state switch — use set_allegiance() explicitly
             self.special_skill = state_data["special_skill"]
             self.dual_strike = (self.special_skill == "Dual Strike")
             self.heal_amount = state_data.get("heal_amount", self.heal_amount)
@@ -2271,27 +2517,38 @@ class Unit:
             self.is_stubborn = state_data.get("is_stubborn", self.is_stubborn)
             self.repair_value = state_data.get("repair_value", self.repair_value)
             self.aggro_range = state_data.get("aggro_range", self.aggro_range)
-            # Reinitialize behavior tree from 2nd state config
+            # Update per-allegiance trees from state 2 data
+            for key, attr in [("hostile_bt_str", "hostile_behavior_tree"),
+                              ("neutral_bt_str", "neutral_behavior_tree"),
+                              ("allied_bt_str", "allied_behavior_tree")]:
+                bt_str = state_data.get(key, "")
+                if bt_str:
+                    try:
+                        tree = json.loads(bt_str)
+                        if isinstance(tree, list) and tree:
+                            setattr(self, attr, tree)
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+            # Also check legacy behavior_tree_str for Allied tree
             bt_str = state_data.get("behavior_tree_str", "")
-            bt_set = False
-            if bt_str:
+            if bt_str and not state_data.get("allied_bt_str", ""):
                 try:
                     tree = json.loads(bt_str)
-                    if isinstance(tree, list) and len(tree) > 0:
-                        self.behavior_tree = tree
-                        bt_set = True
+                    if isinstance(tree, list) and tree:
+                        self.allied_behavior_tree = tree
                 except (json.JSONDecodeError, TypeError):
                     pass
-            if not bt_set:
-                # Rebuild smart fallback from new state properties
-                default = []
-                if self.special_skill == "Healer" and self.heal_amount > 0:
-                    default.append("revive_ally")
-                    default.append("healing")
-                if self.special_skill == "Mount":
-                    default.append("graze")
-                default.append("attack_closest")
-                self.behavior_tree = default
+            # Update allegiance priority if state 2 has one
+            ap_str = state_data.get("allegiance_priority_str", "")
+            if ap_str:
+                try:
+                    parsed = json.loads(ap_str)
+                    if isinstance(parsed, list) and len(parsed) >= 1:
+                        self.allegiance_priority = parsed
+                except (json.JSONDecodeError, TypeError):
+                    pass
+            # Re-select active tree based on current allegiance (unchanged)
+            self.behavior_tree = self._select_behavior_tree()
             return f"{self.name} switched to second state"
         return ""
 

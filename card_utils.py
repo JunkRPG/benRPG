@@ -191,6 +191,14 @@ JSON_FIELDS = {
     "Chain_Config",
     "Default_Behavior_Tree",
     "2nd_State_Default_Behavior_Tree",
+    "Hostile_Behavior_Tree",
+    "Neutral_Behavior_Tree",
+    "Allied_Behavior_Tree",
+    "2nd_State_Hostile_Behavior_Tree",
+    "2nd_State_Neutral_Behavior_Tree",
+    "2nd_State_Allied_Behavior_Tree",
+    "Allegiance_Priority",
+    "2nd_State_Allegiance_Priority",
 }
 
 # Valid values for weapon/ammunition system fields
@@ -296,7 +304,15 @@ def validate_card_json_fields(card_data):
         "Placeholders",
         "Success_Conditions", "Failure_Conditions",
         "Default_Behavior_Tree",
-        "2nd_State_Default_Behavior_Tree"
+        "2nd_State_Default_Behavior_Tree",
+        "Hostile_Behavior_Tree",
+        "Neutral_Behavior_Tree",
+        "Allied_Behavior_Tree",
+        "2nd_State_Hostile_Behavior_Tree",
+        "2nd_State_Neutral_Behavior_Tree",
+        "2nd_State_Allied_Behavior_Tree",
+        "Allegiance_Priority",
+        "2nd_State_Allegiance_Priority",
     }
 
     # Fields that should be objects
