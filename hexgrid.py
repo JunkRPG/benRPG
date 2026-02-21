@@ -516,8 +516,16 @@ class HexGrid:
 
         return damage_dealt, False, f"Dealt {damage_dealt} damage to {loc_name} ({loc_data['health']} HP remaining)"
 
+    def _eject_manning_player(self, row, col):
+        """Eject any player manning the location at (row, col)."""
+        all_players = self.players if self.players else ([self.player] if self.player else [])
+        for p in all_players:
+            if hasattr(p, 'manning_location') and p.manning_location == (row, col):
+                p.leave_manning()
+
     def _destroy_spawn_location(self, row, col):
         """Handle destruction of a spawn location - flip card to state 2 (ruins)."""
+        self._eject_manning_player(row, col)
         loc_data = self.location_data.get((row, col))
         if not loc_data:
             return
@@ -582,6 +590,7 @@ class HexGrid:
 
     def _destroy_npc_spawn_location(self, row, col):
         """Handle destruction of an NPC spawn location (church) - flip card to state 2 (ruins)."""
+        self._eject_manning_player(row, col)
         loc_data = self.location_data.get((row, col))
         if not loc_data:
             return

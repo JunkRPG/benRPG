@@ -177,6 +177,8 @@ class SaveManager:
             "super_charge": player.super_charge,
             "super_charge_max": player.super_charge_max,
             "super_attack_ready": player.super_attack_ready,
+            # Manning state
+            "manning_location": list(player.manning_location) if player.manning_location else None,
             # Healer flag
             "is_healer": player.is_healer,
             # Per-player party (used in multiplayer)
@@ -244,6 +246,7 @@ class SaveManager:
                 "boss_encounter_tag": getattr(unit, 'boss_encounter_tag', None),
                 "dialogue_delivered": getattr(unit, 'dialogue_delivered', False),
                 "_death_processed": getattr(unit, '_death_processed', False),
+                "carry_to_next_level": getattr(unit, 'carry_to_next_level', False),
             })
         return units
 
@@ -467,6 +470,10 @@ class SaveManager:
         player.super_charge_max = player_data.get("super_charge_max", 5)
         player.super_attack_ready = player_data.get("super_attack_ready", False)
 
+        # Manning state
+        manning = player_data.get("manning_location")
+        player.manning_location = tuple(manning) if manning else None
+
         # Healer flag (backwards compatible: derive from special_attack if not saved)
         player.is_healer = player_data.get("is_healer", player.special_attack == "Heal")
 
@@ -610,6 +617,7 @@ class SaveManager:
                 unit.recruit_cooldown = unit_info.get("recruit_cooldown", 0)
                 unit.boss_encounter_tag = unit_info.get("boss_encounter_tag")
                 unit.dialogue_delivered = unit_info.get("dialogue_delivered", False)
+                unit.carry_to_next_level = unit_info.get("carry_to_next_level", False)
                 unit._death_processed = unit_info.get("_death_processed", False)
                 if unit._death_processed:
                     # Dead unit: set position but don't occupy grid cell

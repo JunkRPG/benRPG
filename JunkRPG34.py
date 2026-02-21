@@ -9,6 +9,7 @@ import os
 import json
 import datetime
 import random
+import copy
 from collections import deque
 import tkinter as tk
 from tkinter import filedialog
@@ -528,6 +529,8 @@ class LocationScreen:
         self.garrison_npc_list = None
         self.garrison_button = None
         self.garrison_map_button = None
+        # Man Tower button
+        self.man_tower_button = None
 
     def initialize_screen(self, location_card, hex_pos, hex_grid):
         self.location_card = location_card
@@ -777,6 +780,18 @@ class LocationScreen:
                     "Garrison NPC", manager, container=self.window
                 )
 
+        # Man Tower button - player can man a defensive location to use its weapons
+        self.man_tower_button = None
+        if loc_data_dict and location_card.current_state == 2:
+            all_defenses = loc_data_dict.get("defenses", [])
+            current_player = game.current_player
+            player_on_hex = current_player and current_player.position == hex_pos
+            already_manning = hasattr(current_player, 'is_manning') and current_player.is_manning()
+            if all_defenses and player_on_hex and not already_manning:
+                self.man_tower_button = pygame_gui.elements.UIButton(
+                    pygame.Rect(10, 600, 380, 35), "Man Tower", manager, container=self.window
+                )
+
         # Quest selection panel (shows when view_quests action is used)
         self.quest_list = None
         self.quest_details_text = None
@@ -863,6 +878,16 @@ class LocationScreen:
             # Handle garrison NPC button
             if self.garrison_panel_visible and self.garrison_button and event.ui_element == self.garrison_button:
                 self.garrison_npc()
+                return
+
+            # Handle Man Tower button
+            if self.man_tower_button and event.ui_element == self.man_tower_button:
+                current_player = game.current_player
+                current_player.enter_manning(self.hex_pos)
+                loc_name = self.location_card.get_current_data().get("Name", "Tower")
+                game_screen.add_to_log(f"{current_player.name or current_player.class_name} mans the {loc_name}!")
+                game.current_screen = "game"
+                game_screen.initialize_screen()
                 return
 
             # Handle quest acceptance
@@ -4119,6 +4144,7 @@ class GameScreen:
         self.player_mode = "movement"
         self.defensive_hex_options = []  # Valid hexes for defensive posture selection
         self.defend_button = None        # Defend button on left panel
+        self.leave_tower_button = None   # Leave Tower button (shown when manning)
         self.selected_skill = None  # Currently selected skill for use
         self.skill_buttons = []     # List of (button, skill_card) tuples
         self.skills_button = None   # Skills menu button
@@ -4146,6 +4172,11 @@ class GameScreen:
         self.turn_action_delay = 500  # Delay in ms between unit actions
         self.last_action_time = 0  # Time of last unit action
         self.waiting_for_animation = False  # Whether we're waiting for animation to finish
+        # Unit turn preview system
+        self.unit_preview_phase = None    # None | "range" | "selection"
+        self.unit_preview_start = 0       # pygame.time.get_ticks() when phase began
+        self.unit_preview_plan = None     # plan_turn() result dict
+        self.unit_preview_unit = None     # the unit being previewed
         # Pending location screen (show after movement animation completes)
         self.pending_location = None  # {"card": loc_card, "pos": hex_pos, "hex_grid": hex_grid}
         # Pending defeat screen (show after death animation completes)
@@ -4156,6 +4187,10 @@ class GameScreen:
         self.turn_banner = None  # (label, color_tuple, timestamp) or None
         self._ammo_banner = None  # (label, color_rgb, start_timestamp) or None
         self._pending_advance_after_banner = False  # Wait for banner to finish before advancing
+        # Location defense autopan queue
+        self._loc_defense_queue = []       # [(pos, loc_data), ...]
+        self._loc_defense_active = False   # True while processing queue
+        self._loc_defense_wait_until = None  # pygame.time.get_ticks() deadline for animation wait
         self.current_location_hex = None  # (row, col) if player is on a location
         # Building/placement mode
         self.placement_mode = False
@@ -4181,6 +4216,7 @@ class GameScreen:
         self.autopan_callback = None
         # Teleport pad state
         self.pending_teleport = None  # Dict with pad/destination info when awaiting confirmation
+        self._level_state_cache = {}  # In-memory cache of level state keyed by level file path
         # Equipment toolbar (bottom of screen)
         self.equip_toolbar_buttons = []    # 6 UIButtons for Melee/Proj/Acc/Tool/Action/Items slots
         self.equip_action_tool = None      # Reference to the equipped tool providing the current action
@@ -4874,6 +4910,9 @@ class GameScreen:
         self.turn_queue = []
         self.current_acting_unit = None
         self.waiting_for_animation = False
+        self.unit_preview_phase = None
+        self.unit_preview_plan = None
+        self.unit_preview_unit = None
         self.pending_location = None
         self.pending_defeat = False
         self.pending_defeats = []
@@ -4888,6 +4927,7 @@ class GameScreen:
         self._clear_event_banner()
         self.autopan_active = False
         self.autopan_callback = None
+        self._level_state_cache = {}
         # Reset party
         game.party = []
         # Reset quest manager
@@ -5007,6 +5047,9 @@ class GameScreen:
         self.turn_queue = []
         self.current_acting_unit = None
         self.waiting_for_animation = False
+        self.unit_preview_phase = None
+        self.unit_preview_plan = None
+        self.unit_preview_unit = None
         self.pending_location = None
         self.pending_defeat = False
         self.pending_defeats = []
@@ -5015,6 +5058,7 @@ class GameScreen:
         self._clear_event_banner()
         self.autopan_active = False
         self.autopan_callback = None
+        self._level_state_cache = {}
 
         # Reset instance manager and try to load test deck
         game.instance_manager = InstanceManager(self.card_manager, self.hex_grid)
@@ -5134,10 +5178,16 @@ class GameScreen:
 
         try:
             player1 = game.players[0] if game.multiplayer_mode and game.players else game.player
+            # Clear manning state for all players before level transition
+            all_lc_players = game.players if game.multiplayer_mode and game.players else [game.player]
+            for p in all_lc_players:
+                p.leave_manning()
             # Collect carry-over NPCs before loading new level (which clears the grid)
             carry_over_npcs = []
+            carry_over_unit_objects = []
             for unit in self.hex_grid.units:
                 if getattr(unit, 'carry_to_next_level', False) and unit.hp > 0:
+                    carry_over_unit_objects.append(unit)
                     carry_over_npcs.append({
                         "card_id": unit.card_id,
                         "hp": unit.hp,
@@ -5146,10 +5196,15 @@ class GameScreen:
                         "carry_to_next_level": True,
                         "behavior_tree": list(unit.behavior_tree),
                     })
+            # Snapshot current level state before leaving (carry-over NPCs excluded)
+            self._snapshot_level_state(exclude_units=carry_over_unit_objects)
             # Set multiplayer state so load_level can filter multiplayer_only units
             num_players = len(game.players) if game.multiplayer_mode and game.players else 1
             self.hex_grid._num_players = num_players
             self.hex_grid.load_level(level_file, self.card_manager, player1)
+            self.current_level_file = level_file
+            # Restore cached state if revisiting this level
+            self._restore_level_state(level_file)
             stage_name = stage_data.get("name", f"Stage {self.current_level_idx + 1}")
             self.log.append(f"Loaded {stage_name}: {os.path.basename(level_file)}")
             # Place remaining multiplayer players at adjacent hexes
@@ -5402,7 +5457,8 @@ class GameScreen:
             if card:
                 game.party.append(card)
 
-        # Set up level/campaign info
+        # Set up level/campaign info (cache is empty after load; teleporting will build it)
+        self._level_state_cache = {}
         self.current_level_file = save_data.get("level_file")
         self.campaign_file = save_data.get("campaign_file")
         self.current_level_idx = save_data.get("current_level_idx", 0)
@@ -5505,6 +5561,9 @@ class GameScreen:
         self.turn_queue = []
         self.current_acting_unit = None
         self.waiting_for_animation = False
+        self.unit_preview_phase = None
+        self.unit_preview_plan = None
+        self.unit_preview_unit = None
         self.pending_location = None
         self.pending_defeat = False
         self.pending_defeats = []
@@ -5769,6 +5828,63 @@ class GameScreen:
         self.add_to_log(f"Warning: Could not place {getattr(unit, 'name', 'unit')} near teleport pad")
         return False
 
+    def _snapshot_level_state(self, exclude_units=None):
+        """Snapshot current level's dynamic state into the cache before leaving.
+        exclude_units: list of Unit objects that are travelling with the party
+        (carry-over NPCs, teleport-selected NPCs) — they should NOT be cached."""
+        if not self.current_level_file:
+            return
+        exclude_set = set(id(u) for u in (exclude_units or []))
+        # Also exclude all player objects
+        all_players = game.players if game.multiplayer_mode and game.players else [game.player]
+        for p in all_players:
+            exclude_set.add(id(p))
+        # Temporarily remove excluded units so they aren't serialized
+        original_units = self.hex_grid.units
+        self.hex_grid.units = [u for u in original_units if id(u) not in exclude_set]
+        try:
+            units_data = self.save_manager._serialize_units(self.hex_grid)
+            location_data = self.save_manager._serialize_location_data(self.hex_grid)
+        finally:
+            self.hex_grid.units = original_units
+        self._level_state_cache[self.current_level_file] = {
+            "units": units_data,
+            "location_data": location_data,
+            "card_drawing_hexes": copy.deepcopy(self.hex_grid.card_drawing_hexes),
+            "turn_cycle_count": self.turn_cycle_count,
+            "boss_encounter_phase": self.boss_encounter_phase,
+            "boss_encounter_phase2_tags": list(self.boss_encounter_phase2_tags),
+        }
+
+    def _restore_level_state(self, level_file):
+        """Restore a previously cached level state after load_level reloaded the JSON.
+        Returns True if cache was found and restored, False if first visit (use JSON defaults)."""
+        if level_file not in self._level_state_cache:
+            return False
+        cached = self._level_state_cache[level_file]
+        # Clear auto-loaded units from grid (load_level already placed fresh units from JSON)
+        # Keep player objects that load_level placed
+        all_players = game.players if game.multiplayer_mode and game.players else [game.player]
+        player_ids = set(id(p) for p in all_players)
+        for unit in self.hex_grid.units:
+            if id(unit) not in player_ids and unit.position:
+                r, c = unit.position
+                if (0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols
+                        and self.hex_grid.grid[r][c]["unit"] is unit):
+                    self.hex_grid.grid[r][c]["unit"] = None
+        self.hex_grid.units = [u for u in self.hex_grid.units if id(u) in player_ids]
+        # Rebuild cached units
+        self.save_manager.rebuild_units(cached["units"], self.hex_grid)
+        # Overlay cached location data
+        self.save_manager.rebuild_location_data(cached["location_data"], self.hex_grid)
+        # Restore other state
+        if "card_drawing_hexes" in cached:
+            self.hex_grid.card_drawing_hexes = cached["card_drawing_hexes"]
+        self.turn_cycle_count = cached.get("turn_cycle_count", 0)
+        self.boss_encounter_phase = cached.get("boss_encounter_phase", 0)
+        self.boss_encounter_phase2_tags = cached.get("boss_encounter_phase2_tags", [])
+        return True
+
     def _execute_teleport(self, selected_npcs):
         """Execute teleport: load destination level, place players and selected NPCs."""
         tp = self.pending_teleport
@@ -5792,6 +5908,11 @@ class GameScreen:
             return
 
         # Autosave before teleporting
+        # Clear manning state for all players before teleport
+        all_tp_players = game.players if game.multiplayer_mode and game.players else [game.player]
+        for p in all_tp_players:
+            p.leave_manning()
+
         self.save_manager.save_game(game, self, save_type="autosave", save_label="Pre-Teleport")
 
         # Collect selected NPC data
@@ -5806,6 +5927,9 @@ class GameScreen:
                 "behavior_tree": list(npc.behavior_tree),
                 "carry_to_next_level": getattr(npc, 'carry_to_next_level', False),
             })
+
+        # Snapshot current level state before leaving (selected NPCs excluded from cache)
+        self._snapshot_level_state(exclude_units=selected_npcs)
 
         # Find destination stage for deck config
         dest_stage = None
@@ -5825,6 +5949,8 @@ class GameScreen:
         self.hex_grid._num_players = num_players
         self.hex_grid.load_level(dest_level_file, self.card_manager, player1)
         self.current_level_file = dest_level_file
+        # Restore cached state if revisiting this level
+        self._restore_level_state(dest_level_file)
 
         # Find destination pad position
         dest_pad_pos = None
@@ -6017,6 +6143,9 @@ class GameScreen:
         # Clear defensive posture at start of this player's turn
         current_player = game.current_player
         current_player.clear_defensive_posture()
+        # Lock movement if manning a tower
+        if current_player.is_manning():
+            current_player.movement_used = True
         # Smooth pan camera to the active player
         if current_player and current_player.position:
             row, col = current_player.position
@@ -6052,6 +6181,8 @@ class GameScreen:
             game.player.tick_cooldowns()
             game.player.movement_used = game.player.action_used = False
             game.player.reset_double_attack()
+            if game.player.is_manning():
+                game.player.movement_used = True
             self.turn_phase = "allied"
             self.execute_turn("Allied")
         elif self.turn_phase == "multiplayer_player":
@@ -6062,6 +6193,8 @@ class GameScreen:
             current.tick_cooldowns()
             current.movement_used = current.action_used = False
             current.reset_double_attack()
+            if current.is_manning():
+                current.movement_used = True
 
             # Find next alive player
             next_idx = None
@@ -6248,6 +6381,9 @@ class GameScreen:
 
     def _execute_unit_turn(self, unit):
         """Execute a unit's AI turn (called after autopan completes)."""
+        PREVIEW_RANGE_MS = 500
+        PREVIEW_SELECT_MS = 400
+
         # Guard: unit may have died during pan
         if unit not in self.hex_grid.units or unit.hp <= 0:
             self.process_next_unit()
@@ -6272,9 +6408,21 @@ class GameScreen:
                         self.waiting_for_animation = True
                     return  # Skip unit's normal turn
 
-        # Range flash: briefly highlight allied NPC's projectile range at turn start
-        if unit.allegiance == "Allied" and unit.projectile_range > 0 and unit.position:
-            unit.range_flash_start = pygame.time.get_ticks()
+        # Preview system: plan the turn and show range overlay before executing
+        plan = unit.plan_turn(self.hex_grid)
+        if plan["action"] == "idle":
+            # No action to preview — execute immediately
+            self._do_unit_turn(unit)
+        else:
+            # Enter range preview phase
+            self.unit_preview_unit = unit
+            self.unit_preview_plan = plan
+            self.unit_preview_phase = "range"
+            self.unit_preview_start = pygame.time.get_ticks()
+
+    def _do_unit_turn(self, unit):
+        """Execute a unit's actual turn (after preview completes or directly for idle)."""
+        self.last_action_time = pygame.time.get_ticks()
 
         # Track position before turn for quest movement detection
         position_before = unit.position
@@ -6371,8 +6519,32 @@ class GameScreen:
 
     def update_turn_queue(self):
         """Update the turn queue - called each frame to process consecutive unit turns."""
+        # --- Unit preview phase machine ---
+        if self.unit_preview_phase:
+            PREVIEW_RANGE_MS = 500
+            PREVIEW_SELECT_MS = 400
+            elapsed = pygame.time.get_ticks() - self.unit_preview_start
+            if self.unit_preview_phase == "range" and elapsed >= PREVIEW_RANGE_MS:
+                self.unit_preview_phase = "selection"
+                self.unit_preview_start = pygame.time.get_ticks()
+                return
+            elif self.unit_preview_phase == "selection" and elapsed >= PREVIEW_SELECT_MS:
+                unit = self.unit_preview_unit
+                self.unit_preview_phase = None
+                self.unit_preview_plan = None
+                self.unit_preview_unit = None
+                # Check unit still alive before executing
+                if unit and unit in self.hex_grid.units and unit.hp > 0:
+                    self._do_unit_turn(unit)
+                else:
+                    self.process_next_unit()
+            return  # Don't process anything else while previewing
+
         if not self.waiting_for_animation:
             return
+
+        if self._loc_defense_active:
+            return  # Don't process turn queue while location defense is animating
 
         if self.autopan_active:
             return  # Wait for camera pan to complete before processing
@@ -6525,6 +6697,8 @@ class GameScreen:
             # Healer super: Revive (needs targeting mode)
             if current_player.is_healer:
                 super_label = "[SUPER] Revive"
+            elif current_player.piercing_projectile and current_player.is_manning():
+                super_label = "[SUPER] Sniper Mode"
             else:
                 super_label = f"[SUPER] {current_player.special_attack}"
             btn = UIButton(pygame.Rect(x, y, button_width, 30),
@@ -6637,6 +6811,13 @@ class GameScreen:
         self.left_panel_buttons.append(self.defend_button)
         y_pos += 40
 
+        # Add Leave Tower button (when manning a defensive location)
+        self.leave_tower_button = None
+        if game.current_player.is_manning():
+            self.leave_tower_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Leave Tower", manager)
+            self.left_panel_buttons.append(self.leave_tower_button)
+            y_pos += 40
+
         self.ui_elements.extend(self.left_panel_buttons)
 
         self.ui_elements[0].set_text("<font color='#FFFFFF' size=4>" + "<br>".join(reversed(self.log)) + "</font>")
@@ -6681,6 +6862,16 @@ class GameScreen:
             lines.append(f"<font color='#999999'>Revive:</font> <font color='{charge_color}'>[{charge_pips}]</font>")
         else:
             lines.append(f"<font color='#999999'>Super:</font> <font color='{charge_color}'>[{charge_pips}]</font>")
+        # Manning tower info
+        if p.is_manning():
+            loc_data = self.hex_grid.location_data.get(p.manning_location)
+            if loc_data:
+                loc_name = loc_data["card"].get_current_data().get("Name", "Tower") if loc_data.get("card") else "Tower"
+                defenses = loc_data.get("defenses", [])
+                if defenses:
+                    best = max(defenses, key=lambda d: d.get("damage", 0))
+                    lines.append(f"<font color='#FFD700'>Manning: {loc_name}</font>")
+                    lines.append(f"<font color='#FFD700'>Tower: {best['damage']} dmg / {best.get('range_distance', 0)} range</font>")
         return "<br>".join(lines)
 
     def _handle_quest_chain(self):
@@ -6980,6 +7171,13 @@ class GameScreen:
         self.defend_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Defend", manager)
         self.left_panel_buttons.append(self.defend_button)
         y_pos += 40
+
+        # Add Leave Tower button (when manning a defensive location)
+        self.leave_tower_button = None
+        if current_player.is_manning():
+            self.leave_tower_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Leave Tower", manager)
+            self.left_panel_buttons.append(self.leave_tower_button)
+            y_pos += 40
 
         self.ui_elements.extend(self.left_panel_buttons)
         self.update_turn_label()
@@ -7996,87 +8194,133 @@ class GameScreen:
         self.animating = self.check_animations()
 
     def process_location_defense_turn(self):
-        """Process defensive location attacks against hostile units."""
+        """Process defensive location attacks against hostile units with autopan."""
         active_locations = self.hex_grid.get_active_defensive_locations()
         if not active_locations:
-            # No defenses to fire — defer advance until banner finishes displaying
             self._pending_advance_after_banner = True
             return
 
-        attacks_fired = False
+        # Build queue: only locations that have garrison AND hostiles in range
+        self._loc_defense_queue = []
         for pos, loc_data in active_locations:
             garrison = loc_data.get("garrison_npcs", [])
-            num_garrison = len(garrison)
-            if num_garrison == 0:
+            if not garrison:
                 continue
-
+            # Pre-check: does this location have any defense that can hit a hostile?
+            has_targets = False
             for defense in loc_data.get("defenses", []):
-                if not defense.get("requires_npc"):
+                if not defense.get("requires_npc") or defense.get("damage", 0) <= 0:
                     continue
-                damage = defense.get("damage", 0)
-                if damage <= 0:
-                    continue
-
-                # Calculate range for this defense
                 d_range = self.hex_grid.calculate_range(
                     pos, defense["range_distance"], defense["range_type"],
                     defense.get("include_position", False), defense.get("exclude_adjacent", False)
                 )
-
-                # Find hostile units in range
-                hostiles_in_range = []
                 for hex_pos in d_range:
                     r, c = hex_pos
                     if 0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols:
                         unit = self.hex_grid.grid[r][c].get("unit")
                         if unit and hasattr(unit, 'allegiance') and unit.allegiance == "Hostile" and unit.hp > 0:
-                            hostiles_in_range.append(unit)
+                            has_targets = True
+                            break
+                if has_targets:
+                    break
+            if has_targets:
+                self._loc_defense_queue.append((pos, loc_data))
 
-                if not hostiles_in_range:
-                    continue
+        if not self._loc_defense_queue:
+            self._pending_advance_after_banner = True
+            return
 
-                # Fire N attacks (N = garrison count), each at a random hostile
-                loc_name = loc_data.get("card").get_current_data().get("Name", "Defense") if loc_data.get("card") else "Defense"
-                for _ in range(num_garrison):
-                    # Re-filter alive hostiles each shot
-                    alive = [u for u in hostiles_in_range if u.hp > 0]
-                    if not alive:
-                        break
-                    target = random.choice(alive)
-                    target.hp -= damage
-                    target.set_damage_text(damage)
-                    self.add_to_log(f"{loc_name} defense hits {target.name} for {damage} damage")
-                    attacks_fired = True
+        self._loc_defense_active = True
+        self._process_next_loc_defense()
 
-        # Process deaths from defense attacks
-        if attacks_fired:
-            dead_units = [u for u in self.hex_grid.units if u.hp <= 0 and not getattr(u, '_death_processed', False)]
-            for dead_unit in dead_units:
-                if dead_unit.position:
-                    row, col = dead_unit.position
-                    if self.hex_grid.grid[row][col]["unit"] is dead_unit:
-                        self.hex_grid.grid[row][col]["unit"] = None
-                    # Displace body off location hex
-                    if dead_unit.position in self.hex_grid.location_data:
-                        neighbors = self.hex_grid.get_neighbors(row, col)
-                        for nr, nc in neighbors:
-                            if ((nr, nc) not in self.hex_grid.location_data
-                                    and self.hex_grid.grid[nr][nc]["accessible"]
-                                    and self.hex_grid.grid[nr][nc]["unit"] is None):
-                                dead_unit.position = (nr, nc)
-                                break
-                dead_unit._death_processed = True
-                self.add_to_log(f"{dead_unit.name} defeated")
-                self.add_defeat_notification(dead_unit.name)
-                self.card_manager.track_card_usage(dead_unit.card_id, {"action": "defeated", "screen": "game"})
-                quest_results = game.current_quest_manager.update("unit_death", {"unit": dead_unit}, self.hex_grid, game.current_player)
-                for quest, result, msg in quest_results:
-                    self.add_to_log(msg)
-                self._handle_quest_chain()
-            self._check_boss_encounter_completion()
-            self.player_info_label.set_text(self.get_player_info())
+    def _process_next_loc_defense(self):
+        """Pan to the next location in the defense queue and fire."""
+        if not self._loc_defense_queue:
+            self._finish_loc_defense()
+            return
+        pos, loc_data = self._loc_defense_queue.pop(0)
+        self._start_autopan(pos[0], pos[1], callback=lambda: self._fire_loc_defense(pos, loc_data))
 
-        # Defer advance until the Location Defense banner finishes displaying
+    def _fire_loc_defense(self, pos, loc_data):
+        """Fire one location's defensive attacks with projectile animations."""
+        garrison = loc_data.get("garrison_npcs", [])
+        num_garrison = len(garrison)
+
+        for defense in loc_data.get("defenses", []):
+            if not defense.get("requires_npc"):
+                continue
+            damage = defense.get("damage", 0)
+            if damage <= 0:
+                continue
+
+            d_range = self.hex_grid.calculate_range(
+                pos, defense["range_distance"], defense["range_type"],
+                defense.get("include_position", False), defense.get("exclude_adjacent", False)
+            )
+
+            hostiles_in_range = []
+            for hex_pos in d_range:
+                r, c = hex_pos
+                if 0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols:
+                    unit = self.hex_grid.grid[r][c].get("unit")
+                    if unit and hasattr(unit, 'allegiance') and unit.allegiance == "Hostile" and unit.hp > 0:
+                        hostiles_in_range.append(unit)
+
+            if not hostiles_in_range:
+                continue
+
+            loc_name = loc_data.get("card").get_current_data().get("Name", "Defense") if loc_data.get("card") else "Defense"
+            src = self.hex_grid.get_hex_center(*pos)
+            for _ in range(num_garrison):
+                alive = [u for u in hostiles_in_range if u.hp > 0]
+                if not alive:
+                    break
+                target = random.choice(alive)
+                target.hp -= damage
+                target.set_damage_text(damage)
+                if hasattr(self.hex_grid, 'attack_anims') and target.position:
+                    tgt = self.hex_grid.get_hex_center(*target.position)
+                    self.hex_grid.attack_anims.create_projectile(src, tgt)
+                self.add_to_log(f"{loc_name} defense hits {target.name} for {damage} damage")
+
+        # Wait for projectile animations to finish, then process deaths
+        delay = self.hex_grid.attack_anims.get_max_remaining_ms() if hasattr(self.hex_grid, 'attack_anims') else 0
+        self._loc_defense_wait_until = pygame.time.get_ticks() + delay + 200
+
+    def _process_loc_defense_deaths(self):
+        """Process deaths from the most recent location defense volley, then continue queue."""
+        dead_units = [u for u in self.hex_grid.units if u.hp <= 0 and not getattr(u, '_death_processed', False)]
+        for dead_unit in dead_units:
+            if dead_unit.position:
+                row, col = dead_unit.position
+                if self.hex_grid.grid[row][col]["unit"] is dead_unit:
+                    self.hex_grid.grid[row][col]["unit"] = None
+                # Displace body off location hex
+                if dead_unit.position in self.hex_grid.location_data:
+                    neighbors = self.hex_grid.get_neighbors(row, col)
+                    for nr, nc in neighbors:
+                        if ((nr, nc) not in self.hex_grid.location_data
+                                and self.hex_grid.grid[nr][nc]["accessible"]
+                                and self.hex_grid.grid[nr][nc]["unit"] is None):
+                            dead_unit.position = (nr, nc)
+                            break
+            dead_unit._death_processed = True
+            self.add_to_log(f"{dead_unit.name} defeated")
+            self.add_defeat_notification(dead_unit.name)
+            self.card_manager.track_card_usage(dead_unit.card_id, {"action": "defeated", "screen": "game"})
+            quest_results = game.current_quest_manager.update("unit_death", {"unit": dead_unit}, self.hex_grid, game.current_player)
+            for quest, result, msg in quest_results:
+                self.add_to_log(msg)
+            self._handle_quest_chain()
+        self._process_next_loc_defense()
+
+    def _finish_loc_defense(self):
+        """Clean up after all location defenses have fired."""
+        self._loc_defense_active = False
+        self._loc_defense_wait_until = None
+        self._check_boss_encounter_completion()
+        self.player_info_label.set_text(self.get_player_info())
         self._pending_advance_after_banner = True
 
     def process_transition_turn(self):
@@ -8385,6 +8629,36 @@ class GameScreen:
                     self.behavior_target_npc_card_id = None
                     return
 
+                # Tower attack: manning player clicks on a hostile unit
+                if current_player.is_manning() and unit and isinstance(unit, Unit) and unit.allegiance == "Hostile" and not current_player.action_used and self.player_mode not in ("super_attack",):
+                    tower_range = current_player.get_manning_attack_range(self.hex_grid)
+                    if hex_pos in tower_range:
+                        defenses = current_player.get_manning_defenses(self.hex_grid)
+                        if defenses:
+                            best_defense = max(defenses, key=lambda d: d.get("damage", 0))
+                            damage = best_defense.get("damage", 0)
+                            # Projectile animation from tower to target
+                            anim = None
+                            delay = 0
+                            if hasattr(self.hex_grid, 'attack_anims'):
+                                src = self.hex_grid.get_hex_center(*current_player.manning_location)
+                                tgt = self.hex_grid.get_hex_center(*hex_pos)
+                                anim = self.hex_grid.attack_anims.create_projectile(src, tgt)
+                                delay = self.hex_grid.attack_anims.get_max_remaining_ms()
+                            unit.hp -= damage
+                            unit.set_damage_text(damage, delay, anim=anim)
+                            current_player.action_used = True
+                            current_player.add_super_charge()
+                            loc_data = self.hex_grid.location_data.get(current_player.manning_location)
+                            loc_name = loc_data["card"].get_current_data().get("Name", "Tower") if loc_data and loc_data.get("card") else "Tower"
+                            self.add_to_log(f"{loc_name} fires at {unit.name} for {damage} damage!")
+                            if unit.hp <= 0:
+                                self.pending_defeats.append(unit)
+                            self.player_info_label.set_text(self.get_player_info())
+                    else:
+                        self.add_to_log("Target not in tower range")
+                    return
+
                 # Auto-detect available actions when clicking on a unit (skip in recruit/skill modes)
                 if not self.selected_attack and unit and isinstance(unit, Unit) and self.player_mode not in ("recruit", "skill", "item"):
                     available_actions = []
@@ -8580,26 +8854,43 @@ class GameScreen:
                     else:
                         self.add_to_log("NPC is not adjacent to you")
                 elif self.player_mode == "super_attack":
-                    # Healer Revive: find dead unit/player at clicked hex
-                    revive_target = None
-                    # Check units (including dead ones stored with positions)
-                    for u in self.hex_grid.units:
-                        if u.position == hex_pos and u.hp <= 0:
-                            revive_target = u
-                            break
-                    # Check other players in multiplayer
-                    if not revive_target and game.multiplayer_mode:
-                        for p in game.players:
-                            if p is not current_player and p.position == hex_pos and p.hp <= 0:
-                                revive_target = p
-                                break
-                    if revive_target:
-                        message, defeated_units = current_player.use_super_attack(revive_target, self.hex_grid)
-                        self.add_to_log(message)
-                        self.player_info_label.set_text(self.get_player_info())
+                    # Ranger Sniper Mode: manning tower, click any visible hostile
+                    if current_player.piercing_projectile and current_player.is_manning():
+                        if unit and isinstance(unit, Unit) and unit.allegiance == "Hostile" and unit.hp > 0:
+                            message, defeated_units = current_player.use_super_attack(unit, self.hex_grid)
+                            self.add_to_log(message)
+                            # Projectile animation from tower to target
+                            if hasattr(self.hex_grid, 'attack_anims'):
+                                src = self.hex_grid.get_hex_center(*current_player.manning_location)
+                                tgt = self.hex_grid.get_hex_center(*hex_pos)
+                                self.hex_grid.attack_anims.create_projectile(src, tgt)
+                            for defeated_unit in defeated_units:
+                                self.pending_defeats.append(defeated_unit)
+                            self.player_info_label.set_text(self.get_player_info())
+                        else:
+                            self.add_to_log("Select a visible hostile enemy for Sniper Shot")
+                        self.player_mode = "movement"
                     else:
-                        self.add_to_log("No dead unit at that location to revive")
-                    self.player_mode = "movement"
+                        # Healer Revive: find dead unit/player at clicked hex
+                        revive_target = None
+                        # Check units (including dead ones stored with positions)
+                        for u in self.hex_grid.units:
+                            if u.position == hex_pos and u.hp <= 0:
+                                revive_target = u
+                                break
+                        # Check other players in multiplayer
+                        if not revive_target and game.multiplayer_mode:
+                            for p in game.players:
+                                if p is not current_player and p.position == hex_pos and p.hp <= 0:
+                                    revive_target = p
+                                    break
+                        if revive_target:
+                            message, defeated_units = current_player.use_super_attack(revive_target, self.hex_grid)
+                            self.add_to_log(message)
+                            self.player_info_label.set_text(self.get_player_info())
+                        else:
+                            self.add_to_log("No dead unit at that location to revive")
+                        self.player_mode = "movement"
                 elif self.player_mode == "special_attack" and unit and isinstance(unit, Unit):
                     # Execute special attack on target
                     self._execute_special_attack(unit)
@@ -8609,7 +8900,7 @@ class GameScreen:
                     self.add_to_log(message)
                     self.player_info_label.set_text(self.get_player_info())
                     self._create_equipment_toolbar()
-                elif hex_pos == current_player.position and self.hex_grid.is_location_hex(hex_pos[0], hex_pos[1]):
+                elif hex_pos == current_player.position and self.hex_grid.is_location_hex(hex_pos[0], hex_pos[1]) and not current_player.is_manning():
                     # Clicked on current position which is a location - reopen location screen
                     loc_data = self.hex_grid.location_data.get(hex_pos)
                     if loc_data and loc_data.get("card"):
@@ -8661,8 +8952,12 @@ class GameScreen:
                                     if hex_data.get("linked_level") and isinstance(hex_data["linked_level"], str):
                                         linked_level_file = os.path.join("levels", hex_data["linked_level"])
                                         if os.path.exists(linked_level_file):
+                                            current_player.leave_manning()
                                             self.add_to_log(f"Entering {hex_data['linked_level']}")
+                                            self._snapshot_level_state(exclude_units=[])
                                             self.hex_grid.load_level(linked_level_file, self.card_manager, current_player)
+                                            self.current_level_file = linked_level_file
+                                            self._restore_level_state(linked_level_file)
                                             # Teleport player to new start position
                                             player_start = self.hex_grid.player.position
                                             current_player.teleport(self.hex_grid, *player_start)
@@ -8943,6 +9238,12 @@ class GameScreen:
                                 self.selected_attack = None
                                 self.selected_skill = None
                                 self.add_to_log("Select an adjacent dead unit to Revive (click on them)")
+                            elif current_player.piercing_projectile and current_player.is_manning():
+                                # Ranger super: Sniper Mode - unlimited range shot from tower
+                                self.player_mode = "super_attack"
+                                self.selected_attack = None
+                                self.selected_skill = None
+                                self.add_to_log("SNIPER MODE! Click any visible enemy")
                             else:
                                 message, defeated_units = current_player.use_super_attack(None, self.hex_grid)
                                 self.add_to_log(message)
@@ -8972,6 +9273,16 @@ class GameScreen:
                     self.player_mode = "defensive"
                     self.defensive_hex_options = self._get_defense_hex_options(current_player)
                     self.add_to_log("Choose a direction to defend (click a highlighted hex)")
+                return
+
+            # Leave Tower button
+            if hasattr(self, 'leave_tower_button') and self.leave_tower_button and event.ui_element == self.leave_tower_button and is_player_turn:
+                current_player = game.current_player
+                current_player.leave_manning()
+                self.add_to_log(f"{current_player.name or current_player.class_name} leaves the tower")
+                self.player_info_label.set_text(self.get_player_info())
+                self.rebuild_left_panel()
+                self.advance_turn()
                 return
 
             if event.ui_element in self.left_panel_buttons:
@@ -9109,33 +9420,86 @@ class GameScreen:
                         "inset": 0.40
                     })
 
-        # Range flash for allied NPCs during their turn (brief 800ms highlight)
-        RANGE_FLASH_DURATION = 800
-        for unit in self.hex_grid.units:
-            if (unit.allegiance == "Allied" and unit.range_flash_start > 0 and
-                    unit.projectile_range > 0 and unit.position):
-                elapsed = pygame.time.get_ticks() - unit.range_flash_start
-                if elapsed < RANGE_FLASH_DURATION:
-                    flash_alpha = max(40, int(120 * (1 - elapsed / RANGE_FLASH_DURATION)))
-                    flash_range = self.hex_grid.calculate_range(
-                        unit.position, unit.projectile_range, "line_of_sight", False, False)
-                    if flash_range:
-                        attack_ranges.append({
-                            "range": flash_range,
-                            "color": (100, 180, 255, flash_alpha),
-                            "outline": (60, 120, 200, flash_alpha),
-                            "inset": 0.60
-                        })
-                else:
-                    unit.range_flash_start = 0
+        # Unit turn preview overlay
+        if self.unit_preview_phase and self.unit_preview_unit and self.unit_preview_plan:
+            preview_unit = self.unit_preview_unit
+            plan = self.unit_preview_plan
+            pos = preview_unit.position
+
+            if self.unit_preview_phase == "range" and pos:
+                action = plan["action"]
+                range_hexes = set()
+                range_color = (80, 140, 220, 100)  # Blue default (movement)
+
+                if action in ("move", "move_melee", "move_projectile", "move_repair"):
+                    range_hexes = self.hex_grid.get_movement_range(pos, preview_unit.movement)
+                    range_color = (80, 140, 220, 100)
+                elif action == "melee":
+                    range_hexes = set(self.hex_grid.get_adjacent_hexes(*pos))
+                    range_color = (220, 80, 60, 100)
+                elif action == "projectile":
+                    range_hexes = self.hex_grid.calculate_range(
+                        pos, preview_unit.projectile_range, "line_of_sight", False, False)
+                    if range_hexes is None:
+                        range_hexes = set()
+                    range_color = (220, 80, 60, 100)
+                elif action in ("heal", "revive"):
+                    range_hexes = self.hex_grid.calculate_range(
+                        pos, preview_unit.heal_range, "area_effect", True, False)
+                    if range_hexes is None:
+                        range_hexes = set()
+                    range_color = (60, 200, 80, 100)
+                elif action == "repair":
+                    range_hexes = set(self.hex_grid.get_adjacent_hexes(*pos))
+                    range_color = (220, 200, 60, 100)
+
+                if range_hexes:
+                    attack_ranges.append({
+                        "range": range_hexes,
+                        "color": range_color,
+                        "outline": (range_color[0], range_color[1], range_color[2], min(255, range_color[3] + 60)),
+                        "inset": 0.55
+                    })
+
+            elif self.unit_preview_phase == "selection" and pos:
+                elapsed = pygame.time.get_ticks() - self.unit_preview_start
+                pulse_alpha = 120 + int(60 * math.sin(elapsed * 0.008))
+
+                if plan.get("move_dest"):
+                    attack_ranges.append({
+                        "range": {plan["move_dest"]},
+                        "color": (100, 255, 255, pulse_alpha),
+                        "outline": (60, 200, 200, pulse_alpha),
+                        "inset": 0.55
+                    })
+                if plan.get("target_pos"):
+                    action = plan["action"]
+                    if action in ("heal", "revive"):
+                        sel_color = (80, 255, 100, pulse_alpha)
+                        sel_outline = (40, 200, 60, pulse_alpha)
+                    else:
+                        sel_color = (255, 80, 60, pulse_alpha)
+                        sel_outline = (200, 40, 30, pulse_alpha)
+                    attack_ranges.append({
+                        "range": {plan["target_pos"]},
+                        "color": sel_color,
+                        "outline": sel_outline,
+                        "inset": 0.55
+                    })
 
         if is_player_turn and player_alive and not current_player.action_used and not self.animating and self.player_mode not in ("recruit", "item"):
-            melee_range = current_player.get_melee_attack_range(self.hex_grid)
-            if melee_range:
-                attack_ranges.append({"range": melee_range, "color": (200, 80, 60, 220), "outline": (139, 0, 0, 220), "inset": 0.75})
-            proj_range = current_player.get_projectile_attack_range(self.hex_grid, game.current_party)
-            if proj_range:
-                attack_ranges.append({"range": proj_range, "color": (80, 50, 180, 220), "outline": (50, 30, 140, 220), "inset": 0.55})
+            if current_player.is_manning():
+                # Show tower attack range instead of personal weapon ranges
+                tower_range = current_player.get_manning_attack_range(self.hex_grid)
+                if tower_range:
+                    attack_ranges.append({"range": tower_range, "color": (255, 200, 50, 200), "outline": (200, 150, 30, 220), "inset": 0.55})
+            else:
+                melee_range = current_player.get_melee_attack_range(self.hex_grid)
+                if melee_range:
+                    attack_ranges.append({"range": melee_range, "color": (200, 80, 60, 220), "outline": (139, 0, 0, 220), "inset": 0.75})
+                proj_range = current_player.get_projectile_attack_range(self.hex_grid, game.current_party)
+                if proj_range:
+                    attack_ranges.append({"range": proj_range, "color": (80, 50, 180, 220), "outline": (50, 30, 140, 220), "inset": 0.55})
 
         # Show white rings around recruitable adjacent NPCs (always visible on player turn)
         if is_player_turn:
@@ -9275,6 +9639,11 @@ class GameScreen:
         self.draw_defeat_notifications()
         self.draw_turn_banner()
         self.draw_ammo_banner()
+        # Location defense animation timer — process deaths when projectiles finish
+        if self._loc_defense_active and self._loc_defense_wait_until is not None:
+            if pygame.time.get_ticks() >= self._loc_defense_wait_until:
+                self._loc_defense_wait_until = None
+                self._process_loc_defense_deaths()
         # Advance turn once the Location Defense banner has finished displaying
         if self._pending_advance_after_banner and self.turn_banner is None:
             self._pending_advance_after_banner = False

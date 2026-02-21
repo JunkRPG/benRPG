@@ -166,6 +166,9 @@ class Player:
         self.defended_hex = None            # (row, col) of the hex being defended
         self.defense_value = 0              # Current defense strength (base or shield)
 
+        # Manning defensive locations (towers)
+        self.manning_location = None  # (row, col) of manned location, or None
+
         # Multiplayer attributes
         self.player_number = 1  # 1 or 2 (for multiplayer mode)
         self.player_color = (0, 200, 0)  # Default green, customized per player
@@ -637,6 +640,33 @@ class Player:
             self.action_used = True
             target_name = getattr(target, 'name', 'target')
             return f"{self.name or self.class_name} REVIVED {target_name}! (10 HP)", []
+
+        # Ranger super: Sniper Mode (while manning a tower)
+        if self.piercing_projectile and self.is_manning() and target:
+            # Get tower's best defense damage
+            defenses = self.get_manning_defenses(grid)
+            if not defenses:
+                return "No tower weapons available", []
+            best_defense = max(defenses, key=lambda d: d.get("damage", 0))
+            damage = best_defense.get("damage", 0)
+
+            # Sniper mode: unlimited range, only require LOS from tower to target
+            if not grid.has_clear_line_of_sight(self.manning_location, target.position):
+                return "No line of sight to target from tower", []
+
+            target.hp -= damage
+            target.set_damage_text(damage)
+
+            self.super_charge = 0
+            self.super_attack_ready = False
+            self.action_used = True
+
+            target_name = getattr(target, 'name', 'target')
+            defeated = target.hp <= 0
+            msg = f"{self.name or self.class_name} SNIPER SHOT {target_name} for {damage} damage!"
+            if defeated:
+                return msg, [target]
+            return msg, []
 
         self.super_charge = 0
         self.super_attack_ready = False
@@ -1784,6 +1814,47 @@ class Player:
         self.defensive_posture = False
         self.defended_hex = None
         self.defense_value = 0
+
+    # ========== MANNING DEFENSIVE LOCATIONS ==========
+
+    def is_manning(self):
+        """Check if player is currently manning a defensive location."""
+        return self.manning_location is not None
+
+    def enter_manning(self, location_pos):
+        """Enter a defensive location (tower) to man its weapons."""
+        self.manning_location = tuple(location_pos)
+        self.movement_used = True
+
+    def leave_manning(self):
+        """Leave a manned defensive location."""
+        self.manning_location = None
+
+    def get_manning_defenses(self, grid):
+        """Get the defense entries for the currently manned location."""
+        if not self.manning_location:
+            return []
+        loc_data = grid.location_data.get(self.manning_location)
+        if not loc_data:
+            return []
+        return loc_data.get("defenses", [])
+
+    def get_manning_attack_range(self, grid):
+        """Compute union of all defense weapon ranges for the manned location."""
+        if not self.manning_location:
+            return set()
+        defenses = self.get_manning_defenses(grid)
+        all_range = set()
+        for defense in defenses:
+            d_range = grid.calculate_range(
+                self.manning_location,
+                defense.get("range_distance", 0),
+                defense.get("range_type", "area_effect"),
+                defense.get("include_position", False),
+                defense.get("exclude_adjacent", False)
+            )
+            all_range |= d_range
+        return all_range
 
     def get_shield_defense_value(self):
         """Get defense value from equipped shield, or base defense if none."""
