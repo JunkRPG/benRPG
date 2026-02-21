@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Lightning Strike",
+    "Description": "Strange mushrooms burst, filling the air with spores.",
+    "Subclass": "Environmental",
+    "Outcomes": "[{\"probability\": 0.62, \"type\": \"damage_player\", \"text\": \"The environment itself turns hostile!\", \"params\": {\"damage\": 7}}, {\"probability\": 0.38, \"type\": \"none\", \"text\": \"You find shelter just in time.\", \"params\": {}}]"
+  }
+}

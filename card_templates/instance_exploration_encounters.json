@@ -1,0 +1,106 @@
+{
+  "template_name": "Exploration & Discovery",
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "states": 1,
+  "count": 12,
+  "naming": {
+    "mode": "name_list",
+    "names": [
+      "Hidden Cache", "Abandoned Camp", "Strange Markings", "The Old Well",
+      "Overgrown Ruins", "Mysterious Tracks", "Collapsed Tunnel",
+      "Forgotten Shrine", "The Hollow Tree", "Sunken Chest",
+      "Weathered Signpost", "The Echoing Cave"
+    ]
+  },
+  "fields": {
+    "Description": {"type": "text_choice", "options": [
+      "Something glints in the rubble ahead.",
+      "You notice a hidden path leading off the main trail.",
+      "Old ruins poke through the overgrowth — worth investigating?",
+      "A faint glow emanates from a crack in the rocks.",
+      "You spot what looks like a buried container.",
+      "Strange symbols are carved into a nearby stone.",
+      "An abandoned campsite — someone left in a hurry.",
+      "The ground here sounds hollow when you step on it.",
+      "A collapsed structure reveals a dark opening below.",
+      "You find footprints leading toward something interesting.",
+      "An ancient marker points toward an unmarked location.",
+      "Water trickles from a hidden spring in the hillside."
+    ]},
+    "Subclass": {"type": "fixed", "value": "Discovery"},
+    "Outcomes": {"type": "json_template", "template_mode": "outcome_pool",
+      "outcome_pool": [
+        {"type": "draw_card", "text_options": [
+          "You uncover something useful buried in the dirt!",
+          "Hidden among the rubble, you find salvageable materials.",
+          "The cache contains useful supplies!",
+          "Your search reveals a forgotten stash."
+        ], "params": {"card_type": "Junk Card"}, "weight": 3},
+
+        {"type": "draw_card", "text_options": [
+          "You find old documents tucked into a crevice.",
+          "A weathered scroll lies among the debris.",
+          "Hidden writings reveal useful knowledge."
+        ], "params": {"card_type": "Document Card"}, "weight": 2},
+
+        {"type": "player_choice", "text_options": [
+          "You find a locked container. Force it open?",
+          "A mysterious chest sits before you. Open it?",
+          "You discover a sealed crate. Investigate?"
+        ], "params": {"choices": [
+          {
+            "name": "Force it open",
+            "risk": {"min": 0.2, "max": 0.4},
+            "success": {"type": "draw_card", "card_type": "Junk Card"},
+            "failure": {"type": "damage_player", "damage": {"min": 3, "max": 8}}
+          },
+          {
+            "name": "Leave it alone",
+            "risk": 0,
+            "success": {"type": "none"}
+          }
+        ]}, "weight": 2},
+
+        {"type": "player_choice", "text_options": [
+          "A narrow passage leads deeper underground. Explore?",
+          "The ruins extend further than expected. Press on?",
+          "A dark tunnel beckons. Do you dare enter?"
+        ], "params": {"choices": [
+          {
+            "name": "Explore deeper",
+            "risk": {"min": 0.25, "max": 0.45},
+            "success": {"type": "draw_card", "card_type": {"options": ["Junk Card", "Document Card"]}},
+            "failure": {"type": "spawn_enemy", "deck": "beta_enemy_deck.json", "count": {"min": 1, "max": 2}, "spawn_near": "player"}
+          },
+          {
+            "name": "Back away carefully",
+            "risk": 0,
+            "success": {"type": "none"}
+          }
+        ]}, "weight": 2},
+
+        {"type": "none", "text_options": [
+          "After thorough searching, you find nothing of value.",
+          "The ruins are picked clean — someone beat you here.",
+          "Whatever was here has long since crumbled to dust."
+        ], "params": {}, "weight": 2},
+
+        {"type": "heal_player", "text_options": [
+          "You discover a natural spring — the water is refreshing!",
+          "Edible berries grow wild in this sheltered spot.",
+          "A moment of peace among the ruins restores your spirits."
+        ], "params": {"amount": {"min": 2, "max": 6}}, "weight": 1},
+
+        {"type": "damage_player", "text_options": [
+          "The floor gives way! You fall into a pit.",
+          "A hidden trap springs — sharp spikes!",
+          "Unstable rubble collapses on you!"
+        ], "params": {"damage": {"min": 2, "max": 8}}, "weight": 1}
+      ],
+      "pick_count": {"min": 3, "max": 5},
+      "auto_balance_probabilities": true
+    }
+  },
+  "deck": "generated_instance_exploration_deck"
+}

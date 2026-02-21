@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Ancient Grove",
+    "Description": "Shafts of light pierce the canopy, illuminating the forest floor.",
+    "Outcomes": "[{\"probability\": 0.18, \"type\": \"spawn_enemy\", \"text\": \"Wolves emerge from the treeline!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.19, \"type\": \"draw_instance\", \"text\": \"Something stirs in the underbrush...\", \"params\": {}}, {\"probability\": 0.03, \"type\": \"draw_junk\", \"text\": \"You spot useful herbs growing nearby.\", \"params\": {\"deck\": \"beta_junk_deck.json\", \"count\": 1}}, {\"probability\": 0.05, \"type\": \"spawn_npc\", \"text\": \"A fellow traveler passes through the woods.\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_npc_deck.json\", \"count\": 1, \"allegiance\": \"Neutral\"}}, {\"probability\": 0.26, \"type\": \"weather\", \"text\": \"The wind picks up, bending branches overhead.\", \"params\": {\"effect\": \"fog\", \"range_modifier\": -2}}, {\"probability\": 0.29, \"type\": \"none\", \"text\": \"A quiet moment passes beneath the trees.\", \"params\": {}}]",
+    "2nd_state_Name": "Moonlit Grove",
+    "2nd_state_Description": "Night falls. The forest becomes a different world.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.22, \"type\": \"spawn_enemy\", \"text\": \"Nocturnal predators emerge from their dens!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 2}}, {\"probability\": 0.23, \"type\": \"draw_instance\", \"text\": \"Strange sounds echo through the dark forest...\", \"params\": {}}, {\"probability\": 0.3, \"type\": \"none\", \"text\": \"Stars peek through gaps in the canopy. All is calm.\", \"params\": {}}, {\"probability\": 0.25, \"type\": \"flip_state\", \"text\": \"The sun rises \\u00e2\\u20ac\\u201d the forest transforms with the light.\", \"params\": {}}]"
+  }
+}

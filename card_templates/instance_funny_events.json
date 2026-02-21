@@ -1,0 +1,83 @@
+{
+  "template_name": "Funny & Quirky Events",
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "states": 1,
+  "count": 10,
+  "naming": {
+    "mode": "name_list",
+    "names": [
+      "What Was That?!", "The Chicken Incident", "Oops!",
+      "Well That Happened", "Squirrel Attack!", "The Pants Problem",
+      "Lost and Confused", "Bird Droppings", "Cursed Sandwich",
+      "The Singing Rock"
+    ]
+  },
+  "fields": {
+    "Description": {"type": "text_choice", "options": [
+      "Something deeply strange just happened.",
+      "You're not entirely sure what you just witnessed.",
+      "Well, that's a first.",
+      "This is going in the journal under 'unexplained.'",
+      "You blink twice, but it's still happening.",
+      "Some things can't be unseen.",
+      "The universe has a sense of humor, apparently.",
+      "You glance around to see if anyone else saw that.",
+      "Even the wildlife looks confused.",
+      "Today is officially the weirdest day of your life."
+    ]},
+    "Subclass": {"type": "fixed", "value": "Discovery"},
+    "Outcomes": {"type": "json_template", "template_mode": "outcome_pool",
+      "outcome_pool": [
+        {"type": "player_choice", "text_options": [
+          "A chicken wearing a tiny hat stares at you expectantly.",
+          "A squirrel is sitting on your pack. It seems... angry.",
+          "You find a sandwich on a rock. It's still warm."
+        ], "params": {"choices": [
+          {
+            "name": "Investigate cautiously",
+            "risk": {"min": 0.15, "max": 0.35},
+            "success": {"type": "draw_card", "card_type": "Junk Card"},
+            "failure": {"type": "damage_player", "damage": {"min": 1, "max": 4}}
+          },
+          {
+            "name": "Nope. Walk away.",
+            "risk": 0,
+            "success": {"type": "none"}
+          }
+        ]}, "weight": 3},
+
+        {"type": "damage_player", "text_options": [
+          "You trip over absolutely nothing and face-plant.",
+          "A bird deposits a... gift... directly on your head.",
+          "You walk into a low-hanging branch. Classic.",
+          "Your own pack swings around and hits you in the face.",
+          "You step on a rake. Yes, a rake. In the wilderness."
+        ], "params": {"damage": {"min": 1, "max": 3}}, "weight": 2},
+
+        {"type": "heal_player", "text_options": [
+          "The absurdity of the moment makes you laugh so hard you feel better.",
+          "A friendly animal nuzzles against you. Your spirits lift!",
+          "You find a perfectly preserved pie. Don't question it.",
+          "The cosmic joke is on someone else today — you feel great!"
+        ], "params": {"amount": {"min": 2, "max": 6}}, "weight": 2},
+
+        {"type": "draw_card", "text_options": [
+          "The chicken drops something shiny before waddling away.",
+          "Hidden under the singing rock, you find actual treasure.",
+          "The squirrel drops something from its cheeks before fleeing."
+        ], "params": {"card_type": "Junk Card"}, "weight": 1},
+
+        {"type": "none", "text_options": [
+          "You wait. Nothing else happens. You're mildly disappointed.",
+          "The moment passes. Life goes on. Somehow.",
+          "You shrug and continue your journey, slightly bewildered.",
+          "After a long pause, you decide to pretend this never happened."
+        ], "params": {}, "weight": 2}
+      ],
+      "pick_count": {"min": 2, "max": 4},
+      "auto_balance_probabilities": true
+    }
+  },
+  "deck": "generated_instance_funny_deck"
+}

@@ -590,7 +590,7 @@ class TransitionManager:
                 unit.max_hp = int(state2_data.get("2nd_State_Health", unit.max_hp))
                 unit.hp = unit.max_hp
                 unit.movement = int(state2_data.get("2nd_State_Movement", unit.movement))
-                unit.allegiance = "Allied"
+                unit.set_allegiance("Allied")
 
             hex_grid.place_unit(unit, *spawn_pos)
             spawned.append(f"{unit.name} ({spawn_source})")

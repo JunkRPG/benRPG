@@ -1,0 +1,101 @@
+{
+  "template_name": "Wasteland Biome Transitions",
+  "card_type": "Transition Card",
+  "subclass": null,
+  "states": 2,
+  "count": 4,
+  "naming": {
+    "mode": "name_list",
+    "names": [
+      "Scorched Plains", "Dust Bowl", "Crumbling Highway", "The Barrens"
+    ]
+  },
+  "fields": {
+    "Description": {"type": "text_choice", "options": [
+      "Heat shimmers rise from the cracked earth.",
+      "The wind carries dust and the smell of rust.",
+      "Nothing but desolation stretches to the horizon.",
+      "Rusted structures dot the barren landscape."
+    ]},
+    "Outcomes": {"type": "json_template", "template_mode": "outcome_pool",
+      "outcome_pool": [
+        {"type": "draw_instance", "text_options": [
+          "Movement in the heat haze — something approaches.",
+          "A dust cloud rises in the distance.",
+          "The wasteland holds secrets for those who look."
+        ], "params": {}, "weight": 2},
+
+        {"type": "spawn_enemy", "text_options": [
+          "Raiders emerge from behind rusted wreckage!",
+          "Scavengers spot you and move to intercept!",
+          "Wasteland bandits descend from the ridgeline!"
+        ], "params": {"edge": "random", "deck": "beta_enemy_deck.json", "count": {"min": 1, "max": 2}}, "weight": 3},
+
+        {"type": "draw_junk", "text_options": [
+          "You scavenge useful parts from the wreckage.",
+          "Among the ruins, you find salvageable materials.",
+          "The wasteland yields its treasures to the persistent."
+        ], "params": {"deck": "beta_junk_deck.json", "count": 1}, "weight": 2},
+
+        {"type": "weather", "text_options": [
+          "A dust storm kicks up!",
+          "Sandstorm! Visibility drops to nothing.",
+          "Scorching winds blast across the plains."
+        ], "params": {"effect": {"options": ["storm", "fog"]}, "range_modifier": {"min": -3, "max": -1}}, "weight": 2},
+
+        {"type": "none", "text_options": [
+          "The wasteland is quiet. Too quiet.",
+          "Nothing but the wind and dust.",
+          "The silence is oppressive, but at least it's safe."
+        ], "params": {}, "weight": 2},
+
+        {"type": "spawn_npc", "text_options": [
+          "A lone trader crosses the wasteland.",
+          "A wanderer appears, looking for company.",
+          "A scavenger waves from the roadside."
+        ], "params": {"edge": "random", "deck": "beta_npc_deck.json", "count": 1, "allegiance": "Neutral"}, "weight": 1}
+      ],
+      "pick_count": {"min": 4, "max": 6},
+      "auto_balance_probabilities": true
+    }
+  },
+  "state2_fields": {
+    "Name": {"type": "text_choice", "options": [
+      "Wasteland Night", "Cold Desert", "Starlit Ruins", "Dead of Night"
+    ]},
+    "Description": {"type": "text_choice", "options": [
+      "The desert cools rapidly. Frost forms on metal.",
+      "Stars blaze overhead in the unpolluted sky. The cold bites.",
+      "Night turns the wasteland into a frozen expanse.",
+      "Without the sun's heat, the wasteland becomes dangerously cold."
+    ]},
+    "Outcomes": {"type": "json_template", "template_mode": "outcome_pool",
+      "outcome_pool": [
+        {"type": "damage_player", "text_options": [
+          "The freezing cold saps your strength.",
+          "Hypothermia threatens in the desert night."
+        ], "params": {"damage": {"min": 2, "max": 5}}, "weight": 1},
+
+        {"type": "spawn_enemy", "text_options": [
+          "Night raiders attack under cover of darkness!",
+          "Nocturnal predators hunt in the cold!",
+          "Bandits strike while you shelter from the cold!"
+        ], "params": {"edge": "random", "deck": "beta_enemy_deck.json", "count": {"min": 1, "max": 2}}, "weight": 3},
+
+        {"type": "none", "text_options": [
+          "A bitter but uneventful night passes.",
+          "You huddle against the cold. Dawn can't come soon enough."
+        ], "params": {}, "weight": 2},
+
+        {"type": "flip_state", "text_options": [
+          "The sun rises, bringing warmth back to the wasteland.",
+          "Dawn paints the ruins in golden light. A new day.",
+          "Heat returns with the morning sun."
+        ], "params": {}, "weight": 2}
+      ],
+      "pick_count": {"min": 3, "max": 4},
+      "auto_balance_probabilities": true
+    }
+  },
+  "deck": "generated_transition_wasteland_deck"
+}

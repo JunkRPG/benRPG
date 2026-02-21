@@ -1,4 +1,39 @@
 {
+  "test_tower_los15": {
+    "type": "Document Card",
+    "subclass": "Location_Plan",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Long-Range Tower Plans"
+  },
+  "test_tower_mist_shadow": {
+    "type": "Document Card",
+    "subclass": "Location_Plan",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Shadow Tower Plans"
+  },
+  "tower_guard_archer": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Tower Guard Archer"
+  },
+  "tower_guard_crossbow": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Tower Guard Crossbow"
+  },
+  "tower_guard_spear": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Tower Guard Spear"
+  },
   "373ce071-3e3f-423d-a14e-34e67052b891": {
     "type": "Junk Card",
     "subclass": "Junk_to_Weapon",
@@ -2637,5 +2672,503 @@
     "blueprint_subclass": null,
     "states": 2,
     "name": "Archer Tower Blueprint"
+  },
+  "5d110440-da92-4cd6-971d-19fb784d888f": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "skill_subclass": null,
+    "states": 2,
+    "name": ""
+  },
+  "ambush": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Ambush!"
+  },
+  "skirmish_in_the_brush": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Skirmish in the Brush"
+  },
+  "attacked": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Attacked!"
+  },
+  "roadside_raiders": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Roadside Raiders"
+  },
+  "shadows_strike": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Shadows Strike"
+  },
+  "bandit_assault": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Bandit Assault"
+  },
+  "wolves_at_the_gate": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wolves at the Gate"
+  },
+  "trapped": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Trapped!"
+  },
+  "arrow_storm": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Arrow Storm"
+  },
+  "desperate_fight": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Desperate Fight"
+  },
+  "surrounded": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Surrounded!"
+  },
+  "nightfall_attack": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Nightfall Attack"
+  },
+  "cornered": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Cornered"
+  },
+  "blindsided": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Blindsided"
+  },
+  "the_hunt_begins": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Hunt Begins"
+  },
+  "stranger_on_the_road": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Stranger on the Road"
+  },
+  "the_merchant_s_offer": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Merchant's Offer"
+  },
+  "a_plea_for_help": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "A Plea for Help"
+  },
+  "crossroads_meeting": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Crossroads Meeting"
+  },
+  "the_beggar_s_tale": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Beggar's Tale"
+  },
+  "suspicious_traveler": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Suspicious Traveler"
+  },
+  "old_friends": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Old Friends?"
+  },
+  "the_bard_s_song": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Bard's Song"
+  },
+  "shady_deal": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Shady Deal"
+  },
+  "campfire_stories": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Campfire Stories"
+  },
+  "a_child_s_request": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "A Child's Request"
+  },
+  "the_warning": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Warning"
+  },
+  "hidden_cache": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Hidden Cache"
+  },
+  "abandoned_camp": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Abandoned Camp"
+  },
+  "strange_markings": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Strange Markings"
+  },
+  "the_old_well": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Old Well"
+  },
+  "overgrown_ruins": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Overgrown Ruins"
+  },
+  "mysterious_tracks": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Mysterious Tracks"
+  },
+  "collapsed_tunnel": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Collapsed Tunnel"
+  },
+  "forgotten_shrine": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Forgotten Shrine"
+  },
+  "the_hollow_tree": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Hollow Tree"
+  },
+  "sunken_chest": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Sunken Chest"
+  },
+  "weathered_signpost": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Weathered Signpost"
+  },
+  "the_echoing_cave": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Echoing Cave"
+  },
+  "rockslide": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Rockslide!"
+  },
+  "flash_flood": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Flash Flood"
+  },
+  "sudden_storm": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Sudden Storm"
+  },
+  "sinkhole": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Sinkhole"
+  },
+  "wildfire_smoke": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wildfire Smoke"
+  },
+  "freezing_winds": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Freezing Winds"
+  },
+  "toxic_spores": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Toxic Spores"
+  },
+  "quicksand": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Quicksand!"
+  },
+  "lightning_strike": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Lightning Strike"
+  },
+  "ground_tremor": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Ground Tremor"
+  },
+  "what_was_that": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "What Was That?!"
+  },
+  "the_chicken_incident": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Chicken Incident"
+  },
+  "oops": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Oops!"
+  },
+  "well_that_happened": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Well That Happened"
+  },
+  "squirrel_attack": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Squirrel Attack!"
+  },
+  "the_pants_problem": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Pants Problem"
+  },
+  "lost_and_confused": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Lost and Confused"
+  },
+  "bird_droppings": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Bird Droppings"
+  },
+  "cursed_sandwich": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Cursed Sandwich"
+  },
+  "the_singing_rock": {
+    "type": "Instance Card",
+    "subclass": "Discovery",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "The Singing Rock"
+  },
+  "whispering_woods": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Whispering Woods"
+  },
+  "deep_forest": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Deep Forest"
+  },
+  "twilight_canopy": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Twilight Canopy"
+  },
+  "ancient_grove": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Ancient Grove"
+  },
+  "scorched_plains": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Scorched Plains"
+  },
+  "dust_bowl": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Dust Bowl"
+  },
+  "crumbling_highway": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Crumbling Highway"
+  },
+  "the_barrens": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "The Barrens"
+  },
+  "rocky_highlands": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rocky Highlands"
+  },
+  "mountain_pass": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Mountain Pass"
+  },
+  "windswept_peaks": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Windswept Peaks"
   }
 }

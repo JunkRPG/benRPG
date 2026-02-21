@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Quicksand!",
+    "Description": "The earth groans and shifts \u00e2\u20ac\u201d unstable ground!",
+    "Subclass": "Environmental",
+    "Outcomes": "[{\"probability\": 0.1, \"type\": \"none\", \"text\": \"You find shelter just in time.\", \"params\": {}}, {\"probability\": 0.38, \"type\": \"damage_player\", \"text\": \"You can't escape the danger in time!\", \"params\": {\"damage\": 15}}, {\"probability\": 0.52, \"type\": \"teleport_player\", \"text\": \"The ground shifts \\u00e2\\u20ac\\u201d you end up somewhere unexpected.\", \"params\": {\"distance\": 1, \"direction\": \"random\"}}]"
+  }
+}

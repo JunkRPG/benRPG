@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Toxic Spores",
+    "Description": "A blinding flash splits the sky overhead.",
+    "Subclass": "Environmental",
+    "Outcomes": "[{\"probability\": 0.36, \"type\": \"damage_player\", \"text\": \"Nature's fury strikes without mercy!\", \"params\": {\"damage\": 11}}, {\"probability\": 0.3, \"type\": \"player_choice\", \"text\": \"You see the danger approaching. React quickly!\", \"params\": {\"choices\": [{\"name\": \"Take cover!\", \"risk\": 0.23, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 8}}, {\"name\": \"Run for it!\", \"risk\": 0.46, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 3}}]}}, {\"probability\": 0.09, \"type\": \"teleport_player\", \"text\": \"The force of the event displaces you!\", \"params\": {\"distance\": 3, \"direction\": \"random\"}}, {\"probability\": 0.25, \"type\": \"none\", \"text\": \"The danger passes without harming you.\", \"params\": {}}]"
+  }
+}

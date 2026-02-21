@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Sudden Storm",
+    "Description": "The ground shakes violently beneath your feet!",
+    "Subclass": "Environmental",
+    "Outcomes": "[{\"probability\": 0.44, \"type\": \"damage_player\", \"text\": \"Nature's fury strikes without mercy!\", \"params\": {\"damage\": 5}}, {\"probability\": 0.56, \"type\": \"player_choice\", \"text\": \"There might be a way to avoid the worst of it.\", \"params\": {\"choices\": [{\"name\": \"Take cover!\", \"risk\": 0.22, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 10}}, {\"name\": \"Run for it!\", \"risk\": 0.36, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 6}}]}}]"
+  }
+}

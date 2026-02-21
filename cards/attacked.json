@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Attacked!",
+    "Description": "You hear steel being drawn nearby. Prepare yourself!",
+    "Subclass": "Combat",
+    "Outcomes": "[{\"probability\": 0.21, \"type\": \"damage_player\", \"text\": \"A blade catches your arm. Blood flows.\", \"params\": {\"damage\": 12}}, {\"probability\": 0.25, \"type\": \"spawn_enemy\", \"text\": \"Bandits rush from the bushes!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"spawn_near\": \"player\", \"count\": 1}}, {\"probability\": 0.42, \"type\": \"player_choice\", \"text\": \"You spot them before they spot you. What do you do?\", \"params\": {\"choices\": [{\"name\": \"Attack first!\", \"risk\": 0.28, \"success\": {\"type\": \"damage_enemy\", \"damage\": 20, \"target\": \"random\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 5}}, {\"name\": \"Sneak away\", \"risk\": 0.3, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}]}}, {\"probability\": 0.12, \"type\": \"draw_card\", \"text\": \"You grab something useful from the fallen enemy.\", \"params\": {\"card_type\": \"Junk Card\"}}]"
+  }
+}

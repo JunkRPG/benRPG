@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Nightfall Attack",
+    "Description": "The path ahead is blocked by armed figures.",
+    "Subclass": "Combat",
+    "Outcomes": "[{\"probability\": 0.16, \"type\": \"damage_player\", \"text\": \"You take a hit before you can react!\", \"params\": {\"damage\": 10}}, {\"probability\": 0.19, \"type\": \"spawn_enemy\", \"text\": \"Reinforcements arrive for the enemy!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"spawn_near\": \"player\", \"count\": 1}}, {\"probability\": 0.32, \"type\": \"player_choice\", \"text\": \"You spot them before they spot you. What do you do?\", \"params\": {\"choices\": [{\"name\": \"Attack first!\", \"risk\": 0.28, \"success\": {\"type\": \"damage_enemy\", \"damage\": 16, \"target\": \"random\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 3}}, {\"name\": \"Sneak away\", \"risk\": 0.29, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}]}}, {\"probability\": 0.33, \"type\": \"draw_card\", \"text\": \"You grab something useful from the fallen enemy.\", \"params\": {\"card_type\": \"Junk Card\"}}]"
+  }
+}

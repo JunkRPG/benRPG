@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Wildfire Smoke",
+    "Description": "Strange mushrooms burst, filling the air with spores.",
+    "Subclass": "Environmental",
+    "Outcomes": "[{\"probability\": 0.24, \"type\": \"damage_player\", \"text\": \"You're battered by the elements!\", \"params\": {\"damage\": 4}}, {\"probability\": 0.63, \"type\": \"none\", \"text\": \"You manage to avoid the worst of it.\", \"params\": {}}, {\"probability\": 0.13, \"type\": \"player_choice\", \"text\": \"Split-second decision \\u00e2\\u20ac\\u201d what do you do?\", \"params\": {\"choices\": [{\"name\": \"Take cover!\", \"risk\": 0.37, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 9}}, {\"name\": \"Run for it!\", \"risk\": 0.36, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 4}}]}}]"
+  }
+}

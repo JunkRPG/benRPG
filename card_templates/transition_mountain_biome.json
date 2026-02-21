@@ -1,0 +1,99 @@
+{
+  "template_name": "Mountain Biome Transitions",
+  "card_type": "Transition Card",
+  "subclass": null,
+  "states": 2,
+  "count": 3,
+  "naming": {
+    "mode": "name_list",
+    "names": [
+      "Rocky Highlands", "Mountain Pass", "Windswept Peaks"
+    ]
+  },
+  "fields": {
+    "Description": {"type": "text_choice", "options": [
+      "The air thins as the path climbs higher.",
+      "Rocky terrain stretches upward. The wind howls.",
+      "Mountain peaks loom in every direction."
+    ]},
+    "Outcomes": {"type": "json_template", "template_mode": "outcome_pool",
+      "outcome_pool": [
+        {"type": "draw_instance", "text_options": [
+          "An echo bounces off the cliff face — what caused it?",
+          "Something moves on the ridge above.",
+          "The mountain has surprises in store."
+        ], "params": {}, "weight": 2},
+
+        {"type": "spawn_enemy", "text_options": [
+          "Mountain predators descend from the crags!",
+          "Bandits ambush you from the high ground!",
+          "Rock-dwellers emerge from cave openings!"
+        ], "params": {"edge": "random", "deck": "beta_enemy_deck.json", "count": 1}, "weight": 2},
+
+        {"type": "weather", "text_options": [
+          "A fierce mountain storm rolls in!",
+          "Snow begins to fall heavily.",
+          "Gale-force winds batter the exposed ridge."
+        ], "params": {"effect": {"options": ["storm", "rain", "fog"]}, "range_modifier": {"min": -3, "max": -1}}, "weight": 2},
+
+        {"type": "draw_junk", "text_options": [
+          "You find mineral deposits in the rock face.",
+          "Ore glints in the stone — useful materials!",
+          "Mountain herbs grow in a sheltered crevice."
+        ], "params": {"deck": "beta_junk_deck.json", "count": 1}, "weight": 2},
+
+        {"type": "trip_fall", "text_options": [
+          "Loose scree slides under your feet!",
+          "You slip on the rocky path!",
+          "A false step on the narrow ledge!"
+        ], "params": {"damage": {"min": 2, "max": 5}}, "weight": 2},
+
+        {"type": "none", "text_options": [
+          "The mountain stands silent and majestic.",
+          "Clear skies reveal breathtaking views. All is calm.",
+          "A peaceful moment at altitude."
+        ], "params": {}, "weight": 2}
+      ],
+      "pick_count": {"min": 4, "max": 6},
+      "auto_balance_probabilities": true
+    }
+  },
+  "state2_fields": {
+    "Name": {"type": "text_choice", "options": [
+      "Frozen Heights", "Blizzard Peaks", "Night on the Mountain"
+    ]},
+    "Description": {"type": "text_choice", "options": [
+      "Bitter cold and howling winds make the mountain treacherous.",
+      "Ice coats every surface. Movement becomes dangerous.",
+      "The mountain shows no mercy in the dark."
+    ]},
+    "Outcomes": {"type": "json_template", "template_mode": "outcome_pool",
+      "outcome_pool": [
+        {"type": "spawn_enemy", "text_options": [
+          "Ice creatures emerge from frozen caves!",
+          "Mountain beasts attack, driven by hunger!",
+          "Frost-hardened predators close in!"
+        ], "params": {"edge": "random", "deck": "beta_enemy_deck.json", "count": {"min": 1, "max": 2}}, "weight": 3},
+
+        {"type": "trip_fall", "text_options": [
+          "Ice! You slip and tumble!",
+          "The frozen path betrays you!"
+        ], "params": {"damage": {"min": 3, "max": 7}}, "weight": 2},
+
+        {"type": "none", "text_options": [
+          "You weather the cold. It builds character.",
+          "The storm breaks briefly — a moment of respite."
+        ], "params": {}, "weight": 2},
+
+        {"type": "flip_state", "text_options": [
+          "The ice begins to thaw. Conditions improve.",
+          "Sunlight warms the peaks. The worst is over.",
+          "Spring returns to the mountain."
+        ], "params": {}, "weight": 2}
+      ],
+      "pick_count": {"min": 3, "max": 4},
+      "auto_balance_probabilities": true
+    }
+  },
+  "deck": "generated_transition_mountain_deck"
+}

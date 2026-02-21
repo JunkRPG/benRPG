@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "A Plea for Help",
+    "Description": "A weathered stranger blocks the path, wanting to talk.",
+    "Subclass": "Social",
+    "Outcomes": "[{\"probability\": 0.35, \"type\": \"none\", \"text\": \"The stranger nods and continues on their way.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"player_choice\", \"text\": \"Someone is in trouble and only you can help.\", \"params\": {\"choices\": [{\"name\": \"Help them\", \"risk\": 0.29, \"success\": {\"type\": \"heal_player\", \"amount\": 10}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}, {\"name\": \"Walk away\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}, {\"probability\": 0.22, \"type\": \"player_choice\", \"text\": \"They offer you a trade. Do you accept?\", \"params\": {\"choices\": [{\"name\": \"Accept the trade\", \"risk\": 0.11, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 5}}, {\"name\": \"Decline politely\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}, {\"probability\": 0.28, \"type\": \"spawn_ally\", \"text\": \"A new ally appears from an unexpected encounter.\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"spawn_near\": \"player\", \"count\": 1}}]"
+  }
+}

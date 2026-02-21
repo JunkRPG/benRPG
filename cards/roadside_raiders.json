@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Roadside Raiders",
+    "Description": "Movement in the treeline \u00e2\u20ac\u201d hostiles incoming!",
+    "Subclass": "Combat",
+    "Outcomes": "[{\"probability\": 0.17, \"type\": \"player_choice\", \"text\": \"You spot them before they spot you. What do you do?\", \"params\": {\"choices\": [{\"name\": \"Attack first!\", \"risk\": 0.27, \"success\": {\"type\": \"damage_enemy\", \"damage\": 10, \"target\": \"random\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 7}}, {\"name\": \"Sneak away\", \"risk\": 0.25, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}]}}, {\"probability\": 0.47, \"type\": \"none\", \"text\": \"You brace yourself, but the threat passes.\", \"params\": {}}, {\"probability\": 0.36, \"type\": \"spawn_enemy\", \"text\": \"A war band charges toward you!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"spawn_near\": \"player\", \"count\": 2}}]"
+  }
+}

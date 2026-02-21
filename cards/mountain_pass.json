@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Mountain Pass",
+    "Description": "Mountain peaks loom in every direction.",
+    "Outcomes": "[{\"probability\": 0.12, \"type\": \"trip_fall\", \"text\": \"You slip on the rocky path!\", \"params\": {\"damage\": 4}}, {\"probability\": 0.18, \"type\": \"none\", \"text\": \"The mountain stands silent and majestic.\", \"params\": {}}, {\"probability\": 0.24, \"type\": \"draw_instance\", \"text\": \"Something moves on the ridge above.\", \"params\": {}}, {\"probability\": 0.26, \"type\": \"draw_junk\", \"text\": \"You find mineral deposits in the rock face.\", \"params\": {\"deck\": \"beta_junk_deck.json\", \"count\": 1}}, {\"probability\": 0.2, \"type\": \"spawn_enemy\", \"text\": \"Bandits ambush you from the high ground!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}]",
+    "2nd_state_Name": "Blizzard Peaks",
+    "2nd_state_Description": "Ice coats every surface. Movement becomes dangerous.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.42, \"type\": \"trip_fall\", \"text\": \"Ice! You slip and tumble!\", \"params\": {\"damage\": 5}}, {\"probability\": 0.08, \"type\": \"spawn_enemy\", \"text\": \"Ice creatures emerge from frozen caves!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.5, \"type\": \"none\", \"text\": \"The storm breaks briefly \\u00e2\\u20ac\\u201d a moment of respite.\", \"params\": {}}]"
+  }
+}

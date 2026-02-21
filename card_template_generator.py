@@ -63,6 +63,175 @@ def generate_name(naming_config, index, rng):
         return f"{base_name} #{index + 1}"
 
 
+def _resolve_randomizable(value, rng):
+    """Recursively resolve values that may contain randomization directives.
+
+    Conventions:
+        {"min": X, "max": Y} -> random int (if both int) or float
+        {"min": X, "max": Y, "decimals": N} -> random float with N decimals
+        {"options": [a, b, c]} -> random choice from list
+        dict -> recursively resolve values
+        list -> recursively resolve items
+        primitive -> pass through
+    """
+    if isinstance(value, dict):
+        keys = set(value.keys())
+        if keys <= {"min", "max", "decimals"} and "min" in value and "max" in value:
+            if "decimals" in value or isinstance(value["min"], float) or isinstance(value["max"], float):
+                decimals = value.get("decimals", 2)
+                return round(rng.uniform(float(value["min"]), float(value["max"])), decimals)
+            return rng.randint(value["min"], value["max"])
+        if keys == {"options"}:
+            return rng.choice(value["options"])
+        return {k: _resolve_randomizable(v, rng) for k, v in value.items()}
+    elif isinstance(value, list):
+        return [_resolve_randomizable(item, rng) for item in value]
+    return value
+
+
+def _resolve_json_template(field_config, generated_fields, rng):
+    """Resolve a json_template field to a JSON string.
+
+    Supported template_modes:
+        outcome_pool - Pick outcomes from a weighted pool (Instance/Transition cards)
+        placeholder_pool - Pick quest placeholders from a pool
+        condition_pool - Pick quest conditions from a pool
+        rewards - Generate rewards object from a template
+        chain_config - Generate chain config object from a template
+        fixed - Serialize a fixed JSON value
+    """
+    mode = field_config.get("template_mode", "outcome_pool")
+
+    if mode == "outcome_pool":
+        return _gen_outcome_pool(field_config, rng)
+    elif mode == "placeholder_pool":
+        return _gen_placeholder_pool(field_config, rng)
+    elif mode == "condition_pool":
+        return _gen_condition_pool(field_config, rng)
+    elif mode == "rewards":
+        return _gen_rewards(field_config, rng)
+    elif mode == "chain_config":
+        return _gen_chain_config(field_config, rng)
+    elif mode == "fixed":
+        return json.dumps(field_config.get("value", []))
+    return json.dumps([])
+
+
+def _gen_outcome_pool(field_config, rng):
+    """Generate outcomes JSON by picking from a weighted pool of possible outcomes.
+
+    Each pool entry: {type, text_options, params, weight}
+    Params values can use randomization directives (min/max, options).
+    """
+    pool = field_config.get("outcome_pool", [])
+    pick_config = field_config.get("pick_count", {"min": 3, "max": 5})
+    auto_balance = field_config.get("auto_balance_probabilities", True)
+    allow_dupes = field_config.get("allow_duplicate_types", False)
+
+    if isinstance(pick_config, dict):
+        pick_count = rng.randint(pick_config["min"], pick_config["max"])
+    else:
+        pick_count = int(pick_config)
+
+    if not pool:
+        return json.dumps([])
+
+    if not allow_dupes:
+        pick_count = min(pick_count, len(pool))
+
+    # Weighted selection
+    weights = [entry.get("weight", 1) for entry in pool]
+
+    if allow_dupes:
+        selected = rng.choices(pool, weights=weights, k=pick_count)
+    else:
+        # Sample without replacement using weights
+        selected = []
+        available_indices = list(range(len(pool)))
+        avail_weights = list(weights)
+        for _ in range(pick_count):
+            if not available_indices:
+                break
+            picks = rng.choices(range(len(available_indices)),
+                                weights=avail_weights, k=1)
+            idx = picks[0]
+            selected.append(pool[available_indices[idx]])
+            available_indices.pop(idx)
+            avail_weights.pop(idx)
+
+    # Build outcome objects
+    outcomes = []
+    for entry in selected:
+        text_options = entry.get("text_options", [""])
+        text = rng.choice(text_options) if text_options else ""
+
+        params = _resolve_randomizable(entry.get("params", {}), rng)
+
+        outcome = {
+            "probability": 0.0,
+            "type": entry.get("type", "none"),
+            "text": text,
+            "params": params
+        }
+        outcomes.append(outcome)
+
+    # Auto-balance probabilities to sum to 1.0
+    if auto_balance and outcomes:
+        raw_weights = [rng.random() + 0.1 for _ in outcomes]
+        total = sum(raw_weights)
+        for i, outcome in enumerate(outcomes):
+            outcome["probability"] = round(raw_weights[i] / total, 2)
+        # Fix rounding error
+        diff = round(1.0 - sum(o["probability"] for o in outcomes), 2)
+        outcomes[0]["probability"] = round(outcomes[0]["probability"] + diff, 2)
+
+    return json.dumps(outcomes)
+
+
+def _gen_placeholder_pool(field_config, rng):
+    """Generate quest placeholders JSON from a pool of definitions."""
+    pool = field_config.get("placeholder_pool", [])
+    pick_config = field_config.get("pick_count", {"min": 1, "max": 3})
+
+    if isinstance(pick_config, dict):
+        pick_count = rng.randint(pick_config["min"], pick_config["max"])
+    else:
+        pick_count = int(pick_config)
+
+    pick_count = min(pick_count, len(pool))
+    selected = rng.sample(pool, pick_count) if pool else []
+
+    return json.dumps([_resolve_randomizable(entry, rng) for entry in selected])
+
+
+def _gen_condition_pool(field_config, rng):
+    """Generate quest conditions JSON from a pool of definitions."""
+    pool = field_config.get("condition_pool", [])
+    pick_config = field_config.get("pick_count", {"min": 1, "max": 2})
+
+    if isinstance(pick_config, dict):
+        pick_count = rng.randint(pick_config["min"], pick_config["max"])
+    else:
+        pick_count = int(pick_config)
+
+    pick_count = min(pick_count, len(pool))
+    selected = rng.sample(pool, pick_count) if pool else []
+
+    return json.dumps([_resolve_randomizable(entry, rng) for entry in selected])
+
+
+def _gen_rewards(field_config, rng):
+    """Generate quest rewards JSON object from a template."""
+    template = field_config.get("rewards_template", {})
+    return json.dumps(_resolve_randomizable(template, rng))
+
+
+def _gen_chain_config(field_config, rng):
+    """Generate quest chain config JSON object from a template."""
+    template = field_config.get("chain_template", {})
+    return json.dumps(_resolve_randomizable(template, rng))
+
+
 def resolve_field_value(field_config, generated_fields, rng):
     """Resolve a field value based on its type config.
 
@@ -104,6 +273,20 @@ def resolve_field_value(field_config, generated_fields, rng):
             return str(int(math.floor(result)))
         except (ValueError, TypeError):
             return "0"
+
+    elif field_type == "text_choice":
+        options = field_config.get("options", [""])
+        text = str(rng.choice(options))
+        # Substitute {FieldName} references with already-generated values
+        for key, val in generated_fields.items():
+            text = text.replace(f"{{{key}}}", str(val))
+        return text
+
+    elif field_type == "json_template":
+        return _resolve_json_template(field_config, generated_fields, rng)
+
+    elif field_type == "json_string":
+        return json.dumps(field_config.get("value", ""))
 
     return str(field_config.get("value", ""))
 
@@ -284,7 +467,23 @@ def _summarize_stats(card_data):
         val = data.get(field)
         if val and val != "0":
             parts.append(f"{field}={val}")
-    return ", ".join(parts) if parts else "(no combat stats)"
+    # Summarize narrative card JSON fields
+    for field in ["Outcomes", "Placeholders", "Success_Conditions",
+                   "Failure_Conditions", "Choices"]:
+        val = data.get(field)
+        if val:
+            try:
+                items = json.loads(val)
+                if isinstance(items, list):
+                    parts.append(f"{field}: {len(items)} items")
+            except (json.JSONDecodeError, TypeError):
+                pass
+    if data.get("Description"):
+        desc = data["Description"]
+        if len(desc) > 40:
+            desc = desc[:37] + "..."
+        parts.append(f'"{desc}"')
+    return ", ".join(parts) if parts else "(no stats)"
 
 
 def _update_deck(deck_name, card_ids):

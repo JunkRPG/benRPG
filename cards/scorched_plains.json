@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Scorched Plains",
+    "Description": "Nothing but desolation stretches to the horizon.",
+    "Outcomes": "[{\"probability\": 0.29, \"type\": \"draw_junk\", \"text\": \"The wasteland yields its treasures to the persistent.\", \"params\": {\"deck\": \"beta_junk_deck.json\", \"count\": 1}}, {\"probability\": 0.12, \"type\": \"weather\", \"text\": \"Sandstorm! Visibility drops to nothing.\", \"params\": {\"effect\": \"storm\", \"range_modifier\": -3}}, {\"probability\": 0.23, \"type\": \"none\", \"text\": \"The silence is oppressive, but at least it's safe.\", \"params\": {}}, {\"probability\": 0.36, \"type\": \"spawn_enemy\", \"text\": \"Raiders emerge from behind rusted wreckage!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 2}}]",
+    "2nd_state_Name": "Cold Desert",
+    "2nd_state_Description": "Without the sun's heat, the wasteland becomes dangerously cold.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.6, \"type\": \"damage_player\", \"text\": \"The freezing cold saps your strength.\", \"params\": {\"damage\": 3}}, {\"probability\": 0.15, \"type\": \"spawn_enemy\", \"text\": \"Night raiders attack under cover of darkness!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 2}}, {\"probability\": 0.25, \"type\": \"none\", \"text\": \"You huddle against the cold. Dawn can't come soon enough.\", \"params\": {}}]"
+  }
+}

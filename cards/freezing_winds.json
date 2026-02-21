@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Freezing Winds",
+    "Description": "Dark clouds roll in with terrifying speed.",
+    "Subclass": "Environmental",
+    "Outcomes": "[{\"probability\": 0.59, \"type\": \"player_choice\", \"text\": \"There might be a way to avoid the worst of it.\", \"params\": {\"choices\": [{\"name\": \"Take cover!\", \"risk\": 0.32, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 12}}, {\"name\": \"Run for it!\", \"risk\": 0.39, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 5}}]}}, {\"probability\": 0.41, \"type\": \"none\", \"text\": \"Quick reflexes save you from disaster.\", \"params\": {}}]"
+  }
+}

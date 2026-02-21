@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Bird Droppings",
+    "Description": "The universe has a sense of humor, apparently.",
+    "Subclass": "Discovery",
+    "Outcomes": "[{\"probability\": 0.13, \"type\": \"draw_card\", \"text\": \"The squirrel drops something from its cheeks before fleeing.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.18, \"type\": \"none\", \"text\": \"The moment passes. Life goes on. Somehow.\", \"params\": {}}, {\"probability\": 0.13, \"type\": \"heal_player\", \"text\": \"The cosmic joke is on someone else today \\u00e2\\u20ac\\u201d you feel great!\", \"params\": {\"amount\": 4}}, {\"probability\": 0.56, \"type\": \"player_choice\", \"text\": \"A squirrel is sitting on your pack. It seems... angry.\", \"params\": {\"choices\": [{\"name\": \"Investigate cautiously\", \"risk\": 0.18, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 1}}, {\"name\": \"Nope. Walk away.\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}]"
+  }
+}

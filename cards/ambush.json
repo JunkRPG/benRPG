@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Ambush!",
+    "Description": "Torchlight flickers between the trees \u00e2\u20ac\u201d a raiding party.",
+    "Subclass": "Combat",
+    "Outcomes": "[{\"probability\": 0.13, \"type\": \"damage_player\", \"text\": \"You take a hit before you can react!\", \"params\": {\"damage\": 11}}, {\"probability\": 0.3, \"type\": \"spawn_enemy\", \"text\": \"Enemies emerge from hiding!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"spawn_near\": \"player\", \"count\": 2}}, {\"probability\": 0.57, \"type\": \"none\", \"text\": \"False alarm \\u00e2\\u20ac\\u201d it was just the wind.\", \"params\": {}}]"
+  }
+}

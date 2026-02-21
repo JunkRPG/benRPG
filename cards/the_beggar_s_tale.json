@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "The Beggar's Tale",
+    "Description": "A hooded figure steps from the shadows, hand raised in peace.",
+    "Subclass": "Social",
+    "Outcomes": "[{\"probability\": 0.35, \"type\": \"draw_card\", \"text\": \"They give you a gift before departing.\", \"params\": {\"card_type\": \"Document Card\"}}, {\"probability\": 0.23, \"type\": \"player_choice\", \"text\": \"They offer you a trade. Do you accept?\", \"params\": {\"choices\": [{\"name\": \"Accept the trade\", \"risk\": 0.2, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 3}}, {\"name\": \"Decline politely\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}, {\"probability\": 0.31, \"type\": \"none\", \"text\": \"The stranger nods and continues on their way.\", \"params\": {}}, {\"probability\": 0.11, \"type\": \"heal_player\", \"text\": \"They offer you a healing salve as thanks.\", \"params\": {\"amount\": 4}}]"
+  }
+}

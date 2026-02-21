@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Rocky Highlands",
+    "Description": "The air thins as the path climbs higher.",
+    "Outcomes": "[{\"probability\": 0.21, \"type\": \"weather\", \"text\": \"A fierce mountain storm rolls in!\", \"params\": {\"effect\": \"fog\", \"range_modifier\": -2}}, {\"probability\": 0.16, \"type\": \"draw_instance\", \"text\": \"An echo bounces off the cliff face \\u00e2\\u20ac\\u201d what caused it?\", \"params\": {}}, {\"probability\": 0.26, \"type\": \"none\", \"text\": \"Clear skies reveal breathtaking views. All is calm.\", \"params\": {}}, {\"probability\": 0.19, \"type\": \"draw_junk\", \"text\": \"Mountain herbs grow in a sheltered crevice.\", \"params\": {\"deck\": \"beta_junk_deck.json\", \"count\": 1}}, {\"probability\": 0.18, \"type\": \"spawn_enemy\", \"text\": \"Mountain predators descend from the crags!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}]",
+    "2nd_state_Name": "Blizzard Peaks",
+    "2nd_state_Description": "Bitter cold and howling winds make the mountain treacherous.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.22, \"type\": \"none\", \"text\": \"The storm breaks briefly \\u00e2\\u20ac\\u201d a moment of respite.\", \"params\": {}}, {\"probability\": 0.46, \"type\": \"spawn_enemy\", \"text\": \"Mountain beasts attack, driven by hunger!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 2}}, {\"probability\": 0.32, \"type\": \"flip_state\", \"text\": \"Spring returns to the mountain.\", \"params\": {}}]"
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "template_name": "Environmental Hazards",
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "count": 10,
+  "naming": {
+    "mode": "name_list",
+    "names": [
+      "Rockslide!", "Flash Flood", "Sudden Storm", "Sinkhole",
+      "Wildfire Smoke", "Freezing Winds", "Toxic Spores",
+      "Quicksand!", "Lightning Strike", "Ground Tremor"
+    ]
+  },
+  "fields": {
+    "Description": {"type": "text_choice", "options": [
+      "The ground shakes violently beneath your feet!",
+      "Dark clouds roll in with terrifying speed.",
+      "The air becomes thick and hard to breathe.",
+      "A wall of water rushes down the hillside!",
+      "Cracks spider across the ground — it's giving way!",
+      "The temperature drops suddenly and dangerously.",
+      "Strange mushrooms burst, filling the air with spores.",
+      "The earth groans and shifts — unstable ground!",
+      "A blinding flash splits the sky overhead.",
+      "Smoke billows from a fire spreading through dry brush."
+    ]},
+    "Subclass": {"type": "fixed", "value": "Environmental"},
+    "Outcomes": {"type": "json_template", "template_mode": "outcome_pool",
+      "outcome_pool": [
+        {"type": "damage_player", "text_options": [
+          "The hazard catches you off guard!",
+          "You can't escape the danger in time!",
+          "Nature's fury strikes without mercy!",
+          "You're battered by the elements!",
+          "The environment itself turns hostile!"
+        ], "params": {"damage": {"min": 4, "max": 15}}, "weight": 3},
+
+        {"type": "player_choice", "text_options": [
+          "You see the danger approaching. React quickly!",
+          "There might be a way to avoid the worst of it.",
+          "Split-second decision — what do you do?"
+        ], "params": {"choices": [
+          {
+            "name": "Take cover!",
+            "risk": {"min": 0.2, "max": 0.4},
+            "success": {"type": "none"},
+            "failure": {"type": "damage_player", "damage": {"min": 5, "max": 12}}
+          },
+          {
+            "name": "Run for it!",
+            "risk": {"min": 0.3, "max": 0.5},
+            "success": {"type": "none"},
+            "failure": {"type": "damage_player", "damage": {"min": 3, "max": 8}}
+          }
+        ]}, "weight": 2},
+
+        {"type": "none", "text_options": [
+          "You manage to avoid the worst of it.",
+          "The danger passes without harming you.",
+          "Quick reflexes save you from disaster.",
+          "You find shelter just in time."
+        ], "params": {}, "weight": 2},
+
+        {"type": "teleport_player", "text_options": [
+          "The force of the event displaces you!",
+          "You're swept to a new location!",
+          "The ground shifts — you end up somewhere unexpected."
+        ], "params": {"distance": {"min": 1, "max": 3}, "direction": "random"}, "weight": 1}
+      ],
+      "pick_count": {"min": 2, "max": 4},
+      "auto_balance_probabilities": true
+    }
+  },
+  "deck": "generated_instance_environmental_deck"
+}

@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Bandit Assault",
+    "Description": "Something crashes through the bushes toward you.",
+    "Subclass": "Combat",
+    "Outcomes": "[{\"probability\": 0.36, \"type\": \"spawn_enemy\", \"text\": \"Enemies emerge from hiding!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"spawn_near\": \"player\", \"count\": 1}}, {\"probability\": 0.32, \"type\": \"draw_card\", \"text\": \"You grab something useful from the fallen enemy.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.04, \"type\": \"damage_player\", \"text\": \"You're struck by a thrown rock!\", \"params\": {\"damage\": 12}}, {\"probability\": 0.28, \"type\": \"player_choice\", \"text\": \"You spot them before they spot you. What do you do?\", \"params\": {\"choices\": [{\"name\": \"Attack first!\", \"risk\": 0.23, \"success\": {\"type\": \"damage_enemy\", \"damage\": 17, \"target\": \"random\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 6}}, {\"name\": \"Sneak away\", \"risk\": 0.21, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}]}}]"
+  }
+}

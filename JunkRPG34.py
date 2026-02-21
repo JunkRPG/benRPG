@@ -15,7 +15,7 @@ import tkinter as tk
 from tkinter import filedialog
 from player import Player  # Import Player from player.py
 from unit import Unit      # Import Unit from unit.py
-from hexgrid import HexGrid  # Import HexGrid from hexgrid.py
+from hexgrid import HexGrid, DIRECTIONS  # Import HexGrid from hexgrid.py
 from inventory_card import InventoryCard
 from quest_system import QuestManager
 from instance_system import InstanceManager
@@ -1589,7 +1589,7 @@ class RecruitmentScreen:
                 game.current_player.inventory.remove(card)
 
         # Change NPC allegiance to Allied and set follow/carry behavior
-        self.target_unit.allegiance = "Allied"
+        self.target_unit.set_allegiance("Allied")
         self.target_unit.carry_to_next_level = True
         self.target_unit.behavior_follow_target = f"player_{game.current_player_index}"
 
@@ -1882,7 +1882,7 @@ class PartyScreen:
             "data": card_data
         }
         unit = Unit(unit_data)
-        unit.allegiance = "Allied"  # Ensure allied
+        unit.set_allegiance("Allied")  # Ensure allied
         game_screen.hex_grid.place_unit(unit, deploy_pos[0], deploy_pos[1])
 
         game_screen.add_to_log(f"{name} deployed to the battlefield!")
@@ -3483,7 +3483,7 @@ class TabbedMenuScreen:
         if custom_tree:
             unit_data["custom_behavior_tree"] = custom_tree
         unit = Unit(unit_data)
-        unit.allegiance = "Allied"
+        unit.set_allegiance("Allied")
         # Apply behavior target overrides (stubborn NPCs ignore overrides)
         if not unit.is_stubborn and override:
             if override.get("follow_target"):
@@ -4145,6 +4145,7 @@ class GameScreen:
         self.defensive_hex_options = []  # Valid hexes for defensive posture selection
         self.defend_button = None        # Defend button on left panel
         self.leave_tower_button = None   # Leave Tower button (shown when manning)
+        self.toggle_weapon_button = None # Toggle tower/personal weapon mode
         self.selected_skill = None  # Currently selected skill for use
         self.skill_buttons = []     # List of (button, skill_card) tuples
         self.skills_button = None   # Skills menu button
@@ -5987,7 +5988,7 @@ class GameScreen:
             unit = Unit(card_data)
             unit.hp = npc_info["hp"]
             unit.max_hp = npc_info["max_hp"]
-            unit.allegiance = npc_info["allegiance"]
+            unit.set_allegiance(npc_info["allegiance"])
             unit.behavior_tree = npc_info["behavior_tree"]
             if npc_info.get("behavior_follow_target"):
                 unit.behavior_follow_target = npc_info["behavior_follow_target"]
@@ -6143,9 +6144,6 @@ class GameScreen:
         # Clear defensive posture at start of this player's turn
         current_player = game.current_player
         current_player.clear_defensive_posture()
-        # Lock movement if manning a tower
-        if current_player.is_manning():
-            current_player.movement_used = True
         # Smooth pan camera to the active player
         if current_player and current_player.position:
             row, col = current_player.position
@@ -6181,8 +6179,6 @@ class GameScreen:
             game.player.tick_cooldowns()
             game.player.movement_used = game.player.action_used = False
             game.player.reset_double_attack()
-            if game.player.is_manning():
-                game.player.movement_used = True
             self.turn_phase = "allied"
             self.execute_turn("Allied")
         elif self.turn_phase == "multiplayer_player":
@@ -6193,8 +6189,6 @@ class GameScreen:
             current.tick_cooldowns()
             current.movement_used = current.action_used = False
             current.reset_double_attack()
-            if current.is_manning():
-                current.movement_used = True
 
             # Find next alive player
             next_idx = None
@@ -6813,9 +6807,14 @@ class GameScreen:
 
         # Add Leave Tower button (when manning a defensive location)
         self.leave_tower_button = None
+        self.toggle_weapon_button = None
         if game.current_player.is_manning():
             self.leave_tower_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Leave Tower", manager)
             self.left_panel_buttons.append(self.leave_tower_button)
+            y_pos += 40
+            mode_label = "Mode: Tower Weapon" if game.current_player.manning_weapon_mode == "tower" else "Mode: Personal Weapon"
+            self.toggle_weapon_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), mode_label, manager)
+            self.left_panel_buttons.append(self.toggle_weapon_button)
             y_pos += 40
 
         self.ui_elements.extend(self.left_panel_buttons)
@@ -6867,11 +6866,14 @@ class GameScreen:
             loc_data = self.hex_grid.location_data.get(p.manning_location)
             if loc_data:
                 loc_name = loc_data["card"].get_current_data().get("Name", "Tower") if loc_data.get("card") else "Tower"
-                defenses = loc_data.get("defenses", [])
-                if defenses:
-                    best = max(defenses, key=lambda d: d.get("damage", 0))
-                    lines.append(f"<font color='#FFD700'>Manning: {loc_name}</font>")
-                    lines.append(f"<font color='#FFD700'>Tower: {best['damage']} dmg / {best.get('range_distance', 0)} range</font>")
+                lines.append(f"<font color='#FFD700'>Manning: {loc_name}</font>")
+                if p.manning_weapon_mode == "tower":
+                    defenses = loc_data.get("defenses", [])
+                    if defenses:
+                        best = max(defenses, key=lambda d: d.get("damage", 0))
+                        lines.append(f"<font color='#FFD700'>Tower: {best['damage']} dmg / {best.get('range_distance', 0)} range</font>")
+                else:
+                    lines.append(f"<font color='#AAD4FF'>Using: Personal Weapon</font>")
         return "<br>".join(lines)
 
     def _handle_quest_chain(self):
@@ -7174,9 +7176,14 @@ class GameScreen:
 
         # Add Leave Tower button (when manning a defensive location)
         self.leave_tower_button = None
+        self.toggle_weapon_button = None
         if current_player.is_manning():
             self.leave_tower_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), "Leave Tower", manager)
             self.left_panel_buttons.append(self.leave_tower_button)
+            y_pos += 40
+            mode_label = "Mode: Tower Weapon" if current_player.manning_weapon_mode == "tower" else "Mode: Personal Weapon"
+            self.toggle_weapon_button = UIButton(pygame.Rect(10, y_pos, button_width, 30), mode_label, manager)
+            self.left_panel_buttons.append(self.toggle_weapon_button)
             y_pos += 40
 
         self.ui_elements.extend(self.left_panel_buttons)
@@ -8629,15 +8636,92 @@ class GameScreen:
                     self.behavior_target_npc_card_id = None
                     return
 
-                # Tower attack: manning player clicks on a hostile unit
-                if current_player.is_manning() and unit and isinstance(unit, Unit) and unit.allegiance == "Hostile" and not current_player.action_used and self.player_mode not in ("super_attack",):
+                # Healer tower healing: manning healer (no melee weapon) clicks friendly unit
+                if (current_player.is_manning() and current_player.is_healer
+                    and current_player.melee_weapon is None
+                    and not current_player.action_used
+                    and self.player_mode not in ("super_attack",)):
+                    # Check for allied/neutral unit or player that needs healing
+                    heal_target = None
+                    if unit and isinstance(unit, Unit) and unit.allegiance in ("Allied", "Neutral") and unit.hp < unit.max_hp:
+                        heal_target = unit
+                    elif game.multiplayer_mode:
+                        for p in game.players:
+                            if p is not current_player and p.position == hex_pos and p.hp > 0 and p.hp < p.max_hp:
+                                heal_target = p
+                                break
+                    if heal_target:
+                        tower_range = current_player.get_manning_attack_range(self.hex_grid)
+                        if hex_pos in tower_range or current_player.manning_weapon_mode == "personal":
+                            message, _ = current_player.heal_target(heal_target, self.hex_grid)
+                            self.add_to_log(message)
+                            # Green projectile animation from tower to target
+                            if hasattr(self.hex_grid, 'attack_anims'):
+                                src = self.hex_grid.get_hex_center(*current_player.manning_location)
+                                tgt = self.hex_grid.get_hex_center(*hex_pos)
+                                self.hex_grid.attack_anims.create_projectile(src, tgt, color=(0, 200, 100))
+                            self.player_info_label.set_text(self.get_player_info())
+                            return
+
+                # Tower attack: manning player clicks on a hostile unit (tower weapon mode only)
+                if (current_player.is_manning() and current_player.manning_weapon_mode == "tower"
+                    and unit and isinstance(unit, Unit) and unit.allegiance == "Hostile"
+                    and (not current_player.action_used or (current_player.double_attack_active and current_player.warrior_attacks_remaining > 0))
+                    and self.player_mode not in ("super_attack",)):
                     tower_range = current_player.get_manning_attack_range(self.hex_grid)
                     if hex_pos in tower_range:
                         defenses = current_player.get_manning_defenses(self.hex_grid)
                         if defenses:
                             best_defense = max(defenses, key=lambda d: d.get("damage", 0))
                             damage = best_defense.get("damage", 0)
-                            # Projectile animation from tower to target
+                            best_range = best_defense.get("range_distance", 0)
+                            loc_data = self.hex_grid.location_data.get(current_player.manning_location)
+                            loc_name = loc_data["card"].get_current_data().get("Name", "Tower") if loc_data and loc_data.get("card") else "Tower"
+
+                            # Ranger piercing tower shot
+                            if current_player.piercing_projectile:
+                                tower_row, tower_col = current_player.manning_location
+                                attack_line = []
+                                for direction in DIRECTIONS:
+                                    line = self.hex_grid.get_line(tower_row, tower_col, direction, best_range)
+                                    if hex_pos in line:
+                                        attack_line = line
+                                        break
+
+                                if attack_line:
+                                    # Animate to end of line
+                                    end_pos = attack_line[-1]
+                                    anim = None
+                                    delay = 0
+                                    if hasattr(self.hex_grid, 'attack_anims'):
+                                        src = self.hex_grid.get_hex_center(*current_player.manning_location)
+                                        tgt = self.hex_grid.get_hex_center(*end_pos)
+                                        anim = self.hex_grid.attack_anims.create_projectile(src, tgt)
+                                        delay = self.hex_grid.attack_anims.get_max_remaining_ms()
+                                    # Hit ALL hostile units along the line
+                                    hit_units = []
+                                    for line_pos in attack_line:
+                                        for u in self.hex_grid.units:
+                                            if u.position == line_pos and isinstance(u, Unit) and u.allegiance == "Hostile" and u.hp > 0:
+                                                u.hp -= damage
+                                                u.set_damage_text(damage, delay, anim=anim)
+                                                hit_units.append(u)
+                                                if u.hp <= 0:
+                                                    self.pending_defeats.append(u)
+                                    hit_names = ", ".join(u.name for u in hit_units) if hit_units else unit.name
+                                    self.add_to_log(f"{loc_name} piercing shot hits {hit_names} for {damage} damage!")
+                                    # Warrior dual strike action tracking
+                                    current_player.add_super_charge()
+                                    if current_player.double_attack_active:
+                                        current_player.warrior_attacks_remaining -= 1
+                                        if current_player.warrior_attacks_remaining <= 0:
+                                            current_player.action_used = True
+                                    else:
+                                        current_player.action_used = True
+                                    self.player_info_label.set_text(self.get_player_info())
+                                    return
+
+                            # Standard tower shot (single target)
                             anim = None
                             delay = 0
                             if hasattr(self.hex_grid, 'attack_anims'):
@@ -8647,10 +8731,14 @@ class GameScreen:
                                 delay = self.hex_grid.attack_anims.get_max_remaining_ms()
                             unit.hp -= damage
                             unit.set_damage_text(damage, delay, anim=anim)
-                            current_player.action_used = True
+                            # Warrior dual strike action tracking
                             current_player.add_super_charge()
-                            loc_data = self.hex_grid.location_data.get(current_player.manning_location)
-                            loc_name = loc_data["card"].get_current_data().get("Name", "Tower") if loc_data and loc_data.get("card") else "Tower"
+                            if current_player.double_attack_active:
+                                current_player.warrior_attacks_remaining -= 1
+                                if current_player.warrior_attacks_remaining <= 0:
+                                    current_player.action_used = True
+                            else:
+                                current_player.action_used = True
                             self.add_to_log(f"{loc_name} fires at {unit.name} for {damage} damage!")
                             if unit.hp <= 0:
                                 self.pending_defeats.append(unit)
@@ -8922,7 +9010,7 @@ class GameScreen:
                             self.placement_card = None
                             self.player_mode = "movement"
                             self.initialize_screen()  # Refresh UI
-                elif not current_player.movement_used and not unit:
+                elif not current_player.movement_used and not unit and not current_player.is_manning():
                     path = self.hex_grid.find_path(current_player.position, hex_pos)
                     effective_movement = current_player.get_effective_movement(game.current_party)
                     if path and len(path) - 1 <= effective_movement:
@@ -9275,6 +9363,16 @@ class GameScreen:
                     self.add_to_log("Choose a direction to defend (click a highlighted hex)")
                 return
 
+            # Toggle Weapon Mode button (tower/personal)
+            if hasattr(self, 'toggle_weapon_button') and self.toggle_weapon_button and event.ui_element == self.toggle_weapon_button and is_player_turn:
+                current_player = game.current_player
+                new_mode = current_player.toggle_manning_weapon_mode()
+                mode_name = "Tower Weapon" if new_mode == "tower" else "Personal Weapon"
+                self.add_to_log(f"{current_player.name or current_player.class_name} switches to {mode_name}")
+                self.player_info_label.set_text(self.get_player_info())
+                self.rebuild_left_panel()
+                return
+
             # Leave Tower button
             if hasattr(self, 'leave_tower_button') and self.leave_tower_button and event.ui_element == self.leave_tower_button and is_player_turn:
                 current_player = game.current_player
@@ -9282,7 +9380,7 @@ class GameScreen:
                 self.add_to_log(f"{current_player.name or current_player.class_name} leaves the tower")
                 self.player_info_label.set_text(self.get_player_info())
                 self.rebuild_left_panel()
-                self.advance_turn()
+                self._create_equipment_toolbar()
                 return
 
             if event.ui_element in self.left_panel_buttons:
@@ -9487,12 +9585,27 @@ class GameScreen:
                         "inset": 0.55
                     })
 
-        if is_player_turn and player_alive and not current_player.action_used and not self.animating and self.player_mode not in ("recruit", "item"):
+        has_action = not current_player.action_used or (current_player.double_attack_active and current_player.warrior_attacks_remaining > 0)
+        if is_player_turn and player_alive and has_action and not self.animating and self.player_mode not in ("recruit", "item"):
             if current_player.is_manning():
-                # Show tower attack range instead of personal weapon ranges
-                tower_range = current_player.get_manning_attack_range(self.hex_grid)
-                if tower_range:
-                    attack_ranges.append({"range": tower_range, "color": (255, 200, 50, 200), "outline": (200, 150, 30, 220), "inset": 0.55})
+                if current_player.manning_weapon_mode == "tower":
+                    # Show tower attack range
+                    tower_range = current_player.get_manning_attack_range(self.hex_grid)
+                    if tower_range:
+                        if current_player.is_healer and current_player.melee_weapon is None:
+                            # Green for healing range
+                            attack_ranges.append({"range": tower_range, "color": (0, 200, 100, 200), "outline": (0, 140, 70, 220), "inset": 0.55})
+                        else:
+                            # Gold for tower weapon range
+                            attack_ranges.append({"range": tower_range, "color": (255, 200, 50, 200), "outline": (200, 150, 30, 220), "inset": 0.55})
+                else:
+                    # Personal weapon mode: show normal melee + projectile ranges
+                    melee_range = current_player.get_melee_attack_range(self.hex_grid)
+                    if melee_range:
+                        attack_ranges.append({"range": melee_range, "color": (200, 80, 60, 220), "outline": (139, 0, 0, 220), "inset": 0.75})
+                    proj_range = current_player.get_projectile_attack_range(self.hex_grid, game.current_party)
+                    if proj_range:
+                        attack_ranges.append({"range": proj_range, "color": (80, 50, 180, 220), "outline": (50, 30, 140, 220), "inset": 0.55})
             else:
                 melee_range = current_player.get_melee_attack_range(self.hex_grid)
                 if melee_range:

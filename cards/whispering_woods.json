@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Whispering Woods",
+    "Description": "Shafts of light pierce the canopy, illuminating the forest floor.",
+    "Outcomes": "[{\"probability\": 0.26, \"type\": \"draw_junk\", \"text\": \"Fallen branches yield workable wood.\", \"params\": {\"deck\": \"beta_junk_deck.json\", \"count\": 1}}, {\"probability\": 0.36, \"type\": \"spawn_enemy\", \"text\": \"Hostile creatures appear among the trees!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.03, \"type\": \"draw_instance\", \"text\": \"Something stirs in the underbrush...\", \"params\": {}}, {\"probability\": 0.35, \"type\": \"none\", \"text\": \"A quiet moment passes beneath the trees.\", \"params\": {}}]",
+    "2nd_state_Name": "Shadow Canopy",
+    "2nd_state_Description": "Night falls. The forest becomes a different world.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.24, \"type\": \"none\", \"text\": \"The night passes uneventfully.\", \"params\": {}}, {\"probability\": 0.24, \"type\": \"spawn_enemy\", \"text\": \"Nocturnal predators emerge from their dens!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 2}}, {\"probability\": 0.36, \"type\": \"flip_state\", \"text\": \"The sun rises \\u00e2\\u20ac\\u201d the forest transforms with the light.\", \"params\": {}}, {\"probability\": 0.16, \"type\": \"draw_instance\", \"text\": \"The night brings unexpected events.\", \"params\": {}}]"
+  }
+}

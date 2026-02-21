@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Abandoned Camp",
+    "Description": "You notice a hidden path leading off the main trail.",
+    "Subclass": "Discovery",
+    "Outcomes": "[{\"probability\": 0.15, \"type\": \"draw_card\", \"text\": \"You uncover something useful buried in the dirt!\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.19, \"type\": \"damage_player\", \"text\": \"A hidden trap springs \\u00e2\\u20ac\\u201d sharp spikes!\", \"params\": {\"damage\": 5}}, {\"probability\": 0.18, \"type\": \"draw_card\", \"text\": \"You find old documents tucked into a crevice.\", \"params\": {\"card_type\": \"Document Card\"}}, {\"probability\": 0.08, \"type\": \"none\", \"text\": \"The ruins are picked clean \\u00e2\\u20ac\\u201d someone beat you here.\", \"params\": {}}, {\"probability\": 0.4, \"type\": \"heal_player\", \"text\": \"Edible berries grow wild in this sheltered spot.\", \"params\": {\"amount\": 3}}]"
+  }
+}

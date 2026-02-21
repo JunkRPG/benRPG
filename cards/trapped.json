@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Trapped!",
+    "Description": "Movement in the treeline \u00e2\u20ac\u201d hostiles incoming!",
+    "Subclass": "Combat",
+    "Outcomes": "[{\"probability\": 0.12, \"type\": \"damage_player\", \"text\": \"A blade catches your arm. Blood flows.\", \"params\": {\"damage\": 6}}, {\"probability\": 0.32, \"type\": \"draw_card\", \"text\": \"You grab something useful from the fallen enemy.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.36, \"type\": \"heal_player\", \"text\": \"The rush of battle sharpens your senses.\", \"params\": {\"amount\": 3}}, {\"probability\": 0.2, \"type\": \"player_choice\", \"text\": \"You spot them before they spot you. What do you do?\", \"params\": {\"choices\": [{\"name\": \"Attack first!\", \"risk\": 0.3, \"success\": {\"type\": \"damage_enemy\", \"damage\": 9, \"target\": \"random\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 7}}, {\"name\": \"Sneak away\", \"risk\": 0.25, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}]}}]"
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "template_name": "Forest Biome Transitions",
+  "card_type": "Transition Card",
+  "subclass": null,
+  "states": 2,
+  "count": 4,
+  "naming": {
+    "mode": "name_list",
+    "names": [
+      "Whispering Woods", "Deep Forest", "Twilight Canopy", "Ancient Grove"
+    ]
+  },
+  "fields": {
+    "Description": {"type": "text_choice", "options": [
+      "The forest stirs with life. Creatures move between the trees.",
+      "Leaves rustle in a wind that carries the scent of wildflowers.",
+      "Shafts of light pierce the canopy, illuminating the forest floor.",
+      "The woods grow denser. Animal calls echo in the distance."
+    ]},
+    "Outcomes": {"type": "json_template", "template_mode": "outcome_pool",
+      "outcome_pool": [
+        {"type": "draw_instance", "text_options": [
+          "Something stirs in the underbrush...",
+          "A rustling in the leaves draws your attention.",
+          "The forest holds a surprise for you."
+        ], "params": {}, "weight": 3},
+
+        {"type": "spawn_enemy", "text_options": [
+          "Wolves emerge from the treeline!",
+          "Forest predators have found your scent!",
+          "Hostile creatures appear among the trees!"
+        ], "params": {"edge": "random", "deck": "beta_enemy_deck.json", "count": 1}, "weight": 2},
+
+        {"type": "draw_junk", "text_options": [
+          "You spot useful herbs growing nearby.",
+          "Fallen branches yield workable wood.",
+          "Nature provides — you find useful materials."
+        ], "params": {"deck": "beta_junk_deck.json", "count": 1}, "weight": 2},
+
+        {"type": "spawn_npc", "text_options": [
+          "A woodsman appears on the trail ahead.",
+          "A forager emerges from the trees.",
+          "A fellow traveler passes through the woods."
+        ], "params": {"edge": "random", "deck": "beta_npc_deck.json", "count": 1, "allegiance": "Neutral"}, "weight": 1},
+
+        {"type": "weather", "text_options": [
+          "Rain begins to fall through the canopy.",
+          "A mist rolls in between the trees.",
+          "The wind picks up, bending branches overhead."
+        ], "params": {"effect": {"options": ["rain", "fog", "clear"]}, "range_modifier": {"min": -2, "max": -1}}, "weight": 1},
+
+        {"type": "none", "text_options": [
+          "The forest is peaceful. Birds sing overhead.",
+          "A quiet moment passes beneath the trees.",
+          "Nothing eventful — just the gentle sounds of the woods."
+        ], "params": {}, "weight": 2},
+
+        {"type": "trip_fall", "text_options": [
+          "A hidden root catches your foot!",
+          "You stumble on the uneven forest floor."
+        ], "params": {"damage": {"min": 1, "max": 3}}, "weight": 1}
+      ],
+      "pick_count": {"min": 4, "max": 6},
+      "auto_balance_probabilities": true
+    }
+  },
+  "state2_fields": {
+    "Name": {"type": "text_choice", "options": [
+      "Dark Forest", "Night in the Woods", "Moonlit Grove", "Shadow Canopy"
+    ]},
+    "Description": {"type": "text_choice", "options": [
+      "Night falls. The forest becomes a different world.",
+      "Darkness swallows the canopy. Eyes glow in the shadows.",
+      "The woods are alive with nocturnal sounds.",
+      "Moonlight filters through bare branches overhead."
+    ]},
+    "Outcomes": {"type": "json_template", "template_mode": "outcome_pool",
+      "outcome_pool": [
+        {"type": "spawn_enemy", "text_options": [
+          "Nocturnal predators emerge from their dens!",
+          "Night hunters stalk through the darkness!",
+          "Glowing eyes surround your camp!"
+        ], "params": {"edge": "random", "deck": "beta_enemy_deck.json", "count": {"min": 1, "max": 2}}, "weight": 3},
+
+        {"type": "draw_instance", "text_options": [
+          "Strange sounds echo through the dark forest...",
+          "Something moves in the shadows nearby.",
+          "The night brings unexpected events."
+        ], "params": {}, "weight": 2},
+
+        {"type": "none", "text_options": [
+          "The night passes uneventfully.",
+          "Silence settles over the dark woods.",
+          "Stars peek through gaps in the canopy. All is calm."
+        ], "params": {}, "weight": 2},
+
+        {"type": "flip_state", "text_options": [
+          "Dawn breaks through the canopy. A new day begins.",
+          "Morning light filters through the leaves.",
+          "The sun rises — the forest transforms with the light."
+        ], "params": {}, "weight": 2}
+      ],
+      "pick_count": {"min": 3, "max": 5},
+      "auto_balance_probabilities": true
+    }
+  },
+  "deck": "generated_transition_forest_deck"
+}

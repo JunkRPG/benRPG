@@ -1,0 +1,17 @@
+{
+  "card_type": "Transition Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "skill_subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "",
+    "Description": "",
+    "2nd_state_Name": "",
+    "2nd_state_Description": "",
+    "Background Image": "",
+    "2nd_state_Background Image": "",
+    "Outcomes": "[{\"probability\": 0.5, \"type\": \"draw_instance\", \"text\": \"something happened!!\", \"params\": {}}, {\"probability\": 0.5, \"type\": \"spawn_horse\", \"text\": \"\", \"params\": {\"deck\": \"\", \"count\": 1}}]",
+    "2nd_state_Outcomes": "[]"
+  }
+}

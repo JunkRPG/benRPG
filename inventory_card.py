@@ -17,9 +17,16 @@ class InventoryCard:
 
     def get_state_data(self, state):
         if state == 1:
-            return {k: v for k, v in self.card_data["data"].items() if not k.startswith("2nd_State_")}
+            return {k: v for k, v in self.card_data["data"].items()
+                    if not k.startswith("2nd_State_") and not k.startswith("2nd_state_")}
         elif state == 2:
-            return {k.replace("2nd_State_", ""): v for k, v in self.card_data["data"].items() if k.startswith("2nd_State_")}
+            result = {}
+            for k, v in self.card_data["data"].items():
+                if k.startswith("2nd_State_"):
+                    result[k[len("2nd_State_"):]] = v
+                elif k.startswith("2nd_state_"):
+                    result[k[len("2nd_state_"):]] = v
+            return result
         return {}
 
     def toggle_state(self):

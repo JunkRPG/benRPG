@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Windswept Peaks",
+    "Description": "The air thins as the path climbs higher.",
+    "Outcomes": "[{\"probability\": 0.32, \"type\": \"spawn_enemy\", \"text\": \"Mountain predators descend from the crags!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.21, \"type\": \"draw_junk\", \"text\": \"You find mineral deposits in the rock face.\", \"params\": {\"deck\": \"beta_junk_deck.json\", \"count\": 1}}, {\"probability\": 0.22, \"type\": \"trip_fall\", \"text\": \"A false step on the narrow ledge!\", \"params\": {\"damage\": 5}}, {\"probability\": 0.1, \"type\": \"draw_instance\", \"text\": \"Something moves on the ridge above.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"weather\", \"text\": \"Snow begins to fall heavily.\", \"params\": {\"effect\": \"fog\", \"range_modifier\": -3}}]",
+    "2nd_state_Name": "Night on the Mountain",
+    "2nd_state_Description": "The mountain shows no mercy in the dark.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.51, \"type\": \"none\", \"text\": \"You weather the cold. It builds character.\", \"params\": {}}, {\"probability\": 0.08, \"type\": \"spawn_enemy\", \"text\": \"Ice creatures emerge from frozen caves!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 2}}, {\"probability\": 0.41, \"type\": \"flip_state\", \"text\": \"Spring returns to the mountain.\", \"params\": {}}]"
+  }
+}

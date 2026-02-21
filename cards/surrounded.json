@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Surrounded!",
+    "Description": "You hear steel being drawn nearby. Prepare yourself!",
+    "Subclass": "Combat",
+    "Outcomes": "[{\"probability\": 0.64, \"type\": \"none\", \"text\": \"False alarm \\u00e2\\u20ac\\u201d it was just the wind.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"spawn_enemy\", \"text\": \"Enemies emerge from hiding!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"spawn_near\": \"player\", \"count\": 1}}, {\"probability\": 0.21, \"type\": \"damage_player\", \"text\": \"You're struck by a thrown rock!\", \"params\": {\"damage\": 8}}]"
+  }
+}

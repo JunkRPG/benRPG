@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "The Hollow Tree",
+    "Description": "You notice a hidden path leading off the main trail.",
+    "Subclass": "Discovery",
+    "Outcomes": "[{\"probability\": 0.13, \"type\": \"damage_player\", \"text\": \"Unstable rubble collapses on you!\", \"params\": {\"damage\": 7}}, {\"probability\": 0.58, \"type\": \"player_choice\", \"text\": \"A dark tunnel beckons. Do you dare enter?\", \"params\": {\"choices\": [{\"name\": \"Explore deeper\", \"risk\": 0.35, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}, {\"name\": \"Back away carefully\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}, {\"probability\": 0.23, \"type\": \"none\", \"text\": \"After thorough searching, you find nothing of value.\", \"params\": {}}, {\"probability\": 0.06, \"type\": \"draw_card\", \"text\": \"Hidden writings reveal useful knowledge.\", \"params\": {\"card_type\": \"Document Card\"}}]"
+  }
+}

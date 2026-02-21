@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Flash Flood",
+    "Description": "The air becomes thick and hard to breathe.",
+    "Subclass": "Environmental",
+    "Outcomes": "[{\"probability\": 0.61, \"type\": \"teleport_player\", \"text\": \"You're swept to a new location!\", \"params\": {\"distance\": 1, \"direction\": \"random\"}}, {\"probability\": 0.39, \"type\": \"none\", \"text\": \"You find shelter just in time.\", \"params\": {}}]"
+  }
+}

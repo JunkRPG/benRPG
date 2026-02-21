@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Campfire Stories",
+    "Description": "A merchant's cart sits at the crossroads, its owner beckoning.",
+    "Subclass": "Social",
+    "Outcomes": "[{\"probability\": 0.42, \"type\": \"player_choice\", \"text\": \"Someone is in trouble and only you can help.\", \"params\": {\"choices\": [{\"name\": \"Help them\", \"risk\": 0.17, \"success\": {\"type\": \"heal_player\", \"amount\": 6}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}, {\"name\": \"Walk away\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}, {\"probability\": 0.19, \"type\": \"player_choice\", \"text\": \"They offer you a trade. Do you accept?\", \"params\": {\"choices\": [{\"name\": \"Accept the trade\", \"risk\": 0.14, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 2}}, {\"name\": \"Decline politely\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}, {\"probability\": 0.39, \"type\": \"heal_player\", \"text\": \"They offer you a healing salve as thanks.\", \"params\": {\"amount\": 10}}]"
+  }
+}

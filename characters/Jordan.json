@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "name": "Jordan",
+  "created": "2026-02-16T20:43:44",
+  "stats": {
+    "hp": 110,
+    "max_hp": 110,
+    "movement": 6,
+    "projectile_range": 5,
+    "melee_damage": 4,
+    "projectile_damage": 2
+  },
+  "point_buy": {
+    "budget": 30,
+    "spent": 28,
+    "allocation": {
+      "hp": 11,
+      "movement": 6,
+      "projectile_range": 5,
+      "melee_damage": 4,
+      "projectile_damage": 2
+    }
+  },
+  "attacks": {
+    "projectile": {
+      "name": "Sweet ladel sling",
+      "damage": 2
+    },
+    "melee": {
+      "name": "Sour Squash Smack",
+      "damage": 4
+    }
+  },
+  "special_ability": "Dual Strike",
+  "starting_kit": [
+    {
+      "card_id": "starter_ranger_bow",
+      "state": 1
+    },
+    {
+      "card_id": "starter_tank_hammer_head",
+      "state": 1
+    },
+    {
+      "card_id": "win_guide",
+      "state": 1
+    },
+    {
+      "card_id": "starter_tank_sledgehammer_plans",
+      "state": 1
+    },
+    {
+      "card_id": "starter_ranger_bowstring",
+      "state": 1
+    }
+  ],
+  "class_name": "Custom"
+}

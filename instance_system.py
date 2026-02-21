@@ -239,13 +239,15 @@ class InstanceManager:
             deck_file = params.get("deck", None)
             spawn_near = params.get("spawn_near", "player")
             count = params.get("count", 1)
-            return self._spawn_units(deck_file, spawn_near, count, "Hostile", hex_grid, player)
+            spawn_hp = params.get("spawn_hp", None)
+            return self._spawn_units(deck_file, spawn_near, count, "Hostile", hex_grid, player, spawn_hp)
 
         elif outcome_type == "spawn_ally":
             deck_file = params.get("deck", None)
             spawn_near = params.get("spawn_near", "player")
             count = params.get("count", 1)
-            return self._spawn_units(deck_file, spawn_near, count, "Allied", hex_grid, player)
+            spawn_hp = params.get("spawn_hp", None)
+            return self._spawn_units(deck_file, spawn_near, count, "Allied", hex_grid, player, spawn_hp)
 
         elif outcome_type == "modify_stat":
             stat = params.get("stat", "")
@@ -331,8 +333,8 @@ class InstanceManager:
 
         return "\n".join(messages)
 
-    def _spawn_units(self, deck_file, spawn_near, count, allegiance, hex_grid, player):
-        """Spawn units near player or randomly."""
+    def _spawn_units(self, deck_file, spawn_near, count, allegiance, hex_grid, player, spawn_hp=None):
+        """Spawn units near player, on a map edge, or randomly."""
         if not hex_grid or not deck_file:
             return "Failed to spawn units."
 
@@ -358,6 +360,9 @@ class InstanceManager:
                         if not cell.get("unit") and cell.get("type") != "obstacle":
                             spawn_pos = adj
                             break
+            elif spawn_near and spawn_near.startswith("edge_"):
+                edge = spawn_near.replace("edge_", "")  # "east", "west", etc.
+                spawn_pos = hex_grid.get_edge_spawn_position(edge)
 
             if not spawn_pos:
                 # Find random empty hex
@@ -380,6 +385,9 @@ class InstanceManager:
 
                 unit = Unit(card_data)
                 hex_grid.place_unit(unit, *spawn_pos)
+                # Apply reduced spawn HP (fractional: 0.5 = 50% of max HP)
+                if spawn_hp is not None and 0 < spawn_hp < 1:
+                    unit.hp = max(1, int(unit.max_hp * spawn_hp))
                 spawned.append(unit.name)
 
         if spawned:

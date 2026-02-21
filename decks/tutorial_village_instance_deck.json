@@ -1,0 +1,9 @@
+{
+  "deck_name": "Tutorial Village Instances",
+  "back_image": null,
+  "cards": [
+    "tutorial_instance_wounded_villagers",
+    "tutorial_instance_village_foraging",
+    "tutorial_instance_strange_noise"
+  ]
+}

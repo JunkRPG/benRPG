@@ -1,0 +1,14 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Road to Town",
+    "Description": "The eastern road leading to the occupied town. Once you leave, there's no turning back.",
+    "Outcomes": "",
+    "Choices": "",
+    "Shop_Deck": "",
+    "Shop_Size": "",
+    "Is_Spawn_Location": "false"
+  }
+}

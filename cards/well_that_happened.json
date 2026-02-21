@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Well That Happened",
+    "Description": "Today is officially the weirdest day of your life.",
+    "Subclass": "Discovery",
+    "Outcomes": "[{\"probability\": 0.22, \"type\": \"damage_player\", \"text\": \"You walk into a low-hanging branch. Classic.\", \"params\": {\"damage\": 1}}, {\"probability\": 0.5, \"type\": \"heal_player\", \"text\": \"The absurdity of the moment makes you laugh so hard you feel better.\", \"params\": {\"amount\": 6}}, {\"probability\": 0.28, \"type\": \"player_choice\", \"text\": \"A chicken wearing a tiny hat stares at you expectantly.\", \"params\": {\"choices\": [{\"name\": \"Investigate cautiously\", \"risk\": 0.35, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 3}}, {\"name\": \"Nope. Walk away.\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}]"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "template_name": "Blueprint to Weapon",
+  "target_type": "Document Card",
+  "target_subclass": "Blueprint",
+  "target_state": "state1",
+  "card_width": 750,
+  "card_height": 525,
+  "background_color": "#1a1a2e",
+  "border_color": "#3a3a5c",
+  "border_width": 2,
+  "elements": [
+    {
+      "id": "text_34457ca1",
+      "type": "text",
+      "field_key": "Name",
+      "label_prefix": "",
+      "x": 385,
+      "y": 28,
+      "font_family": "Arial",
+      "font_size": 30,
+      "font_style": "normal",
+      "font_color": "#ffffff",
+      "alignment": "center",
+      "max_width": 700
+    },
+    {
+      "id": "text_105d3405",
+      "type": "text",
+      "field_key": "Description",
+      "label_prefix": "",
+      "x": 183,
+      "y": 139,
+      "font_family": "Arial",
+      "font_size": 20,
+      "font_style": "normal",
+      "font_color": "#ffffff",
+      "alignment": "center",
+      "max_width": 700
+    },
+    {
+      "id": "img_bfafad9c",
+      "type": "image",
+      "field_key": "Image File Path",
+      "x": 326,
+      "y": 105,
+      "width": 400,
+      "height": 400
+    }
+  ]
+}

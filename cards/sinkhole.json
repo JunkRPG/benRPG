@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Sinkhole",
+    "Description": "A blinding flash splits the sky overhead.",
+    "Subclass": "Environmental",
+    "Outcomes": "[{\"probability\": 0.17, \"type\": \"player_choice\", \"text\": \"There might be a way to avoid the worst of it.\", \"params\": {\"choices\": [{\"name\": \"Take cover!\", \"risk\": 0.32, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 5}}, {\"name\": \"Run for it!\", \"risk\": 0.4, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 5}}]}}, {\"probability\": 0.41, \"type\": \"none\", \"text\": \"The danger passes without harming you.\", \"params\": {}}, {\"probability\": 0.26, \"type\": \"damage_player\", \"text\": \"Nature's fury strikes without mercy!\", \"params\": {\"damage\": 6}}, {\"probability\": 0.16, \"type\": \"teleport_player\", \"text\": \"The ground shifts \\u00e2\\u20ac\\u201d you end up somewhere unexpected.\", \"params\": {\"distance\": 1, \"direction\": \"random\"}}]"
+  }
+}

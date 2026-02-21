@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Wounded Villagers",
+    "Description": "Allied villagers returning home from battle, bruised and bloodied.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"spawn_ally\", \"text\": \"Wounded villagers limp home and join your cause.\", \"params\": {\"deck\": \"villager_npc_deck.json\", \"spawn_near\": \"edge_east\", \"spawn_hp\": 0.5, \"count\": 1}}, {\"probability\": 0.30, \"type\": \"player_choice\", \"text\": \"A wounded villager collapses nearby and asks for help.\", \"params\": {\"choices\": [{\"name\": \"Help them\", \"risk\": 0.2, \"success\": {\"type\": \"spawn_ally\", \"deck\": \"villager_npc_deck.json\", \"spawn_near\": \"edge_east\", \"spawn_hp\": 0.5, \"count\": 1}, \"failure\": {\"type\": \"damage_player\", \"damage\": 5}}, {\"name\": \"Keep moving\", \"effect\": {\"type\": \"none\", \"text\": \"You press on, leaving the villager behind.\"}}]}}, {\"probability\": 0.30, \"type\": \"heal_player\", \"text\": \"A returning villager shares medicinal herbs with you.\", \"params\": {\"amount\": 8}}]"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Arrow Storm",
+    "Description": "The dead silence breaks with the ring of drawn weapons.",
+    "Subclass": "Combat",
+    "Outcomes": "[{\"probability\": 0.18, \"type\": \"spawn_enemy\", \"text\": \"More hostiles appear!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"spawn_near\": \"player\", \"count\": 2}}, {\"probability\": 0.17, \"type\": \"damage_player\", \"text\": \"A blade catches your arm. Blood flows.\", \"params\": {\"damage\": 10}}, {\"probability\": 0.09, \"type\": \"player_choice\", \"text\": \"The enemy hasn't noticed you yet.\", \"params\": {\"choices\": [{\"name\": \"Attack first!\", \"risk\": 0.24, \"success\": {\"type\": \"damage_enemy\", \"damage\": 11, \"target\": \"random\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 4}}, {\"name\": \"Sneak away\", \"risk\": 0.11, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}]}}, {\"probability\": 0.39, \"type\": \"heal_player\", \"text\": \"Adrenaline surges \\u00e2\\u20ac\\u201d you feel reinvigorated!\", \"params\": {\"amount\": 7}}, {\"probability\": 0.17, \"type\": \"none\", \"text\": \"You hold your breath... nothing happens.\", \"params\": {}}]"
+  }
+}

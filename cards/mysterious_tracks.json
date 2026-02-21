@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Mysterious Tracks",
+    "Description": "A faint glow emanates from a crack in the rocks.",
+    "Subclass": "Discovery",
+    "Outcomes": "[{\"probability\": 0.4, \"type\": \"draw_card\", \"text\": \"You find old documents tucked into a crevice.\", \"params\": {\"card_type\": \"Document Card\"}}, {\"probability\": 0.36, \"type\": \"damage_player\", \"text\": \"Unstable rubble collapses on you!\", \"params\": {\"damage\": 8}}, {\"probability\": 0.24, \"type\": \"draw_card\", \"text\": \"The cache contains useful supplies!\", \"params\": {\"card_type\": \"Junk Card\"}}]"
+  }
+}

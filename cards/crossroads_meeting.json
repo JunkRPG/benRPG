@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Crossroads Meeting",
+    "Description": "A traveler approaches, arms spread wide in greeting.",
+    "Subclass": "Social",
+    "Outcomes": "[{\"probability\": 0.55, \"type\": \"none\", \"text\": \"The stranger nods and continues on their way.\", \"params\": {}}, {\"probability\": 0.34, \"type\": \"draw_card\", \"text\": \"You receive useful information \\u00e2\\u20ac\\u201d and a small token.\", \"params\": {\"card_type\": \"Document Card\"}}, {\"probability\": 0.11, \"type\": \"player_choice\", \"text\": \"They want to barter \\u00e2\\u20ac\\u201d junk for medicine.\", \"params\": {\"choices\": [{\"name\": \"Accept the trade\", \"risk\": 0.13, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 2}}, {\"name\": \"Decline politely\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}]"
+  }
+}

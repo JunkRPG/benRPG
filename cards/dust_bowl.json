@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Dust Bowl",
+    "Description": "Nothing but desolation stretches to the horizon.",
+    "Outcomes": "[{\"probability\": 0.19, \"type\": \"draw_instance\", \"text\": \"Movement in the heat haze \\u00e2\\u20ac\\u201d something approaches.\", \"params\": {}}, {\"probability\": 0.28, \"type\": \"none\", \"text\": \"Nothing but the wind and dust.\", \"params\": {}}, {\"probability\": 0.1, \"type\": \"spawn_npc\", \"text\": \"A scavenger waves from the roadside.\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_npc_deck.json\", \"count\": 1, \"allegiance\": \"Neutral\"}}, {\"probability\": 0.1, \"type\": \"draw_junk\", \"text\": \"Among the ruins, you find salvageable materials.\", \"params\": {\"deck\": \"beta_junk_deck.json\", \"count\": 1}}, {\"probability\": 0.12, \"type\": \"spawn_enemy\", \"text\": \"Raiders emerge from behind rusted wreckage!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 2}}, {\"probability\": 0.21, \"type\": \"weather\", \"text\": \"A dust storm kicks up!\", \"params\": {\"effect\": \"fog\", \"range_modifier\": -1}}]",
+    "2nd_state_Name": "Starlit Ruins",
+    "2nd_state_Description": "Without the sun's heat, the wasteland becomes dangerously cold.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.37, \"type\": \"flip_state\", \"text\": \"Dawn paints the ruins in golden light. A new day.\", \"params\": {}}, {\"probability\": 0.46, \"type\": \"none\", \"text\": \"A bitter but uneventful night passes.\", \"params\": {}}, {\"probability\": 0.17, \"type\": \"spawn_enemy\", \"text\": \"Bandits strike while you shelter from the cold!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 2}}]"
+  }
+}

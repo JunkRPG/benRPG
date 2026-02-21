@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "data": {
+    "Name": "Strange Noise",
+    "Description": "Mysterious sounds near the village edge set the locals on edge.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.35, \"type\": \"spawn_enemy\", \"text\": \"A wild animal attacks!\", \"params\": {\"deck\": \"wolf_enemy_deck.json\", \"spawn_near\": \"player\", \"count\": 1}}, {\"probability\": 0.35, \"type\": \"none\", \"text\": \"Just the wind rustling through the trees.\", \"params\": {}}, {\"probability\": 0.30, \"type\": \"player_choice\", \"text\": \"You hear something moving in the bushes.\", \"params\": {\"choices\": [{\"name\": \"Investigate\", \"risk\": 0.4, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"wolf_enemy_deck.json\", \"spawn_near\": \"player\", \"count\": 1}}, {\"name\": \"Ignore it\", \"effect\": {\"type\": \"none\", \"text\": \"You walk away. Whatever it was, it can stay there.\"}}]}}]"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Twilight Canopy",
+    "Description": "The woods grow denser. Animal calls echo in the distance.",
+    "Outcomes": "[{\"probability\": 0.12, \"type\": \"trip_fall\", \"text\": \"A hidden root catches your foot!\", \"params\": {\"damage\": 1}}, {\"probability\": 0.23, \"type\": \"none\", \"text\": \"A quiet moment passes beneath the trees.\", \"params\": {}}, {\"probability\": 0.19, \"type\": \"draw_junk\", \"text\": \"Nature provides \\u00e2\\u20ac\\u201d you find useful materials.\", \"params\": {\"deck\": \"beta_junk_deck.json\", \"count\": 1}}, {\"probability\": 0.27, \"type\": \"spawn_enemy\", \"text\": \"Hostile creatures appear among the trees!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.19, \"type\": \"weather\", \"text\": \"The wind picks up, bending branches overhead.\", \"params\": {\"effect\": \"fog\", \"range_modifier\": -1}}]",
+    "2nd_state_Name": "Shadow Canopy",
+    "2nd_state_Description": "The woods are alive with nocturnal sounds.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.69, \"type\": \"none\", \"text\": \"Stars peek through gaps in the canopy. All is calm.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"spawn_enemy\", \"text\": \"Nocturnal predators emerge from their dens!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.16, \"type\": \"draw_instance\", \"text\": \"Something moves in the shadows nearby.\", \"params\": {}}]"
+  }
+}

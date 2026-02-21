@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Forgotten Shrine",
+    "Description": "A collapsed structure reveals a dark opening below.",
+    "Subclass": "Discovery",
+    "Outcomes": "[{\"probability\": 0.2, \"type\": \"none\", \"text\": \"The ruins are picked clean \\u00e2\\u20ac\\u201d someone beat you here.\", \"params\": {}}, {\"probability\": 0.14, \"type\": \"draw_card\", \"text\": \"Your search reveals a forgotten stash.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.14, \"type\": \"player_choice\", \"text\": \"A dark tunnel beckons. Do you dare enter?\", \"params\": {\"choices\": [{\"name\": \"Explore deeper\", \"risk\": 0.28, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Document Card\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 2, \"spawn_near\": \"player\"}}, {\"name\": \"Back away carefully\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}, {\"probability\": 0.19, \"type\": \"player_choice\", \"text\": \"You find a locked container. Force it open?\", \"params\": {\"choices\": [{\"name\": \"Force it open\", \"risk\": 0.25, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 7}}, {\"name\": \"Leave it alone\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}, {\"probability\": 0.33, \"type\": \"draw_card\", \"text\": \"A weathered scroll lies among the debris.\", \"params\": {\"card_type\": \"Document Card\"}}]"
+  }
+}

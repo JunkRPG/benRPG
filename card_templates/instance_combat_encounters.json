@@ -1,0 +1,97 @@
+{
+  "template_name": "Combat Encounters",
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "states": 1,
+  "count": 15,
+  "naming": {
+    "mode": "name_list",
+    "names": [
+      "Ambush!", "Skirmish in the Brush", "Attacked!", "Roadside Raiders",
+      "Shadows Strike", "Bandit Assault", "Wolves at the Gate", "Trapped!",
+      "Arrow Storm", "Desperate Fight", "Surrounded!", "Nightfall Attack",
+      "Cornered", "Blindsided", "The Hunt Begins"
+    ]
+  },
+  "fields": {
+    "Description": {"type": "text_choice", "options": [
+      "Shadows move in the underbrush... something is watching you.",
+      "You hear steel being drawn nearby. Prepare yourself!",
+      "The ground trembles with approaching footsteps.",
+      "A twig snaps behind you. You're not alone.",
+      "The air goes still. Too still. Then you see them.",
+      "Movement in the treeline — hostiles incoming!",
+      "A guttural war cry echoes across the clearing.",
+      "You stumble into a trap. Enemies close in from all sides.",
+      "The path ahead is blocked by armed figures.",
+      "Something crashes through the bushes toward you.",
+      "Torchlight flickers between the trees — a raiding party.",
+      "An arrow thuds into the ground at your feet. A warning shot.",
+      "You round a corner and come face to face with trouble.",
+      "The dead silence breaks with the ring of drawn weapons.",
+      "Hostile eyes glint in the darkness ahead."
+    ]},
+    "Subclass": {"type": "fixed", "value": "Combat"},
+    "Outcomes": {"type": "json_template", "template_mode": "outcome_pool",
+      "outcome_pool": [
+        {"type": "damage_player", "text_options": [
+          "You take a hit before you can react!",
+          "An arrow finds its mark — you stagger back.",
+          "A blade catches your arm. Blood flows.",
+          "You're struck by a thrown rock!",
+          "The ambusher lands a cheap shot."
+        ], "params": {"damage": {"min": 3, "max": 12}}, "weight": 3},
+
+        {"type": "spawn_enemy", "text_options": [
+          "Enemies emerge from hiding!",
+          "Bandits rush from the bushes!",
+          "More hostiles appear!",
+          "A war band charges toward you!",
+          "Reinforcements arrive for the enemy!"
+        ], "params": {"deck": "beta_enemy_deck.json", "spawn_near": "player", "count": {"min": 1, "max": 2}}, "weight": 3},
+
+        {"type": "none", "text_options": [
+          "False alarm — it was just the wind.",
+          "You brace yourself, but the threat passes.",
+          "Whatever was there has moved on.",
+          "The danger fades before it materializes.",
+          "You hold your breath... nothing happens."
+        ], "params": {}, "weight": 2},
+
+        {"type": "player_choice", "text_options": [
+          "You spot them before they spot you. What do you do?",
+          "You have a moment to decide your approach.",
+          "The enemy hasn't noticed you yet."
+        ], "params": {"choices": [
+          {
+            "name": "Attack first!",
+            "risk": {"min": 0.15, "max": 0.35},
+            "success": {"type": "damage_enemy", "damage": {"min": 8, "max": 20}, "target": "random"},
+            "failure": {"type": "damage_player", "damage": {"min": 3, "max": 8}}
+          },
+          {
+            "name": "Sneak away",
+            "risk": {"min": 0.1, "max": 0.3},
+            "success": {"type": "none"},
+            "failure": {"type": "spawn_enemy", "deck": "beta_enemy_deck.json", "count": 1, "spawn_near": "player"}
+          }
+        ]}, "weight": 2},
+
+        {"type": "heal_player", "text_options": [
+          "Adrenaline surges — you feel reinvigorated!",
+          "You find a moment to catch your breath and bandage a wound.",
+          "The rush of battle sharpens your senses."
+        ], "params": {"amount": {"min": 3, "max": 8}}, "weight": 1},
+
+        {"type": "draw_card", "text_options": [
+          "You grab something useful from the fallen enemy.",
+          "In the chaos, you spot something worth taking.",
+          "A dropped satchel spills its contents — you grab what you can."
+        ], "params": {"card_type": {"options": ["Junk Card", "Document Card"]}}, "weight": 1}
+      ],
+      "pick_count": {"min": 3, "max": 5},
+      "auto_balance_probabilities": true
+    }
+  },
+  "deck": "generated_instance_combat_deck"
+}

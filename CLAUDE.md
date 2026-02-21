@@ -42,6 +42,9 @@ python RangeViewer40.py
 
 # Run card template maker
 python "CardTemplateMaker7 (Use this one to progress).py"
+
+# Run card template generator UI
+python CardTemplateGeneratorUI.py
 ```
 
 All apps launch fullscreen. Press ESC to exit.
@@ -226,6 +229,37 @@ Check `BACKLOG.md` at the start of related work to see if there are pending item
 5. **JunkRPG** → Play and test
 6. **csv_card_importer.py** → Bulk import cards from CSV (`--dry-run`, `--deck`, `--use-name-as-id`, `--generate-template`)
 7. **card_template_generator.py** → Generate card variants from JSON templates in `card_templates/` (`--count`, `--seed`, `--deck`, `--dry-run`)
+
+### Card Template Generator Field Types
+The template generator supports these field value types in template JSON files:
+- `fixed` - Static value
+- `int` - Random integer in `{min, max}` range
+- `float` - Random float with decimal precision
+- `choice` - Random selection from `options` list
+- `scaled` - Multiplier of another field's value
+- `text_choice` - Random text from `options` list, supports `{FieldName}` substitution from generated fields
+- `json_template` - Generates structured JSON for narrative card fields (Outcomes, Placeholders, Conditions, etc.)
+  - `template_mode: "outcome_pool"` - Pick from weighted outcome pool, auto-balance probabilities (Instance/Transition cards)
+  - `template_mode: "placeholder_pool"` - Generate quest placeholder arrays
+  - `template_mode: "condition_pool"` - Generate quest condition arrays
+  - `template_mode: "rewards"` - Generate quest rewards objects
+  - `template_mode: "chain_config"` - Generate quest chain config objects
+  - `template_mode: "fixed"` - Serialize a static JSON value
+- `json_string` - Serialize a raw JSON value to string
+
+Randomization directives in `json_template` params: `{"min": X, "max": Y}` for random int/float, `{"options": [...]}` for random choice. These resolve recursively in nested structures.
+
+### CardMaker Visual Editors
+CardMaker21.py provides visual editors for complex JSON fields instead of requiring raw JSON text entry:
+- **OutcomeEditorWidget** - Instance Card and Transition Card `Outcomes` fields
+- **PlaceholderEditorWidget** - Quest Card `Placeholders` field
+- **ConditionEditorWidget** - Quest Card `Success_Conditions` and `Failure_Conditions` fields
+- **RewardsEditorWidget** - Quest Card `Rewards` field
+- **ChainConfigEditorWidget** - Quest Card `Chain_Config` field
+- **LocationOutcomeEditorWidget** - Location Card `Outcomes` fields
+- **LocationChoiceEditorWidget** - Location Card `Choices` fields
+
+All editors follow the same interface pattern (field_name, build_all, handle_event, serialize_to_json_string, get_total_height, destroy) and integrate with `self.outcome_editors` list for automatic save/load.
 
 ## Gotchas
 

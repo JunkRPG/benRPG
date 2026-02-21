@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "The Bard's Song",
+    "Description": "You encounter a small camp with a lone occupant.",
+    "Subclass": "Social",
+    "Outcomes": "[{\"probability\": 0.66, \"type\": \"draw_card\", \"text\": \"They give you a gift before departing.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.21, \"type\": \"none\", \"text\": \"An interesting conversation, but nothing more comes of it.\", \"params\": {}}, {\"probability\": 0.13, \"type\": \"player_choice\", \"text\": \"They ask for food in exchange for information.\", \"params\": {\"choices\": [{\"name\": \"Accept the trade\", \"risk\": 0.13, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 5}}, {\"name\": \"Decline politely\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}]"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Strange Markings",
+    "Description": "An ancient marker points toward an unmarked location.",
+    "Subclass": "Discovery",
+    "Outcomes": "[{\"probability\": 0.23, \"type\": \"none\", \"text\": \"The ruins are picked clean \\u00e2\\u20ac\\u201d someone beat you here.\", \"params\": {}}, {\"probability\": 0.36, \"type\": \"player_choice\", \"text\": \"The ruins extend further than expected. Press on?\", \"params\": {\"choices\": [{\"name\": \"Explore deeper\", \"risk\": 0.42, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Document Card\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}, {\"name\": \"Back away carefully\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}, {\"probability\": 0.28, \"type\": \"player_choice\", \"text\": \"You find a locked container. Force it open?\", \"params\": {\"choices\": [{\"name\": \"Force it open\", \"risk\": 0.3, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 8}}, {\"name\": \"Leave it alone\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}, {\"probability\": 0.13, \"type\": \"heal_player\", \"text\": \"A moment of peace among the ruins restores your spirits.\", \"params\": {\"amount\": 4}}]"
+  }
+}

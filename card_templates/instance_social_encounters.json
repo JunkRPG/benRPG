@@ -1,0 +1,99 @@
+{
+  "template_name": "Social Encounters",
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "count": 12,
+  "naming": {
+    "mode": "name_list",
+    "names": [
+      "Stranger on the Road", "The Merchant's Offer", "A Plea for Help",
+      "Crossroads Meeting", "The Beggar's Tale", "Suspicious Traveler",
+      "Old Friends?", "The Bard's Song", "Shady Deal", "Campfire Stories",
+      "A Child's Request", "The Warning"
+    ]
+  },
+  "fields": {
+    "Description": {"type": "text_choice", "options": [
+      "A figure waves you down from the roadside.",
+      "Someone calls out to you from behind a ruined wall.",
+      "A traveler approaches, arms spread wide in greeting.",
+      "You encounter a small camp with a lone occupant.",
+      "A weathered stranger blocks the path, wanting to talk.",
+      "Voices carry on the wind — someone nearby is speaking.",
+      "A merchant's cart sits at the crossroads, its owner beckoning.",
+      "A hooded figure steps from the shadows, hand raised in peace.",
+      "You hear sobbing from behind a pile of rubble.",
+      "A child runs toward you, breathless and wide-eyed.",
+      "An old woman sits by the path, watching you approach.",
+      "A group of travelers calls out, asking to share your fire."
+    ]},
+    "Subclass": {"type": "fixed", "value": "Social"},
+    "Outcomes": {"type": "json_template", "template_mode": "outcome_pool",
+      "outcome_pool": [
+        {"type": "player_choice", "text_options": [
+          "They offer you a trade. Do you accept?",
+          "They ask for food in exchange for information.",
+          "They want to barter — junk for medicine."
+        ], "params": {"choices": [
+          {
+            "name": "Accept the trade",
+            "risk": {"min": 0.1, "max": 0.25},
+            "success": {"type": "draw_card", "card_type": "Junk Card"},
+            "failure": {"type": "damage_player", "damage": {"min": 2, "max": 5}}
+          },
+          {
+            "name": "Decline politely",
+            "risk": 0,
+            "success": {"type": "none"}
+          }
+        ]}, "weight": 3},
+
+        {"type": "player_choice", "text_options": [
+          "They beg you for help. Will you assist them?",
+          "A desperate plea — they need your aid!",
+          "Someone is in trouble and only you can help."
+        ], "params": {"choices": [
+          {
+            "name": "Help them",
+            "risk": {"min": 0.15, "max": 0.3},
+            "success": {"type": "heal_player", "amount": {"min": 5, "max": 10}},
+            "failure": {"type": "spawn_enemy", "deck": "beta_enemy_deck.json", "count": 1, "spawn_near": "player"}
+          },
+          {
+            "name": "Walk away",
+            "risk": 0,
+            "success": {"type": "none"}
+          }
+        ]}, "weight": 3},
+
+        {"type": "heal_player", "text_options": [
+          "The stranger shares some of their supplies with you.",
+          "They offer you a healing salve as thanks.",
+          "A kind soul tends to your wounds."
+        ], "params": {"amount": {"min": 3, "max": 10}}, "weight": 2},
+
+        {"type": "draw_card", "text_options": [
+          "They give you a gift before departing.",
+          "You receive useful information — and a small token.",
+          "The stranger leaves behind something valuable."
+        ], "params": {"card_type": {"options": ["Junk Card", "Document Card"]}}, "weight": 2},
+
+        {"type": "spawn_ally", "text_options": [
+          "The stranger offers to travel with you for a while.",
+          "Impressed by your demeanor, they join your cause.",
+          "A new ally appears from an unexpected encounter."
+        ], "params": {"deck": "beta_npc_deck.json", "spawn_near": "player", "count": 1}, "weight": 1},
+
+        {"type": "none", "text_options": [
+          "They share a story but have nothing else to offer.",
+          "An interesting conversation, but nothing more comes of it.",
+          "The stranger nods and continues on their way."
+        ], "params": {}, "weight": 2}
+      ],
+      "pick_count": {"min": 3, "max": 4},
+      "auto_balance_probabilities": true
+    }
+  },
+  "deck": "generated_instance_social_deck"
+}

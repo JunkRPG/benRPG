@@ -15,7 +15,10 @@
       "Bash(\"C:\\\\Users\\\\Tony\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\" -c \"import base64; print\\(''ok''\\)\")",
       "Bash(\"C:\\\\Users\\\\Tony\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python313\\\\python.exe\" -c \"import sys; print\\(sys.executable\\)\")",
       "Bash(findstr:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(cd:*)",
+      "Bash(git status:*)",
+      "Bash(python3:*)"
     ]
   }
 }

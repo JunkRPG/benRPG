@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Ground Tremor",
+    "Description": "The ground shakes violently beneath your feet!",
+    "Subclass": "Environmental",
+    "Outcomes": "[{\"probability\": 0.26, \"type\": \"player_choice\", \"text\": \"There might be a way to avoid the worst of it.\", \"params\": {\"choices\": [{\"name\": \"Take cover!\", \"risk\": 0.33, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 5}}, {\"name\": \"Run for it!\", \"risk\": 0.35, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 7}}]}}, {\"probability\": 0.16, \"type\": \"damage_player\", \"text\": \"You can't escape the danger in time!\", \"params\": {\"damage\": 7}}, {\"probability\": 0.26, \"type\": \"teleport_player\", \"text\": \"The force of the event displaces you!\", \"params\": {\"distance\": 1, \"direction\": \"random\"}}, {\"probability\": 0.32, \"type\": \"none\", \"text\": \"You manage to avoid the worst of it.\", \"params\": {}}]"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "The Singing Rock",
+    "Description": "The universe has a sense of humor, apparently.",
+    "Subclass": "Discovery",
+    "Outcomes": "[{\"probability\": 0.19, \"type\": \"draw_card\", \"text\": \"The squirrel drops something from its cheeks before fleeing.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.27, \"type\": \"heal_player\", \"text\": \"The cosmic joke is on someone else today \\u00e2\\u20ac\\u201d you feel great!\", \"params\": {\"amount\": 2}}, {\"probability\": 0.54, \"type\": \"none\", \"text\": \"You shrug and continue your journey, slightly bewildered.\", \"params\": {}}]"
+  }
+}

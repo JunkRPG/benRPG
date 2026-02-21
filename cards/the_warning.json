@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "The Warning",
+    "Description": "A child runs toward you, breathless and wide-eyed.",
+    "Subclass": "Social",
+    "Outcomes": "[{\"probability\": 0.28, \"type\": \"draw_card\", \"text\": \"The stranger leaves behind something valuable.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.33, \"type\": \"player_choice\", \"text\": \"Someone is in trouble and only you can help.\", \"params\": {\"choices\": [{\"name\": \"Help them\", \"risk\": 0.26, \"success\": {\"type\": \"heal_player\", \"amount\": 10}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}, {\"name\": \"Walk away\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}, {\"probability\": 0.25, \"type\": \"heal_player\", \"text\": \"The stranger shares some of their supplies with you.\", \"params\": {\"amount\": 4}}, {\"probability\": 0.14, \"type\": \"player_choice\", \"text\": \"They want to barter \\u00e2\\u20ac\\u201d junk for medicine.\", \"params\": {\"choices\": [{\"name\": \"Accept the trade\", \"risk\": 0.13, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 3}}, {\"name\": \"Decline politely\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}]"
+  }
+}

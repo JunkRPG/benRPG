@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Crumbling Highway",
+    "Description": "Nothing but desolation stretches to the horizon.",
+    "Outcomes": "[{\"probability\": 0.26, \"type\": \"draw_junk\", \"text\": \"The wasteland yields its treasures to the persistent.\", \"params\": {\"deck\": \"beta_junk_deck.json\", \"count\": 1}}, {\"probability\": 0.31, \"type\": \"spawn_npc\", \"text\": \"A lone trader crosses the wasteland.\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_npc_deck.json\", \"count\": 1, \"allegiance\": \"Neutral\"}}, {\"probability\": 0.2, \"type\": \"spawn_enemy\", \"text\": \"Raiders emerge from behind rusted wreckage!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.23, \"type\": \"weather\", \"text\": \"A dust storm kicks up!\", \"params\": {\"effect\": \"fog\", \"range_modifier\": -1}}]",
+    "2nd_state_Name": "Dead of Night",
+    "2nd_state_Description": "Without the sun's heat, the wasteland becomes dangerously cold.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.3, \"type\": \"flip_state\", \"text\": \"The sun rises, bringing warmth back to the wasteland.\", \"params\": {}}, {\"probability\": 0.12, \"type\": \"spawn_enemy\", \"text\": \"Night raiders attack under cover of darkness!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.58, \"type\": \"damage_player\", \"text\": \"The freezing cold saps your strength.\", \"params\": {\"damage\": 4}}]"
+  }
+}

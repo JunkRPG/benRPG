@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "The Pants Problem",
+    "Description": "The universe has a sense of humor, apparently.",
+    "Subclass": "Discovery",
+    "Outcomes": "[{\"probability\": 0.74, \"type\": \"draw_card\", \"text\": \"The squirrel drops something from its cheeks before fleeing.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.26, \"type\": \"damage_player\", \"text\": \"You trip over absolutely nothing and face-plant.\", \"params\": {\"damage\": 3}}]"
+  }
+}

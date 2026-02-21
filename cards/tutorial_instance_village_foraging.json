@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "states": 1,
+  "data": {
+    "Name": "Village Foraging",
+    "Description": "Foraging and discovery around the village outskirts.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"draw_card\", \"text\": \"You find useful materials while foraging.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.30, \"type\": \"player_choice\", \"text\": \"You notice a dark shed at the edge of the village.\", \"params\": {\"choices\": [{\"name\": \"Go inside\", \"risk\": 0.3, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 8}}, {\"name\": \"Leave it\", \"effect\": {\"type\": \"none\", \"text\": \"Best not to poke around in the dark.\"}}]}}, {\"probability\": 0.30, \"type\": \"none\", \"text\": \"Nothing of interest today.\", \"params\": {}}]"
+  }
+}

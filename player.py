@@ -168,6 +168,7 @@ class Player:
 
         # Manning defensive locations (towers)
         self.manning_location = None  # (row, col) of manned location, or None
+        self.manning_weapon_mode = "tower"  # "tower" or "personal"
 
         # Multiplayer attributes
         self.player_number = 1  # 1 or 2 (for multiplayer mode)
@@ -221,12 +222,17 @@ class Player:
         elif self.action_used:
             return "Action already used this turn", False
 
-        # Check distance (0 = self, 1 = adjacent)
+        # Check distance (0 = self, 1 = adjacent, or tower range when manning)
         if target is self:
             distance = 0
         else:
             distance = grid.hex_distance(self.position, target.position)
-        if distance > 1:
+        if self.is_manning() and self.manning_weapon_mode == "tower":
+            # When manning in tower mode, allow healing at tower range
+            manning_range = self.get_manning_attack_range(grid)
+            if target is not self and target.position not in manning_range:
+                return "Target not in tower healing range", False
+        elif distance > 1:
             return "Target must be adjacent or self", False
 
         # Cannot heal dead targets (use Revive instead)
@@ -1822,13 +1828,22 @@ class Player:
         return self.manning_location is not None
 
     def enter_manning(self, location_pos):
-        """Enter a defensive location (tower) to man its weapons."""
+        """Enter a defensive location (tower) to man its weapons. Free action."""
         self.manning_location = tuple(location_pos)
-        self.movement_used = True
+        self.manning_weapon_mode = "tower"
 
     def leave_manning(self):
-        """Leave a manned defensive location."""
+        """Leave a manned defensive location. Free action."""
         self.manning_location = None
+        self.manning_weapon_mode = "tower"
+
+    def toggle_manning_weapon_mode(self):
+        """Toggle between tower and personal weapon while manning. Returns new mode."""
+        if self.manning_weapon_mode == "tower":
+            self.manning_weapon_mode = "personal"
+        else:
+            self.manning_weapon_mode = "tower"
+        return self.manning_weapon_mode
 
     def get_manning_defenses(self, grid):
         """Get the defense entries for the currently manned location."""

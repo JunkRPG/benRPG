@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Lost and Confused",
+    "Description": "You blink twice, but it's still happening.",
+    "Subclass": "Discovery",
+    "Outcomes": "[{\"probability\": 0.33, \"type\": \"heal_player\", \"text\": \"The absurdity of the moment makes you laugh so hard you feel better.\", \"params\": {\"amount\": 3}}, {\"probability\": 0.51, \"type\": \"none\", \"text\": \"The moment passes. Life goes on. Somehow.\", \"params\": {}}, {\"probability\": 0.16, \"type\": \"player_choice\", \"text\": \"A squirrel is sitting on your pack. It seems... angry.\", \"params\": {\"choices\": [{\"name\": \"Investigate cautiously\", \"risk\": 0.34, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 1}}, {\"name\": \"Nope. Walk away.\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}]"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "The Chicken Incident",
+    "Description": "Something deeply strange just happened.",
+    "Subclass": "Discovery",
+    "Outcomes": "[{\"probability\": 0.45, \"type\": \"heal_player\", \"text\": \"You find a perfectly preserved pie. Don't question it.\", \"params\": {\"amount\": 2}}, {\"probability\": 0.55, \"type\": \"player_choice\", \"text\": \"A squirrel is sitting on your pack. It seems... angry.\", \"params\": {\"choices\": [{\"name\": \"Investigate cautiously\", \"risk\": 0.34, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 4}}, {\"name\": \"Nope. Walk away.\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}]"
+  }
+}

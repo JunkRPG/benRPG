@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Oops!",
+    "Description": "You're not entirely sure what you just witnessed.",
+    "Subclass": "Discovery",
+    "Outcomes": "[{\"probability\": 0.13, \"type\": \"draw_card\", \"text\": \"The chicken drops something shiny before waddling away.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.36, \"type\": \"damage_player\", \"text\": \"You walk into a low-hanging branch. Classic.\", \"params\": {\"damage\": 3}}, {\"probability\": 0.51, \"type\": \"player_choice\", \"text\": \"A squirrel is sitting on your pack. It seems... angry.\", \"params\": {\"choices\": [{\"name\": \"Investigate cautiously\", \"risk\": 0.31, \"success\": {\"type\": \"draw_card\", \"card_type\": \"Junk Card\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 3}}, {\"name\": \"Nope. Walk away.\", \"risk\": 0, \"success\": {\"type\": \"none\"}}]}}]"
+  }
+}

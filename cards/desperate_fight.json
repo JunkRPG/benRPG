@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Desperate Fight",
+    "Description": "Hostile eyes glint in the darkness ahead.",
+    "Subclass": "Combat",
+    "Outcomes": "[{\"probability\": 0.24, \"type\": \"heal_player\", \"text\": \"The rush of battle sharpens your senses.\", \"params\": {\"amount\": 6}}, {\"probability\": 0.4, \"type\": \"damage_player\", \"text\": \"An arrow finds its mark \\u00e2\\u20ac\\u201d you stagger back.\", \"params\": {\"damage\": 11}}, {\"probability\": 0.36, \"type\": \"spawn_enemy\", \"text\": \"Bandits rush from the bushes!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"spawn_near\": \"player\", \"count\": 2}}]"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Tower Guard Archer",
+    "Description": "A disciplined archer trained to man defensive towers. Will seek out and garrison the nearest available tower.",
+    "Health": "20",
+    "Movement": "4",
+    "Melee Damage": "4",
+    "Projectile Damage": "7",
+    "Projectile Range": "6",
+    "Range_Type": "line_of_sight",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "",
+    "Background Image File Path": "",
+    "NPC Image File Path": "",
+    "Default_Behavior_Tree": "[\"garrison_tower\", \"attack_closest\", \"follow_target\"]",
+    "2nd_State_Name": "Sentinel Archer",
+    "2nd_State_Health": "30",
+    "2nd_State_Movement": "5",
+    "2nd_State_Melee Damage": "6",
+    "2nd_State_Projectile Damage": "12",
+    "2nd_State_Projectile Range": "8",
+    "2nd_State_Range_Type": "line_of_sight",
+    "2nd_State_Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "2nd_State_Special Skill": "",
+    "2nd_State_NPC Image File Path": ""
+  },
+  "id": "tower_guard_archer"
+}

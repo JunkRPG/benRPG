@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "The Hunt Begins",
+    "Description": "Torchlight flickers between the trees \u00e2\u20ac\u201d a raiding party.",
+    "Subclass": "Combat",
+    "Outcomes": "[{\"probability\": 0.06, \"type\": \"spawn_enemy\", \"text\": \"Reinforcements arrive for the enemy!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"spawn_near\": \"player\", \"count\": 1}}, {\"probability\": 0.25, \"type\": \"damage_player\", \"text\": \"You take a hit before you can react!\", \"params\": {\"damage\": 11}}, {\"probability\": 0.21, \"type\": \"heal_player\", \"text\": \"Adrenaline surges \\u00e2\\u20ac\\u201d you feel reinvigorated!\", \"params\": {\"amount\": 7}}, {\"probability\": 0.19, \"type\": \"none\", \"text\": \"Whatever was there has moved on.\", \"params\": {}}, {\"probability\": 0.29, \"type\": \"player_choice\", \"text\": \"You spot them before they spot you. What do you do?\", \"params\": {\"choices\": [{\"name\": \"Attack first!\", \"risk\": 0.34, \"success\": {\"type\": \"damage_enemy\", \"damage\": 9, \"target\": \"random\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 4}}, {\"name\": \"Sneak away\", \"risk\": 0.17, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}]}}]"
+  }
+}

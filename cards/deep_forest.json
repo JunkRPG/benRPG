@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "subclass": null,
+  "blueprint_subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Deep Forest",
+    "Description": "The forest stirs with life. Creatures move between the trees.",
+    "Outcomes": "[{\"probability\": 0.11, \"type\": \"spawn_enemy\", \"text\": \"Forest predators have found your scent!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.31, \"type\": \"draw_junk\", \"text\": \"You spot useful herbs growing nearby.\", \"params\": {\"deck\": \"beta_junk_deck.json\", \"count\": 1}}, {\"probability\": 0.32, \"type\": \"spawn_npc\", \"text\": \"A fellow traveler passes through the woods.\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_npc_deck.json\", \"count\": 1, \"allegiance\": \"Neutral\"}}, {\"probability\": 0.26, \"type\": \"weather\", \"text\": \"Rain begins to fall through the canopy.\", \"params\": {\"effect\": \"clear\", \"range_modifier\": -1}}]",
+    "2nd_state_Name": "Moonlit Grove",
+    "2nd_state_Description": "Darkness swallows the canopy. Eyes glow in the shadows.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.33, \"type\": \"flip_state\", \"text\": \"The sun rises \\u00e2\\u20ac\\u201d the forest transforms with the light.\", \"params\": {}}, {\"probability\": 0.27, \"type\": \"spawn_enemy\", \"text\": \"Night hunters stalk through the darkness!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 2}}, {\"probability\": 0.28, \"type\": \"none\", \"text\": \"Stars peek through gaps in the canopy. All is calm.\", \"params\": {}}, {\"probability\": 0.12, \"type\": \"draw_instance\", \"text\": \"The night brings unexpected events.\", \"params\": {}}]"
+  }
+}

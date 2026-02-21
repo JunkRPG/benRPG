@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Skirmish in the Brush",
+    "Description": "Shadows move in the underbrush... something is watching you.",
+    "Subclass": "Combat",
+    "Outcomes": "[{\"probability\": 0.23, \"type\": \"damage_player\", \"text\": \"You take a hit before you can react!\", \"params\": {\"damage\": 5}}, {\"probability\": 0.23, \"type\": \"player_choice\", \"text\": \"The enemy hasn't noticed you yet.\", \"params\": {\"choices\": [{\"name\": \"Attack first!\", \"risk\": 0.23, \"success\": {\"type\": \"damage_enemy\", \"damage\": 12, \"target\": \"random\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 4}}, {\"name\": \"Sneak away\", \"risk\": 0.14, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}]}}, {\"probability\": 0.19, \"type\": \"none\", \"text\": \"Whatever was there has moved on.\", \"params\": {}}, {\"probability\": 0.07, \"type\": \"spawn_enemy\", \"text\": \"Enemies emerge from hiding!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"spawn_near\": \"player\", \"count\": 1}}, {\"probability\": 0.28, \"type\": \"draw_card\", \"text\": \"In the chaos, you spot something worth taking.\", \"params\": {\"card_type\": \"Junk Card\"}}]"
+  }
+}

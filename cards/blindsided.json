@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Blindsided",
+    "Description": "The path ahead is blocked by armed figures.",
+    "Subclass": "Combat",
+    "Outcomes": "[{\"probability\": 0.35, \"type\": \"damage_player\", \"text\": \"An arrow finds its mark \\u00e2\\u20ac\\u201d you stagger back.\", \"params\": {\"damage\": 9}}, {\"probability\": 0.1, \"type\": \"draw_card\", \"text\": \"You grab something useful from the fallen enemy.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.27, \"type\": \"spawn_enemy\", \"text\": \"Reinforcements arrive for the enemy!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"spawn_near\": \"player\", \"count\": 1}}, {\"probability\": 0.11, \"type\": \"none\", \"text\": \"You hold your breath... nothing happens.\", \"params\": {}}, {\"probability\": 0.17, \"type\": \"player_choice\", \"text\": \"You spot them before they spot you. What do you do?\", \"params\": {\"choices\": [{\"name\": \"Attack first!\", \"risk\": 0.23, \"success\": {\"type\": \"damage_enemy\", \"damage\": 17, \"target\": \"random\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 7}}, {\"name\": \"Sneak away\", \"risk\": 0.2, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}]}}]"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Discovery",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Squirrel Attack!",
+    "Description": "Even the wildlife looks confused.",
+    "Subclass": "Discovery",
+    "Outcomes": "[{\"probability\": 0.74, \"type\": \"damage_player\", \"text\": \"You step on a rake. Yes, a rake. In the wilderness.\", \"params\": {\"damage\": 3}}, {\"probability\": 0.26, \"type\": \"none\", \"text\": \"The moment passes. Life goes on. Somehow.\", \"params\": {}}]"
+  }
+}

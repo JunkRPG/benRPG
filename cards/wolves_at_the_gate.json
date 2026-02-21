@@ -1,0 +1,12 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "blueprint_subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Wolves at the Gate",
+    "Description": "Torchlight flickers between the trees \u00e2\u20ac\u201d a raiding party.",
+    "Subclass": "Combat",
+    "Outcomes": "[{\"probability\": 0.28, \"type\": \"player_choice\", \"text\": \"You spot them before they spot you. What do you do?\", \"params\": {\"choices\": [{\"name\": \"Attack first!\", \"risk\": 0.34, \"success\": {\"type\": \"damage_enemy\", \"damage\": 19, \"target\": \"random\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 5}}, {\"name\": \"Sneak away\", \"risk\": 0.29, \"success\": {\"type\": \"none\"}, \"failure\": {\"type\": \"spawn_enemy\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1, \"spawn_near\": \"player\"}}]}}, {\"probability\": 0.21, \"type\": \"none\", \"text\": \"You brace yourself, but the threat passes.\", \"params\": {}}, {\"probability\": 0.28, \"type\": \"damage_player\", \"text\": \"The ambusher lands a cheap shot.\", \"params\": {\"damage\": 4}}, {\"probability\": 0.2, \"type\": \"spawn_enemy\", \"text\": \"More hostiles appear!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"spawn_near\": \"player\", \"count\": 1}}, {\"probability\": 0.03, \"type\": \"heal_player\", \"text\": \"Adrenaline surges \\u00e2\\u20ac\\u201d you feel reinvigorated!\", \"params\": {\"amount\": 5}}]"
+  }
+}
