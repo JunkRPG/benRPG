@@ -10,6 +10,7 @@ from sound_manager import play_card_acquired_sound
 import os
 from deck_utils import resolve_deck_path
 from card_utils import load_card
+from hexgrid import _spawn_log
 
 
 class TransitionCard:
@@ -377,13 +378,16 @@ class TransitionManager:
         from unit import Unit
 
         if not deck_file:
+            _spawn_log(f"[SPAWN] _spawn_from_edge: no deck specified")
             return "No deck specified for spawning."
+
+        _spawn_log(f"[SPAWN] _spawn_from_edge: edge={edge}, deck={deck_file}, allegiance={allegiance}, count={count}")
 
         # Check for active spawn locations first
         active_spawn_locations = hex_grid.get_active_spawn_locations()
 
         spawned = []
-        for _ in range(count):
+        for i in range(count):
             spawn_pos = None
             actual_deck = deck_file
             spawn_source = edge
@@ -409,13 +413,20 @@ class TransitionManager:
                 spawn_pos = hex_grid.get_edge_spawn_position(edge)
                 spawn_source = edge
 
+            # Final fallback to any random empty position on the map
             if not spawn_pos:
+                spawn_pos = hex_grid.get_random_spawn_position()
+                spawn_source = "the wilds"
+
+            if not spawn_pos:
+                _spawn_log(f"[SPAWN] _spawn_from_edge: no spawn position found (attempt {i+1}/{count})")
                 continue
 
             # Draw card from the appropriate deck
             deck_path = resolve_deck_path(actual_deck)
             card = self.card_manager.draw_from_deck(deck_path)
             if not card:
+                _spawn_log(f"[SPAWN] _spawn_from_edge: no card drawn from deck '{deck_path}' (attempt {i+1}/{count})")
                 continue
 
             # Create unit from card - Unit takes card_data dict
@@ -426,8 +437,11 @@ class TransitionManager:
                 card_data["data"]["Allegiance (Hostile, Neutral, Allied)"] = allegiance
 
             unit = Unit(card_data)
-            hex_grid.place_unit(unit, *spawn_pos)
-            spawned.append(f"{unit.name} ({spawn_source})")
+            success, msg = hex_grid.place_unit(unit, *spawn_pos)
+            if success:
+                spawned.append(f"{unit.name} ({spawn_source})")
+            else:
+                _spawn_log(f"[SPAWN] Failed to place {unit.name} at {spawn_pos}: {msg}")
 
         if spawned:
             return f"Spawned: {', '.join(spawned)}"
@@ -459,13 +473,17 @@ class TransitionManager:
         from unit import Unit
 
         if not deck_file:
+            _spawn_log(f"[SPAWN] _spawn_npc_from_location: no deck specified")
             return "No deck specified for spawning."
+
+        _spawn_log(f"[SPAWN] _spawn_npc_from_location: edge={edge}, deck={deck_file}, allegiance={allegiance}, count={count}")
 
         # Check for active NPC spawn locations (churches) first
         active_npc_locations = hex_grid.get_active_npc_spawn_locations()
+        _spawn_log(f"[SPAWN] _spawn_npc_from_location: found {len(active_npc_locations)} active NPC spawn locations")
 
         spawned = []
-        for _ in range(count):
+        for i in range(count):
             spawn_pos = None
             actual_deck = deck_file
             spawn_source = edge
@@ -491,13 +509,20 @@ class TransitionManager:
                 spawn_pos = hex_grid.get_edge_spawn_position(edge)
                 spawn_source = edge
 
+            # Final fallback to any random empty position on the map
             if not spawn_pos:
+                spawn_pos = hex_grid.get_random_spawn_position()
+                spawn_source = "the wilds"
+
+            if not spawn_pos:
+                _spawn_log(f"[SPAWN] _spawn_npc_from_location: no spawn position found (attempt {i+1}/{count})")
                 continue
 
             # Draw card from the appropriate deck
             deck_path = resolve_deck_path(actual_deck)
             card = self.card_manager.draw_from_deck(deck_path)
             if not card:
+                _spawn_log(f"[SPAWN] _spawn_npc_from_location: no card drawn from deck '{deck_path}' (attempt {i+1}/{count})")
                 continue
 
             # Create unit from card - Unit takes card_data dict
@@ -508,8 +533,11 @@ class TransitionManager:
                 card_data["data"]["Allegiance (Hostile, Neutral, Allied)"] = allegiance
 
             unit = Unit(card_data)
-            hex_grid.place_unit(unit, *spawn_pos)
-            spawned.append(f"{unit.name} ({spawn_source})")
+            success, msg = hex_grid.place_unit(unit, *spawn_pos)
+            if success:
+                spawned.append(f"{unit.name} ({spawn_source})")
+            else:
+                _spawn_log(f"[SPAWN] Failed to place NPC {unit.name} at {spawn_pos}: {msg}")
 
         if spawned:
             return f"Spawned: {', '.join(spawned)}"
@@ -558,6 +586,12 @@ class TransitionManager:
                 spawn_source = "the wilds"
                 has_assigned_npc = False
 
+            # Final fallback to any random empty position on the map
+            if not spawn_pos:
+                spawn_pos = hex_grid.get_random_spawn_position()
+                spawn_source = "the wilds"
+                has_assigned_npc = False
+
             if not spawn_pos:
                 continue
 
@@ -592,8 +626,11 @@ class TransitionManager:
                 unit.movement = int(state2_data.get("2nd_State_Movement", unit.movement))
                 unit.set_allegiance("Allied")
 
-            hex_grid.place_unit(unit, *spawn_pos)
-            spawned.append(f"{unit.name} ({spawn_source})")
+            success, msg = hex_grid.place_unit(unit, *spawn_pos)
+            if success:
+                spawned.append(f"{unit.name} ({spawn_source})")
+            else:
+                _spawn_log(f"[SPAWN] Failed to place horse {unit.name} at {spawn_pos}: {msg}")
 
         if spawned:
             return f"Spawned: {', '.join(spawned)}"
@@ -623,8 +660,11 @@ class TransitionManager:
                 card_data["data"]["Allegiance (Hostile, Neutral, Allied)"] = "Neutral"
 
             unit = Unit(card_data)
-            hex_grid.place_unit(unit, *spawn_pos)
-            spawned.append(unit.name)
+            success, msg = hex_grid.place_unit(unit, *spawn_pos)
+            if success:
+                spawned.append(unit.name)
+            else:
+                _spawn_log(f"[SPAWN] Failed to place wild mount {unit.name} at {spawn_pos}: {msg}")
 
         if spawned:
             return f"A wild creature appears: {', '.join(spawned)}"
@@ -636,8 +676,10 @@ class TransitionManager:
 
         # Draw NPC card from npc_deck
         npc_deck_path = resolve_deck_path(npc_deck)
+        _spawn_log(f"[SPAWN] _spawn_quest_npc: npc_deck={npc_deck_path}, quest_deck={quest_deck}")
         npc_card = self.card_manager.draw_from_deck(npc_deck_path)
         if not npc_card:
+            _spawn_log(f"[SPAWN] _spawn_quest_npc: no NPC card drawn from '{npc_deck_path}'")
             return "No NPC card available for quest giver."
 
         # Draw quest card ID from quest_deck
@@ -650,10 +692,15 @@ class TransitionManager:
                 card_ids = deck_data.get("cards", [])
                 if card_ids:
                     quest_card_id = random.choice(card_ids)
+                else:
+                    _spawn_log(f"[SPAWN] _spawn_quest_npc: quest deck '{quest_deck_path}' has no cards")
+            else:
+                _spawn_log(f"[SPAWN] _spawn_quest_npc: quest deck file '{quest_deck_path}' not found")
         except Exception as e:
-            print(f"Error reading quest deck for quest NPC: {e}")
+            _spawn_log(f"[SPAWN] _spawn_quest_npc: error reading quest deck: {e}")
 
         if not quest_card_id:
+            _spawn_log(f"[SPAWN] _spawn_quest_npc: no quest card available")
             return "No quest card available for quest giver."
 
         # Create unit from NPC card
@@ -685,7 +732,10 @@ class TransitionManager:
         if not spawn_pos:
             return "No valid spawn position for quest NPC."
 
-        hex_grid.place_unit(unit, *spawn_pos)
+        success, msg = hex_grid.place_unit(unit, *spawn_pos)
+        if not success:
+            _spawn_log(f"[SPAWN] Failed to place quest NPC {unit.name} at {spawn_pos}: {msg}")
+            return f"Quest NPC {unit.name} failed to spawn."
         return f"A quest giver ({unit.name}) has appeared!"
 
     def _draw_cards(self, card_type, deck_file, count, player):

@@ -9,51 +9,51 @@
   },
   "terrain": [
     [
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
       "forest",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff"
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "forest",
@@ -94,10 +94,10 @@
       "grass",
       "stone",
       "grass",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "forest",
@@ -138,10 +138,10 @@
       "forest",
       "grass",
       "grass",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "forest",
@@ -182,10 +182,10 @@
       "stone",
       "grass",
       "forest",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "grass",
@@ -226,10 +226,10 @@
       "grass",
       "grass",
       "grass",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "dirt",
@@ -270,10 +270,10 @@
       "grass",
       "forest",
       "grass",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "forest",
@@ -314,10 +314,10 @@
       "grass",
       "grass",
       "stone",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "grass",
       "forest",
@@ -358,10 +358,10 @@
       "grass",
       "dirt",
       "dirt",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "grass",
       "forest",
@@ -402,10 +402,10 @@
       "grass",
       "grass",
       "grass",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "forest",
@@ -446,10 +446,10 @@
       "stone",
       "stone",
       "grass",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "forest",
@@ -490,10 +490,10 @@
       "dirt",
       "grass",
       "grass",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "forest",
@@ -534,10 +534,10 @@
       "grass",
       "forest",
       "forest",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "forest",
@@ -578,10 +578,10 @@
       "grass",
       "grass",
       "grass",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "forest",
@@ -622,10 +622,10 @@
       "grass",
       "forest",
       "forest",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "forest",
@@ -666,10 +666,10 @@
       "stone",
       "grass",
       "dirt",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "grass",
@@ -710,10 +710,10 @@
       "stone",
       "grass",
       "stone",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "dirt",
@@ -754,10 +754,10 @@
       "grass",
       "stone",
       "forest",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "grass",
       "forest",
       "grass",
@@ -798,10 +798,10 @@
       "forest",
       "grass",
       "grass",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "forest",
@@ -842,10 +842,10 @@
       "grass",
       "forest",
       "stone",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "forest",
@@ -886,10 +886,10 @@
       "mountain",
       "forest",
       "stone",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "dirt",
       "forest",
       "forest",
@@ -930,10 +930,10 @@
       "forest",
       "stone",
       "grass",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "forest",
@@ -974,10 +974,10 @@
       "dirt",
       "grass",
       "stone",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
+      "grass",
       "forest",
       "forest",
       "grass",
@@ -1018,51 +1018,51 @@
       "stone",
       "stone",
       "forest",
-      "cliff"
+      "grass"
     ],
     [
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff",
-      "cliff"
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass",
+      "grass"
     ]
   ],
   "inaccessible_hexes": [],
