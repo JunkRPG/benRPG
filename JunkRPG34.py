@@ -3529,10 +3529,7 @@ class GameScreen:
             melee_name = p.attacks.get("melee", {}).get("name", "Fist")
         # Projectile slot label
         if p.projectile_weapon:
-            if p.melee_weapon and p.projectile_weapon is p.melee_weapon:
-                proj_name = "(Both)"
-            else:
-                proj_name = p.projectile_weapon.get_current_data().get("Name", "???")
+            proj_name = p.projectile_weapon.get_current_data().get("Name", "???")
         else:
             proj_name = p.attacks.get("projectile", {}).get("name", "Throw Rock")
         # Tool slot label
@@ -3847,7 +3844,7 @@ class GameScreen:
                     if not ctype and card.card_data.get("subclass") in ("Junk_to_Weapon", "Blueprint_to_Weapon"):
                         if int(cdata.get("Melee Damage", 0) or 0) > 0:
                             ctype = "Melee"
-                    if ctype in ("Melee", "Both"):
+                    if ctype == "Melee":
                         items.append((cdata.get("Name", "???"), card))
             if p.melee_weapon:
                 items.append(("-- Unequip --", "unequip"))
@@ -3861,7 +3858,7 @@ class GameScreen:
                     if not ctype and card.card_data.get("subclass") in ("Junk_to_Weapon", "Blueprint_to_Weapon"):
                         if int(cdata.get("Projectile Damage", 0) or 0) > 0:
                             ctype = "Projectile"
-                    if ctype in ("Projectile", "Both"):
+                    if ctype == "Projectile":
                         items.append((cdata.get("Name", "???"), card))
             if p.projectile_weapon:
                 items.append(("-- Unequip --", "unequip"))
@@ -3902,7 +3899,7 @@ class GameScreen:
                 if card.current_state == 2 and card is not p.equipped_accessory:
                     cdata = card.get_current_data()
                     ctype = cdata.get("Type", "")
-                    if ctype in ("Tool_Belt", "Accessory", "Belt", "Pouch", "Ammunition"):
+                    if ctype in ("Tool_Belt", "Accessory", "Belt", "Pouch", "Ammunition", "Shield", "Armor"):
                         items.append((cdata.get("Name", "???"), card))
             if p.equipped_accessory:
                 items.append(("-- Unequip --", "unequip"))

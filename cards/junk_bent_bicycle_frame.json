@@ -1,0 +1,25 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Bent Bicycle Frame",
+    "Description": "A mangled bicycle frame with long steel tubes. Straighten it out and add a blade — you've got reach and power in one package.",
+    "Raw Material Value": "4",
+    "Refined Material Value": "3",
+    "Metal Value": "8",
+    "Wood Value": "0",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "4",
+    "Requirements: Refined Materials": "3",
+    "Requirements: Wood": "0",
+    "Requirements: Metal": "8",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Frame Halberd",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "20",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Weapon Image": ""
+  }
+}

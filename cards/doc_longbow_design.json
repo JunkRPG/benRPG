@@ -1,0 +1,28 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Longbow Crafting Guide",
+    "Description": "A hand-drawn guide to crafting a proper longbow from flexible wood. Includes details on tillering, string selection, and draw weight.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "3",
+    "Requirements: Refined Materials": "3",
+    "Requirements: Wood": "5",
+    "Requirements: Metal": "2",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Artisan Longbow",
+    "2nd_state_Type": "Projectile",
+    "2nd_state_Melee Damage": "0",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Range_Type": "line_of_sight",
+    "2nd_state_Range_Distance": "6",
+    "2nd_state_Include_Position": "false",
+    "2nd_state_Exclude_Adjacent": "false",
+    "2nd_state_Requires_Ammo": "true",
+    "2nd_state_Compatible_Ammo": "Arrow",
+    "2nd_state_Weapon Image": ""
+  }
+}

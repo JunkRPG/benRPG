@@ -1,0 +1,25 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Old Chains",
+    "Description": "A tangle of heavy chain links, caked in rust and grime. With a handle, they'd make a devastating flail.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "1",
+    "Metal Value": "5",
+    "Wood Value": "0",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "0",
+    "Requirements: Metal": "5",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Chain Flail",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "16",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Weapon Image": ""
+  }
+}

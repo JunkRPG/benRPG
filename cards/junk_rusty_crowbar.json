@@ -1,0 +1,25 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Rusty Crowbar",
+    "Description": "A bent and rusted crowbar. The metal is still solid underneath all that corrosion.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "1",
+    "Metal Value": "5",
+    "Wood Value": "0",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "0",
+    "Requirements: Metal": "5",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Iron Pry Bar",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "14",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Weapon Image": ""
+  }
+}

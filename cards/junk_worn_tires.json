@@ -1,0 +1,24 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Worn Out Tires",
+    "Description": "A stack of bald tires. The rubber is thick and layered — cut and bolted together, they'd make a surprisingly tough barrier.",
+    "Raw Material Value": "4",
+    "Refined Material Value": "2",
+    "Metal Value": "5",
+    "Wood Value": "1",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "4",
+    "Requirements: Refined Materials": "2",
+    "Requirements: Wood": "1",
+    "Requirements: Metal": "5",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Tire Riot Shield",
+    "2nd_state_Type": "Shield",
+    "2nd_state_Defense_Value": "15",
+    "2nd_state_Tool Image": ""
+  }
+}

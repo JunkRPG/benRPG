@@ -1,0 +1,24 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Cracked Hubcap",
+    "Description": "A dented hubcap from some forgotten car. The chrome is flaking but the steel underneath is solid enough to stop a blade.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "1",
+    "Metal Value": "4",
+    "Wood Value": "0",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "0",
+    "Requirements: Metal": "4",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Hubcap Buckler",
+    "2nd_state_Type": "Shield",
+    "2nd_state_Defense_Value": "8",
+    "2nd_state_Tool Image": ""
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Frayed Seat Belts",
+    "Description": "A bundle of seat belts cut from wrecked cars. The woven nylon is surprisingly cut-resistant when layered.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "1",
+    "Metal Value": "2",
+    "Wood Value": "1",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "1",
+    "Requirements: Metal": "2",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Belt Strap Vest",
+    "2nd_state_Type": "Armor",
+    "2nd_state_Armor_Value": "6",
+    "2nd_state_Tool Image": ""
+  }
+}

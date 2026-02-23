@@ -1,0 +1,24 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Old Appliance Door",
+    "Description": "The heavy door from an old washing machine or oven. Bulky and awkward, but nothing short of an axe is getting through it.",
+    "Raw Material Value": "3",
+    "Refined Material Value": "2",
+    "Metal Value": "7",
+    "Wood Value": "0",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "3",
+    "Requirements: Refined Materials": "2",
+    "Requirements: Wood": "0",
+    "Requirements: Metal": "7",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Scrap Door Shield",
+    "2nd_state_Type": "Shield",
+    "2nd_state_Defense_Value": "12",
+    "2nd_state_Tool Image": ""
+  }
+}

@@ -2039,7 +2039,7 @@ class CardEditor:
                     self.ui_elements.append(browse)
                 elif field_type == "dropdown":
                     if field == "2nd_state_Type":
-                        options = ["Melee", "Projectile", "Both"]
+                        options = ["Melee", "Projectile"]
                         default = value if value in options else options[0]
                     elif field == "2nd_state_Use_HP":
                         options = HP_OPTIONS
@@ -2565,7 +2565,7 @@ class CardEditor:
                 field_type = self.get_field_type(field, card_data)
                 if field_type == "dropdown":
                     if field == "2nd_state_Type":
-                        options = ["Melee", "Projectile", "Both"]
+                        options = ["Melee", "Projectile"]
                         default = value if value in options else options[0]
                     elif field == "2nd_state_Use_HP":
                         options = HP_OPTIONS
@@ -3324,7 +3324,7 @@ class CardCreationScreen:
                 if self.selected_subclass == "Junk_to_Weapon":
                     right_fields = [
                         ("2nd_state_Name", "text"),
-                        ("2nd_state_Type", "dropdown", ["Melee", "Projectile", "Both"], "Melee"),
+                        ("2nd_state_Type", "dropdown", ["Melee", "Projectile"], "Melee"),
                         ("2nd_state_Melee Damage", "text"),
                         ("2nd_state_Projectile Damage", "text"),
                         # Range properties for projectile weapons
@@ -3340,7 +3340,7 @@ class CardCreationScreen:
                 elif self.selected_subclass == "Junk_to_Tool":
                     right_fields = [
                         ("2nd_state_Name", "text"),
-                        ("2nd_state_Type", "dropdown", ["Tool", "Tool_Belt", "Accessory"], "Tool"),
+                        ("2nd_state_Type", "dropdown", ["Tool", "Tool_Belt", "Accessory", "Shield", "Armor"], "Tool"),
                         ("2nd_state_Use", "text"),
                         ("2nd_state_Subtype", "text"),  # e.g., "Building", "Repair"
                         ("2nd_state_Tool_Action", "text"),  # e.g., "Build", "Dig", "Prune"
@@ -3352,6 +3352,7 @@ class CardCreationScreen:
                         # Tool belt/accessory fields
                         ("2nd_state_Extra_Tool_Slots", "dropdown", TOOL_SLOT_OPTIONS, "0"),
                         ("2nd_state_Defense_Value", "text"),
+                        ("2nd_state_Armor_Value", "text"),
                         ("2nd_state_Tool Image", "file"),
                     ]
                 elif self.selected_subclass == "Junk_to_Consumable_Item":
@@ -3413,7 +3414,7 @@ class CardCreationScreen:
                     ]
                     fields_state_2 = [
                         ("2nd_state_Name", "text"),
-                        ("2nd_state_Type", "dropdown", ["Melee", "Projectile", "Both"], "Melee"),
+                        ("2nd_state_Type", "dropdown", ["Melee", "Projectile"], "Melee"),
                         ("2nd_state_Melee Damage", "text"),
                         ("2nd_state_Projectile Damage", "text"),
                         # Range properties for projectile weapons
@@ -3438,13 +3439,14 @@ class CardCreationScreen:
                     ]
                     fields_state_2 = [
                         ("2nd_state_Name", "text"),
-                        ("2nd_state_Type", "dropdown", ["Tool", "Tool_Belt", "Accessory"], "Tool"),
+                        ("2nd_state_Type", "dropdown", ["Tool", "Tool_Belt", "Accessory", "Shield", "Armor"], "Tool"),
                         ("2nd_state_Use", "text"),
                         ("2nd_state_Subtype", "text"),  # e.g., "Building", "Repair"
                         ("2nd_state_Tool_Action", "text"),  # e.g., "Build", "Dig", "Prune"
                         # Tool belt/accessory fields
                         ("2nd_state_Extra_Tool_Slots", "dropdown", TOOL_SLOT_OPTIONS, "0"),
                         ("2nd_state_Defense_Value", "text"),
+                        ("2nd_state_Armor_Value", "text"),
                         ("2nd_state_Tool Image", "file"),
                     ]
                 elif self.selected_blueprint_subclass == "Blueprint_to_Consumable_Item":

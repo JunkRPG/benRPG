@@ -70,7 +70,7 @@ PRESET_CLASSES = {
         "melee_name": "Fist",
         "proj_name": "Throw Rock",
         "kit": [
-            {"card_id": "starter_warrior_combat_bow", "state": 1},
+            {"card_id": "starter_warrior_shortbow", "state": 1},
             {"card_id": "starter_warrior_bowstring", "state": 1},
             {"card_id": "starter_warrior_metal_wraps", "state": 1},
             {"card_id": "starter_warrior_arrows", "state": 2},
@@ -126,7 +126,7 @@ SUGGESTED_KITS = {
         "win_guide", "beta_junk_tool_scavengers_kit"
     ],
     "Warrior Kit": [
-        "starter_warrior_combat_bow", "starter_warrior_bowstring", "starter_warrior_metal_wraps",
+        "starter_warrior_shortbow", "starter_warrior_bowstring", "starter_warrior_metal_wraps",
         "starter_warrior_arrows", "win_guide", "beta_junk_tool_scavengers_kit"
     ],
     "Tank Kit": [

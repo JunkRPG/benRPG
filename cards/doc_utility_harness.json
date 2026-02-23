@@ -1,0 +1,21 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Utility Harness Diagram",
+    "Description": "A detailed schematic for a multi-pocket utility harness with reinforced stitching. Maximizes carrying capacity.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "3",
+    "Requirements: Refined Materials": "3",
+    "Requirements: Wood": "2",
+    "Requirements: Metal": "5",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Utility Harness",
+    "2nd_state_Type": "Tool_Belt",
+    "2nd_state_Extra_Tool_Slots": "3",
+    "2nd_state_Tool Image": ""
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Worn Fan Belts",
+    "Description": "Thick rubber belts from car engines. Flexible, durable, and when overlapped they form surprisingly effective plating.",
+    "Raw Material Value": "3",
+    "Refined Material Value": "2",
+    "Metal Value": "5",
+    "Wood Value": "0",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "3",
+    "Requirements: Refined Materials": "2",
+    "Requirements: Wood": "0",
+    "Requirements: Metal": "5",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Rubber Plate Armor",
+    "2nd_state_Type": "Armor",
+    "2nd_state_Armor_Value": "10",
+    "2nd_state_Tool Image": ""
+  }
+}

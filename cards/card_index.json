@@ -4129,5 +4129,173 @@
     "blueprint_subclass": null,
     "states": 2,
     "name": "Enemy Fortress Gate"
+  },
+  "starter_warrior_shortbow": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Worn Shortbow Frame"
+  },
+  "junk_rusty_crowbar": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rusty Crowbar"
+  },
+  "junk_dull_mower_blade": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Dull Lawn Mower Blade"
+  },
+  "junk_old_chains": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Old Chains"
+  },
+  "junk_rusty_shovel": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rusty Shovel"
+  },
+  "junk_broken_screwdriver": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Broken Screwdriver"
+  },
+  "junk_bent_bicycle_frame": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Bent Bicycle Frame"
+  },
+  "junk_tangled_wires": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Tangled Electrical Wires"
+  },
+  "junk_old_springs": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Old Springs"
+  },
+  "junk_cracked_hubcap": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Cracked Hubcap"
+  },
+  "junk_old_appliance_door": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Old Appliance Door"
+  },
+  "junk_worn_tires": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Worn Out Tires"
+  },
+  "junk_frayed_seat_belts": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Frayed Seat Belts"
+  },
+  "junk_worn_fan_belts": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Worn Fan Belts"
+  },
+  "junk_old_spark_plugs": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Old Spark Plugs"
+  },
+  "junk_frayed_rope_belt": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Old Rope Scraps"
+  },
+  "doc_blacksmith_sledge": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Blacksmith's Sledgehammer Plans"
+  },
+  "doc_longbow_design": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Longbow Crafting Guide"
+  },
+  "doc_tower_shield_plans": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Tool",
+    "states": 2,
+    "name": "Tower Shield Blueprint"
+  },
+  "doc_plate_armor_plans": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Tool",
+    "states": 2,
+    "name": "Plate Armor Schematic"
+  },
+  "doc_utility_harness": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Tool",
+    "states": 2,
+    "name": "Utility Harness Diagram"
+  },
+  "junk_stone_ammo": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Chipped Cobblestones"
+  },
+  "junk_heavy_bolts": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Scrap Metal Rods"
+  },
+  "junk_fire_arrows": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Pitch-Soaked Rags & Sticks"
   }
 }

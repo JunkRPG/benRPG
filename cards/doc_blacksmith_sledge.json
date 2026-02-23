@@ -1,0 +1,22 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Blacksmith's Sledgehammer Plans",
+    "Description": "Detailed forging instructions for a massive two-handed sledgehammer. Requires serious metalwork and a sturdy haft.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "5",
+    "Requirements: Refined Materials": "4",
+    "Requirements: Wood": "2",
+    "Requirements: Metal": "10",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Forge Sledgehammer",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "24",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Weapon Image": ""
+  }
+}

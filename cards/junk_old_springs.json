@@ -1,0 +1,31 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Old Springs",
+    "Description": "Heavy coil springs salvaged from a mattress or car suspension. With a housing and trigger mechanism, they could power a bolt launcher.",
+    "Raw Material Value": "3",
+    "Refined Material Value": "2",
+    "Metal Value": "6",
+    "Wood Value": "0",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "3",
+    "Requirements: Refined Materials": "2",
+    "Requirements: Wood": "0",
+    "Requirements: Metal": "6",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Spring Launcher",
+    "2nd_state_Type": "Projectile",
+    "2nd_state_Melee Damage": "0",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Range_Type": "line_of_sight",
+    "2nd_state_Range_Distance": "5",
+    "2nd_state_Include_Position": "false",
+    "2nd_state_Exclude_Adjacent": "false",
+    "2nd_state_Requires_Ammo": "true",
+    "2nd_state_Compatible_Ammo": "Bolt",
+    "2nd_state_Weapon Image": ""
+  }
+}

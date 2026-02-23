@@ -22,7 +22,7 @@ CHARACTER_CLASSES = {
         "attacks": {"Throw Rock": 6, "Fist": 6},
         "special_attack": "Dual Strike",
         "starting_kit": [
-            {"card_id": "starter_warrior_combat_bow", "state": 1},
+            {"card_id": "starter_warrior_shortbow", "state": 1},
             {"card_id": "starter_warrior_bowstring", "state": 1},
             {"card_id": "starter_warrior_metal_wraps", "state": 1},
             {"card_id": "starter_warrior_arrows", "state": 2},
@@ -972,49 +972,12 @@ class Player:
         if not weapon_type:
             has_melee = int(weapon_data.get("Melee Damage", 0) or 0) > 0
             has_proj = int(weapon_data.get("Projectile Damage", 0) or 0) > 0
-            if has_melee and has_proj:
-                weapon_type = "Both"
-            elif has_melee:
+            if has_melee:
                 weapon_type = "Melee"
             elif has_proj:
                 weapon_type = "Projectile"
 
-        if weapon_type == "Both":
-            # Dual-slot weapon (e.g., Combat Bow) - occupies both melee and projectile slots
-            try:
-                # Melee slot - additive with base melee damage
-                weapon_melee_damage = int(weapon_data.get("Melee Damage", 0))
-                total_melee = self.default_attacks["melee"]["damage"] + weapon_melee_damage
-                self.melee_weapon = weapon_card
-                self.attacks["melee"] = {"name": weapon_data["Name"], "damage": total_melee}
-
-                # Projectile slot - range is additive with base range
-                self.projectile_weapon = weapon_card
-                self.projectile_range = self.default_projectile_range + int(weapon_data.get("Range_Distance", weapon_data.get("Projectile Range", 5)))
-                self.projectile_range_type = weapon_data.get("Range_Type", "line_of_sight")
-                self.projectile_include_pos = str(weapon_data.get("Include_Position", "false")).lower() == "true"
-                self.projectile_exclude_adj = str(weapon_data.get("Exclude_Adjacent", "false")).lower() == "true"
-
-                requires_ammo = str(weapon_data.get("Requires_Ammo", "false")).lower() == "true"
-                if requires_ammo:
-                    self.attacks["projectile"] = {
-                        "name": weapon_data["Name"],
-                        "damage": 0,
-                        "requires_ammo": True,
-                        "compatible_ammo": weapon_data.get("Compatible_Ammo", "")
-                    }
-                else:
-                    weapon_proj_damage = int(weapon_data.get("Projectile Damage", 0))
-                    total_proj = self.default_attacks["projectile"]["damage"] + weapon_proj_damage
-                    self.attacks["projectile"] = {
-                        "name": weapon_data["Name"],
-                        "damage": total_proj,
-                        "requires_ammo": False
-                    }
-            except ValueError as e:
-                print(f"Error: Invalid dual-slot weapon data for {weapon_data.get('Name', 'Unknown')}: {e}")
-
-        elif weapon_type == "Melee" and "Melee Damage" in weapon_data:
+        if weapon_type == "Melee" and "Melee Damage" in weapon_data:
             try:
                 weapon_damage = int(weapon_data["Melee Damage"])
                 total_damage = self.default_attacks["melee"]["damage"] + weapon_damage
@@ -1208,7 +1171,7 @@ class Player:
         card_type = card_data.get("Type", "")
 
         # Check if this is a valid accessory
-        valid_accessory_types = ["Tool_Belt", "Accessory", "Belt", "Pouch", "Ammunition", "Shield"]
+        valid_accessory_types = ["Tool_Belt", "Accessory", "Belt", "Pouch", "Ammunition", "Shield", "Armor"]
         if card_type not in valid_accessory_types:
             return "This item cannot be equipped as an accessory"
 
@@ -1876,16 +1839,55 @@ class Player:
             self._hp_visual_offset_until = pygame.time.get_ticks() + delay
 
     def take_damage(self, damage, attacker_pos=None, grid=None):
-        """Apply damage with defensive posture check (probability-based).
+        """Apply damage with armor and defensive posture checks.
+        Armor (passive): damage <= armor_value fully blocked; damage > armor_value breaks armor, reduced damage.
         Block chance = defense_value / damage (capped at 100%).
         On failed block with shield: shield breaks, absorbs defense_value damage.
-        Returns (actual_damage, blocked, shield_broken) tuple."""
+        Returns (actual_damage, blocked, shield_broken, armor_blocked, armor_broken) tuple."""
+        # Passive armor check — always active, checked first
+        armor_value = self.get_armor_value()
+        if armor_value > 0 and damage > 0:
+            if damage <= armor_value:
+                # Attack fully absorbed by armor
+                return (0, False, False, True, False)
+            else:
+                # Armor breaks, reduced damage passes through
+                reduced_damage = damage - armor_value
+                self._break_armor()
+                # Continue with reduced damage for defensive posture check
+                damage = reduced_damage
+                # Check defensive posture with reduced damage
+                if self.defensive_posture and self.defended_hex and attacker_pos and grid and damage > 0:
+                    if self._is_attack_from_defended_direction(attacker_pos, grid):
+                        block_chance = min(1.0, self.defense_value / damage)
+                        if random.random() < block_chance:
+                            return (0, True, False, False, True)
+                        else:
+                            has_shield = False
+                            if self.equipped_accessory:
+                                acc_data = self.equipped_accessory.get_current_data()
+                                if acc_data.get("Type") == "Shield":
+                                    has_shield = True
+                            if has_shield:
+                                absorbed = min(self.defense_value, damage)
+                                actual = damage - absorbed
+                                self._break_shield()
+                                if actual > 0:
+                                    self.hp -= actual
+                                return (actual, False, True, False, True)
+                            else:
+                                self.hp -= damage
+                                return (damage, False, False, False, True)
+                self.hp -= damage
+                return (damage, False, False, False, True)
+
+        # No armor — standard defensive posture check
         if self.defensive_posture and self.defended_hex and attacker_pos and grid and damage > 0:
             if self._is_attack_from_defended_direction(attacker_pos, grid):
                 block_chance = min(1.0, self.defense_value / damage)
                 if random.random() < block_chance:
                     # Block succeeded — no damage
-                    return (0, True, False)
+                    return (0, True, False, False, False)
                 else:
                     # Block failed
                     has_shield = False
@@ -1900,14 +1902,14 @@ class Player:
                         self._break_shield()
                         if actual > 0:
                             self.hp -= actual
-                        return (actual, False, True)
+                        return (actual, False, True, False, False)
                     else:
                         # No shield — full damage on failed block
                         self.hp -= damage
-                        return (damage, False, False)
+                        return (damage, False, False, False, False)
 
         self.hp -= damage
-        return (damage, False, False)
+        return (damage, False, False, False, False)
 
     def _is_attack_from_defended_direction(self, attacker_pos, grid):
         """Check if an attack originates from or passes through the defended hex."""
@@ -1927,6 +1929,22 @@ class Player:
             self.inventory.append(shield)
             self.equipped_accessory = None
             self.defense_value = 5
+
+    def _break_armor(self):
+        """Break the equipped armor — revert to state 1 and return to inventory."""
+        if self.equipped_accessory:
+            armor = self.equipped_accessory
+            armor.current_state = 1
+            self.inventory.append(armor)
+            self.equipped_accessory = None
+
+    def get_armor_value(self):
+        """Get armor value from equipped armor, or 0 if none."""
+        if self.equipped_accessory:
+            acc_data = self.equipped_accessory.get_current_data()
+            if acc_data.get("Type") == "Armor":
+                return int(acc_data.get("Armor_Value", 0))
+        return 0
 
     def clear_defensive_posture(self):
         """Clear defensive posture at start of player's next turn."""

@@ -1,0 +1,30 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Chipped Cobblestones",
+    "Description": "Chunks of broken cobblestone from old roads. Chip them round and smooth, and they fly true from a sling.",
+    "Raw Material Value": "1",
+    "Refined Material Value": "0",
+    "Metal Value": "0",
+    "Wood Value": "0",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "1",
+    "Requirements: Refined Materials": "0",
+    "Requirements: Wood": "0",
+    "Requirements: Metal": "1",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Sling Stones",
+    "2nd_state_Type": "Ammunition",
+    "2nd_state_Use_HP": "+0HP",
+    "2nd_state_Revert_Chance": "0",
+    "2nd_state_Use_Placeholder": "TBD",
+    "2nd_state_Ammo_Type": "Stone",
+    "2nd_state_Ammo_Damage": "8",
+    "2nd_state_Runout_Chance": "30",
+    "2nd_state_Compatible_Weapons": "Wire Sling",
+    "2nd_state_Item Image": ""
+  }
+}

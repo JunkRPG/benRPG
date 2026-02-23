@@ -1376,8 +1376,17 @@ class Unit:
                 tgt = grid.get_hex_center(*player.position)
                 anim = grid.attack_anims.create_melee(src, tgt)
                 delay = grid.attack_anims.get_max_remaining_ms()
-            actual_damage, blocked, shield_broken = player.take_damage(damage, self.position, grid)
+            actual_damage, blocked, shield_broken, armor_blocked, armor_broken = player.take_damage(damage, self.position, grid)
             log = []
+            if armor_blocked:
+                player.set_damage_text(0, delay, anim=anim, text="ABSORBED")
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks() + delay
+                log.append(f"{self.name} attacked {player.class_name} — fully absorbed by armor!")
+                return log
+            if armor_broken:
+                absorbed = damage - actual_damage if actual_damage < damage else 0
+                log.append(f"{player.class_name}'s armor broke! (absorbed {absorbed} damage)")
             if blocked:
                 player.set_damage_text(0, delay, anim=anim, text="BLOCKED")
                 self.attack_flash = True
@@ -1385,8 +1394,10 @@ class Unit:
                 log.append(f"{self.name} attacked {player.class_name} — blocked by defense!")
                 return log
             if shield_broken:
-                absorbed = damage - actual_damage
-                log.append(f"{player.class_name}'s shield broke! (absorbed {absorbed} damage)")
+                absorbed_s = damage - actual_damage
+                if armor_broken:
+                    absorbed_s = max(0, absorbed_s - (damage - actual_damage))
+                log.append(f"{player.class_name}'s shield broke! (absorbed some damage)")
             player.set_damage_text(actual_damage, delay, anim=anim)
             self.attack_flash = True
             self.flash_start = pygame.time.get_ticks() + delay
@@ -1409,8 +1420,17 @@ class Unit:
                 tgt = grid.get_hex_center(*player.position)
                 anim = grid.attack_anims.create_projectile(src, tgt)
                 delay = grid.attack_anims.get_max_remaining_ms()
-            actual_damage, blocked, shield_broken = player.take_damage(damage, self.position, grid)
+            actual_damage, blocked, shield_broken, armor_blocked, armor_broken = player.take_damage(damage, self.position, grid)
             log = []
+            if armor_blocked:
+                player.set_damage_text(0, delay, anim=anim, text="ABSORBED")
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks() + delay
+                log.append(f"{self.name} attacked {player.class_name} with projectile — fully absorbed by armor!")
+                return log
+            if armor_broken:
+                absorbed = damage - actual_damage if actual_damage < damage else 0
+                log.append(f"{player.class_name}'s armor broke! (absorbed {absorbed} damage)")
             if blocked:
                 player.set_damage_text(0, delay, anim=anim, text="BLOCKED")
                 self.attack_flash = True
@@ -2452,7 +2472,16 @@ class Unit:
         log = []
         if is_player:
             target_name = target.class_name
-            actual_damage, blocked, shield_broken = target.take_damage(damage, self.position, grid)
+            actual_damage, blocked, shield_broken, armor_blocked, armor_broken = target.take_damage(damage, self.position, grid)
+            if armor_blocked:
+                target.set_damage_text(0, delay, anim=anim, text="ABSORBED")
+                self.attack_flash = True
+                self.flash_start = pygame.time.get_ticks() + delay
+                log.append(f"{self.name} attacked {target_name} — fully absorbed by armor!")
+                return log
+            if armor_broken:
+                absorbed = damage - actual_damage if actual_damage < damage else 0
+                log.append(f"{target_name}'s armor broke! (absorbed {absorbed} damage)")
             if blocked:
                 target.set_damage_text(0, delay, anim=anim, text="BLOCKED")
                 self.attack_flash = True

@@ -1,0 +1,24 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Old Spark Plugs",
+    "Description": "A box of burnt-out spark plugs. The ceramic and metal can be broken down and woven into chainmail-style armor plating.",
+    "Raw Material Value": "4",
+    "Refined Material Value": "3",
+    "Metal Value": "8",
+    "Wood Value": "0",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "4",
+    "Requirements: Refined Materials": "3",
+    "Requirements: Wood": "0",
+    "Requirements: Metal": "8",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Spark Mail",
+    "2nd_state_Type": "Armor",
+    "2nd_state_Armor_Value": "14",
+    "2nd_state_Tool Image": ""
+  }
+}

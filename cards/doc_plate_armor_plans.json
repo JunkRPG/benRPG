@@ -1,0 +1,21 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Plate Armor Schematic",
+    "Description": "Precise technical drawings for interlocking scrap metal plates that form a full suit of armor. Extremely resource-intensive.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "5",
+    "Requirements: Refined Materials": "5",
+    "Requirements: Wood": "0",
+    "Requirements: Metal": "15",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Scrap Plate Armor",
+    "2nd_state_Type": "Armor",
+    "2nd_state_Armor_Value": "18",
+    "2nd_state_Tool Image": ""
+  }
+}
