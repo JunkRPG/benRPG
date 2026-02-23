@@ -5,6 +5,15 @@ import os
 import json
 import random
 from collections import deque
+
+def _spawn_log(msg):
+    """Write spawn diagnostic to both console and log file."""
+    print(msg)
+    try:
+        with open("spawn_debug.log", "a") as f:
+            f.write(msg + "\n")
+    except Exception:
+        pass
 from player import Player  # Import Player for type checking
 from unit import Unit      # Import Unit for instantiation
 from inventory_card import InventoryCard
@@ -60,6 +69,13 @@ class HexGrid:
         self.pulse_time = 0
         # Attack animation manager
         self.attack_anims = AttackAnimationManager(sound_mgr=sound_manager)
+        # Performance caches
+        self._terrain_texture_cache = {}   # {(row, col): Surface}
+        self._terrain_cache_hex_size = None
+        self._overlay_surf = None          # Reusable SRCALPHA surface for overlays
+        self._overlay_hex_points = None    # Pre-computed hex polygon for overlay surface
+        self._overlay_hex_size = None
+        self._font_cache = {}              # {size: pygame.font.Font}
 
     def load_level(self, level_file, card_manager, player):
         try:
@@ -76,6 +92,7 @@ class HexGrid:
             # Rebuild the grid with the new dimensions
             self.grid = [[{"unit": None, "accessible": True, "terrain": "grass"} for _ in range(self.cols)] for _ in range(self.rows)]
             self.units = []  # Clear all units from previous level
+            self._terrain_texture_cache = {}  # Clear terrain cache for new level
             self.card_drawing_hexes = level_data.get("card_drawing_hexes", [])
             # Load teleport pads
             self.teleport_pads = level_data.get("teleport_pads", [])
@@ -126,16 +143,23 @@ class HexGrid:
             # Load and place units
             # Determine multiplayer state for multiplayer_only filtering
             num_players = getattr(self, '_num_players', 1)
-            for unit_data in level_data.get("units", []):
+            units_list = level_data.get("units", [])
+            _spawn_log(f"[LOAD_LEVEL] Found {len(units_list)} units in level data")
+            units_loaded = 0
+            for unit_data in units_list:
                 # Skip multiplayer_only units in single-player
                 if unit_data.get("multiplayer_only") and num_players <= 1:
+                    _spawn_log(f"[LOAD_LEVEL] Skipping multiplayer_only unit: {unit_data.get('card_id')}")
                     continue
                 card_id = unit_data.get("card_id")
+                pos = unit_data.get("position", {})
+                _spawn_log(f"[LOAD_LEVEL] Loading unit card_id='{card_id}' at row={pos.get('row')}, col={pos.get('column')}")
                 card_data = load_card(card_id)
                 if card_data is None:
-                    print(f"Skipping unit: card '{card_id}' not found")
+                    _spawn_log(f"[LOAD_LEVEL] FAILED: card '{card_id}' not found")
                     continue
                 unit = Unit(card_data)
+                _spawn_log(f"[LOAD_LEVEL] Created Unit: name='{unit.name}', allegiance='{unit.allegiance}', hp={unit.hp}")
                 # Apply optional level JSON fields
                 if unit_data.get("behavior_follow_target"):
                     unit.behavior_follow_target = unit_data["behavior_follow_target"]
@@ -144,12 +168,17 @@ class HexGrid:
                         unit.behavior_tree.insert(0, "follow_target")
                 if unit_data.get("carry_to_next_level"):
                     unit.carry_to_next_level = True
-                self.place_unit(unit, unit_data["position"]["row"], unit_data["position"]["column"])
+                row, col = unit_data["position"]["row"], unit_data["position"]["column"]
+                success, msg = self.place_unit(unit, row, col)
+                _spawn_log(f"[LOAD_LEVEL] place_unit('{unit.name}', {row}, {col}) -> {'SUCCESS' if success else 'FAILED'} {msg}")
+                if success:
+                    units_loaded += 1
                 card_manager.track_card_usage(unit.card_id, {
                     "action": "spawned",
                     "screen": "game",
-                    "position": (unit_data["position"]["row"], unit_data["position"]["column"])
+                    "position": (row, col)
                 })
+            _spawn_log(f"[LOAD_LEVEL] Total units loaded: {units_loaded}/{len(units_list)}")
 
             # Preload deck data for card-drawing hexes
             for hex_data in self.card_drawing_hexes:
@@ -162,6 +191,25 @@ class HexGrid:
                             print(f"Loaded deck: {deck_file}, contents: {self.deck_data[deck_file]}")
                         except Exception as e:
                             print(f"Error loading deck {deck_file}: {e}")
+
+            # Load junk piles
+            for pile_data in level_data.get("junk_piles", []):
+                pile_card_data = load_card("junk_pile_template")
+                if pile_card_data is None:
+                    print("Skipping junk pile: card 'junk_pile_template' not found")
+                    continue
+                pile_unit = Unit(pile_card_data)
+                pile_unit.hp = 0
+                pile_unit._death_processed = True
+                pile_unit._is_junk_pile = True
+                pile_unit._junk_search_chance = pile_data.get("search_chance", 60)
+                pile_unit._junk_searches_remaining = pile_data.get("searches_remaining", 3)
+                row = pile_data["position"]["row"]
+                col = pile_data["position"]["column"]
+                pile_unit.position = (row, col)
+                if 0 <= row < self.rows and 0 <= col < self.cols:
+                    self.grid[row][col]["unit"] = pile_unit
+                    self.units.append(pile_unit)
 
             # Load location hexes
             self.location_hexes = level_data.get("location_hexes", [])
@@ -334,6 +382,65 @@ class HexGrid:
     def get_teleport_pad_id(self, row, col):
         """Get the pad_id for a teleport pad hex, or None."""
         return self.teleport_pad_positions.get((row, col))
+
+    def _get_location_category(self, loc_data):
+        """Classify a location hex into a visual category based on its card data.
+        Returns: 'enemy_spawn', 'npc_spawn', 'defensive', 'healing', 'shop', 'gate', or 'generic'.
+        Caches result in loc_data['_category'] to avoid re-parsing JSON every frame."""
+        cached_state = loc_data.get("_category_state")
+        current_state = loc_data.get("state", 1)
+        if "_category" in loc_data and cached_state == current_state:
+            return loc_data["_category"]
+
+        def _set(cat):
+            loc_data["_category"] = cat
+            loc_data["_category_state"] = current_state
+            return cat
+
+        # Enemy spawn takes top priority
+        if loc_data.get("is_spawn_location") and loc_data.get("health", 0) > 0:
+            return _set("enemy_spawn")
+
+        # NPC spawn
+        if loc_data.get("is_npc_spawn_location") and loc_data.get("npc_health", 0) > 0:
+            return _set("npc_spawn")
+
+        card = loc_data.get("card")
+        if not card:
+            return _set("generic")
+
+        card_data = card.get_current_data()
+
+        # Defensive location
+        if str(card_data.get("Defense_Enabled", "")).lower() == "true":
+            return _set("defensive")
+
+        # Check Choices for heal action (and no shop deck = pure healing location)
+        shop_deck = card_data.get("Shop_Deck", "")
+        has_heal = False
+        try:
+            choices_str = card_data.get("Choices", "[]")
+            choices = json.loads(choices_str) if isinstance(choices_str, str) else choices_str
+            for choice in choices:
+                if isinstance(choice, dict) and choice.get("action") == "heal":
+                    has_heal = True
+                    break
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+        if has_heal and not shop_deck:
+            return _set("healing")
+
+        # Shop/Market
+        if shop_deck:
+            return _set("shop")
+
+        # Gate/Passage (name-based)
+        name = card_data.get("Name", "").lower()
+        if any(kw in name for kw in ("gate", "entrance", "exit")):
+            return _set("gate")
+
+        return _set("generic")
 
     def _init_spawn_location_data(self, pos, card_data, state=1):
         """Initialize spawn location data from a location card (both enemy and NPC spawns)."""
@@ -1558,20 +1665,39 @@ class HexGrid:
         for row, col in line[1:-1]:
             if not self.grid[row][col]["accessible"]:
                 return False
+            terrain = self.grid[row][col].get("terrain", "grass")
+            if does_terrain_block_los(terrain):
+                return False
             if not ignore_units and self.grid[row][col]["unit"] is not None:
                 return False
         return True
 
-    def get_neighbors(self, row, col, goal=None):
+    def _can_pass_through(self, mover, occupant):
+        """Same-allegiance living units can pass through each other."""
+        if mover is None or occupant is None:
+            return False
+        if getattr(occupant, 'hp', 1) <= 0:
+            return False  # Dead bodies block everyone
+        # Get apparent allegiance (disguised Spy appears Hostile to enemies)
+        mover_alleg = getattr(mover, 'allegiance', 'Allied')
+        occupant_alleg = getattr(occupant, 'allegiance', 'Allied')
+        if getattr(mover, 'is_disguised', False):
+            mover_alleg = "Hostile"
+        if getattr(occupant, 'is_disguised', False):
+            occupant_alleg = "Hostile"
+        return mover_alleg == occupant_alleg
+
+    def get_neighbors(self, row, col, goal=None, moving_unit=None):
         if col % 2 == 0:
             offsets = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1)]
         else:
             offsets = [(-1, 0), (1, 0), (0, -1), (0, 1), (1, -1), (1, 1)]
         neighbors = [(row + dr, col + dc) for dr, dc in offsets]
-        return [(r, c) for r, c in neighbors if 0 <= r < self.rows and 0 <= c < self.cols and 
-                self.grid[r][c]["accessible"] and ((goal and (r, c) == goal) or self.grid[r][c]["unit"] is None)]
+        return [(r, c) for r, c in neighbors if 0 <= r < self.rows and 0 <= c < self.cols and
+                self.grid[r][c]["accessible"] and ((goal and (r, c) == goal) or self.grid[r][c]["unit"] is None
+                or self._can_pass_through(moving_unit, self.grid[r][c]["unit"]))]
 
-    def find_path(self, start, goal):
+    def find_path(self, start, goal, moving_unit=None):
         frontier = [(0, start)]
         came_from = {start: None}
         cost_so_far = {start: 0}
@@ -1579,7 +1705,7 @@ class HexGrid:
             _, current = heappop(frontier)
             if current == goal:
                 break
-            for next_pos in self.get_neighbors(*current, goal=goal):
+            for next_pos in self.get_neighbors(*current, goal=goal, moving_unit=moving_unit):
                 new_cost = cost_so_far[current] + 1
                 if next_pos not in cost_so_far or new_cost < cost_so_far[next_pos]:
                     cost_so_far[next_pos] = new_cost
@@ -1596,7 +1722,7 @@ class HexGrid:
         path.append(start)
         return path[::-1]
 
-    def get_movement_range(self, start, movement):
+    def get_movement_range(self, start, movement, moving_unit=None):
         reachable = set()
         frontier = deque([(0, start)])
         visited = set([start])
@@ -1605,14 +1731,14 @@ class HexGrid:
             if cost > movement:
                 continue
             reachable.add(current)
-            for neighbor in self.get_neighbors(*current):
-                if neighbor not in visited and self.grid[neighbor[0]][neighbor[1]]["unit"] is None:
+            for neighbor in self.get_neighbors(*current, moving_unit=moving_unit):
+                if neighbor not in visited:
                     visited.add(neighbor)
                     frontier.append((cost + 1, neighbor))
         return reachable
 
-    def get_valid_moves(self, start, movement):
-        reachable = self.get_movement_range(start, movement)
+    def get_valid_moves(self, start, movement, moving_unit=None):
+        reachable = self.get_movement_range(start, movement, moving_unit=moving_unit)
         return [pos for pos in reachable if pos != start and self.grid[pos[0]][pos[1]]["unit"] is None]
 
     def get_hexes_at_distance(self, position, distance):
@@ -1899,6 +2025,293 @@ class HexGrid:
 
         return targetable
 
+    # ---- Enhanced token rendering helpers ----
+
+    def _get_icon_type(self, unit):
+        """Return a string icon key based on the unit's attributes."""
+        if isinstance(unit, Player):
+            class_icons = {
+                "Warrior": "sword", "Ranger": "arrow", "Tank": "shield",
+                "Healer": "cross", "Builder": "hammer", "Spy": "eye",
+                "Scout": "star",
+            }
+            return class_icons.get(unit.class_name, "person")
+        # Units: check in priority order
+        if getattr(unit, 'card_type', '') == "Boss Card":
+            return "crown"
+        skill = getattr(unit, 'special_skill', None) or ""
+        if skill == "Healer":
+            return "cross"
+        if skill == "Mount":
+            return "horse"
+        if skill == "Messenger":
+            return "scroll"
+        if skill == "Summon Minion":
+            return "starburst"
+        pd = getattr(unit, 'projectile_damage', 0)
+        md = getattr(unit, 'melee_damage', 0)
+        if pd > 0 and md > 0:
+            return "dual"
+        if pd > 0:
+            return "arrow"
+        if md > 0:
+            return "sword"
+        return "person"
+
+    def _draw_token_icon(self, surface, center, icon_radius, icon_type, color):
+        """Draw a simple geometric icon inside a token circle."""
+        cx, cy = center
+        r = icon_radius  # icon drawing radius
+        if icon_type == "sword":
+            # Vertical blade + cross guard
+            pygame.draw.line(surface, color, (cx, cy - r), (cx, cy + r), max(2, r // 4))
+            pygame.draw.line(surface, color, (cx - r * 0.5, cy - r * 0.15), (cx + r * 0.5, cy - r * 0.15), max(2, r // 4))
+        elif icon_type == "arrow":
+            # Upward-pointing arrow shaft + chevron tip
+            pygame.draw.line(surface, color, (cx, cy + r), (cx, cy - r), max(2, r // 4))
+            pygame.draw.line(surface, color, (cx - r * 0.45, cy - r * 0.35), (cx, cy - r), max(2, r // 4))
+            pygame.draw.line(surface, color, (cx + r * 0.45, cy - r * 0.35), (cx, cy - r), max(2, r // 4))
+        elif icon_type == "shield":
+            # Chevron / rounded shield shape
+            pts = [
+                (cx, cy - r * 0.85),
+                (cx - r * 0.7, cy - r * 0.3),
+                (cx - r * 0.5, cy + r * 0.6),
+                (cx, cy + r * 0.9),
+                (cx + r * 0.5, cy + r * 0.6),
+                (cx + r * 0.7, cy - r * 0.3),
+            ]
+            pts = [(int(px), int(py)) for px, py in pts]
+            pygame.draw.polygon(surface, color, pts, max(2, r // 4))
+        elif icon_type == "cross":
+            # Plus sign
+            t = max(2, r // 3)
+            pygame.draw.line(surface, color, (cx, cy - r), (cx, cy + r), t)
+            pygame.draw.line(surface, color, (cx - r, cy), (cx + r, cy), t)
+        elif icon_type == "hammer":
+            # Vertical handle + horizontal head at top
+            pygame.draw.line(surface, color, (cx, cy - r * 0.3), (cx, cy + r), max(2, r // 4))
+            pygame.draw.line(surface, color, (cx - r * 0.55, cy - r * 0.3), (cx + r * 0.55, cy - r * 0.3), max(2, int(r * 0.35)))
+        elif icon_type == "eye":
+            # Horizontal almond shape + dot center
+            pts = [
+                (cx - r, cy),
+                (cx - r * 0.3, cy - r * 0.5),
+                (cx + r * 0.3, cy - r * 0.5),
+                (cx + r, cy),
+                (cx + r * 0.3, cy + r * 0.5),
+                (cx - r * 0.3, cy + r * 0.5),
+            ]
+            pts = [(int(px), int(py)) for px, py in pts]
+            pygame.draw.polygon(surface, color, pts, max(2, r // 4))
+            pygame.draw.circle(surface, color, (cx, cy), max(2, int(r * 0.25)))
+        elif icon_type == "star":
+            # 4-pointed star
+            pts = []
+            for i in range(8):
+                angle = math.pi / 4 * i - math.pi / 2
+                dist = r if i % 2 == 0 else r * 0.35
+                pts.append((int(cx + math.cos(angle) * dist), int(cy + math.sin(angle) * dist)))
+            pygame.draw.polygon(surface, color, pts, 0)
+        elif icon_type == "crown":
+            # 3-pointed zigzag on top of horizontal base
+            base_y = int(cy + r * 0.4)
+            top_y = int(cy - r * 0.9)
+            mid_y = int(cy - r * 0.1)
+            pts = [
+                (int(cx - r * 0.8), base_y),
+                (int(cx - r * 0.8), mid_y),
+                (int(cx - r * 0.45), top_y),
+                (int(cx - r * 0.15), mid_y),
+                (cx, top_y),
+                (int(cx + r * 0.15), mid_y),
+                (int(cx + r * 0.45), top_y),
+                (int(cx + r * 0.8), mid_y),
+                (int(cx + r * 0.8), base_y),
+            ]
+            pygame.draw.polygon(surface, color, pts, 0)
+        elif icon_type == "horse":
+            # Simple curved polygon: head + neck
+            pts = [
+                (int(cx - r * 0.2), int(cy + r * 0.8)),   # base of neck
+                (int(cx - r * 0.3), int(cy - r * 0.1)),    # back of neck
+                (int(cx - r * 0.15), int(cy - r * 0.7)),   # top of head
+                (int(cx + r * 0.35), int(cy - r * 0.85)),  # nose
+                (int(cx + r * 0.5), int(cy - r * 0.5)),    # jaw
+                (int(cx + r * 0.2), int(cy - r * 0.15)),   # front neck
+                (int(cx + r * 0.15), int(cy + r * 0.8)),   # base front
+            ]
+            pygame.draw.polygon(surface, color, pts, 0)
+        elif icon_type == "scroll":
+            # Small rectangle with curled ends
+            rect_l = int(cx - r * 0.45)
+            rect_r = int(cx + r * 0.45)
+            rect_t = int(cy - r * 0.55)
+            rect_b = int(cy + r * 0.55)
+            pygame.draw.rect(surface, color, (rect_l, rect_t, rect_r - rect_l, rect_b - rect_t), max(1, r // 5))
+            curl_r = max(2, int(r * 0.2))
+            pygame.draw.circle(surface, color, (rect_l, rect_t), curl_r, max(1, r // 5))
+            pygame.draw.circle(surface, color, (rect_r, rect_b), curl_r, max(1, r // 5))
+        elif icon_type == "starburst":
+            # 3 short lines radiating from center
+            for angle_deg in [90, 210, 330]:
+                angle = math.radians(angle_deg)
+                ex = int(cx + math.cos(angle) * r)
+                ey = int(cy - math.sin(angle) * r)
+                pygame.draw.line(surface, color, (cx, cy), (ex, ey), max(2, r // 4))
+        elif icon_type == "dual":
+            # Crossed sword + arrow
+            pygame.draw.line(surface, color, (cx - r * 0.7, cy - r * 0.7), (cx + r * 0.7, cy + r * 0.7), max(2, r // 4))
+            pygame.draw.line(surface, color, (cx + r * 0.7, cy - r * 0.7), (cx - r * 0.7, cy + r * 0.7), max(2, r // 4))
+        else:  # "person" - default
+            # Circle head + body line
+            head_r = max(2, int(r * 0.3))
+            pygame.draw.circle(surface, color, (cx, int(cy - r * 0.35)), head_r, 0)
+            pygame.draw.line(surface, color, (cx, int(cy - r * 0.05)), (cx, int(cy + r * 0.7)), max(2, r // 4))
+            # Arms
+            pygame.draw.line(surface, color, (int(cx - r * 0.45), int(cy + r * 0.15)), (int(cx + r * 0.45), int(cy + r * 0.15)), max(1, r // 5))
+
+    def _draw_enhanced_token(self, surface, pos, base_radius, base_color, icon_type,
+                             is_player=False, is_dead=False, is_boss=False, attack_flash=False,
+                             is_junk_pile=False):
+        """Draw an enhanced token with drop shadow, gradient fill, border, and icon."""
+        cx, cy = int(pos[0]), int(pos[1])
+
+        # Size adjustments
+        if is_boss:
+            radius = int(base_radius * 1.25)
+        elif is_player:
+            radius = int(base_radius * 1.15)
+        elif is_junk_pile:
+            radius = int(base_radius * 1.3)
+        else:
+            radius = base_radius
+
+        # Color calculations
+        if is_dead and is_junk_pile:
+            fill_color = (180, 140, 60)
+            ring_color = (140, 100, 30)
+            center_color = (210, 170, 80)
+            icon_color = (240, 210, 140, 200)
+        elif is_dead:
+            fill_color = (80, 80, 80)
+            ring_color = (50, 50, 50)
+            center_color = (110, 110, 110)
+            icon_color = (160, 160, 160, 150)
+        elif attack_flash:
+            fill_color = (255, 255, 255)
+            ring_color = (200, 200, 200)
+            center_color = (255, 255, 255)
+            icon_color = None  # No icon during flash
+        else:
+            fill_color = base_color
+            ring_color = (max(0, base_color[0] - 40), max(0, base_color[1] - 40), max(0, base_color[2] - 40))
+            center_color = (min(255, base_color[0] + 40), min(255, base_color[1] + 40), min(255, base_color[2] + 40))
+            icon_color = (255, 255, 255, 200)
+
+        # Total surface size needs to accommodate shadow offset
+        surf_size = (radius + 4) * 2
+        token_surf = pygame.Surface((surf_size, surf_size), pygame.SRCALPHA)
+        sc = surf_size // 2  # surface center
+
+        if is_junk_pile:
+            # Junk pile: draw as irregular lumpy blob instead of a circle
+            rng = random.Random(cx * 1000 + cy)  # deterministic per-position
+            num_pts = 8
+            blob_pts = []
+            for i in range(num_pts):
+                angle = (2 * math.pi * i / num_pts) - math.pi / 2
+                wobble = radius * rng.uniform(0.65, 1.05)
+                bx = sc + int(math.cos(angle) * wobble)
+                by = sc + int(math.sin(angle) * wobble)
+                blob_pts.append((bx, by))
+            # Shadow
+            shadow_pts = [(p[0] + 2, p[1] + 2) for p in blob_pts]
+            pygame.draw.polygon(token_surf, (0, 0, 0, 50), shadow_pts, 0)
+            # Outline
+            outline_pts = [(p[0], p[1]) for p in blob_pts]
+            pygame.draw.polygon(token_surf, ring_color, outline_pts, 0)
+            # Inner fill (slightly shrunk)
+            inner_pts = []
+            for p in blob_pts:
+                dx, dy = p[0] - sc, p[1] - sc
+                inner_pts.append((int(sc + dx * 0.88), int(sc + dy * 0.88)))
+            pygame.draw.polygon(token_surf, fill_color, inner_pts, 0)
+            # Highlight blob
+            hi_pts = []
+            for p in blob_pts:
+                dx, dy = p[0] - sc, p[1] - sc
+                hi_pts.append((int(sc + dx * 0.55), int(sc + dy * 0.55)))
+            pygame.draw.polygon(token_surf, (*center_color, 60), hi_pts, 0)
+            # Small scrap detail marks inside
+            for _ in range(3):
+                sx = sc + rng.randint(-radius // 3, radius // 3)
+                sy = sc + rng.randint(-radius // 3, radius // 3)
+                ex = sx + rng.randint(-radius // 4, radius // 4)
+                ey = sy + rng.randint(-radius // 4, radius // 4)
+                pygame.draw.line(token_surf, (*ring_color, 120), (sx, sy), (ex, ey), max(1, radius // 8))
+        else:
+            # Standard circular token
+            # Layer 1: Drop shadow
+            if not is_dead:
+                pygame.draw.circle(token_surf, (0, 0, 0, 60), (sc + 2, sc + 2), radius)
+
+            # Layer 2: Outer ring (darker border)
+            pygame.draw.circle(token_surf, ring_color, (sc, sc), radius + 2)
+
+            # Layer 3: Gold ring for living players
+            if is_player and not is_dead:
+                pygame.draw.circle(token_surf, (200, 170, 50), (sc, sc), radius + 1)
+
+            # Layer 4: Main fill
+            pygame.draw.circle(token_surf, fill_color, (sc, sc), radius)
+
+            # Layer 5: Center highlight (lighter disc for gradient effect)
+            if not attack_flash:
+                inner_r = int(radius * 0.7)
+                pygame.draw.circle(token_surf, (*center_color, 80), (sc, sc), inner_r)
+
+            # Layer 6: Icon
+            if icon_color is not None:
+                icon_r = int(radius * 0.6)
+                if icon_r >= 2:
+                    icon_surf = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+                    ic = radius  # icon surface center
+                    self._draw_token_icon(icon_surf, (ic, ic), icon_r, icon_type, icon_color)
+                    token_surf.blit(icon_surf, (sc - radius, sc - radius))
+
+            # Layer 7: Top highlight crescent (upper-left for 3D-lit look)
+            if not is_dead and not attack_flash:
+                hi_r = max(2, radius // 3)
+                hi_color = (255, 255, 255, 50)
+                pygame.draw.circle(token_surf, hi_color, (sc - radius // 4, sc - radius // 4), hi_r)
+
+        surface.blit(token_surf, (cx - sc, cy - sc))
+        return radius  # Return actual radius used (for health bar positioning)
+
+    def _get_overlay_surf(self):
+        """Return a reusable SRCALPHA surface + hex polygon points for overlay drawing.
+        Recreated only when hex_size changes (zoom)."""
+        if self._overlay_hex_size != self.hex_size:
+            size = self.hex_size * 2
+            self._overlay_surf = pygame.Surface((size, size), pygame.SRCALPHA)
+            self._overlay_hex_points = [
+                (self.hex_size + self.hex_size * math.cos(math.radians(60 * i)),
+                 self.hex_size + self.hex_size * math.sin(math.radians(60 * i)))
+                for i in range(6)
+            ]
+            self._overlay_hex_size = self.hex_size
+        self._overlay_surf.fill((0, 0, 0, 0))
+        return self._overlay_surf, self._overlay_hex_points
+
+    def _get_font(self, size):
+        """Return a cached pygame font of the given size."""
+        font = self._font_cache.get(size)
+        if font is None:
+            font = pygame.font.Font(None, size)
+            self._font_cache[size] = font
+        return font
+
     def draw(self, surface, movement_range=None, attack_ranges=None, colors=None, targetable_units=None):
         if colors is None:
             colors = {
@@ -1915,6 +2328,10 @@ class HexGrid:
                 'ORANGE': (255, 165, 0)
             }
         hex_surface = pygame.Surface((surface.get_width(), surface.get_height()), pygame.SRCALPHA)
+        # Invalidate terrain texture cache on zoom (hex_size change)
+        if self._terrain_cache_hex_size != self.hex_size:
+            self._terrain_texture_cache = {}
+            self._terrain_cache_hex_size = self.hex_size
         for row in range(self.rows):
             for col in range(self.cols):
                 x, y = self.get_hex_center(row, col)
@@ -1925,109 +2342,197 @@ class HexGrid:
                 terrain_type = self.grid[row][col].get("terrain", "grass")
                 terrain_color = get_terrain_color(terrain_type)
                 pygame.draw.polygon(hex_surface, terrain_color, points, 0)
-                # Subtle terrain texture patterns
-                tc = terrain_color
-                pat_alpha = 30
-                pat_color = (max(0, tc[0] - 40), max(0, tc[1] - 40), max(0, tc[2] - 40), pat_alpha)
-                pat_hi = (min(255, tc[0] + 30), min(255, tc[1] + 30), min(255, tc[2] + 30), pat_alpha)
-                hs = self.hex_size
-                ix, iy = int(x), int(y)
-                if terrain_type == "water" or terrain_type == "deep_water":
-                    # Wavy horizontal lines
-                    wave_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
-                    for wi in range(-2, 3):
-                        wy = hs + wi * int(hs * 0.3)
-                        wave_pts = [(int(hs * 0.3 + j * hs * 0.15), wy + int(math.sin(j * 0.8) * hs * 0.08)) for j in range(10)]
-                        if len(wave_pts) > 1:
-                            pygame.draw.lines(wave_surf, pat_hi, False, wave_pts, 1)
-                    hex_surface.blit(wave_surf, (ix - hs, iy - hs))
-                elif terrain_type == "sand":
-                    # Scattered dots
-                    dot_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
+
+                # Terrain texture patterns — use cache to avoid regenerating every frame
+                cached_tex = self._terrain_texture_cache.get((row, col))
+                if cached_tex is not None:
+                    hex_surface.blit(cached_tex, (int(x) - self.hex_size, int(y) - self.hex_size))
+                    # Edge shading
+                    edge_color = (max(0, terrain_color[0] - 25), max(0, terrain_color[1] - 25), max(0, terrain_color[2] - 25))
+                    pygame.draw.polygon(hex_surface, edge_color, points, 2)
+                else:
+                    # Generate texture and cache it
+                    tc = terrain_color
+                    pat_dk = (max(0, tc[0] - 40), max(0, tc[1] - 40), max(0, tc[2] - 40))
+                    pat_hi = (min(255, tc[0] + 30), min(255, tc[1] + 30), min(255, tc[2] + 30))
+                    hs = self.hex_size
+                    ix, iy = int(x), int(y)
+                    tex_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
                     rng = random.Random(row * 100 + col)
-                    for _ in range(8):
-                        dx = rng.randint(int(hs * 0.4), int(hs * 1.6))
-                        dy = rng.randint(int(hs * 0.4), int(hs * 1.6))
-                        pygame.draw.circle(dot_surf, pat_color, (dx, dy), max(1, int(hs * 0.04)))
-                    hex_surface.blit(dot_surf, (ix - hs, iy - hs))
-                elif terrain_type == "forest":
-                    # Small tree-like marks
-                    tree_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
-                    rng = random.Random(row * 100 + col)
-                    for _ in range(5):
-                        tx = rng.randint(int(hs * 0.5), int(hs * 1.5))
-                        ty = rng.randint(int(hs * 0.5), int(hs * 1.5))
-                        s = max(2, int(hs * 0.07))
-                        pygame.draw.circle(tree_surf, pat_color, (tx, ty), s)
-                        pygame.draw.line(tree_surf, pat_color, (tx, ty + s), (tx, ty + s * 2), 1)
-                    hex_surface.blit(tree_surf, (ix - hs, iy - hs))
-                elif terrain_type == "mountain" or terrain_type == "cliff":
-                    # Small triangle peaks
-                    mtn_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
-                    rng = random.Random(row * 100 + col)
-                    for _ in range(3):
-                        mx = rng.randint(int(hs * 0.5), int(hs * 1.5))
-                        my = rng.randint(int(hs * 0.6), int(hs * 1.4))
-                        s = max(3, int(hs * 0.1))
-                        pygame.draw.polygon(mtn_surf, pat_hi, [(mx, my - s), (mx - s, my + s // 2), (mx + s, my + s // 2)])
-                    hex_surface.blit(mtn_surf, (ix - hs, iy - hs))
-                elif terrain_type == "stone":
-                    # Crack lines
-                    crack_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
-                    rng = random.Random(row * 100 + col)
-                    for _ in range(3):
-                        cx1 = rng.randint(int(hs * 0.5), int(hs * 1.5))
-                        cy1 = rng.randint(int(hs * 0.5), int(hs * 1.5))
-                        cx2 = cx1 + rng.randint(-int(hs * 0.3), int(hs * 0.3))
-                        cy2 = cy1 + rng.randint(-int(hs * 0.3), int(hs * 0.3))
-                        pygame.draw.line(crack_surf, pat_color, (cx1, cy1), (cx2, cy2), 1)
-                    hex_surface.blit(crack_surf, (ix - hs, iy - hs))
-                elif terrain_type == "swamp":
-                    # Scattered puddle circles
-                    swamp_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
-                    rng = random.Random(row * 100 + col)
-                    for _ in range(4):
-                        sx = rng.randint(int(hs * 0.5), int(hs * 1.5))
-                        sy = rng.randint(int(hs * 0.5), int(hs * 1.5))
-                        sr = max(2, int(hs * 0.06))
-                        pygame.draw.circle(swamp_surf, pat_color, (sx, sy), sr, 1)
-                    hex_surface.blit(swamp_surf, (ix - hs, iy - hs))
-                elif terrain_type == "lava":
-                    # Bright glow spots
-                    lava_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
-                    rng = random.Random(row * 100 + col)
-                    for _ in range(4):
-                        lx = rng.randint(int(hs * 0.5), int(hs * 1.5))
-                        ly = rng.randint(int(hs * 0.5), int(hs * 1.5))
-                        lr = max(2, int(hs * 0.06))
-                        pygame.draw.circle(lava_surf, (255, 200, 50, 35), (lx, ly), lr)
-                    hex_surface.blit(lava_surf, (ix - hs, iy - hs))
-                elif terrain_type == "ice":
-                    # Crystalline lines
-                    ice_surf = pygame.Surface((hs * 2, hs * 2), pygame.SRCALPHA)
-                    rng = random.Random(row * 100 + col)
-                    for _ in range(4):
-                        ix1 = rng.randint(int(hs * 0.5), int(hs * 1.5))
-                        iy1 = rng.randint(int(hs * 0.5), int(hs * 1.5))
-                        ang = rng.uniform(0, math.pi)
-                        length = int(hs * 0.15)
-                        ix2 = ix1 + int(math.cos(ang) * length)
-                        iy2 = iy1 + int(math.sin(ang) * length)
-                        pygame.draw.line(ice_surf, (220, 240, 255, 40), (ix1, iy1), (ix2, iy2), 1)
-                    hex_surface.blit(ice_surf, (ix - hs, iy - hs))
-                # Subtle edge shading for terrain depth
-                edge_color = (max(0, terrain_color[0] - 25), max(0, terrain_color[1] - 25), max(0, terrain_color[2] - 25))
-                pygame.draw.polygon(hex_surface, edge_color, points, 2)
+                    if terrain_type in ("water", "deep_water"):
+                        # Layered wavy lines with varying amplitude
+                        for wi in range(-3, 4):
+                            wy = hs + wi * int(hs * 0.22)
+                            amp = hs * 0.06 + abs(wi) * hs * 0.02
+                            phase = rng.uniform(0, 6.28)
+                            wave_pts = [(int(hs * 0.2 + j * hs * 0.12),
+                                         wy + int(math.sin(j * 0.7 + phase) * amp))
+                                        for j in range(14)]
+                            alpha = 25 + abs(wi) * 5
+                            c = pat_hi if wi % 2 == 0 else (min(255, tc[0] + 50), min(255, tc[1] + 50), min(255, tc[2] + 50))
+                            pygame.draw.lines(tex_surf, (*c, alpha), False, wave_pts, 1)
+                        hex_surface.blit(tex_surf, (ix - hs, iy - hs))
+                    elif terrain_type == "grass":
+                        # Clusters of short grass blades + scattered highlight dots
+                        for _ in range(12):
+                            gx = rng.randint(int(hs * 0.3), int(hs * 1.7))
+                            gy = rng.randint(int(hs * 0.3), int(hs * 1.7))
+                            blade_h = max(2, int(hs * rng.uniform(0.06, 0.12)))
+                            lean = rng.randint(-2, 2)
+                            alpha = rng.randint(25, 50)
+                            pygame.draw.line(tex_surf, (*pat_dk, alpha), (gx, gy), (gx + lean, gy - blade_h), 1)
+                        for _ in range(6):
+                            dx = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            dy = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            pygame.draw.circle(tex_surf, (*pat_hi, 20), (dx, dy), max(1, int(hs * 0.03)))
+                        hex_surface.blit(tex_surf, (ix - hs, iy - hs))
+                    elif terrain_type == "sand":
+                        # Scattered dots of varying size + subtle wind ripple lines
+                        for _ in range(14):
+                            dx = rng.randint(int(hs * 0.3), int(hs * 1.7))
+                            dy = rng.randint(int(hs * 0.3), int(hs * 1.7))
+                            dr = max(1, int(hs * rng.uniform(0.02, 0.05)))
+                            alpha = rng.randint(20, 45)
+                            pygame.draw.circle(tex_surf, (*pat_dk, alpha), (dx, dy), dr)
+                        for wi in range(-2, 3):
+                            wy = hs + wi * int(hs * 0.28) + rng.randint(-3, 3)
+                            rx1 = rng.randint(int(hs * 0.4), int(hs * 0.7))
+                            rx2 = rng.randint(int(hs * 1.2), int(hs * 1.6))
+                            pygame.draw.line(tex_surf, (*pat_dk, 18), (rx1, wy), (rx2, wy + rng.randint(-2, 2)), 1)
+                        hex_surface.blit(tex_surf, (ix - hs, iy - hs))
+                    elif terrain_type == "dirt":
+                        # Rough pebble dots + short scratch marks
+                        for _ in range(10):
+                            dx = rng.randint(int(hs * 0.3), int(hs * 1.7))
+                            dy = rng.randint(int(hs * 0.3), int(hs * 1.7))
+                            dr = max(1, int(hs * rng.uniform(0.03, 0.06)))
+                            c = pat_dk if rng.random() > 0.5 else pat_hi
+                            pygame.draw.circle(tex_surf, (*c, 30), (dx, dy), dr)
+                        for _ in range(5):
+                            sx = rng.randint(int(hs * 0.4), int(hs * 1.5))
+                            sy = rng.randint(int(hs * 0.4), int(hs * 1.5))
+                            ex = sx + rng.randint(-int(hs * 0.15), int(hs * 0.15))
+                            ey = sy + rng.randint(-int(hs * 0.08), int(hs * 0.08))
+                            pygame.draw.line(tex_surf, (*pat_dk, 25), (sx, sy), (ex, ey), 1)
+                        hex_surface.blit(tex_surf, (ix - hs, iy - hs))
+                    elif terrain_type == "forest":
+                        # Layered tree canopy circles with trunks
+                        for _ in range(7):
+                            tx = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            ty = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            s = max(2, int(hs * rng.uniform(0.06, 0.12)))
+                            c = pat_dk if rng.random() > 0.4 else (max(0, tc[0] - 20), max(0, tc[1] + 15), max(0, tc[2] - 20))
+                            pygame.draw.circle(tex_surf, (*c, 40), (tx, ty), s)
+                            pygame.draw.line(tex_surf, (*pat_dk, 35), (tx, ty + s), (tx, ty + s + max(2, int(hs * 0.06))), 1)
+                        hex_surface.blit(tex_surf, (ix - hs, iy - hs))
+                    elif terrain_type in ("mountain", "cliff"):
+                        # Triangle peaks with highlight edges + scattered rubble dots
+                        for _ in range(4):
+                            mx = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            my = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                            s = max(3, int(hs * rng.uniform(0.08, 0.14)))
+                            tri = [(mx, my - s), (mx - s, my + s // 2), (mx + s, my + s // 2)]
+                            pygame.draw.polygon(tex_surf, (*pat_hi, 35), tri)
+                            pygame.draw.line(tex_surf, (*pat_dk, 40), tri[0], tri[1], 1)
+                        for _ in range(6):
+                            rx = rng.randint(int(hs * 0.3), int(hs * 1.7))
+                            ry = rng.randint(int(hs * 0.3), int(hs * 1.7))
+                            pygame.draw.circle(tex_surf, (*pat_dk, 25), (rx, ry), max(1, int(hs * 0.025)))
+                        hex_surface.blit(tex_surf, (ix - hs, iy - hs))
+                    elif terrain_type == "stone":
+                        # Crack lines with branches + highlight spots
+                        for _ in range(5):
+                            cx1 = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            cy1 = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            cx2 = cx1 + rng.randint(-int(hs * 0.3), int(hs * 0.3))
+                            cy2 = cy1 + rng.randint(-int(hs * 0.3), int(hs * 0.3))
+                            pygame.draw.line(tex_surf, (*pat_dk, 40), (cx1, cy1), (cx2, cy2), 1)
+                            # Branch off
+                            if rng.random() > 0.5:
+                                bx = cx2 + rng.randint(-int(hs * 0.12), int(hs * 0.12))
+                                by = cy2 + rng.randint(-int(hs * 0.12), int(hs * 0.12))
+                                pygame.draw.line(tex_surf, (*pat_dk, 30), (cx2, cy2), (bx, by), 1)
+                        for _ in range(4):
+                            hx = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                            hy = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                            pygame.draw.circle(tex_surf, (*pat_hi, 20), (hx, hy), max(1, int(hs * 0.03)))
+                        hex_surface.blit(tex_surf, (ix - hs, iy - hs))
+                    elif terrain_type == "wood":
+                        # Plank grain lines (horizontal) + knot circles
+                        for wi in range(-3, 4):
+                            wy = hs + wi * int(hs * 0.25)
+                            wobble = rng.randint(-2, 2)
+                            pygame.draw.line(tex_surf, (*pat_dk, 30),
+                                            (int(hs * 0.25), wy + wobble),
+                                            (int(hs * 1.75), wy + rng.randint(-2, 2)), 1)
+                        for _ in range(2):
+                            kx = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                            ky = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                            kr = max(2, int(hs * 0.04))
+                            pygame.draw.circle(tex_surf, (*pat_dk, 35), (kx, ky), kr, 1)
+                        hex_surface.blit(tex_surf, (ix - hs, iy - hs))
+                    elif terrain_type == "swamp":
+                        # Puddle rings + reed lines sticking up
+                        for _ in range(5):
+                            sx = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            sy = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            sr = max(2, int(hs * rng.uniform(0.05, 0.09)))
+                            pygame.draw.circle(tex_surf, (*pat_dk, 30), (sx, sy), sr, 1)
+                        for _ in range(4):
+                            rx = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                            ry = rng.randint(int(hs * 0.6), int(hs * 1.5))
+                            rh = max(3, int(hs * rng.uniform(0.08, 0.15)))
+                            pygame.draw.line(tex_surf, (*pat_dk, 35), (rx, ry), (rx + rng.randint(-1, 1), ry - rh), 1)
+                        hex_surface.blit(tex_surf, (ix - hs, iy - hs))
+                    elif terrain_type == "lava":
+                        # Bright glow spots + dark crust cracks
+                        for _ in range(6):
+                            lx = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            ly = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            lr = max(2, int(hs * rng.uniform(0.05, 0.09)))
+                            pygame.draw.circle(tex_surf, (255, 200, 50, 40), (lx, ly), lr)
+                        for _ in range(3):
+                            cx1 = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                            cy1 = rng.randint(int(hs * 0.5), int(hs * 1.5))
+                            cx2 = cx1 + rng.randint(-int(hs * 0.2), int(hs * 0.2))
+                            cy2 = cy1 + rng.randint(-int(hs * 0.2), int(hs * 0.2))
+                            pygame.draw.line(tex_surf, (80, 20, 0, 40), (cx1, cy1), (cx2, cy2), 1)
+                        hex_surface.blit(tex_surf, (ix - hs, iy - hs))
+                    elif terrain_type == "ice":
+                        # Crystalline lines + sparkle dots
+                        for _ in range(6):
+                            ix1 = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            iy1 = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            ang = rng.uniform(0, math.pi)
+                            length = int(hs * rng.uniform(0.1, 0.2))
+                            ix2 = ix1 + int(math.cos(ang) * length)
+                            iy2 = iy1 + int(math.sin(ang) * length)
+                            pygame.draw.line(tex_surf, (220, 240, 255, 45), (ix1, iy1), (ix2, iy2), 1)
+                        for _ in range(4):
+                            sx = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            sy = rng.randint(int(hs * 0.4), int(hs * 1.6))
+                            pygame.draw.circle(tex_surf, (255, 255, 255, 35), (sx, sy), 1)
+                        hex_surface.blit(tex_surf, (ix - hs, iy - hs))
+                    elif terrain_type == "void":
+                        # Faint scattered stars/specks
+                        for _ in range(8):
+                            vx = rng.randint(int(hs * 0.3), int(hs * 1.7))
+                            vy = rng.randint(int(hs * 0.3), int(hs * 1.7))
+                            pygame.draw.circle(tex_surf, (60, 60, 80, 30), (vx, vy), 1)
+                        hex_surface.blit(tex_surf, (ix - hs, iy - hs))
+                    # Cache the generated texture surface
+                    self._terrain_texture_cache[(row, col)] = tex_surf
+                    # Subtle edge shading for terrain depth
+                    edge_color = (max(0, terrain_color[0] - 25), max(0, terrain_color[1] - 25), max(0, terrain_color[2] - 25))
+                    pygame.draw.polygon(hex_surface, edge_color, points, 2)
 
                 # Draw overlay for inaccessible hexes (darker tint)
                 if not self.grid[row][col]["accessible"]:
                     # Darken the terrain color for manually marked inaccessible
                     if is_terrain_accessible(terrain_type):
-                        dark_overlay = pygame.Surface((self.hex_size * 2, self.hex_size * 2), pygame.SRCALPHA)
-                        dark_points = [(self.hex_size + self.hex_size * math.cos(math.radians(60 * i)),
-                                       self.hex_size + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
-                        pygame.draw.polygon(dark_overlay, (0, 0, 0, 80), dark_points, 0)
-                        hex_surface.blit(dark_overlay, (x - self.hex_size, y - self.hex_size))
+                        ovl, ovl_pts = self._get_overlay_surf()
+                        pygame.draw.polygon(ovl, (0, 0, 0, 80), ovl_pts, 0)
+                        hex_surface.blit(ovl, (x - self.hex_size, y - self.hex_size))
 
                 # Hover highlight
                 if self.hovered_hex == (row, col) and self.selected_hex != (row, col):
@@ -2069,18 +2574,23 @@ class HexGrid:
                 # Draw location hex indicators
                 if (row, col) in self.location_data:
                     loc_data = self.location_data[(row, col)]
-                    is_spawn_location = loc_data.get("is_spawn_location", False)
-                    has_health = loc_data.get("health", 0) > 0
-                    is_npc_spawn = loc_data.get("is_npc_spawn_location", False)
-                    has_npc_health = loc_data.get("npc_health", 0) > 0
+                    category = self._get_location_category(loc_data)
 
-                    # Determine border color: red for enemy spawns, blue for NPC spawns, orange for regular
-                    if is_spawn_location and has_health:
-                        border_color = colors['RED']
-                    elif is_npc_spawn and has_npc_health:
-                        border_color = colors['BLUE']
-                    else:
-                        border_color = colors['ORANGE']
+                    # Category-specific border colors
+                    category_colors = {
+                        "enemy_spawn": colors['RED'],
+                        "npc_spawn": colors['BLUE'],
+                        "defensive": (0, 200, 220),
+                        "healing": (80, 220, 80),
+                        "shop": (255, 200, 50),
+                        "gate": (160, 100, 220),
+                        "generic": colors['ORANGE'],
+                    }
+                    border_color = category_colors.get(category, colors['ORANGE'])
+
+                    # Inner glow fill (low-alpha) so location hexes pop from terrain
+                    glow_color = (border_color[0], border_color[1], border_color[2], 25)
+                    pygame.draw.polygon(hex_surface, glow_color, points, 0)
                     pygame.draw.polygon(hex_surface, border_color, points, 3)
                 if self.selected_hex == (row, col):
                     pygame.draw.polygon(hex_surface, (255, 215, 0, 60), points, 0)
@@ -2095,11 +2605,9 @@ class HexGrid:
                 # Movement range: shade out-of-range hexes
                 if movement_range and (row, col) not in movement_range:
                     x, y = self.get_hex_center(row, col)
-                    dark_overlay = pygame.Surface((self.hex_size * 2, self.hex_size * 2), pygame.SRCALPHA)
-                    dark_points = [(self.hex_size + self.hex_size * math.cos(math.radians(60 * i)),
-                                   self.hex_size + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
-                    pygame.draw.polygon(dark_overlay, (0, 0, 0, 100), dark_points, 0)
-                    hex_surface.blit(dark_overlay, (x - self.hex_size, y - self.hex_size))
+                    ovl, ovl_pts = self._get_overlay_surf()
+                    pygame.draw.polygon(ovl, (0, 0, 0, 100), ovl_pts, 0)
+                    hex_surface.blit(ovl, (x - self.hex_size, y - self.hex_size))
 
         # Attack range hex fill with gentle breathing alpha
         ar_pulse = (math.sin(pygame.time.get_ticks() / 400.0) + 1) / 2  # 0.0–1.0
@@ -2110,36 +2618,31 @@ class HexGrid:
                         if (row, col) in ar["range"]:
                             x, y = self.get_hex_center(row, col)
                             color = ar["color"]
-                            range_overlay = pygame.Surface((self.hex_size * 2, self.hex_size * 2), pygame.SRCALPHA)
-                            range_points = [(self.hex_size + self.hex_size * math.cos(math.radians(60 * i)),
-                                            self.hex_size + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                            ovl, ovl_pts = self._get_overlay_surf()
                             # Breathing hex tint fill
-                            fill_alpha = int(30 + ar_pulse * 25)
-                            pygame.draw.polygon(range_overlay, (color[0], color[1], color[2], fill_alpha), range_points, 0)
+                            fill_alpha = int(18 + ar_pulse * 17)
+                            pygame.draw.polygon(ovl, (color[0], color[1], color[2], fill_alpha), ovl_pts, 0)
                             # Subtle inner hex border
-                            pygame.draw.polygon(range_overlay, (color[0], color[1], color[2], 100), range_points, 2)
-                            hex_surface.blit(range_overlay, (x - self.hex_size, y - self.hex_size))
+                            pygame.draw.polygon(ovl, (color[0], color[1], color[2], 60), ovl_pts, 2)
+                            hex_surface.blit(ovl, (x - self.hex_size, y - self.hex_size))
 
         # Third pass: Draw location icons and names on top of range rings
         for (row, col), loc_data in self.location_data.items():
             x, y = self.get_hex_center(row, col)
-            is_spawn_location = loc_data.get("is_spawn_location", False)
-            has_health = loc_data.get("health", 0) > 0
-            is_npc_spawn = loc_data.get("is_npc_spawn_location", False)
-            has_npc_health = loc_data.get("npc_health", 0) > 0
+            category = self._get_location_category(loc_data)
 
             # Track bottom of building area so the name label goes below it
-            label_top_y = y + self.hex_size * 0.3 * 0.5  # default: just below house body
+            label_top_y = y + self.hex_size * 0.5 * 0.5  # default: just below icon body
 
             if loc_data.get("card"):
                 # Draw icons for assigned locations
                 is_upgraded = loc_data.get("state", 1) == 2
 
-                if is_spawn_location and has_health:
+                if category == "enemy_spawn":
                     # Draw tower/fort icon for active enemy spawn locations (red)
                     icon_color = colors['RED']
                     outline_color = (10, 10, 20)
-                    tower_size = self.hex_size * 0.3
+                    tower_size = self.hex_size * 0.45
                     tower_x, tower_y = x, y
                     base_rect = pygame.Rect(
                         tower_x - tower_size * 0.4,
@@ -2187,11 +2690,11 @@ class HexGrid:
                                        (bar_x, bar_y, health_width, bar_height))
                     label_top_y = bar_y + bar_height + 2
 
-                elif is_npc_spawn and has_npc_health:
+                elif category == "npc_spawn":
                     # Draw church icon for active NPC spawn locations (blue)
                     icon_color = colors['BLUE']
                     outline_color = (10, 10, 20)
-                    church_size = self.hex_size * 0.3
+                    church_size = self.hex_size * 0.45
                     church_x, church_y = x, y
                     steeple_points = [
                         (church_x, church_y - church_size * 1.0),
@@ -2243,11 +2746,86 @@ class HexGrid:
                                        (bar_x, bar_y, health_width, bar_height))
                     label_top_y = bar_y + bar_height + 2
 
+                elif category == "defensive":
+                    # Shield icon for defensive locations (cyan)
+                    outline_color = (10, 10, 20)
+                    icon_color = (0, 200, 220) if not is_upgraded else (0, 240, 255)
+                    s = self.hex_size * 0.5
+                    # Pentagon shield shape
+                    shield_pts = [
+                        (x, y - s * 0.9),              # top center
+                        (x + s * 0.6, y - s * 0.5),    # top right
+                        (x + s * 0.5, y + s * 0.3),    # bottom right
+                        (x, y + s * 0.7),               # bottom point
+                        (x - s * 0.5, y + s * 0.3),    # bottom left
+                        (x - s * 0.6, y - s * 0.5),    # top left
+                    ]
+                    pygame.draw.polygon(hex_surface, outline_color, shield_pts)
+                    pygame.draw.polygon(hex_surface, icon_color, shield_pts, 0)
+                    pygame.draw.polygon(hex_surface, outline_color, shield_pts, 2)
+                    # Vertical arrow slit
+                    pygame.draw.line(hex_surface, outline_color,
+                                   (x, y - s * 0.35), (x, y + s * 0.25), 2)
+                    label_top_y = y + s * 0.7 + 2
+
+                elif category == "healing":
+                    # Medical cross icon for healing locations (green)
+                    outline_color = (10, 10, 20)
+                    icon_color = (80, 220, 80) if not is_upgraded else (100, 255, 100)
+                    s = self.hex_size * 0.5
+                    arm_w = s * 0.3  # half-width of cross arm
+                    arm_h = s * 0.7  # half-height of cross arm
+                    # Draw cross as two overlapping rectangles
+                    v_rect = pygame.Rect(x - arm_w, y - arm_h, arm_w * 2, arm_h * 2)
+                    h_rect = pygame.Rect(x - arm_h, y - arm_w, arm_h * 2, arm_w * 2)
+                    pygame.draw.rect(hex_surface, outline_color, v_rect.inflate(3, 3))
+                    pygame.draw.rect(hex_surface, outline_color, h_rect.inflate(3, 3))
+                    pygame.draw.rect(hex_surface, icon_color, v_rect)
+                    pygame.draw.rect(hex_surface, icon_color, h_rect)
+                    label_top_y = y + arm_h + 2
+
+                elif category == "shop":
+                    # Coin/pouch icon for shop locations (gold)
+                    outline_color = (10, 10, 20)
+                    icon_color = (255, 200, 50) if not is_upgraded else (255, 225, 80)
+                    s = self.hex_size * 0.5
+                    # Outer coin circle
+                    pygame.draw.circle(hex_surface, outline_color, (int(x), int(y)), int(s * 0.7) + 1)
+                    pygame.draw.circle(hex_surface, icon_color, (int(x), int(y)), int(s * 0.7))
+                    # Inner circle detail
+                    pygame.draw.circle(hex_surface, outline_color, (int(x), int(y)), int(s * 0.4), 2)
+                    # Small "$" or dot in center
+                    pygame.draw.circle(hex_surface, outline_color, (int(x), int(y)), int(s * 0.15))
+                    label_top_y = y + s * 0.7 + 2
+
+                elif category == "gate":
+                    # Archway icon for gate/passage locations (purple)
+                    outline_color = (10, 10, 20)
+                    icon_color = (160, 100, 220) if not is_upgraded else (190, 130, 255)
+                    s = self.hex_size * 0.5
+                    pillar_w = s * 0.25
+                    pillar_h = s * 1.0
+                    # Left pillar
+                    l_rect = pygame.Rect(x - s * 0.55, y - s * 0.2, pillar_w, pillar_h)
+                    pygame.draw.rect(hex_surface, outline_color, l_rect.inflate(2, 2))
+                    pygame.draw.rect(hex_surface, icon_color, l_rect)
+                    # Right pillar
+                    r_rect = pygame.Rect(x + s * 0.55 - pillar_w, y - s * 0.2, pillar_w, pillar_h)
+                    pygame.draw.rect(hex_surface, outline_color, r_rect.inflate(2, 2))
+                    pygame.draw.rect(hex_surface, icon_color, r_rect)
+                    # Arch connecting pillars (semicircle at top)
+                    arch_rect = pygame.Rect(x - s * 0.55, y - s * 0.7, s * 1.1, s * 1.0)
+                    pygame.draw.arc(hex_surface, outline_color, arch_rect.inflate(2, 2),
+                                   0.15, math.pi - 0.15, 4)
+                    pygame.draw.arc(hex_surface, icon_color, arch_rect,
+                                   0.15, math.pi - 0.15, 3)
+                    label_top_y = y + s * 0.8 + 2
+
                 else:
-                    # Draw house icon for regular assigned locations
+                    # House icon for generic assigned locations
                     icon_color = colors['GREEN'] if is_upgraded else colors['ORANGE']
                     outline_color = (10, 10, 20)
-                    house_size = self.hex_size * 0.3
+                    house_size = self.hex_size * 0.5
                     house_x, house_y = x, y
                     roof_points = [
                         (house_x, house_y - house_size * 0.8),
@@ -2286,7 +2864,7 @@ class HexGrid:
                     g_y = int(y - self.hex_size * 0.45)
                     pygame.draw.circle(hex_surface, (0, 180, 0), (g_x, g_y), g_radius)
                     pygame.draw.circle(hex_surface, colors['WHITE'], (g_x, g_y), g_radius, 1)
-                    g_font = pygame.font.Font(None, max(10, g_radius * 2))
+                    g_font = self._get_font(max(10, g_radius * 2))
                     g_text = g_font.render(str(g_count), True, colors['WHITE'])
                     g_rect = g_text.get_rect(center=(g_x, g_y))
                     hex_surface.blit(g_text, g_rect)
@@ -2294,7 +2872,7 @@ class HexGrid:
                 # Draw unknown building icon for unassigned locations
                 unknown_color = (210, 180, 100)  # Muted gold/tan
                 outline_color = (10, 10, 20)
-                house_size = self.hex_size * 0.35  # Slightly larger than regular
+                house_size = self.hex_size * 0.5  # Slightly larger than regular
                 house_x, house_y = x, y
                 # House silhouette (triangle roof + rectangle base)
                 roof_points = [
@@ -2313,7 +2891,7 @@ class HexGrid:
                 pygame.draw.rect(hex_surface, outline_color, base_rect.inflate(2, 2))
                 pygame.draw.rect(hex_surface, unknown_color, base_rect)
                 # Draw "?" in the center of the building
-                q_font = pygame.font.Font(None, max(14, int(house_size * 1.8)))
+                q_font = self._get_font(max(14, int(house_size * 1.8)))
                 q_surface = q_font.render("?", True, (60, 40, 20))
                 q_rect = q_surface.get_rect(center=(int(house_x), int(house_y + house_size * 0.05)))
                 hex_surface.blit(q_surface, q_rect)
@@ -2386,42 +2964,29 @@ class HexGrid:
                     hex_surface.blit(scaled_image, image_rect)
                     health_bar_y = image_rect.top - 5
                 else:
-                    # Use player's custom color if available (multiplayer), otherwise default colors
+                    # Determine base allegiance color
+                    is_dead = is_dead_player or is_dead_unit
                     if isinstance(unit, Player):
-                        if is_dead_player:
-                            color = (100, 100, 100)  # Gray for dead players
-                        else:
-                            color = unit.player_color if hasattr(unit, 'player_color') else colors['GREEN']
-                    elif is_dead_unit:
-                        color = (100, 100, 100)  # Grey for dead NPCs
-                    elif unit.allegiance == "Hostile":
-                        color = colors['RED']
-                    elif unit.allegiance == "Allied":
-                        color = colors['BLUE']
+                        base_color = unit.player_color if hasattr(unit, 'player_color') else colors['GREEN']
+                    elif hasattr(unit, 'allegiance') and unit.allegiance == "Hostile":
+                        base_color = colors['RED']
+                    elif hasattr(unit, 'allegiance') and unit.allegiance == "Allied":
+                        base_color = colors['BLUE']
                     else:
-                        color = (0, 190, 170)  # Teal for neutral NPCs
+                        base_color = (0, 190, 170)  # Teal for neutral NPCs
                     base_radius = max(10, int(self.hex_size / 3))
-                    # Player tokens are slightly larger
-                    radius = int(base_radius * 1.15) if isinstance(unit, Player) else base_radius
-                    cx, cy = int(pos[0]), int(pos[1])
-                    flash_elapsed = pygame.time.get_ticks() - unit.flash_start if unit.attack_flash else 0
-                    draw_color = colors['WHITE'] if (unit.attack_flash and flash_elapsed >= 0) else color
-                    # Dark outline
-                    pygame.draw.circle(hex_surface, (10, 10, 20), (cx, cy), radius + 2)
-                    # Player gets a thin gold ring around the token
-                    if isinstance(unit, Player) and not is_dead_player and not is_dead_unit:
-                        pygame.draw.circle(hex_surface, (200, 170, 50), (cx, cy), radius + 1)
-                    # Main token
-                    pygame.draw.circle(hex_surface, draw_color, (cx, cy), radius)
-                    # Inner highlight (lighter shade, upper-left offset for 3D effect)
-                    if not unit.attack_flash:
-                        hi_r = min(255, draw_color[0] + 60)
-                        hi_g = min(255, draw_color[1] + 60)
-                        hi_b = min(255, draw_color[2] + 60)
-                        highlight_surf = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-                        pygame.draw.circle(highlight_surf, (hi_r, hi_g, hi_b, 80),
-                                           (radius - 2, radius - 2), radius // 2)
-                        hex_surface.blit(highlight_surf, (cx - radius, cy - radius))
+                    flash_active = unit.attack_flash and (pygame.time.get_ticks() - unit.flash_start) >= 0
+                    icon_type = self._get_icon_type(unit)
+                    is_boss = not isinstance(unit, Player) and getattr(unit, 'card_type', '') == "Boss Card"
+                    is_junk_pile = getattr(unit, '_is_junk_pile', False)
+                    radius = self._draw_enhanced_token(
+                        hex_surface, pos, base_radius, base_color, icon_type,
+                        is_player=isinstance(unit, Player),
+                        is_dead=is_dead,
+                        is_boss=is_boss,
+                        attack_flash=flash_active,
+                        is_junk_pile=is_junk_pile
+                    )
                     health_bar_y = pos[1] - radius - 5  # Position health bar just above the circle
 
                 # --- Defensive posture indicator ---
@@ -2456,7 +3021,7 @@ class HexGrid:
 
                 # Draw player name badge for multiplayer mode
                 if isinstance(unit, Player) and hasattr(unit, 'player_number') and len(all_players) > 1:
-                    badge_font = pygame.font.Font(None, max(14, int(self.hex_size * 0.38)))
+                    badge_font = self._get_font(max(14, int(self.hex_size * 0.38)))
                     player_name = unit.name if hasattr(unit, 'name') and unit.name else f"P{unit.player_number}"
                     badge_text = f"P{unit.player_number}: {player_name}"
                     badge_surface = badge_font.render(badge_text, True, colors['WHITE'])
@@ -2501,7 +3066,7 @@ class HexGrid:
                     alpha = max(0, alpha)
                     # Use larger font for damage numbers
                     dmg_font_size = max(20, int(self.hex_size * 0.45))
-                    dmg_font = pygame.font.Font(None, dmg_font_size)
+                    dmg_font = self._get_font(dmg_font_size)
                     # Green for heals (no minus sign), red for damage
                     is_heal = not unit.damage_text.startswith("-")
                     dmg_color = (80, 255, 80) if is_heal else (255, 60, 60)
@@ -2519,8 +3084,9 @@ class HexGrid:
 
                 unit.draw_health_bar(hex_surface, (pos[0], health_bar_y))
 
-                # Draw defeated X marker for dead players or dead NPCs
-                if is_dead_player or is_dead_unit:
+                # Draw defeated X marker for dead players or dead NPCs (skip junk piles)
+                is_junk_pile_unit = getattr(unit, '_is_junk_pile', False)
+                if (is_dead_player or is_dead_unit) and not is_junk_pile_unit:
                     x_radius = max(8, int(self.hex_size / 4))
                     cx, cy = int(pos[0]), int(pos[1])
                     x_surf = pygame.Surface((x_radius * 2 + 4, x_radius * 2 + 4), pygame.SRCALPHA)
@@ -2613,7 +3179,7 @@ class HexGrid:
                 for extra in self.hover_extra_lines:
                     tip_lines.append(extra)
                 # Render tooltip
-                tip_font = pygame.font.Font(None, 16)
+                tip_font = self._get_font(16)
                 # Color extra lines differently (damage preview in red/yellow)
                 tip_surfs = []
                 for i, line in enumerate(tip_lines):
