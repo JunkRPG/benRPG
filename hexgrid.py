@@ -2399,17 +2399,17 @@ class HexGrid:
     def draw(self, surface, movement_range=None, attack_ranges=None, colors=None, targetable_units=None):
         if colors is None:
             colors = {
-                'BLUE': (0, 0, 255),
+                'BLUE': (55, 80, 170),
                 'DARK_RED_ALPHA': (100, 0, 0, 128),
                 'LIGHT_GREEN': (144, 238, 144),
                 'YELLOW': (255, 255, 0),
                 'GOLDEN_YELLOW': (255, 215, 0),
-                'GREEN': (0, 255, 0),
-                'RED': (255, 0, 0),
+                'GREEN': (45, 170, 80),
+                'RED': (185, 45, 50),
                 'GRAY': (128, 128, 128),
                 'WHITE': (255, 255, 255),
-                'PURPLE': (128, 0, 128),
-                'ORANGE': (255, 165, 0)
+                'PURPLE': (120, 60, 150),
+                'ORANGE': (200, 130, 50)
             }
         hex_surface = pygame.Surface((surface.get_width(), surface.get_height()), pygame.SRCALPHA)
         # Invalidate terrain texture cache on zoom or orientation change
@@ -2666,10 +2666,10 @@ class HexGrid:
                     category_colors = {
                         "enemy_spawn": colors['RED'],
                         "npc_spawn": colors['BLUE'],
-                        "defensive": (0, 200, 220),
-                        "healing": (80, 220, 80),
-                        "shop": (255, 200, 50),
-                        "gate": (160, 100, 220),
+                        "defensive": (60, 150, 165),
+                        "healing": (65, 175, 85),
+                        "shop": (200, 165, 55),
+                        "gate": (130, 85, 175),
                         "generic": colors['ORANGE'],
                     }
                     border_color = category_colors.get(category, colors['ORANGE'])
@@ -2835,7 +2835,7 @@ class HexGrid:
                 elif category == "defensive":
                     # Shield icon for defensive locations (cyan)
                     outline_color = (10, 10, 20)
-                    icon_color = (0, 200, 220) if not is_upgraded else (0, 240, 255)
+                    icon_color = (60, 150, 165) if not is_upgraded else (80, 180, 195)
                     s = self.hex_size * 0.5
                     # Pentagon shield shape
                     shield_pts = [
@@ -2857,7 +2857,7 @@ class HexGrid:
                 elif category == "healing":
                     # Medical cross icon for healing locations (green)
                     outline_color = (10, 10, 20)
-                    icon_color = (80, 220, 80) if not is_upgraded else (100, 255, 100)
+                    icon_color = (65, 175, 85) if not is_upgraded else (85, 210, 105)
                     s = self.hex_size * 0.5
                     arm_w = s * 0.3  # half-width of cross arm
                     arm_h = s * 0.7  # half-height of cross arm
@@ -2873,7 +2873,7 @@ class HexGrid:
                 elif category == "shop":
                     # Coin/pouch icon for shop locations (gold)
                     outline_color = (10, 10, 20)
-                    icon_color = (255, 200, 50) if not is_upgraded else (255, 225, 80)
+                    icon_color = (200, 165, 55) if not is_upgraded else (220, 185, 70)
                     s = self.hex_size * 0.5
                     # Outer coin circle
                     pygame.draw.circle(hex_surface, outline_color, (int(x), int(y)), int(s * 0.7) + 1)
@@ -2887,7 +2887,7 @@ class HexGrid:
                 elif category == "gate":
                     # Archway icon for gate/passage locations (purple)
                     outline_color = (10, 10, 20)
-                    icon_color = (160, 100, 220) if not is_upgraded else (190, 130, 255)
+                    icon_color = (130, 85, 175) if not is_upgraded else (155, 110, 200)
                     s = self.hex_size * 0.5
                     pillar_w = s * 0.25
                     pillar_h = s * 1.0
@@ -2948,7 +2948,7 @@ class HexGrid:
                     g_radius = max(6, int(self.hex_size * 0.15))
                     g_x = int(x + self.hex_size * 0.45)
                     g_y = int(y - self.hex_size * 0.45)
-                    pygame.draw.circle(hex_surface, (0, 180, 0), (g_x, g_y), g_radius)
+                    pygame.draw.circle(hex_surface, (45, 155, 75), (g_x, g_y), g_radius)
                     pygame.draw.circle(hex_surface, colors['WHITE'], (g_x, g_y), g_radius, 1)
                     g_font = self._get_font(max(10, g_radius * 2))
                     g_text = g_font.render(str(g_count), True, colors['WHITE'])
@@ -3014,16 +3014,16 @@ class HexGrid:
                 if is_active:
                     # Determine glow color based on unit type
                     if isinstance(unit, Player):
-                        glow_color = (255, 215, 0)  # Gold for players
+                        glow_color = (210, 175, 55)  # Gold for players
                     elif hasattr(unit, 'allegiance'):
                         if unit.allegiance == "Hostile":
-                            glow_color = (255, 60, 60)  # Red for enemies
+                            glow_color = (200, 60, 55)  # Red for enemies
                         elif unit.allegiance == "Allied":
-                            glow_color = (60, 120, 255)  # Blue for allies
+                            glow_color = (65, 105, 200)  # Blue for allies
                         else:
-                            glow_color = (0, 220, 200)  # Teal for neutral
+                            glow_color = (55, 170, 155)  # Teal for neutral
                     else:
-                        glow_color = (255, 215, 0)
+                        glow_color = (210, 175, 55)
                     glow_radius = max(14, int(self.hex_size / 2.2))
                     # Draw 3 concentric glow rings with pulsing alpha
                     for i in range(3):
@@ -3060,7 +3060,7 @@ class HexGrid:
                     elif hasattr(unit, 'allegiance') and unit.allegiance == "Allied":
                         base_color = colors['BLUE']
                     else:
-                        base_color = (0, 190, 170)  # Teal for neutral NPCs
+                        base_color = (55, 155, 140)  # Teal for neutral NPCs
                     base_radius = max(10, int(self.hex_size / 3))
                     flash_active = unit.attack_flash and (pygame.time.get_ticks() - unit.flash_start) >= 0
                     icon_type = self._get_icon_type(unit)
@@ -3097,7 +3097,7 @@ class HexGrid:
                         p1 = (int(tip_x + perp_x * arc_half), int(tip_y + perp_y * arc_half))
                         p2 = (int(tip_x - perp_x * arc_half), int(tip_y - perp_y * arc_half))
                         # Draw shield arc (thick colored line)
-                        shield_color = (80, 160, 255)
+                        shield_color = (70, 130, 200)
                         pygame.draw.line(hex_surface, (20, 40, 80), p1, p2, max(4, int(self.hex_size * 0.12)))
                         pygame.draw.line(hex_surface, shield_color, p1, p2, max(3, int(self.hex_size * 0.09)))
                         # Small direction arrow tip
@@ -3118,7 +3118,7 @@ class HexGrid:
                     badge_y = int(health_bar_y) - badge_h - 14
                     # Draw badge background with player color
                     badge_bg = pygame.Surface((badge_w, badge_h), pygame.SRCALPHA)
-                    badge_color = unit.player_color if hasattr(unit, 'player_color') else (0, 200, 0)
+                    badge_color = unit.player_color if hasattr(unit, 'player_color') else (45, 170, 80)
                     pygame.draw.rect(badge_bg, (*badge_color, 200), (0, 0, badge_w, badge_h), border_radius=3)
                     pygame.draw.rect(badge_bg, (255, 255, 255, 80), (0, 0, badge_w, badge_h), width=1, border_radius=3)
                     hex_surface.blit(badge_bg, (badge_x, badge_y))
@@ -3156,7 +3156,7 @@ class HexGrid:
                     dmg_font = self._get_font(dmg_font_size)
                     # Green for heals (no minus sign), red for damage
                     is_heal = not unit.damage_text.startswith("-")
-                    dmg_color = (80, 255, 80) if is_heal else (255, 60, 60)
+                    dmg_color = (75, 210, 95) if is_heal else (220, 70, 65)
                     dmg_text_surf = dmg_font.render(unit.damage_text, True, dmg_color)
                     dmg_shadow_surf = dmg_font.render(unit.damage_text, True, (0, 0, 0))
                     dmg_base_y = int(health_bar_y) - 26  # Above health bar area
@@ -3178,8 +3178,8 @@ class HexGrid:
                     cx, cy = int(pos[0]), int(pos[1])
                     x_surf = pygame.Surface((x_radius * 2 + 4, x_radius * 2 + 4), pygame.SRCALPHA)
                     xc = x_radius + 2
-                    pygame.draw.line(x_surf, (255, 0, 0, 200), (xc - x_radius, xc - x_radius), (xc + x_radius, xc + x_radius), 3)
-                    pygame.draw.line(x_surf, (255, 0, 0, 200), (xc - x_radius, xc + x_radius), (xc + x_radius, xc - x_radius), 3)
+                    pygame.draw.line(x_surf, (185, 45, 50, 200), (xc - x_radius, xc - x_radius), (xc + x_radius, xc + x_radius), 3)
+                    pygame.draw.line(x_surf, (185, 45, 50, 200), (xc - x_radius, xc + x_radius), (xc + x_radius, xc - x_radius), 3)
                     hex_surface.blit(x_surf, (cx - xc, cy - xc))
 
         # Movement range boundary: pulsing edge on border between reachable and unreachable
@@ -3187,7 +3187,7 @@ class HexGrid:
         if movement_range:
             pulse = (math.sin(pygame.time.get_ticks() / 500.0) + 1) / 2
             edge_alpha = int(140 + pulse * 115)
-            edge_color = (180, 220, 255, edge_alpha)
+            edge_color = (150, 190, 220, edge_alpha)
             edge_surf = pygame.Surface((hex_surface.get_width(), hex_surface.get_height()), pygame.SRCALPHA)
             # Edge-to-neighbor mapping: edge i (vertex i to vertex i+1) faces the neighbor at offset index i
             if self.hex_orientation == "pointy":

@@ -216,7 +216,7 @@ class Player:
 
         # Multiplayer attributes
         self.player_number = 1  # 1 or 2 (for multiplayer mode)
-        self.player_color = (0, 200, 0)  # Default green, customized per player
+        self.player_color = (45, 170, 80)  # Default green, customized per player
         self.party = []  # This player's recruited allied NPCs (for multiplayer independence)
         try:
             self.image = pygame.image.load(os.path.join(os.path.dirname(__file__), "images", "player.png")).convert_alpha()
