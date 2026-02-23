@@ -192,8 +192,12 @@ while running:
                     dy = event.pos[1] - drag_start_y
                     hex_grid.view_offset_x = start_view_offset_x + dx
                     hex_grid.view_offset_y = start_view_offset_y + dy
-                    grid_width = hex_grid.cols * hex_grid.hex_size * 1.5
-                    grid_height = hex_grid.rows * hex_grid.hex_size * 1.732
+                    if hex_grid.hex_orientation == "pointy":
+                        grid_width = hex_grid.cols * hex_grid.hex_size * 1.732
+                        grid_height = hex_grid.rows * hex_grid.hex_size * 1.5
+                    else:
+                        grid_width = hex_grid.cols * hex_grid.hex_size * 1.5
+                        grid_height = hex_grid.rows * hex_grid.hex_size * 1.732
                     min_offset_x = WINDOW_WIDTH - grid_width if grid_width > WINDOW_WIDTH else 0
                     max_offset_x = 0 if grid_width > WINDOW_WIDTH else WINDOW_WIDTH - grid_width
                     min_offset_y = WINDOW_HEIGHT - grid_height if grid_height > WINDOW_HEIGHT else 0
@@ -210,8 +214,12 @@ while running:
                     hex_grid.hex_size = new_s
                     hex_grid.view_offset_x = mx - zoom_factor * (mx - ox)
                     hex_grid.view_offset_y = my - zoom_factor * (my - oy)
-                    grid_width = hex_grid.cols * hex_grid.hex_size * 1.5
-                    grid_height = hex_grid.rows * hex_grid.hex_size * 1.732
+                    if hex_grid.hex_orientation == "pointy":
+                        grid_width = hex_grid.cols * hex_grid.hex_size * 1.732
+                        grid_height = hex_grid.rows * hex_grid.hex_size * 1.5
+                    else:
+                        grid_width = hex_grid.cols * hex_grid.hex_size * 1.5
+                        grid_height = hex_grid.rows * hex_grid.hex_size * 1.732
                     min_offset_x = WINDOW_WIDTH - grid_width if grid_width > WINDOW_WIDTH else 0
                     max_offset_x = 0 if grid_width > WINDOW_WIDTH else WINDOW_WIDTH - grid_width
                     min_offset_y = WINDOW_HEIGHT - grid_height if grid_height > WINDOW_HEIGHT else 0

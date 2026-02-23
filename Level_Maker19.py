@@ -40,15 +40,20 @@ manager = pygame_gui.UIManager((WINDOW_WIDTH, WINDOW_HEIGHT), "theme.json")
 
 class EditorHexGrid:
     """Manages the hexagonal grid's layout, drawing, and interaction."""
-    def __init__(self, rows, cols, hex_size, window_width, window_height):
+    def __init__(self, rows, cols, hex_size, window_width, window_height, hex_orientation="flat"):
         self.rows = rows
         self.cols = cols
         self.base_hex_size = hex_size
         self.hex_size = hex_size
+        self.hex_orientation = hex_orientation
         self.min_hex_size = 10
         self.max_hex_size = 100
-        grid_width = self.cols * self.hex_size * 1.5
-        grid_height = self.rows * self.hex_size * 1.732
+        if self.hex_orientation == "pointy":
+            grid_width = self.cols * self.hex_size * 1.732
+            grid_height = self.rows * self.hex_size * 1.5
+        else:
+            grid_width = self.cols * self.hex_size * 1.5
+            grid_height = self.rows * self.hex_size * 1.732
         self.view_offset_x = (window_width - grid_width) / 2 if grid_width < window_width else 0
         self.view_offset_y = (window_height - grid_height) / 2 if grid_height < window_height else 0
         self.window_width = window_width
@@ -72,8 +77,12 @@ class EditorHexGrid:
         self.clamp_offsets()
 
     def clamp_offsets(self):
-        grid_width = self.cols * self.hex_size * 1.5 + self.hex_size
-        grid_height = self.rows * self.hex_size * 1.732 + self.hex_size
+        if self.hex_orientation == "pointy":
+            grid_width = self.cols * self.hex_size * 1.732 + self.hex_size
+            grid_height = self.rows * self.hex_size * 1.5 + self.hex_size
+        else:
+            grid_width = self.cols * self.hex_size * 1.5 + self.hex_size
+            grid_height = self.rows * self.hex_size * 1.732 + self.hex_size
         margin = self.hex_size  # Keep at least one hex visible at screen edge
 
         # Allow panning so any edge of the grid can be brought into view
@@ -88,15 +97,24 @@ class EditorHexGrid:
         self.view_offset_y = max(min(self.view_offset_y, max_y), min_y)
 
     def get_hex_center(self, row, col):
-        x = self.view_offset_x + col * self.hex_size * 1.5
-        y = self.view_offset_y + row * self.hex_size * 1.732 + (col % 2) * self.hex_size * 0.866
+        if self.hex_orientation == "pointy":
+            x = self.view_offset_x + col * self.hex_size * 1.732 + (row % 2) * self.hex_size * 0.866
+            y = self.view_offset_y + row * self.hex_size * 1.5
+        else:
+            x = self.view_offset_x + col * self.hex_size * 1.5
+            y = self.view_offset_y + row * self.hex_size * 1.732 + (col % 2) * self.hex_size * 0.866
         return x, y
 
     def get_hex_at_pixel(self, x, y):
         grid_left = self.view_offset_x
-        grid_right = self.view_offset_x + (self.cols * self.hex_size * 1.5)
-        grid_top = self.view_offset_y
-        grid_bottom = self.view_offset_y + (self.rows * self.hex_size * 1.732)
+        if self.hex_orientation == "pointy":
+            grid_right = self.view_offset_x + (self.cols * self.hex_size * 1.732)
+            grid_top = self.view_offset_y
+            grid_bottom = self.view_offset_y + (self.rows * self.hex_size * 1.5)
+        else:
+            grid_right = self.view_offset_x + (self.cols * self.hex_size * 1.5)
+            grid_top = self.view_offset_y
+            grid_bottom = self.view_offset_y + (self.rows * self.hex_size * 1.732)
         padding = self.hex_size
         if not (grid_left - padding <= x <= grid_right + padding and 
                 grid_top - padding <= y <= grid_bottom + padding):
@@ -113,11 +131,12 @@ class EditorHexGrid:
         return selected_hex
 
     def draw(self, surface, selected_hex, card_drawing_dict, player_start, terrain, units, level_editor):
+        angle_off = 30 if self.hex_orientation == "pointy" else 0
         for row in range(self.rows):
             for col in range(self.cols):
                 center = self.get_hex_center(row, col)
-                points = [(center[0] + self.hex_size * math.cos(math.radians(60 * i)),
-                           center[1] + self.hex_size * math.sin(math.radians(60 * i)))
+                points = [(center[0] + self.hex_size * math.cos(math.radians(60 * i + angle_off)),
+                           center[1] + self.hex_size * math.sin(math.radians(60 * i + angle_off)))
                           for i in range(6)]
                 terrain_type = terrain[row][col]
                 color = TERRAIN_COLORS.get(terrain_type, GRAY)
@@ -128,8 +147,8 @@ class EditorHexGrid:
                 if not terrain_accessible:
                     # Create semi-transparent dark overlay
                     overlay = pygame.Surface((self.hex_size * 2.5, self.hex_size * 2.5), pygame.SRCALPHA)
-                    overlay_points = [(self.hex_size * 1.25 + self.hex_size * math.cos(math.radians(60 * i)),
-                                      self.hex_size * 1.25 + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                    overlay_points = [(self.hex_size * 1.25 + self.hex_size * math.cos(math.radians(60 * i + angle_off)),
+                                      self.hex_size * 1.25 + self.hex_size * math.sin(math.radians(60 * i + angle_off))) for i in range(6)]
                     pygame.draw.polygon(overlay, (0, 0, 0, 60), overlay_points, 0)
                     surface.blit(overlay, (center[0] - self.hex_size * 1.25, center[1] - self.hex_size * 1.25))
 
@@ -229,7 +248,8 @@ class EditorHexGrid:
 
 class LevelEditor:
     def __init__(self):
-        self.grid = EditorHexGrid(10, 10, 30, WINDOW_WIDTH, WINDOW_HEIGHT)
+        self.hex_orientation = "flat"
+        self.grid = EditorHexGrid(10, 10, 30, WINDOW_WIDTH, WINDOW_HEIGHT, hex_orientation=self.hex_orientation)
         self.selected_hex = None
         self.card_drawing_hexes = []
         self.card_drawing_dict = {}
@@ -357,8 +377,14 @@ class LevelEditor:
         self.cols_entry = UITextEntryLine(relative_rect=pygame.Rect(10, 32, 80, 30), manager=manager, initial_text="10")
         self.rows_entry = UITextEntryLine(relative_rect=pygame.Rect(100, 32, 80, 30), manager=manager, initial_text="10")
         self.apply_button = UIButton(relative_rect=pygame.Rect(190, 32, 80, 30), text="Apply", manager=manager)
-        y_pos = 70
-        self.unit_type_dropdown = UIDropDownMenu(options_list=["Enemy", "Boss", "NPC"], starting_option="Enemy", 
+        self.orientation_dropdown = UIDropDownMenu(
+            options_list=["Flat Top", "Pointy Top"],
+            starting_option="Flat Top",
+            relative_rect=pygame.Rect(10, 62, 120, 30),
+            manager=manager
+        )
+        y_pos = 100
+        self.unit_type_dropdown = UIDropDownMenu(options_list=["Enemy", "Boss", "NPC"], starting_option="Enemy",
                                                  relative_rect=pygame.Rect(10, y_pos, 190, 30), manager=manager)
         y_pos += 40
         self.unit_card_list = UISelectionList(relative_rect=pygame.Rect(10, y_pos, 190, 100), 
@@ -401,7 +427,7 @@ class LevelEditor:
                                           text="Paint Mode: OFF", manager=manager)
 
         # Location hex UI elements (left panel, below unit placement)
-        left_y_pos = 340
+        left_y_pos = 370
         self.location_label = UILabel(relative_rect=pygame.Rect(10, left_y_pos, 190, 25),
                                       text="Location Hexes:", manager=manager)
         left_y_pos += 30
@@ -580,7 +606,12 @@ class LevelEditor:
                     if rows > 0 and cols > 0:
                         old_terrain = self.terrain
                         old_accessible = self.accessible
-                        self.grid = EditorHexGrid(rows, cols, 30, WINDOW_WIDTH, WINDOW_HEIGHT)
+                        # Read orientation from dropdown
+                        selected_orient = self.orientation_dropdown.selected_option
+                        if isinstance(selected_orient, tuple):
+                            selected_orient = selected_orient[0]
+                        self.hex_orientation = "pointy" if selected_orient == "Pointy Top" else "flat"
+                        self.grid = EditorHexGrid(rows, cols, 30, WINDOW_WIDTH, WINDOW_HEIGHT, hex_orientation=self.hex_orientation)
                         self.terrain = [["grass" for _ in range(cols)] for _ in range(rows)]
                         self.accessible = [[True for _ in range(cols)] for _ in range(rows)]
                         for r in range(min(rows, len(old_terrain))):
@@ -809,10 +840,13 @@ class LevelEditor:
             elif event.ui_element == self.exit_button:
                 pygame.quit()
                 sys.exit()
-        elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED and event.ui_element == self.unit_type_dropdown:
-            self.current_unit_type = event.text
-            cards = self.unit_cards.get(self.current_unit_type, [])
-            self.unit_card_list.set_item_list([name for _, name in cards] or ["No cards available"])
+        elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
+            if event.ui_element == self.unit_type_dropdown:
+                self.current_unit_type = event.text
+                cards = self.unit_cards.get(self.current_unit_type, [])
+                self.unit_card_list.set_item_list([name for _, name in cards] or ["No cards available"])
+            elif event.ui_element == self.orientation_dropdown:
+                self.status_label.set_text(f"Orientation set to {event.text} (click Apply to update grid)")
         elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION and event.ui_element == self.deck_list:
             self.update_card_list()
 
@@ -827,7 +861,7 @@ class LevelEditor:
             inaccessible_hexes = [{"row": r, "column": c} for r in range(self.grid.rows) 
                                   for c in range(self.grid.cols) if not self.accessible[r][c]]
             level_data = {
-                "grid": {"rows": self.grid.rows, "columns": self.grid.cols},
+                "grid": {"rows": self.grid.rows, "columns": self.grid.cols, "hex_orientation": self.hex_orientation},
                 "player_start": {"row": self.player_start[0], "column": self.player_start[1]} if self.player_start else None,
                 "terrain": self.terrain,
                 "inaccessible_hexes": inaccessible_hexes,
@@ -862,6 +896,7 @@ class LevelEditor:
                 else:
                     rows = level_data.get("grid_rows", 16)
                     cols = level_data.get("grid_cols", 24)
+                self.hex_orientation = level_data.get("grid", {}).get("hex_orientation", "flat")
                 # Warn about large levels
                 if rows > MAX_GRID_SIZE or cols > MAX_GRID_SIZE:
                     self.status_label.set_text(f"Level exceeds max size ({MAX_GRID_SIZE}x{MAX_GRID_SIZE})")
@@ -869,7 +904,7 @@ class LevelEditor:
                 total_hexes = rows * cols
                 if rows > WARN_GRID_SIZE or cols > WARN_GRID_SIZE:
                     print(f"Warning: Loading large level with {total_hexes:,} hexes")
-                self.grid = EditorHexGrid(rows, cols, 30, WINDOW_WIDTH, WINDOW_HEIGHT)
+                self.grid = EditorHexGrid(rows, cols, 30, WINDOW_WIDTH, WINDOW_HEIGHT, hex_orientation=self.hex_orientation)
                 self.terrain = level_data["terrain"]
                 self.accessible = [[True for _ in range(cols)] for _ in range(rows)]
                 for hex in level_data.get("inaccessible_hexes", []):
@@ -894,6 +929,16 @@ class LevelEditor:
                 self.selected_hex = None
                 self.rows_entry.set_text(str(rows))
                 self.cols_entry.set_text(str(cols))
+                # Update orientation dropdown to match loaded level
+                orient_display = "Pointy Top" if self.hex_orientation == "pointy" else "Flat Top"
+                if hasattr(self, 'orientation_dropdown'):
+                    self.orientation_dropdown.kill()
+                    self.orientation_dropdown = UIDropDownMenu(
+                        options_list=["Flat Top", "Pointy Top"],
+                        starting_option=orient_display,
+                        relative_rect=pygame.Rect(10, 62, 120, 30),
+                        manager=manager
+                    )
                 self.update_info_label()
                 self.status_label.set_text(f"Loaded {os.path.basename(file_path)}")
                 self.load_levels()

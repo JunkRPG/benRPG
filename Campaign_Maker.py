@@ -72,6 +72,7 @@ class PreviewHexGrid:
         self.view_offset_x = 0
         self.view_offset_y = 0
         self.level_data = None
+        self.hex_orientation = "flat"
 
     def load_level(self, level_file):
         """Load level data for preview."""
@@ -87,6 +88,7 @@ class PreviewHexGrid:
             self.inaccessible = self.level_data.get("inaccessible_hexes", [])
             self.card_drawing_hexes = self.level_data.get("card_drawing_hexes", [])
             self.location_hexes = self.level_data.get("location_hexes", [])
+            self.hex_orientation = self.level_data["grid"].get("hex_orientation", "flat")
 
             # Calculate hex size to fit preview area
             self._calculate_view()
@@ -106,8 +108,12 @@ class PreviewHexGrid:
         available_height = self.preview_rect.height - 40
 
         # Hex grid dimensions
-        grid_width_factor = self.cols * 1.5 + 0.5
-        grid_height_factor = self.rows * 1.732 + 0.866
+        if self.hex_orientation == "pointy":
+            grid_width_factor = self.cols * 1.732 + 0.866
+            grid_height_factor = self.rows * 1.5 + 0.5
+        else:
+            grid_width_factor = self.cols * 1.5 + 0.5
+            grid_height_factor = self.rows * 1.732 + 0.866
 
         # Calculate hex size
         size_by_width = available_width / grid_width_factor
@@ -121,8 +127,12 @@ class PreviewHexGrid:
         self.view_offset_y = self.preview_rect.y + (self.preview_rect.height - actual_height) / 2 + 20
 
     def get_hex_center(self, row, col):
-        x = self.view_offset_x + col * self.hex_size * 1.5
-        y = self.view_offset_y + row * self.hex_size * 1.732 + (col % 2) * self.hex_size * 0.866
+        if self.hex_orientation == "pointy":
+            x = self.view_offset_x + col * self.hex_size * 1.732 + (row % 2) * self.hex_size * 0.866
+            y = self.view_offset_y + row * self.hex_size * 1.5
+        else:
+            x = self.view_offset_x + col * self.hex_size * 1.5
+            y = self.view_offset_y + row * self.hex_size * 1.732 + (col % 2) * self.hex_size * 0.866
         return x, y
 
     def draw(self, surface):
@@ -136,12 +146,13 @@ class PreviewHexGrid:
             return
 
         # Draw hexes
+        angle_off = 30 if self.hex_orientation == "pointy" else 0
         for row in range(self.rows):
             for col in range(self.cols):
                 center = self.get_hex_center(row, col)
                 points = [
-                    (center[0] + self.hex_size * math.cos(math.radians(60 * i)),
-                     center[1] + self.hex_size * math.sin(math.radians(60 * i)))
+                    (center[0] + self.hex_size * math.cos(math.radians(60 * i + angle_off)),
+                     center[1] + self.hex_size * math.sin(math.radians(60 * i + angle_off)))
                     for i in range(6)
                 ]
 

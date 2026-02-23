@@ -1,0 +1,52 @@
+{
+  "grid": {
+    "rows": 12,
+    "columns": 16,
+    "hex_orientation": "pointy"
+  },
+  "player_start": {
+    "row": 6,
+    "column": 2
+  },
+  "terrain": [
+    ["grass","grass","grass","grass","grass","grass","water","water","grass","grass","grass","grass","grass","grass","grass","grass"],
+    ["grass","grass","dirt","dirt","grass","grass","water","grass","grass","sand","sand","grass","grass","grass","grass","grass"],
+    ["grass","dirt","dirt","grass","grass","grass","grass","grass","sand","sand","sand","grass","grass","grass","grass","grass"],
+    ["grass","grass","grass","grass","grass","mountain","mountain","grass","grass","sand","grass","grass","dirt","dirt","grass","grass"],
+    ["grass","grass","grass","grass","grass","mountain","grass","grass","grass","grass","grass","dirt","dirt","grass","grass","grass"],
+    ["grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass"],
+    ["grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass"],
+    ["grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass"],
+    ["grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","dirt","dirt","grass","grass","grass"],
+    ["grass","grass","sand","sand","grass","grass","grass","grass","water","water","grass","grass","dirt","grass","grass","grass"],
+    ["grass","sand","sand","grass","grass","grass","grass","water","water","grass","grass","grass","grass","grass","grass","grass"],
+    ["grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass","grass"]
+  ],
+  "units": [
+    {
+      "card_id": "campaign_enemy_junk_scavenger",
+      "position": {"row": 3, "column": 10}
+    },
+    {
+      "card_id": "campaign_enemy_rust_rat",
+      "position": {"row": 8, "column": 12}
+    },
+    {
+      "card_id": "campaign_enemy_scrap_bandit",
+      "position": {"row": 5, "column": 14}
+    },
+    {
+      "card_id": "campaign_npc_junk_dealer",
+      "position": {"row": 6, "column": 5}
+    }
+  ],
+  "inaccessible_hexes": [],
+  "card_drawing_hexes": [],
+  "location_hexes": [],
+  "teleport_pads": [],
+  "junk_piles": [
+    {"position": {"row": 2, "column": 3}, "search_chance": 60, "searches_remaining": 2},
+    {"position": {"row": 9, "column": 7}, "search_chance": 50, "searches_remaining": 3}
+  ],
+  "starting_inventory": []
+}

@@ -39,6 +39,7 @@ class HexGrid:
         self.rows = rows
         self.cols = cols
         self.hex_size = hex_size
+        self.hex_orientation = "flat"  # "flat" or "pointy"
         # Grid stores a dict with "unit", "accessible", and "terrain" keys
         self.grid = [[{"unit": None, "accessible": True, "terrain": "grass"} for _ in range(cols)] for _ in range(rows)]
         self.player = None
@@ -57,8 +58,7 @@ class HexGrid:
         self.teleport_pads = []
         self.teleport_pad_positions = {}  # {(row, col): pad_id}
         # Calculate initial offsets based on provided dimensions
-        grid_width = self.cols * self.hex_size * 1.5
-        grid_height = self.rows * self.hex_size * 1.732
+        grid_width, grid_height = self._grid_pixel_size()
         self.view_offset_x = (window_width - grid_width) / 2 if grid_width < window_width else 0
         self.view_offset_y = (window_height - grid_height) / 2 if grid_height < window_height else 0
         # Font for rendering unit names and damage text
@@ -76,6 +76,17 @@ class HexGrid:
         self._overlay_hex_points = None    # Pre-computed hex polygon for overlay surface
         self._overlay_hex_size = None
         self._font_cache = {}              # {size: pygame.font.Font}
+        self._terrain_cache_orientation = None
+
+    def _grid_pixel_size(self):
+        """Return (width, height) of the full grid in pixels based on orientation."""
+        if self.hex_orientation == "pointy":
+            return (self.cols * self.hex_size * 1.732, self.rows * self.hex_size * 1.5)
+        return (self.cols * self.hex_size * 1.5, self.rows * self.hex_size * 1.732)
+
+    def _hex_angle_offset(self):
+        """Return angle offset in degrees for hex vertices (0 for flat, 30 for pointy)."""
+        return 30 if self.hex_orientation == "pointy" else 0
 
     def load_level(self, level_file, card_manager, player):
         try:
@@ -89,6 +100,11 @@ class HexGrid:
                 self.rows = level_data.get("grid_rows", self.rows)
                 self.cols = level_data.get("grid_cols", self.cols)
             self.hex_size = level_data.get("hex_size", 30)  # Default to 30 if not specified
+            # Read hex orientation (default flat for backward compat)
+            if "grid" in level_data:
+                self.hex_orientation = level_data["grid"].get("hex_orientation", "flat")
+            else:
+                self.hex_orientation = "flat"
             # Rebuild the grid with the new dimensions
             self.grid = [[{"unit": None, "accessible": True, "terrain": "grass"} for _ in range(self.cols)] for _ in range(self.rows)]
             self.units = []  # Clear all units from previous level
@@ -276,8 +292,7 @@ class HexGrid:
                             print(f"Error loading location deck {deck_file}: {e}")
             
             # Recalculate view offsets based on new grid size
-            grid_width = self.cols * self.hex_size * 1.5
-            grid_height = self.rows * self.hex_size * 1.732
+            grid_width, grid_height = self._grid_pixel_size()
             window_width = pygame.display.Info().current_w
             window_height = pygame.display.Info().current_h
             if grid_width < window_width and grid_height < window_height:
@@ -288,8 +303,12 @@ class HexGrid:
                 # Large grid: center view on player start position
                 player_row = player_start["row"]
                 player_col = player_start.get("column", player_start.get("col", 0))
-                player_pixel_x = player_col * self.hex_size * 1.5
-                player_pixel_y = player_row * self.hex_size * 1.732 + (player_col % 2) * self.hex_size * 0.866
+                if self.hex_orientation == "pointy":
+                    player_pixel_x = player_col * self.hex_size * 1.732 + (player_row % 2) * self.hex_size * 0.866
+                    player_pixel_y = player_row * self.hex_size * 1.5
+                else:
+                    player_pixel_x = player_col * self.hex_size * 1.5
+                    player_pixel_y = player_row * self.hex_size * 1.732 + (player_col % 2) * self.hex_size * 0.866
                 self.view_offset_x = window_width / 2 - player_pixel_x
                 self.view_offset_y = window_height / 2 - player_pixel_y
             else:
@@ -305,15 +324,20 @@ class HexGrid:
                 self.place_unit(player, self.rows // 2, self.cols // 2)
 
     def get_hex_center(self, row, col):
-        x = self.view_offset_x + col * self.hex_size * 1.5
-        y = self.view_offset_y + row * self.hex_size * 1.732 + (col % 2) * self.hex_size * 0.866
+        if self.hex_orientation == "pointy":
+            x = self.view_offset_x + col * self.hex_size * 1.732 + (row % 2) * self.hex_size * 0.866
+            y = self.view_offset_y + row * self.hex_size * 1.5
+        else:
+            x = self.view_offset_x + col * self.hex_size * 1.5
+            y = self.view_offset_y + row * self.hex_size * 1.732 + (col % 2) * self.hex_size * 0.866
         return x, y
 
     def get_hex_at_pixel(self, x, y):
         grid_left = self.view_offset_x
-        grid_right = self.view_offset_x + (self.cols * self.hex_size * 1.5)
+        gw, gh = self._grid_pixel_size()
+        grid_right = self.view_offset_x + gw
         grid_top = self.view_offset_y
-        grid_bottom = self.view_offset_y + (self.rows * self.hex_size * 1.732)
+        grid_bottom = self.view_offset_y + gh
         padding = self.hex_size
         if not (grid_left - padding <= x <= grid_right + padding and grid_top - padding <= y <= grid_bottom + padding):
             return None
@@ -1609,14 +1633,22 @@ class HexGrid:
     # ========== END EDGE SPAWNING METHODS ==========
 
     def offset_to_cube(self, col, row):
-        x = col
-        z = row - (col // 2)
+        if self.hex_orientation == "pointy":
+            x = col - (row // 2)
+            z = row
+        else:
+            x = col
+            z = row - (col // 2)
         y = -x - z
         return x, y, z
 
     def cube_to_offset(self, x, z):
-        col = x
-        row = z + (x // 2)
+        if self.hex_orientation == "pointy":
+            col = x + (z // 2)
+            row = z
+        else:
+            col = x
+            row = z + (x // 2)
         return row, col
 
     def hex_distance(self, pos1, pos2):
@@ -1688,10 +1720,16 @@ class HexGrid:
         return mover_alleg == occupant_alleg
 
     def get_neighbors(self, row, col, goal=None, moving_unit=None):
-        if col % 2 == 0:
-            offsets = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1)]
+        if self.hex_orientation == "pointy":
+            if row % 2 == 0:
+                offsets = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, -1)]
+            else:
+                offsets = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, 1), (1, 1)]
         else:
-            offsets = [(-1, 0), (1, 0), (0, -1), (0, 1), (1, -1), (1, 1)]
+            if col % 2 == 0:
+                offsets = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1)]
+            else:
+                offsets = [(-1, 0), (1, 0), (0, -1), (0, 1), (1, -1), (1, 1)]
         neighbors = [(row + dr, col + dc) for dr, dc in offsets]
         return [(r, c) for r, c in neighbors if 0 <= r < self.rows and 0 <= c < self.cols and
                 self.grid[r][c]["accessible"] and ((goal and (r, c) == goal) or self.grid[r][c]["unit"] is None
@@ -1919,58 +1957,102 @@ class HexGrid:
     def _get_mist_shadow_range(self, pos, distance):
         """
         Calculate mist/shadow range pattern - 6 directional lines that bisect
-        the standard hex directions (30°, 90°, 150°, 210°, 270°, 330°).
+        the standard hex directions. Goes through hex vertices (between edges).
         Supports any distance (no hardcoded limit).
         """
         range_set = set()
         row, col = pos
 
-        # Diagonal direction definitions: (col_delta, row_delta_to_even_col, row_delta_to_odd_col)
-        # Each step moves 1 column; row delta depends on parity of the NEW column.
-        diag_dirs = {
-            30:  (+1, -1, -2),   # ↗ up-right
-            150: (+1, +2, +1),   # ↘ down-right
-            210: (-1, +2, +1),   # ↙ down-left
-            330: (-1, -1, -2),   # ↖ up-left
-        }
-
-        for angle in [30, 90, 150, 210, 270, 330]:
-            line = []
-
-            if angle in (90, 270):
-                # Horizontal directions: step by 2 columns
-                for step in range(1, distance + 1):
-                    new_c = col + (2 * step if angle == 90 else -2 * step)
-                    new_pos = (row, new_c)
-                    if (0 <= new_c < self.cols and
-                            self.hex_distance(pos, new_pos) <= distance):
-                        if self.grid[row][new_c]["accessible"]:
-                            line.append(new_pos)
+        if self.hex_orientation == "pointy":
+            # Pointy-top: diagonal dirs use (row_delta, dc_to_even_row, dc_to_odd_row)
+            # Each step moves 1 row; col delta depends on parity of the NEW row.
+            pointy_diag_dirs = {
+                "dr": (+1, +1, 0),     # ↘ down-right
+                "dl": (+1, 0, -1),     # ↙ down-left
+                "ul": (-1, 0, -1),     # ↖ up-left
+                "ur": (-1, +1, 0),     # ↗ up-right
+            }
+            # 6 vertex directions: up, down, and 4 diagonals
+            for direction in ["up", "ur", "dr", "down", "dl", "ul"]:
+                line = []
+                if direction in ("up", "down"):
+                    # Vertical directions: step by 2 rows, same column
+                    for step in range(1, distance + 1):
+                        new_r = row + (-2 * step if direction == "up" else 2 * step)
+                        new_pos = (new_r, col)
+                        if (0 <= new_r < self.rows and
+                                self.hex_distance(pos, new_pos) <= distance):
+                            if self.grid[new_r][col]["accessible"]:
+                                line.append(new_pos)
+                            else:
+                                break
                         else:
                             break
-                    else:
-                        break
-            else:
-                # Diagonal directions: compute offsets algorithmically
-                col_d, dr_to_even, dr_to_odd = diag_dirs[angle]
-                cur_r, cur_c = row, col
-                for step in range(distance):
-                    new_c = cur_c + col_d
-                    # Row delta depends on parity of the NEW column
-                    dr = dr_to_odd if new_c % 2 != 0 else dr_to_even
-                    new_r = cur_r + dr
-                    new_pos = (new_r, new_c)
-                    if (0 <= new_r < self.rows and 0 <= new_c < self.cols and
-                            self.hex_distance(pos, new_pos) <= distance):
-                        if self.grid[new_r][new_c]["accessible"]:
-                            line.append(new_pos)
+                else:
+                    row_d, dc_to_even, dc_to_odd = pointy_diag_dirs[direction]
+                    cur_r, cur_c = row, col
+                    for step in range(distance):
+                        new_r = cur_r + row_d
+                        dc = dc_to_odd if new_r % 2 != 0 else dc_to_even
+                        new_c = cur_c + dc
+                        new_pos = (new_r, new_c)
+                        if (0 <= new_r < self.rows and 0 <= new_c < self.cols and
+                                self.hex_distance(pos, new_pos) <= distance):
+                            if self.grid[new_r][new_c]["accessible"]:
+                                line.append(new_pos)
+                            else:
+                                break
                         else:
                             break
-                    else:
-                        break
-                    cur_r, cur_c = new_r, new_c
+                        cur_r, cur_c = new_r, new_c
+                range_set.update(line)
+        else:
+            # Flat-top: diagonal dirs use (col_delta, row_delta_to_even_col, row_delta_to_odd_col)
+            # Each step moves 1 column; row delta depends on parity of the NEW column.
+            diag_dirs = {
+                30:  (+1, -1, -2),   # ↗ up-right
+                150: (+1, +2, +1),   # ↘ down-right
+                210: (-1, +2, +1),   # ↙ down-left
+                330: (-1, -1, -2),   # ↖ up-left
+            }
 
-            range_set.update(line)
+            for angle in [30, 90, 150, 210, 270, 330]:
+                line = []
+
+                if angle in (90, 270):
+                    # Horizontal directions: step by 2 columns
+                    for step in range(1, distance + 1):
+                        new_c = col + (2 * step if angle == 90 else -2 * step)
+                        new_pos = (row, new_c)
+                        if (0 <= new_c < self.cols and
+                                self.hex_distance(pos, new_pos) <= distance):
+                            if self.grid[row][new_c]["accessible"]:
+                                line.append(new_pos)
+                            else:
+                                break
+                        else:
+                            break
+                else:
+                    # Diagonal directions: compute offsets algorithmically
+                    col_d, dr_to_even, dr_to_odd = diag_dirs[angle]
+                    cur_r, cur_c = row, col
+                    for step in range(distance):
+                        new_c = cur_c + col_d
+                        # Row delta depends on parity of the NEW column
+                        dr = dr_to_odd if new_c % 2 != 0 else dr_to_even
+                        new_r = cur_r + dr
+                        new_pos = (new_r, new_c)
+                        if (0 <= new_r < self.rows and 0 <= new_c < self.cols and
+                                self.hex_distance(pos, new_pos) <= distance):
+                            if self.grid[new_r][new_c]["accessible"]:
+                                line.append(new_pos)
+                            else:
+                                break
+                        else:
+                            break
+                        cur_r, cur_c = new_r, new_c
+
+                range_set.update(line)
 
         return range_set
 
@@ -2291,16 +2373,18 @@ class HexGrid:
 
     def _get_overlay_surf(self):
         """Return a reusable SRCALPHA surface + hex polygon points for overlay drawing.
-        Recreated only when hex_size changes (zoom)."""
-        if self._overlay_hex_size != self.hex_size:
+        Recreated only when hex_size or orientation changes."""
+        if self._overlay_hex_size != self.hex_size or getattr(self, '_overlay_hex_orientation', None) != self.hex_orientation:
             size = self.hex_size * 2
             self._overlay_surf = pygame.Surface((size, size), pygame.SRCALPHA)
+            angle_off = self._hex_angle_offset()
             self._overlay_hex_points = [
-                (self.hex_size + self.hex_size * math.cos(math.radians(60 * i)),
-                 self.hex_size + self.hex_size * math.sin(math.radians(60 * i)))
+                (self.hex_size + self.hex_size * math.cos(math.radians(60 * i + angle_off)),
+                 self.hex_size + self.hex_size * math.sin(math.radians(60 * i + angle_off)))
                 for i in range(6)
             ]
             self._overlay_hex_size = self.hex_size
+            self._overlay_hex_orientation = self.hex_orientation
         self._overlay_surf.fill((0, 0, 0, 0))
         return self._overlay_surf, self._overlay_hex_points
 
@@ -2328,15 +2412,17 @@ class HexGrid:
                 'ORANGE': (255, 165, 0)
             }
         hex_surface = pygame.Surface((surface.get_width(), surface.get_height()), pygame.SRCALPHA)
-        # Invalidate terrain texture cache on zoom (hex_size change)
-        if self._terrain_cache_hex_size != self.hex_size:
+        # Invalidate terrain texture cache on zoom or orientation change
+        if self._terrain_cache_hex_size != self.hex_size or self._terrain_cache_orientation != self.hex_orientation:
             self._terrain_texture_cache = {}
             self._terrain_cache_hex_size = self.hex_size
+            self._terrain_cache_orientation = self.hex_orientation
+        angle_off = self._hex_angle_offset()
         for row in range(self.rows):
             for col in range(self.cols):
                 x, y = self.get_hex_center(row, col)
-                points = [(x + self.hex_size * math.cos(math.radians(60 * i)),
-                           y + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                points = [(x + self.hex_size * math.cos(math.radians(60 * i + angle_off)),
+                           y + self.hex_size * math.sin(math.radians(60 * i + angle_off))) for i in range(6)]
 
                 # Draw terrain color as base
                 terrain_type = self.grid[row][col].get("terrain", "grass")
@@ -2952,7 +3038,8 @@ class HexGrid:
                 is_dead_player = isinstance(unit, Player) and unit.hp <= 0
 
                 if isinstance(unit, Player) and unit.image:
-                    scale_factor = (self.hex_size * 1.5 * unit.image_scale_factor) / unit.image.get_height()
+                    img_scale_base = self.hex_size * (1.732 if self.hex_orientation == "pointy" else 1.5)
+                    scale_factor = (img_scale_base * unit.image_scale_factor) / unit.image.get_height()
                     scaled_image = pygame.transform.scale(unit.image,
                                                          (int(unit.image.get_width() * scale_factor),
                                                           int(unit.image.get_height() * scale_factor)))
@@ -3102,14 +3189,21 @@ class HexGrid:
             edge_alpha = int(140 + pulse * 115)
             edge_color = (180, 220, 255, edge_alpha)
             edge_surf = pygame.Surface((hex_surface.get_width(), hex_surface.get_height()), pygame.SRCALPHA)
-            # Edge i faces direction (i+1)%6: edge 0→lower-right, 1→below, 2→lower-left, 3→upper-left, 4→above, 5→upper-right
-            even_col_neighbors = [(0, 1), (1, 0), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
-            odd_col_neighbors = [(1, 1), (1, 0), (1, -1), (0, -1), (-1, 0), (0, 1)]
+            # Edge-to-neighbor mapping: edge i (vertex i to vertex i+1) faces the neighbor at offset index i
+            if self.hex_orientation == "pointy":
+                even_edge_neighbors = [(1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (0, 1)]
+                odd_edge_neighbors = [(1, 1), (1, 0), (0, -1), (-1, 0), (-1, 1), (0, 1)]
+            else:
+                even_edge_neighbors = [(0, 1), (1, 0), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
+                odd_edge_neighbors = [(1, 1), (1, 0), (1, -1), (0, -1), (-1, 0), (0, 1)]
             for (mr, mc) in movement_range:
                 x, y = self.get_hex_center(mr, mc)
-                verts = [(x + self.hex_size * math.cos(math.radians(60 * i)),
-                          y + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
-                offsets = even_col_neighbors if mc % 2 == 0 else odd_col_neighbors
+                verts = [(x + self.hex_size * math.cos(math.radians(60 * i + angle_off)),
+                          y + self.hex_size * math.sin(math.radians(60 * i + angle_off))) for i in range(6)]
+                if self.hex_orientation == "pointy":
+                    offsets = even_edge_neighbors if mr % 2 == 0 else odd_edge_neighbors
+                else:
+                    offsets = even_edge_neighbors if mc % 2 == 0 else odd_edge_neighbors
                 for i, (dr, dc) in enumerate(offsets):
                     nr, nc = mr + dr, mc + dc
                     if (nr, nc) not in movement_range:
@@ -3119,8 +3213,12 @@ class HexGrid:
         # Attack range boundary: pulsing inward-thickened edges on border of each attack range
         if attack_ranges:
             ar_edge_pulse = (math.sin(pygame.time.get_ticks() / 400.0) + 1) / 2
-            even_col_nb = [(0, 1), (1, 0), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
-            odd_col_nb = [(1, 1), (1, 0), (1, -1), (0, -1), (-1, 0), (0, 1)]
+            if self.hex_orientation == "pointy":
+                even_ar_nb = [(1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (0, 1)]
+                odd_ar_nb = [(1, 1), (1, 0), (0, -1), (-1, 0), (-1, 1), (0, 1)]
+            else:
+                even_ar_nb = [(0, 1), (1, 0), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
+                odd_ar_nb = [(1, 1), (1, 0), (1, -1), (0, -1), (-1, 0), (0, 1)]
             inset_t = 0.12  # How far inward the thick edge extends (fraction of hex radius)
             for ar in attack_ranges:
                 ar_set = ar["range"]
@@ -3133,11 +3231,14 @@ class HexGrid:
                 ar_edge_surf = pygame.Surface((hex_surface.get_width(), hex_surface.get_height()), pygame.SRCALPHA)
                 for (mr, mc) in ar_set:
                     x, y = self.get_hex_center(mr, mc)
-                    verts = [(x + self.hex_size * math.cos(math.radians(60 * i)),
-                              y + self.hex_size * math.sin(math.radians(60 * i))) for i in range(6)]
+                    verts = [(x + self.hex_size * math.cos(math.radians(60 * i + angle_off)),
+                              y + self.hex_size * math.sin(math.radians(60 * i + angle_off))) for i in range(6)]
                     # Inset vertices: each vertex lerped toward hex center
                     inset_verts = [(v[0] + (x - v[0]) * inset_t, v[1] + (y - v[1]) * inset_t) for v in verts]
-                    offsets = even_col_nb if mc % 2 == 0 else odd_col_nb
+                    if self.hex_orientation == "pointy":
+                        offsets = even_ar_nb if mr % 2 == 0 else odd_ar_nb
+                    else:
+                        offsets = even_ar_nb if mc % 2 == 0 else odd_ar_nb
                     for i, (dr, dc) in enumerate(offsets):
                         nr, nc = mr + dr, mc + dc
                         if (nr, nc) not in ar_set:
