@@ -293,7 +293,16 @@ class SaveManager:
             entry = {
                 "card_id": loc_data["card"].card_data.get("id", "") if loc_data.get("card") else None,
                 "card_state": loc_data["card"].current_state if loc_data.get("card") else None,
-                "shop": [self._serialize_inventory_card(c) for c in loc_data.get("shop", [])],
+                "shop": [
+                    {
+                        "card": self._serialize_inventory_card(
+                            item["card"] if isinstance(item, dict) else item
+                        ),
+                        "price": item.get("price", {}) if isinstance(item, dict) else {},
+                    }
+                    for item in loc_data.get("shop", [])
+                    if (item.get("card") if isinstance(item, dict) else item)
+                ],
                 "turns": loc_data.get("turns", 0),
                 "visited": loc_data.get("visited", False),
             }
@@ -704,9 +713,17 @@ class SaveManager:
             # Restore shop contents
             loc_data["shop"] = []
             for shop_ref in entry.get("shop", []):
-                card = self._rebuild_inventory_card(shop_ref)
-                if card:
-                    loc_data["shop"].append(card)
+                if isinstance(shop_ref, dict) and "card" in shop_ref:
+                    card = self._rebuild_inventory_card(shop_ref["card"])
+                    if card:
+                        loc_data["shop"].append({
+                            "card": card,
+                            "price": shop_ref.get("price", {}),
+                        })
+                else:
+                    card = self._rebuild_inventory_card(shop_ref)
+                    if card:
+                        loc_data["shop"].append({"card": card, "price": {}})
 
             # Restore simple fields
             loc_data["turns"] = entry.get("turns", 0)
