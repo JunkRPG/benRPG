@@ -77,11 +77,19 @@ Items discussed but deferred during planning. Check this file at the start of re
 - **Duplicate card**: Copy an existing card as a starting point for a new one
 
 ### More Content Cards (Mix of Templates + Hand-Authored)
-- Location Cards: needs 15-20+ (currently 7)
-- Enemy Cards: needs 20-30+ (currently 8)
-- NPC Cards: needs 15-20+ (currently 8)
-- Junk Cards: needs 20-30+ (currently 8)
-- Document Cards: needs 10-15+ (currently 4)
+*Card counts updated Feb 2026:*
+- Location Cards: 48 (target met)
+- Enemy Cards: 57 (target met)
+- NPC Cards: 84 (target met)
+- Junk Cards: 155 (target met)
+- Document Cards: 75 (target met)
+- Instance Cards: 107
+- Quest Cards: 26 (goal was 25+, met)
+- Transition Cards: 23
+- Boss Cards: 15
+- **Total: 590 cards indexed**
+
+Focus areas for future content: more quest chains, more transition variety, campaign-specific boss encounters
 
 ---
 
@@ -111,3 +119,45 @@ Items discussed but deferred during planning. Check this file at the start of re
 - Neutral units can become Hostile if attacked by the player
 - Regression triggers: proximity to overwhelming enemy force, special transition card effects
 - Visual indicators for allegiance instability (flashing allegiance icon)
+
+---
+
+## Junk Pile Feature — Deferred Items
+*Deferred from: 3-Level Campaign + Junk Pile Feature Plan (Feb 2026)*
+*Core junk pile mechanic implemented: loading from level JSON, search/move/place interactions, save/load, amber rendering.*
+
+### Level Maker UI for Junk Piles
+- Add junk pile placement tool to Level_Maker19.py
+- UI to set search_chance and searches_remaining per pile
+- Currently junk piles must be hand-edited in level JSON
+
+### Junk Pile Visual Icon Customization
+- Custom icon for junk piles instead of default token shape
+- Could use "starburst" or a new "pile" icon type
+- Different icons for searched vs unsearched piles
+
+---
+
+## UX & Polish — Deferred Items
+*Consolidated from Future plans.txt (Feb 2026)*
+*Most items from that file were already implemented. These remain relevant:*
+
+### Death Recap / Defeat Screen Enhancement
+- Show the final moment before death so the player knows why they died
+- Slow-motion or freeze-frame replay of the killing blow
+- Display attacker name, damage dealt, and attack type
+
+### Inventory Tooltips
+- Hover tooltips for inventory and crafting items using Pygame-GUI's UITextBox
+- Show detailed card info (stats, description) without requiring selection
+- Small delay before tooltip appears to avoid flicker
+
+### Sprite Caching / Performance
+- Pre-scale and cache unit images in Player and Unit constructors instead of scaling every frame in HexGrid.draw()
+- Consider dirty rectangle rendering (pygame.display.update(rects)) for draw optimization
+
+### ~~JunkRPG34.py Module Split~~ — DONE
+- ~~Split main file into separate modules~~
+- Completed Feb 2026: 26 classes extracted to `screens/` package + `game_context.py` shared namespace
+- JunkRPG34.py reduced from 11,786 to 6,711 lines (GameScreen + Game + setup/loop remain)
+- 10 new files: `game_context.py`, `screens/__init__.py`, `screens/card_manager.py`, `screens/menu_screens.py`, `screens/pause_screens.py`, `screens/game_overlay_screens.py`, `screens/party_screens.py`, `screens/crafting_screen.py`, `screens/location_screens.py`, `screens/inventory_screens.py`, `screens/tabbed_menu_screen.py`

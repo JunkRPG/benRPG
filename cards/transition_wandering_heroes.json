@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "states": 2,
+  "data": {
+    "Name": "Heroes Arrive",
+    "Description": "Wandering heroes have arrived in the area, seeking allies and adventure.",
+    "Background Image": "",
+    "Outcomes": "[{\"probability\": 0.25, \"type\": \"spawn_npc\", \"text\": \"A wandering hero pledges to fight alongside you.\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"allegiance\": \"Allied\"}}, {\"probability\": 0.20, \"type\": \"quest_npc_spawn\", \"text\": \"A hero brings word of a quest.\", \"params\": {\"npc_deck\": \"beta_npc_deck.json\", \"quest_deck\": \"beta_quest_deck.json\"}}, {\"probability\": 0.15, \"type\": \"draw_instance\", \"text\": \"The heroes share tales of strange events.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"draw_junk\", \"text\": \"The heroes share some spare equipment.\", \"params\": {\"deck\": \"beta_junk_deck.json\"}}, {\"probability\": 0.15, \"type\": \"flip_state\", \"text\": \"The heroes grow restless and seek a challenge...\", \"params\": {}}, {\"probability\": 0.10, \"type\": \"none\", \"text\": \"The heroes rest and share stories by the fire.\", \"params\": {}}]",
+    "2nd_state_Name": "Heroes Challenge",
+    "2nd_state_Description": "The wandering heroes have attracted attention. Enemies gather to test their strength.",
+    "2nd_state_Background Image": "",
+    "2nd_state_Outcomes": "[{\"probability\": 0.25, \"type\": \"spawn_enemy\", \"text\": \"Challengers appear to test the heroes!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.25, \"type\": \"draw_instance\", \"text\": \"The challenge takes an unexpected turn.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"spawn_npc\", \"text\": \"More heroes arrive to join the fray.\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"allegiance\": \"Neutral\"}}, {\"probability\": 0.15, \"type\": \"flip_state\", \"text\": \"The challenge ends. The heroes settle down.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"The heroes train among themselves.\", \"params\": {}}]"
+  }
+}

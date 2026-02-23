@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "states": 2,
+  "data": {
+    "Name": "Busy Markets",
+    "Description": "Trade routes are open and merchants flood the area with goods.",
+    "Background Image": "",
+    "Outcomes": "[{\"probability\": 0.25, \"type\": \"spawn_npc\", \"text\": \"A merchant caravan arrives with wares.\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"allegiance\": \"Neutral\"}}, {\"probability\": 0.25, \"type\": \"draw_junk\", \"text\": \"You find discarded trade goods.\", \"params\": {\"deck\": \"beta_junk_deck.json\"}}, {\"probability\": 0.15, \"type\": \"draw_instance\", \"text\": \"A dispute breaks out among traders.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"flip_state\", \"text\": \"Bandits have been spotted on the trade routes...\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"Business as usual at the markets.\", \"params\": {}}]",
+    "2nd_state_Name": "Bandit Season",
+    "2nd_state_Description": "Bandits have taken over the trade routes. Travel is dangerous.",
+    "2nd_state_Background Image": "",
+    "2nd_state_Outcomes": "[{\"probability\": 0.30, \"type\": \"spawn_enemy\", \"text\": \"Bandits attack from the roadside!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.25, \"type\": \"draw_instance\", \"text\": \"You stumble upon a bandit camp.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"spawn_enemy\", \"text\": \"A large bandit raiding party appears!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 2}}, {\"probability\": 0.15, \"type\": \"flip_state\", \"text\": \"The bandits have been driven off. Trade resumes.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"none\", \"text\": \"The bandits seem to be elsewhere today.\", \"params\": {}}]"
+  }
+}

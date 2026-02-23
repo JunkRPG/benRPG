@@ -1,0 +1,19 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Hunt",
+  "states": 2,
+  "data": {
+    "Name": "Wrath of the Guardian",
+    "Description": "The shrine's ancient guardian has awakened — defeat it before the curse consumes everything",
+    "Template_Text": "The ground shakes as [Enemy1], the shrine's ancient guardian, rises from the earth near [Location1]. This is no ordinary foe — it draws power from the cursed stones themselves. Steel yourself and end this threat once and for all!",
+    "Placeholders": "[{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":1},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"enemy_defeated\",\"params\":{\"unit\":\"Enemy1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "Chain_Config": "{\"on_success\":{\"mode\":\"auto_activate\",\"quest_card_id\":\"quest_chain_shrine_restore\",\"inherit_placeholders\":[\"Location1\"],\"message\":\"The guardian falls, but the shrine remains corrupted. It must be restored!\",\"set_transition\":\"transition_aftermath\"},\"on_failure\":{\"mode\":\"none\"}}",
+    "2nd_state_Name": "Guardian Vanquished",
+    "2nd_state_Template_Text": "With a thunderous crash, [Enemy1] crumbles to dust near [Location1]. The curse weakens, but the shrine's sacred stones are still tainted. Someone must bring a pure artifact to cleanse this place...",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Town Market",
+    "Description": "A bustling marketplace in the town square. Merchants hawk wares from colorful stalls.",
+    "Outcomes": "[{\"probability\": 0.4, \"card_type\": \"Junk Card\", \"deck_file\": \"campaign_junk_deck.json\"}, {\"probability\": 0.3, \"card_type\": \"Document Card\", \"deck_file\": \"campaign_document_deck.json\"}, {\"probability\": 0.3, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "Choices": "[{\"name\": \"Browse Market\", \"action\": \"shop\", \"costs_action\": false, \"params\": {}}, {\"name\": \"Haggle for Deals\", \"action\": \"draw_card\", \"costs_action\": true, \"params\": {}}]",
+    "Shop_Deck": "campaign_junk_deck.json",
+    "Shop_Size": "6",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "5",
+    "Upgrade_NPC_Type": "",
+    "Upgrade_Material_Cost": "{}",
+    "2nd_state_Name": "Grand Bazaar",
+    "2nd_state_Description": "The market has grown into a grand bazaar with exotic goods from distant lands.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.3, \"card_type\": \"Junk Card\", \"deck_file\": \"campaign_junk_deck.json\"}, {\"probability\": 0.4, \"card_type\": \"Document Card\", \"deck_file\": \"campaign_document_deck.json\"}, {\"probability\": 0.3, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "2nd_state_Choices": "[{\"name\": \"Browse Market\", \"action\": \"shop\", \"costs_action\": false, \"params\": {}}, {\"name\": \"Haggle for Deals\", \"action\": \"draw_card\", \"costs_action\": true, \"params\": {}}]",
+    "2nd_state_Shop_Deck": "campaign_junk_deck.json",
+    "2nd_state_Shop_Size": "8",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "5"
+  }
+}

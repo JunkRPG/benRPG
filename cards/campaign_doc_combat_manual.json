@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Combat Manual",
+    "Description": "A military training manual with techniques for melee combat and tactical positioning.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

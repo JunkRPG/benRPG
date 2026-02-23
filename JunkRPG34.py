@@ -4,16 +4,16 @@ import pygame_gui
 from pygame_gui.elements import UIButton, UITextBox, UIWindow, UISelectionList, UIDropDownMenu, UILabel, UIPanel, UITextEntryLine
 from pygame import display, event
 import math
-from heapq import heappush, heappop
 import os
 import json
 import datetime
 import random
 import copy
+import logging
 from collections import deque
 import tkinter as tk
 from tkinter import filedialog
-from player import Player  # Import Player from player.py
+from player import Player, CHARACTER_CLASSES  # Import Player from player.py
 from unit import Unit      # Import Unit from unit.py
 from hexgrid import HexGrid, DIRECTIONS  # Import HexGrid from hexgrid.py
 from inventory_card import InventoryCard
@@ -25,6 +25,25 @@ from card_utils import load_card, load_card_index
 from terrain_config import TERRAIN_CONFIG, get_terrain_color
 from save_system import SaveManager
 from sound_manager import sound_manager, play_card_acquired_sound
+import game_context as gc
+from game_context import (DARK_CHARCOAL, GRAY, YELLOW, GOLDEN_YELLOW, BLUE, RED,
+                          DARK_RED_ALPHA, WHITE, GREEN, LIGHT_GREEN, PURPLE, ORANGE,
+                          PLAYER_COLORS, PLAYER_COLOR_NAMES, PLAYER_COLOR_HEX,
+                          MOVE_SPEED, ATTACK_FLASH_DURATION,
+                          add_card_to_player, _check_builder_wood_perk)
+from screens.card_manager import CardManager
+from screens.menu_screens import (MainMenu, PlayerCountScreen, CharacterCreationScreen,
+                                  MultiplayerCharacterCreationScreen, SettingsScreen)
+from screens.pause_screens import (PauseMenuScreen, GameSettingsScreen,
+                                   ConfirmationScreen, SaveLoadScreen)
+from screens.game_overlay_screens import TeleportPartyScreen, DefeatScreen
+from screens.party_screens import PartyScreen, QuestScreen, SkillsScreen
+from screens.crafting_screen import CraftingScreen
+from screens.location_screens import LocationScreen, RecruitmentScreen, CardGivingScreen
+from screens.inventory_screens import InventoryScreen, CardBrowserScreen, NpcBrowserScreen
+from screens.tabbed_menu_screen import TabbedMenuScreen
+
+logger = logging.getLogger("JunkRPG")
 
 # Initialize Pygame and Pygame-GUI
 pygame.init()
@@ -39,33 +58,11 @@ display.set_caption("Junk RPG")
 # Initialize UIManager
 manager = pygame_gui.UIManager((WINDOW_WIDTH, WINDOW_HEIGHT), "theme.json")
 
-# Colors (synced with level maker where applicable)
-DARK_CHARCOAL = (35, 35, 40)  # Background
-GRAY = (200, 200, 200)
-YELLOW = (255, 255, 0)
-GOLDEN_YELLOW = (255, 215, 0)
-BLUE = (0, 0, 255)
-RED = (255, 0, 0)
-DARK_RED_ALPHA = (100, 0, 0, 128)
-WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
-LIGHT_GREEN = (144, 238, 144)  # Card-drawing hex border
-PURPLE = (128, 0, 128)  # Linked level hex border
-ORANGE = (255, 165, 0)  # Location hex border
-
-# Multiplayer player colors (up to 4 players)
-PLAYER_COLORS = [
-    (0, 200, 0),      # P1: Green
-    (100, 150, 255),   # P2: Blue
-    (255, 100, 100),   # P3: Red
-    (255, 200, 50),    # P4: Gold
-]
-PLAYER_COLOR_NAMES = ["Green", "Blue", "Red", "Gold"]
-PLAYER_COLOR_HEX = ["#66DD66", "#6688FF", "#FF6666", "#FFD744"]
-
-# Animation constants
-MOVE_SPEED = 5
-ATTACK_FLASH_DURATION = 500
+# Populate game_context with pygame display objects
+gc.screen = screen
+gc.manager = manager
+gc.WINDOW_WIDTH = WINDOW_WIDTH
+gc.WINDOW_HEIGHT = WINDOW_HEIGHT
 
 # Directories
 os.makedirs("cards", exist_ok=True)
@@ -77,4050 +74,28 @@ if not os.path.exists(INDEX_FILE):
     with open(INDEX_FILE, 'w') as f:
         json.dump({}, f)
 
-# Character classes
-CHARACTER_CLASSES = {
-    "Ranger": {"hp": 50, "movement": 5, "projectile_range": 5, "attacks": {"Throw Rock": 8, "Fist": 4}, "special_attack": "Piercing Shot"},
-    "Warrior": {"hp": 100, "movement": 4, "projectile_range": 4, "attacks": {"Throw Rock": 6, "Fist": 6}, "special_attack": "Double Attack"},
-    "Tank": {"hp": 150, "movement": 3, "projectile_range": 3, "attacks": {"Throw Rock": 4, "Fist": 8}, "special_attack": "Spin Punch"},
-    "Healer": {"hp": 50, "movement": 5, "projectile_range": 3, "attacks": {"Throw Rock": 4, "Fist": 4}, "special_attack": "Heal"},
-    "Builder": {"hp": 100, "movement": 4, "projectile_range": 4, "attacks": {"Throw Rock": 6, "Fist": 6}, "special_attack": "Master Builder"}
-}
 
+def _load_custom_font(path, size, fallback_name="Arial", fallback_bold=False):
+    """Load a TTF font file with SysFont fallback."""
+    try:
+        return pygame.font.Font(path, size)
+    except Exception:
+        return pygame.font.SysFont(fallback_name, size, bold=fallback_bold)
+
+
+class PlayerInfoPanelProxy:
+    """Drop-in replacement for UITextBox that just flags the panel dirty."""
+    def __init__(self, game_screen):
+        self._game_screen = game_screen
+    def set_text(self, html_text):
+        self._game_screen._player_panel_dirty = True
+    def kill(self):
+        pass
+    def show(self):
+        pass
+    def hide(self):
+        pass
 
-def _check_builder_wood_perk():
-    """Returns True if current player is a Master Builder standing on forest terrain."""
-    player = game.current_player
-    if player.special_attack != "Master Builder":
-        return False
-    pos = player.position
-    if pos is None:
-        return False
-    terrain = game_screen.hex_grid.grid[pos[0]][pos[1]].get("terrain", "grass")
-    return terrain == "forest"
-
-
-def add_card_to_player(card):
-    """Add a card to inventory or party depending on type. Returns message about where it went."""
-    play_card_acquired_sound(card)
-    card_type = card.card_data.get("card_type", "")
-    if card_type == "NPC Card":
-        allegiance = card.get_current_data().get("Allegiance (Hostile, Neutral, Allied)", "")
-        if "Allied" in allegiance:
-            game.current_party.append(card)
-            name = card.get_current_data().get("Name", "Unknown")
-            return f"{name} joined your party!"
-    game.current_player.inventory.append(card)
-    return None  # No special message
-
-
-# CardManager class
-class CardManager:
-    def __init__(self):
-        self.card_types = ["Junk Card", "Document Card", "Enemy Card", "NPC Card", "Location Card", "Quest Card", "Instance Card", "Boss Card"]
-
-    def get_cards_for_game(self, card_type=None, filters=None):
-        index = load_card_index()
-        if not index:
-            return []
-
-        cards = []
-        for card_id, info in index.items():
-            if card_type and info['type'] != card_type:
-                continue
-            card_data = load_card(card_id, silent=True)
-            if not card_data:
-                continue
-            if filters and not self._apply_filters(card_data, filters):
-                continue
-            is_valid, _ = self.validate_card_for_game(card_data)
-            if is_valid:
-                cards.append(card_data)
-        return cards
-
-    def _apply_filters(self, card_data, filters):
-        for field, condition in filters.items():
-            if field not in card_data['data']:
-                return False
-            value = card_data['data'][field]
-            if isinstance(condition, str) and condition.startswith(('>', '<', '=')):
-                try:
-                    operator = condition[0]
-                    threshold = float(condition[1:])
-                    value = float(value)
-                    if operator == '>' and value <= threshold:
-                        return False
-                    elif operator == '<' and value >= threshold:
-                        return False
-                    elif operator == '=' and value != threshold:
-                        return False
-                except ValueError:
-                    return False
-            elif value != condition:
-                return False
-        return True
-
-    def validate_card_for_game(self, card_data):
-        required_fields = {
-            "Enemy Card": ["Name", "Health", "Movement", "Melee Damage"],
-            "Boss Card": ["Name", "Health", "Movement", "Melee Damage"],
-            "NPC Card": ["Name", "Health", "Movement", "Melee Damage", "Allegiance (Hostile, Neutral, Allied)"],
-            "Location Card": ["Name"],
-            "Junk Card": ["Name"],
-            "Document Card": ["Name"],
-            "Quest Card": ["Name", "Template_Text"],
-            "Instance Card": ["Name", "Outcomes"],
-            "Transition Card": ["Name", "Outcomes"]
-        }
-        card_type = card_data.get("card_type")
-        if card_type not in required_fields:
-            return False, f"Unsupported card type: {card_type}"
-        data = card_data.get("data", {})
-        missing_fields = [field for field in required_fields[card_type] if field not in data or not data[field]]
-        if missing_fields:
-            return False, f"Missing fields: {', '.join(missing_fields)}"
-        numeric_fields = {
-            "Enemy Card": ["Health", "Movement", "Melee Damage", "Projectile Damage", "Projectile Range"],
-            "Boss Card": ["Health", "Movement", "Melee Damage", "Projectile Damage", "Projectile Range"],
-            "NPC Card": ["Health", "Movement", "Melee Damage", "Projectile Damage", "Projectile Range"]
-        }
-        if card_type in numeric_fields:
-            for field in numeric_fields[card_type]:
-                if field in data and data[field]:
-                    try:
-                        value = float(data[field])
-                        if value < 0:
-                            return False, f"Invalid {field}: must be non-negative"
-                    except ValueError:
-                        return False, f"Invalid numeric {field}"
-        return True, "Valid"
-
-    def draw_from_deck(self, deck_file):
-        """Draw a random card from a deck file and return it as an InventoryCard."""
-        import random
-        try:
-            with open(deck_file, 'r') as f:
-                deck_data = json.load(f)
-        except Exception as e:
-            print(f"Error loading deck {deck_file}: {e}")
-            return None
-
-        cards = deck_data.get("cards", [])
-        if not cards:
-            return None
-
-        card_id = random.choice(cards)
-        card_data = load_card(card_id)
-        if not card_data:
-            return None
-        return InventoryCard(card_data)
-
-    def track_card_usage(self, card_id, usage_context):
-        usage_log = os.path.join("cards", "usage_log.json")
-        try:
-            if os.path.exists(usage_log):
-                with open(usage_log, 'r') as f:
-                    usage_data = json.load(f)
-            else:
-                usage_data = {}
-            if card_id not in usage_data:
-                usage_data[card_id] = []
-            usage_data[card_id].append({"timestamp": datetime.datetime.now().isoformat(), "context": usage_context})
-            with open(usage_log, 'w') as f:
-                json.dump(usage_data, f, indent=2)
-        except Exception as e:
-            print(f"Error with usage log: {e}")
-
-# InventoryScreen class
-class InventoryScreen:
-    def __init__(self):
-        self.window = None
-        self.header_label = None
-        self.junk_list = None
-        self.documents_list = None
-        self.weapons_list = None
-        self.equip_button = None
-        self.consumables_list = None
-        self.use_button = None
-        self.use_junk_button = None
-        self.tools_list = None
-        self.equip_tool_button = None
-        self.equip_accessory_button = None  # For tool belts and accessories
-        self.browse_cards_button = None  # Creative mode: browse all cards
-        self.read_guide_button = None  # For reading Guide documents
-        self.info_text = None
-        self.close_button = None
-        self.selected_card = None
-        self.selected_from_list = None  # Track which list the selection came from
-
-    def initialize_screen(self):
-        manager.clear_and_reset()
-        window_rect = pygame.Rect((WINDOW_WIDTH - 1200) // 2, (WINDOW_HEIGHT - 800) // 2, 1200, 800)
-        self.window = UIWindow(window_rect, manager, "Inventory")
-        self.header_label = UILabel(pygame.Rect(0, 0, 1200, 50), "Inventory", manager, container=self.window)
-        column_width = 280
-        column_height = 500
-
-        # Column labels
-        UILabel(pygame.Rect(10, 35, column_width, 25), "Junk / Materials", manager, container=self.window)
-        UILabel(pygame.Rect(column_width + 10, 35, column_width, 25), "Documents", manager, container=self.window)
-        UILabel(pygame.Rect(2 * column_width + 10, 35, column_width, 25), "Weapons", manager, container=self.window)
-        UILabel(pygame.Rect(3 * column_width + 10, 35, column_width, 25), "Consumables / Tools", manager, container=self.window)
-
-        # Junk cards (column 1)
-        junk_cards = [card for card in game.current_player.inventory if card.current_state == 1 and card.card_data["card_type"] == "Junk Card"]
-        junk_names = []
-        for card in junk_cards:
-            name = card.get_current_data().get("Name", "Unnamed")
-            # Mark consumable junk items
-            if card.get_current_data().get("Use_HP") or card.card_data.get("subclass") == "Consumable":
-                name += " [Usable]"
-            junk_names.append(name)
-        self.junk_list = UISelectionList(pygame.Rect(10, 60, column_width, column_height),
-                                         junk_names if junk_names else ["No junk items"],
-                                         manager, container=self.window)
-        self.use_junk_button = UIButton(pygame.Rect(10, 565, column_width, 35), "Use Item", manager, container=self.window)
-
-        # Documents (column 2) - include Guide cards in both states
-        documents_cards = [card for card in game.current_player.inventory
-                          if card.card_data["card_type"] == "Document Card"
-                          and (card.current_state == 1 or card.card_data.get("subclass") == "Guide")]
-        self.documents_list = UISelectionList(pygame.Rect(column_width + 10, 60, column_width, column_height - 45),
-                                              [card.get_current_data().get("Name", "Unnamed") for card in documents_cards] or ["No documents"],
-                                              manager, container=self.window)
-        self.read_guide_button = UIButton(pygame.Rect(column_width + 10, column_height + 20, column_width, 35),
-                                          "Read Guide", manager, container=self.window)
-
-        # Weapons (column 3)
-        weapons_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") in ["Melee", "Projectile", "Both"]]
-        self.weapons_list = UISelectionList(pygame.Rect(2 * column_width + 10, 60, column_width, column_height - 100),
-                                            [card.get_current_data().get("Name", "Unnamed") for card in weapons_cards] or ["No weapons"],
-                                            manager, container=self.window)
-        self.equip_button = UIButton(pygame.Rect(2 * column_width + 10, column_height - 30, column_width, 35), "Equip Weapon", manager, container=self.window)
-
-        # Consumables, Tools, and Ammunition (column 4)
-        consumables_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Consumable"]
-        tools_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Tool"]
-        ammo_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Ammunition"]
-        accessory_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") in ["Tool_Belt", "Accessory", "Belt", "Pouch"]]
-        combined_items = consumables_cards + tools_cards + ammo_cards + accessory_cards
-
-        # Mark item types in the list
-        item_names = []
-        for card in combined_items:
-            name = card.get_current_data().get("Name", "Unnamed")
-            card_type = card.get_current_data().get("Type", "")
-            if card_type == "Ammunition":
-                name += " [Ammo]"
-            elif card_type in ["Tool_Belt", "Accessory", "Belt", "Pouch"]:
-                name += " [Accessory]"
-            item_names.append(name)
-
-        self.consumables_list = UISelectionList(pygame.Rect(3 * column_width + 10, 60, column_width, column_height - 190),
-                                                item_names if item_names else ["No consumables/tools"],
-                                                manager, container=self.window)
-        self.use_button = UIButton(pygame.Rect(3 * column_width + 10, column_height - 120, column_width, 35), "Use Consumable", manager, container=self.window)
-        self.equip_tool_button = UIButton(pygame.Rect(3 * column_width + 10, column_height - 80, column_width, 35), "Equip as Tool/Ammo", manager, container=self.window)
-        self.equip_accessory_button = UIButton(pygame.Rect(3 * column_width + 10, column_height - 40, column_width, 35), "Equip Accessory", manager, container=self.window)
-
-        # Item details panel (bottom)
-        UILabel(pygame.Rect(10, 610, 200, 25), "Item Details:", manager, container=self.window)
-        self.info_text = UITextBox("<font color='#FFFFFF'>Select an item to view its stats and details</font>",
-                                   pygame.Rect(10, 635, 870, 120), manager, container=self.window)
-
-        # Creative mode button (browse all cards)
-        if game.game_mode == "creative":
-            self.browse_cards_button = UIButton(pygame.Rect(900, 635, 150, 35), "Browse Cards", manager, container=self.window)
-            # Mode indicator
-            UILabel(pygame.Rect(900, 680, 150, 25), "[Creative Mode]", manager, container=self.window)
-        else:
-            self.browse_cards_button = None
-
-        # Close button
-        self.close_button = UIButton(pygame.Rect(1050, 720, 120, 35), "Close", manager, container=self.window)
-        self.selected_card = None
-        self.selected_from_list = None
-
-    def handle_event(self, event):
-        # Handle window X button close
-        if event.type == pygame_gui.UI_WINDOW_CLOSE:
-            if event.ui_element == self.window:
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-                return
-
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.close_button:
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-            elif self.browse_cards_button and event.ui_element == self.browse_cards_button:
-                game.current_screen = "card_browser"
-                card_browser_screen.initialize_screen()
-            elif event.ui_element == self.equip_button and self.selected_card and self.selected_from_list == "weapons":
-                game.current_player.equip_weapon(self.selected_card)
-                game_screen.player_info_label.set_text(game_screen.get_player_info())
-                self.info_text.set_text("<font color='#00FF00'>Weapon equipped!</font>")
-            elif event.ui_element == self.use_junk_button and self.selected_card and self.selected_from_list == "junk":
-                # Use consumable junk item
-                self._use_consumable_item()
-            elif event.ui_element == self.use_button and self.selected_card and self.selected_from_list == "consumables":
-                # Use crafted consumable
-                self._use_consumable_item()
-            elif event.ui_element == self.equip_tool_button and self.selected_card:
-                # Equip item as tool (works for junk with Use_HP, consumables, tools, or ammunition)
-                if self.selected_from_list in ["junk", "consumables"]:
-                    card_type = self.selected_card.get_current_data().get("Type", "")
-                    # Don't equip accessories via tool button
-                    if card_type in ["Tool_Belt", "Accessory", "Belt", "Pouch"]:
-                        self.info_text.set_text("<font color='#FF0000'>Use 'Equip Accessory' for tool belts</font>")
-                    else:
-                        msg = game.current_player.equip_tool(self.selected_card)
-                        self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
-                        self.initialize_screen()  # Refresh to remove from list
-                else:
-                    self.info_text.set_text("<font color='#FF0000'>Select a consumable, tool, or ammo to equip</font>")
-            elif hasattr(self, 'equip_accessory_button') and event.ui_element == self.equip_accessory_button and self.selected_card:
-                # Equip accessory (tool belt, pouch, etc.)
-                if self.selected_from_list == "consumables":
-                    card_type = self.selected_card.get_current_data().get("Type", "")
-                    if card_type in ["Tool_Belt", "Accessory", "Belt", "Pouch"]:
-                        msg = game.current_player.equip_accessory(self.selected_card)
-                        self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
-                        self.initialize_screen()  # Refresh to remove from list
-                    else:
-                        self.info_text.set_text("<font color='#FF0000'>Select a tool belt or accessory to equip</font>")
-                else:
-                    self.info_text.set_text("<font color='#FF0000'>Select a tool belt or accessory to equip</font>")
-            elif self.read_guide_button and event.ui_element == self.read_guide_button:
-                # Read Guide document to learn a blueprint
-                if self.selected_card and self.selected_from_list == "documents" and self.selected_card.card_data.get("subclass") == "Guide":
-                    message = game.current_player.read_guide(self.selected_card, game.card_manager)
-                    self.info_text.set_text(f"<font color='#00FFFF'>{message}</font>")
-                    game_screen.add_to_log(message)
-                    self.initialize_screen()
-                else:
-                    self.info_text.set_text("<font color='#FF0000'>Select a Guide document to read</font>")
-
-        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            selected_name = event.text
-            # Remove [Usable] suffix if present for matching
-            clean_name = selected_name.replace(" [Usable]", "")
-
-            if event.ui_element == self.junk_list:
-                self.selected_from_list = "junk"
-                self.selected_card = next((card for card in game.current_player.inventory
-                                          if card.current_state == 1
-                                          and card.card_data["card_type"] == "Junk Card"
-                                          and card.get_current_data().get("Name") == clean_name), None)
-            elif event.ui_element == self.documents_list:
-                self.selected_from_list = "documents"
-                self.selected_card = next((card for card in game.current_player.inventory
-                                          if card.card_data["card_type"] == "Document Card"
-                                          and (card.current_state == 1 or card.card_data.get("subclass") == "Guide")
-                                          and card.get_current_data().get("Name") == clean_name), None)
-            elif event.ui_element == self.weapons_list:
-                self.selected_from_list = "weapons"
-                self.selected_card = next((card for card in game.current_player.inventory
-                                          if card.current_state == 2
-                                          and card.get_current_data().get("Type") in ["Melee", "Projectile", "Both"]
-                                          and card.get_current_data().get("Name") == clean_name), None)
-            elif event.ui_element == self.consumables_list:
-                self.selected_from_list = "consumables"
-                # Remove type suffixes for matching
-                match_name = clean_name.replace(" [Ammo]", "").replace(" [Accessory]", "")
-                self.selected_card = next((card for card in game.current_player.inventory
-                                          if card.current_state == 2
-                                          and card.get_current_data().get("Type") in ["Consumable", "Tool", "Ammunition", "Tool_Belt", "Accessory", "Belt", "Pouch"]
-                                          and card.get_current_data().get("Name") == match_name), None)
-
-            if self.selected_card:
-                # Build detailed info display
-                card_data = self.selected_card.get_current_data()
-                info_lines = []
-                info_lines.append(f"<b>{card_data.get('Name', 'Unknown')}</b>")
-                if card_data.get('Description'):
-                    info_lines.append(f"<i>{card_data.get('Description')}</i>")
-                info_lines.append("")
-                for k, v in card_data.items():
-                    if v and k not in ['Name', 'Description', 'id']:
-                        info_lines.append(f"{k}: {v}")
-                self.info_text.set_text(f"<font color='#FFFFFF'>{'<br>'.join(info_lines)}</font>")
-            else:
-                self.info_text.set_text("<font color='#FFFFFF'>Select an item to view its stats and details</font>")
-
-    def _use_consumable_item(self):
-        """Use a consumable item (junk or crafted)."""
-        if not self.selected_card:
-            self.info_text.set_text("<font color='#FF0000'>No item selected!</font>")
-            return
-
-        current_data = self.selected_card.get_current_data()
-        hp_effect = current_data.get("Use_HP", "")
-
-        if not hp_effect:
-            self.info_text.set_text(f"<font color='#FF0000'>{current_data.get('Name', 'Item')} cannot be used!</font>")
-            return
-
-        try:
-            # Handle case where hp_effect is a list
-            if isinstance(hp_effect, list):
-                hp_effect = next((effect for effect in hp_effect if effect and "HP" in effect), "+0HP")
-
-            # Parse HP value (handles +15HP, -10HP, etc.)
-            hp_str = hp_effect.replace("HP", "").replace("+", "")
-            hp_change = int(hp_str)
-
-            if hp_change > 0:
-                old_hp = game.current_player.hp
-                game.current_player.hp = min(game.current_player.max_hp, game.current_player.hp + hp_change)
-                actual_heal = game.current_player.hp - old_hp
-                game_screen.add_to_log(f"Used {current_data.get('Name', 'Item')}: +{actual_heal} HP ({old_hp} -> {game.current_player.hp})")
-                game.current_player.inventory.remove(self.selected_card)
-                self.selected_card = None
-                self.initialize_screen()
-                game_screen.player_info_label.set_text(game_screen.get_player_info())
-            elif hp_change < 0:
-                # Negative HP effect (poison, damage item, etc.)
-                game.current_player.hp = max(0, game.current_player.hp + hp_change)
-                game_screen.add_to_log(f"Used {current_data.get('Name', 'Item')}: {hp_change} HP")
-                game.current_player.inventory.remove(self.selected_card)
-                self.selected_card = None
-                self.initialize_screen()
-                game_screen.player_info_label.set_text(game_screen.get_player_info())
-            else:
-                self.info_text.set_text(f"<font color='#FF0000'>{current_data.get('Name', 'Item')} has no effect!</font>")
-        except (ValueError, AttributeError) as e:
-            self.info_text.set_text(f"<font color='#FF0000'>Cannot use {current_data.get('Name', 'Item')}: invalid effect</font>")
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-# LocationScreen class for interacting with location hexes
-class LocationScreen:
-    def __init__(self):
-        self.window = None
-        self.location_card = None
-        self.hex_pos = None
-        self.choice_buttons = []
-        self.shop_items_list = None
-        self.buy_button = None
-        self.sell_materials_list = None
-        self.sell_button = None
-        self.npc_list = None
-        self.assign_npc_button = None
-        self.close_button = None
-        self.info_text = None
-        self.selected_shop_item = None
-        self.selected_materials = []
-        self.material_name_to_card = {}
-        self.shop_item_names = []
-        # Quest viewing
-        self.quest_panel_visible = False
-        self.available_quests = []  # List of quest InventoryCards
-        self.quest_list = None
-        self.quest_details_text = None
-        self.accept_quest_button = None
-        self.selected_quest_index = None
-        self.quest_deck_file = None
-        # Garrison system
-        self.garrison_panel_visible = False
-        self.garrison_list = None
-        self.garrison_npc_list = None
-        self.garrison_button = None
-        self.garrison_map_button = None
-        # Man Tower button
-        self.man_tower_button = None
-
-    def initialize_screen(self, location_card, hex_pos, hex_grid):
-        self.location_card = location_card
-        self.hex_pos = hex_pos
-        self.hex_grid = hex_grid
-        self.selected_shop_item = None
-        self.selected_materials = []
-
-        manager.clear_and_reset()
-
-        window_rect = pygame.Rect((WINDOW_WIDTH - 1200) // 2, (WINDOW_HEIGHT - 800) // 2, 1200, 800)
-        self.window = pygame_gui.elements.UIWindow(window_rect, manager, "Location")
-
-        loc_data = location_card.get_current_data()
-        loc_name = loc_data.get("Name", "Unknown Location")
-        description = loc_data.get("Description", "")
-
-        # Header with location name
-        self.header_label = pygame_gui.elements.UILabel(
-            pygame.Rect(10, 5, 1150, 50), loc_name, manager, container=self.window,
-            object_id="#location_title"
-        )
-
-        # Description
-        self.desc_text = pygame_gui.elements.UITextBox(
-            f"<font color='#FFFFFF'>{description}</font>",
-            pygame.Rect(10, 55, 380, 70), manager, container=self.window
-        )
-
-        # Choices panel (left side)
-        self.choices_label = pygame_gui.elements.UILabel(
-            pygame.Rect(10, 130, 380, 25), "Actions:", manager, container=self.window
-        )
-
-        choices = hex_grid.get_location_choices(hex_pos[0], hex_pos[1])
-        self.choice_buttons = []
-        y_pos = 160
-        for choice in choices:
-            choice_name = choice.get("name", "Unknown")
-            costs_action = choice.get("costs_action", False)
-            action = choice.get("action", "exit")
-            btn_text = f"{choice_name} {'(Action)' if costs_action else '(Free)'}"
-            btn = pygame_gui.elements.UIButton(
-                pygame.Rect(10, y_pos, 380, 35), btn_text, manager, container=self.window
-            )
-            self.choice_buttons.append((btn, choice))
-            y_pos += 40
-
-        # Add Leave button if not in choices
-        if not any(c.get("action") == "exit" for c in choices):
-            leave_btn = pygame_gui.elements.UIButton(
-                pygame.Rect(10, y_pos, 380, 35), "Leave (Free)", manager, container=self.window
-            )
-            self.choice_buttons.append((leave_btn, {"name": "Leave", "action": "exit", "costs_action": False}))
-
-        # Check if quest panel should be shown (set before creating shop panel)
-        self.quest_panel_visible = len(self.available_quests) > 0
-
-        # Shop panel (middle) - only show if quest panel is not visible
-        self.shop_label = None
-        self.shop_items_list = None
-        self.buy_button = None
-        self.materials_label = None
-        self.sell_materials_list = None
-        self.shop_item_names = []
-
-        if not self.quest_panel_visible:
-            self.shop_label = pygame_gui.elements.UILabel(
-                pygame.Rect(400, 130, 380, 25), "Shop:", manager, container=self.window
-            )
-
-            shop_inventory = hex_grid.get_shop_inventory(hex_pos[0], hex_pos[1])
-            shop_items = []
-            for item in shop_inventory:
-                card = item.get("card")
-                price = item.get("price", {})
-                if card:
-                    item_name = item.get("display_name") or card.get_current_data().get("Name", "Unknown")
-                    price_str = f"{price.get('amount', 0)} {price.get('type', 'metal')}"
-                    shop_items.append(f"{item_name} - {price_str}")
-
-            # Store shop item names for index lookup in handle_event
-            self.shop_item_names = shop_items if shop_items else []
-
-            self.shop_items_list = pygame_gui.elements.UISelectionList(
-                pygame.Rect(400, 160, 380, 250),
-                shop_items if shop_items else ["Shop is empty"],
-                manager, container=self.window
-            )
-
-            self.buy_button = pygame_gui.elements.UIButton(
-                pygame.Rect(400, 420, 185, 35), "Buy Item", manager, container=self.window
-            )
-
-            # Materials for payment (middle bottom)
-            # Get the shop's currency type to show relevant material values
-            shop_currency = loc_data.get("Shop_Currency", "metal")
-            currency_to_value_field = {
-                "metal": "Metal Value",
-                "wood": "Wood Value",
-                "raw_materials": "Raw Material Value",
-                "refined_materials": "Refined Material Value"
-            }
-            value_field = currency_to_value_field.get(shop_currency, "Metal Value")
-
-            self.materials_label = pygame_gui.elements.UILabel(
-                pygame.Rect(400, 465, 380, 25), f"Materials for Payment ({shop_currency}):", manager, container=self.window
-            )
-
-            material_cards = [card for card in game.current_player.inventory
-                            if card.card_data.get("card_type") == "Junk Card" and card.current_state == 1]
-
-            # Build material names with their values
-            material_names = []
-            self.material_name_to_card = {}  # Map display name back to card for selection
-            for card in material_cards:
-                card_data = card.get_current_data()
-                name = card_data.get("Name", "Unknown")
-                value = int(card_data.get(value_field, 0))
-                display_name = f"{name} ({value} {shop_currency})"
-                material_names.append(display_name)
-                self.material_name_to_card[display_name] = card
-
-            self.sell_materials_list = pygame_gui.elements.UISelectionList(
-                pygame.Rect(400, 495, 380, 200),
-                material_names if material_names else ["No materials"],
-                manager, container=self.window,
-                allow_multi_select=True
-            )
-
-        # Upgrade panel (right side) - only if location can be upgraded
-        self.upgrade_panel_visible = False
-        if location_card.states == 2 and location_card.current_state == 1:
-            upgrade_npc_type = loc_data.get("Upgrade_NPC_Type", "")
-            if upgrade_npc_type:
-                self.upgrade_panel_visible = True
-                self.upgrade_label = pygame_gui.elements.UILabel(
-                    pygame.Rect(790, 130, 380, 25), "Upgrade Location:", manager, container=self.window
-                )
-
-                upgrade_cost = loc_data.get("Upgrade_Material_Cost", "{}")
-                self.upgrade_info = pygame_gui.elements.UITextBox(
-                    f"<font color='#FFFFFF'>Requires {upgrade_npc_type} NPC<br>Materials: {upgrade_cost}</font>",
-                    pygame.Rect(790, 160, 380, 80), manager, container=self.window
-                )
-
-                # Get allied NPCs from party
-                allied_npcs = [card for card in game.current_party
-                              if "Allied" in card.get_current_data().get("Allegiance (Hostile, Neutral, Allied)", "")]
-                npc_names = [card.get_current_data().get("Name", "Unknown") for card in allied_npcs]
-
-                self.npc_list = pygame_gui.elements.UISelectionList(
-                    pygame.Rect(790, 250, 380, 150),
-                    npc_names if npc_names else ["No allied NPCs"],
-                    manager, container=self.window
-                )
-
-                self.assign_npc_button = pygame_gui.elements.UIButton(
-                    pygame.Rect(790, 410, 380, 35), "Assign NPC (Upgrade)", manager, container=self.window
-                )
-
-        # Recruitable NPCs panel (right side, below upgrade or at upgrade position if no upgrade)
-        self.recruit_panel_visible = False
-        self.recruit_npc_list = None
-        self.recruit_button = None
-        self.selected_recruit_index = None
-
-        available_npcs = hex_grid.get_available_npcs(hex_pos[0], hex_pos[1])
-        if available_npcs:
-            self.recruit_panel_visible = True
-            recruit_y = 460 if self.upgrade_panel_visible else 130
-
-            pygame_gui.elements.UILabel(
-                pygame.Rect(790, recruit_y, 380, 25), "NPCs Available to Recruit:", manager, container=self.window
-            )
-
-            npc_names = [npc.get("name", "Unknown") for npc in available_npcs]
-            self.recruit_npc_list = pygame_gui.elements.UISelectionList(
-                pygame.Rect(790, recruit_y + 30, 380, 150),
-                npc_names,
-                manager, container=self.window
-            )
-
-            self.recruit_button = pygame_gui.elements.UIButton(
-                pygame.Rect(790, recruit_y + 190, 380, 35), "Recruit to Party", manager, container=self.window
-            )
-
-        # Garrison panel (right side, for defensive locations in state 2)
-        self.garrison_panel_visible = False
-        self.garrison_list = None
-        self.garrison_npc_list = None
-        self.garrison_button = None
-        self.garrison_map_button = None
-
-        loc_data_dict = hex_grid.location_data.get(hex_pos)
-        defenses = loc_data_dict.get("defenses", []) if loc_data_dict else []
-        has_npc_defense = any(d.get("requires_npc") for d in defenses)
-        if location_card.current_state == 2 and has_npc_defense:
-            self.garrison_panel_visible = True
-            garrison = loc_data_dict.get("garrison_npcs", [])
-            garrison_y = 130
-            # Position below upgrade/recruit panels if they exist
-            if self.upgrade_panel_visible:
-                garrison_y = 460
-            if self.recruit_panel_visible:
-                garrison_y = max(garrison_y, 460 if self.upgrade_panel_visible else 360)
-
-            pygame_gui.elements.UILabel(
-                pygame.Rect(790, garrison_y, 380, 25),
-                f"Garrison ({len(garrison)}/3):", manager, container=self.window
-            )
-
-            # Current garrison members
-            garrison_names = [f"{g.get('name', 'Unknown')} (HP: {g.get('hp', 0)}/{g.get('max_hp', 0)})" for g in garrison]
-
-            # Party NPCs available to garrison
-            party_npc_names = []
-            self._garrison_party_npcs = []
-            for card in game.current_party:
-                card_data = card.get_current_data()
-                allegiance = card_data.get("Allegiance (Hostile, Neutral, Allied)", "")
-                if "Allied" in allegiance:
-                    name = card_data.get("Name", "Unknown")
-                    party_npc_names.append(f"[PARTY] {name}")
-                    self._garrison_party_npcs.append(card)
-
-            # On-map allied units available to garrison
-            self._garrison_map_units = []
-            for unit in hex_grid.units:
-                if unit.allegiance == "Allied":
-                    party_npc_names.append(f"[MAP] {unit.name}")
-                    self._garrison_map_units.append(unit)
-
-            all_items = garrison_names + (["---"] if garrison_names and party_npc_names else []) + party_npc_names
-            if not all_items:
-                all_items = ["No NPCs available"]
-
-            self.garrison_npc_list = pygame_gui.elements.UISelectionList(
-                pygame.Rect(790, garrison_y + 30, 380, 180),
-                all_items,
-                manager, container=self.window
-            )
-
-            if len(garrison) < 3 and party_npc_names:
-                self.garrison_button = pygame_gui.elements.UIButton(
-                    pygame.Rect(790, garrison_y + 220, 380, 35),
-                    "Garrison NPC", manager, container=self.window
-                )
-
-        # Man Tower button - player can man a defensive location to use its weapons
-        self.man_tower_button = None
-        if loc_data_dict and location_card.current_state == 2:
-            all_defenses = loc_data_dict.get("defenses", [])
-            current_player = game.current_player
-            player_on_hex = current_player and current_player.position == hex_pos
-            already_manning = hasattr(current_player, 'is_manning') and current_player.is_manning()
-            if all_defenses and player_on_hex and not already_manning:
-                self.man_tower_button = pygame_gui.elements.UIButton(
-                    pygame.Rect(10, 600, 380, 35), "Man Tower", manager, container=self.window
-                )
-
-        # Quest selection panel (shows when view_quests action is used)
-        self.quest_list = None
-        self.quest_details_text = None
-        self.accept_quest_button = None
-        self.back_to_shop_button = None
-
-        if self.quest_panel_visible:
-            # Quest panel in the middle area
-            pygame_gui.elements.UILabel(
-                pygame.Rect(400, 130, 380, 25), "Available Quests:", manager, container=self.window
-            )
-
-            quest_names = [q.get_current_data().get("Name", "Unknown Quest") for q in self.available_quests]
-            self.quest_list = pygame_gui.elements.UISelectionList(
-                pygame.Rect(400, 160, 380, 150),
-                quest_names,
-                manager, container=self.window
-            )
-
-            pygame_gui.elements.UILabel(
-                pygame.Rect(400, 320, 380, 25), "Quest Details:", manager, container=self.window
-            )
-
-            self.quest_details_text = pygame_gui.elements.UITextBox(
-                "<font color='#FFFFFF'>Select a quest to view details</font>",
-                pygame.Rect(400, 350, 380, 200), manager, container=self.window
-            )
-
-            self.accept_quest_button = pygame_gui.elements.UIButton(
-                pygame.Rect(400, 560, 185, 35), "Accept Quest", manager, container=self.window
-            )
-
-            self.back_to_shop_button = pygame_gui.elements.UIButton(
-                pygame.Rect(595, 560, 185, 35), "Back to Shop", manager, container=self.window
-            )
-
-        # Info panel (bottom)
-        self.info_text = pygame_gui.elements.UITextBox(
-            "<font color='#FFFFFF'>Select an action or shop item</font>",
-            pygame.Rect(10, 700, 1150, 60), manager, container=self.window
-        )
-
-        # Close button
-        self.close_button = pygame_gui.elements.UIButton(
-            pygame.Rect(1050, 5, 100, 30), "Close", manager, container=self.window
-        )
-
-    def handle_event(self, event):
-        # Handle window X button (same as Close)
-        if event.type == pygame_gui.UI_WINDOW_CLOSE:
-            if event.ui_element == self.window:
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-                return
-
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            # Handle close button
-            if event.ui_element == self.close_button:
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-                return
-
-            # Handle choice buttons
-            for btn, choice in self.choice_buttons:
-                if event.ui_element == btn:
-                    self.execute_choice(choice)
-                    return
-
-            # Handle buy button
-            if event.ui_element == self.buy_button:
-                self.purchase_item()
-                return
-
-            # Handle NPC assignment for upgrade
-            if self.upgrade_panel_visible and event.ui_element == self.assign_npc_button:
-                self.upgrade_location()
-                return
-
-            # Handle NPC recruitment
-            if self.recruit_panel_visible and event.ui_element == self.recruit_button:
-                self.recruit_npc()
-                return
-
-            # Handle garrison NPC button
-            if self.garrison_panel_visible and self.garrison_button and event.ui_element == self.garrison_button:
-                self.garrison_npc()
-                return
-
-            # Handle Man Tower button
-            if self.man_tower_button and event.ui_element == self.man_tower_button:
-                current_player = game.current_player
-                current_player.enter_manning(self.hex_pos)
-                loc_name = self.location_card.get_current_data().get("Name", "Tower")
-                game_screen.add_to_log(f"{current_player.name or current_player.class_name} mans the {loc_name}!")
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-                return
-
-            # Handle quest acceptance
-            if self.quest_panel_visible and self.accept_quest_button and event.ui_element == self.accept_quest_button:
-                self.accept_selected_quest()
-                return
-
-            # Handle back to shop button
-            if self.quest_panel_visible and self.back_to_shop_button and event.ui_element == self.back_to_shop_button:
-                self.available_quests = []
-                self.selected_quest_index = None
-                self.initialize_screen(self.location_card, self.hex_pos, self.hex_grid)
-                return
-
-        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            # Handle quest selection
-            if self.quest_panel_visible and self.quest_list and event.ui_element == self.quest_list:
-                selection = self.quest_list.get_single_selection()
-                if selection:
-                    for i, quest in enumerate(self.available_quests):
-                        if quest.get_current_data().get("Name") == selection:
-                            self.selected_quest_index = i
-                            # Show quest details
-                            quest_data = quest.get_current_data()
-                            info = f"<b>{quest_data.get('Name', 'Unknown')}</b><br><br>"
-                            info += f"<i>{quest_data.get('Description', '')}</i><br><br>"
-                            template = quest_data.get('Template_Text', '')
-                            info += f"{template}<br><br>"
-                            # Show rewards info
-                            rewards_json = quest_data.get('Rewards', '{}')
-                            try:
-                                import json
-                                rewards = json.loads(rewards_json) if isinstance(rewards_json, str) else rewards_json
-                                if rewards.get('cards'):
-                                    info += f"<b>Rewards:</b> {len(rewards['cards'])} item(s)"
-                            except (json.JSONDecodeError, KeyError, TypeError, AttributeError):
-                                pass  # Invalid rewards format, skip display
-                            if self.quest_details_text:
-                                self.quest_details_text.set_text(f"<font color='#FFFFFF'>{info}</font>")
-                            break
-            # Handle recruit NPC selection
-            if self.recruit_panel_visible and self.recruit_npc_list and event.ui_element == self.recruit_npc_list:
-                available_npcs = self.hex_grid.get_available_npcs(self.hex_pos[0], self.hex_pos[1])
-                selection = self.recruit_npc_list.get_single_selection()
-                if selection:
-                    for i, npc in enumerate(available_npcs):
-                        if npc.get("name") == selection:
-                            self.selected_recruit_index = i
-                            # Show NPC stats
-                            info = f"<b>{npc.get('name', 'Unknown')}</b><br>"
-                            info += f"HP: {npc.get('hp', 0)}/{npc.get('max_hp', 0)}<br>"
-                            info += f"Movement: {npc.get('movement', 0)}<br>"
-                            info += f"Melee Damage: {npc.get('melee_damage', 0)}<br>"
-                            if npc.get('projectile_damage', 0) > 0:
-                                info += f"Projectile: {npc.get('projectile_damage', 0)} (Range: {npc.get('projectile_range', 0)})<br>"
-                            info += f"Allegiance: {npc.get('allegiance', 'Unknown')}"
-                            self.info_text.set_text(f"<font color='#FFFFFF'>{info}</font>")
-                            break
-            if self.shop_items_list and event.ui_element == self.shop_items_list:
-                selection = self.shop_items_list.get_single_selection()
-                if selection and selection != "Shop is empty" and selection in self.shop_item_names:
-                    idx = self.shop_item_names.index(selection)
-                    self.selected_shop_item = idx
-                    shop_inv = self.hex_grid.get_shop_inventory(self.hex_pos[0], self.hex_pos[1])
-                    if idx < len(shop_inv):
-                        item = shop_inv[idx]
-                        card = item.get("card")
-                        if card:
-                            item_data = card.get_current_data()
-                            info = "<br>".join(f"{k}: {v}" for k, v in item_data.items() if v and k != "id")
-                            self.info_text.set_text(f"<font color='#FFFFFF'>{info}</font>")
-
-    def execute_choice(self, choice):
-        action = choice.get("action", "exit")
-        costs_action = choice.get("costs_action", False)
-        params = choice.get("params", {})
-
-        if costs_action and game.current_player.action_used:
-            self.info_text.set_text("<font color='#FF0000'>Action already used this turn!</font>")
-            return
-
-        if action == "exit":
-            game.current_screen = "game"
-            game_screen.initialize_screen()
-        elif action == "draw_card":
-            outcome_card, msg = self.hex_grid.trigger_location_outcome(self.hex_pos[0], self.hex_pos[1], game_screen.card_manager)
-            if outcome_card:
-                party_msg = add_card_to_player(outcome_card)
-                if party_msg:
-                    game_screen.add_to_log(party_msg)
-            game_screen.add_to_log(msg)
-            if costs_action:
-                game.current_player.action_used = True
-            self.hex_grid.mark_location_visited(self.hex_pos[0], self.hex_pos[1])
-            self.info_text.set_text(f"<font color='#FFFFFF'>{msg}</font>")
-        elif action == "heal":
-            hp_amount = int(params.get("amount", 10))
-            old_hp = game.current_player.hp
-            game.current_player.hp = min(game.current_player.max_hp, game.current_player.hp + hp_amount)
-            msg = f"Healed for {game.current_player.hp - old_hp} HP"
-            game_screen.add_to_log(msg)
-            if costs_action:
-                game.current_player.action_used = True
-            self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
-        elif action == "shop":
-            self.info_text.set_text("<font color='#FFFFFF'>Select items from the shop above</font>")
-        elif action == "trade":
-            self.info_text.set_text("<font color='#FFFFFF'>Select materials to trade</font>")
-        elif action == "accept_quest":
-            # Accept a quest from this location
-            deck_file = params.get("deck", "decks/test_quest_deck.json")
-
-            # Check if player can accept more quests
-            if not game.current_quest_manager.can_accept_quest():
-                self.info_text.set_text("<font color='#FF0000'>Quest log full! Complete or abandon a quest first.</font>")
-                return
-
-            # Draw a quest card from the specified deck
-            quest_card = game.card_manager.draw_from_deck(deck_file)
-            if not quest_card:
-                self.info_text.set_text("<font color='#FF0000'>No quests available at this location.</font>")
-                return
-
-            # Check if player already has this quest active
-            quest_name = quest_card.get_current_data().get("Name", "Unknown")
-            for active in game.current_quest_manager.active_quests:
-                if active.quest_card.get_current_data().get("Name") == quest_name:
-                    self.info_text.set_text(f"<font color='#FF0000'>Already have quest: {quest_name}</font>")
-                    return
-
-            # Activate the quest
-            success, msg = game.current_quest_manager.activate_quest(quest_card, self.hex_grid, game.current_player)
-
-            if success:
-                if costs_action:
-                    game.current_player.action_used = True
-                game_screen.add_to_log(f"New quest accepted: {quest_name}")
-                self.info_text.set_text(f"<font color='#00FF00'>Quest accepted: {quest_name}</font>")
-                # Update quest button count
-                game_screen.update_quest_button()
-            else:
-                self.info_text.set_text(f"<font color='#FF0000'>{msg}</font>")
-        elif action == "view_quests":
-            # Show available quests from the deck
-            deck_file = params.get("deck", "decks/test_quest_deck.json")
-            self.quest_deck_file = deck_file
-            self.load_available_quests(deck_file)
-        elif action == "repair_location":
-            # Repair an NPC spawn location (church) using a hammer and materials
-            heal_amount = int(params.get("amount", 20))
-            can_rebuild = params.get("can_rebuild", True)
-            required_materials = params.get("materials", {})  # e.g., {"Metal": 2, "Wood": 3}
-
-            # Check for building tool (hammer)
-            if not game.current_player.has_building_tool():
-                self.info_text.set_text("<font color='#FF0000'>You need a hammer equipped to repair!</font>")
-                return
-
-            # Calculate player's available materials
-            totals = {"Metal": 0, "Wood": 0, "Raw": 0, "Refined": 0}
-            for card in game.current_player.inventory:
-                card_data = card.get_current_data()
-                totals["Metal"] += int(card_data.get("Metal Value", 0) or 0)
-                totals["Wood"] += int(card_data.get("Wood Value", 0) or 0)
-                totals["Raw"] += int(card_data.get("Raw Material Value", 0) or 0)
-                totals["Refined"] += int(card_data.get("Refined Material Value", 0) or 0)
-
-            # Check material requirements
-            missing = []
-            for material, required in required_materials.items():
-                required = int(required or 0)
-                if required <= 0:
-                    continue
-                available = totals.get(material, 0)
-                if available < required:
-                    missing.append(f"{material}: need {required}, have {available}")
-
-            if missing:
-                self.info_text.set_text(f"<font color='#FF0000'>Missing materials: {', '.join(missing)}</font>")
-                return
-
-            # Consume materials from inventory (consume cards until requirements met)
-            materials_to_consume = dict(required_materials)
-            cards_to_remove = []
-            for card in game.current_player.inventory[:]:  # Copy list to avoid modification during iteration
-                if all(v <= 0 for v in materials_to_consume.values()):
-                    break
-                card_data = card.get_current_data()
-                card_contributes = False
-                for mat_type in ["Metal", "Wood", "Raw", "Refined"]:
-                    if materials_to_consume.get(mat_type, 0) > 0:
-                        card_value = int(card_data.get(f"{mat_type} Value" if mat_type in ["Metal", "Wood"] else f"{mat_type} Material Value", 0) or 0)
-                        if card_value > 0:
-                            card_contributes = True
-                            materials_to_consume[mat_type] = max(0, materials_to_consume.get(mat_type, 0) - card_value)
-                if card_contributes:
-                    cards_to_remove.append(card)
-
-            # Remove consumed cards
-            for card in cards_to_remove:
-                if card in game.current_player.inventory:
-                    game.current_player.inventory.remove(card)
-
-            # Perform the repair
-            success, healed, rebuilt, msg = self.hex_grid.repair_npc_location(
-                self.hex_pos[0], self.hex_pos[1], heal_amount, can_rebuild
-            )
-
-            if success:
-                game_screen.add_to_log(msg)
-                if costs_action:
-                    game.current_player.action_used = True
-                color = "#00FF00"
-                # Refresh location card display
-                self.location_card = self.hex_grid.get_location_card(self.hex_pos[0], self.hex_pos[1])
-                self.initialize_screen(self.location_card, self.hex_pos, self.hex_grid)
-            else:
-                color = "#FF0000"
-
-            self.info_text.set_text(f"<font color='{color}'>{msg}</font>")
-
-    def load_available_quests(self, deck_file):
-        """Load all quests from a deck and display them for selection."""
-        import json
-        import os
-
-        self.available_quests = []
-        self.selected_quest_index = None
-
-        try:
-            with open(deck_file, 'r') as f:
-                deck_data = json.load(f)
-            quest_ids = deck_data.get("cards", [])
-
-            for quest_id in quest_ids:
-                card_file = os.path.join("cards", f"{quest_id}.json")
-                try:
-                    with open(card_file, 'r') as f:
-                        card_data = json.load(f)
-                    card_data["id"] = quest_id
-                    quest_card = InventoryCard(card_data)
-                    self.available_quests.append(quest_card)
-                except Exception as e:
-                    print(f"Error loading quest {quest_id}: {e}")
-        except Exception as e:
-            print(f"Error loading quest deck {deck_file}: {e}")
-
-        # Refresh the screen to show quest panel
-        self.initialize_screen(self.location_card, self.hex_pos, self.hex_grid)
-
-    def accept_selected_quest(self):
-        """Accept the currently selected quest."""
-        if self.selected_quest_index is None:
-            self.info_text.set_text("<font color='#FF0000'>Select a quest first!</font>")
-            return
-
-        if not game.current_quest_manager.can_accept_quest():
-            self.info_text.set_text("<font color='#FF0000'>Quest log full! Complete or abandon a quest first.</font>")
-            return
-
-        quest_card = self.available_quests[self.selected_quest_index]
-        quest_name = quest_card.get_current_data().get("Name", "Unknown")
-
-        # Check if player already has this quest active
-        for active in game.current_quest_manager.active_quests:
-            if active.quest_card.get_current_data().get("Name") == quest_name:
-                self.info_text.set_text(f"<font color='#FF0000'>Already have quest: {quest_name}</font>")
-                return
-
-        # Activate the quest
-        success, msg = game.current_quest_manager.activate_quest(quest_card, self.hex_grid, game.current_player)
-
-        if success:
-            game_screen.add_to_log(f"New quest accepted: {quest_name}")
-            self.info_text.set_text(f"<font color='#00FF00'>Quest accepted: {quest_name}</font>")
-            game_screen.update_quest_button()
-            # Clear the quest panel
-            self.available_quests = []
-            self.selected_quest_index = None
-            self.initialize_screen(self.location_card, self.hex_pos, self.hex_grid)
-        else:
-            self.info_text.set_text(f"<font color='#FF0000'>{msg}</font>")
-
-    def purchase_item(self):
-        if self.selected_shop_item is None:
-            self.info_text.set_text("<font color='#FF0000'>Select a shop item first!</font>")
-            return
-
-        # Save sell_state before purchase (shop item gets removed during purchase)
-        shop_inv = self.hex_grid.get_shop_inventory(self.hex_pos[0], self.hex_pos[1])
-        sell_state = None
-        if self.selected_shop_item < len(shop_inv):
-            sell_state = shop_inv[self.selected_shop_item].get("sell_state")
-
-        # Get selected materials using the display name to card mapping
-        selected_material_names = self.sell_materials_list.get_multi_selection() if self.sell_materials_list else []
-        material_cards = [self.material_name_to_card[name] for name in selected_material_names
-                         if name in self.material_name_to_card]
-
-        purchased_card, msg = self.hex_grid.purchase_from_shop(
-            self.hex_pos[0], self.hex_pos[1], self.selected_shop_item, game.current_player.inventory, material_cards
-        )
-
-        if purchased_card:
-            # Remove used materials
-            for mat in material_cards:
-                if mat in game.current_player.inventory:
-                    game.current_player.inventory.remove(mat)
-
-            # Route based on sell_state for mount NPCs
-            is_mount_npc = (purchased_card.card_data.get("card_type") == "NPC Card" and
-                           purchased_card.card_data.get("data", {}).get("Special Skill") == "Mount")
-
-            if sell_state == 1 and is_mount_npc:
-                # Wild purchase: spawn as neutral unit near stable
-                from unit import Unit
-                spawn_card = purchased_card.card_data.copy()
-                spawn_card["data"] = spawn_card["data"].copy()
-                wild_unit = Unit(spawn_card)
-                spawn_pos = self.hex_grid.find_empty_hex_near(self.hex_pos, 3)
-                if spawn_pos:
-                    self.hex_grid.place_unit(wild_unit, spawn_pos[0], spawn_pos[1])
-                    wild_name = purchased_card.get_current_data().get("Name", "Horse")
-                    game_screen.add_to_log(f"{wild_name} released near the stable!")
-                    self.info_text.set_text(f"<font color='#00FF00'>{wild_name} released near the stable!</font>")
-                else:
-                    game_screen.add_to_log("No space to release the horse nearby!")
-                    self.info_text.set_text("<font color='#FF0000'>No space to release nearby!</font>")
-            elif sell_state == 2 and is_mount_npc:
-                # Tamed purchase: add to party (reset to state 1 for mount system compatibility)
-                purchased_card.current_state = 1
-                game.current_party.append(purchased_card)
-                tamed_name = purchased_card.card_data.get("data", {}).get("2nd_State_Name", "Horse")
-                game_screen.add_to_log(f"{tamed_name} joined your party!")
-                self.info_text.set_text(f"<font color='#00FF00'>{tamed_name} joined your party!</font>")
-            else:
-                # Normal flow
-                party_msg = add_card_to_player(purchased_card)
-                if party_msg:
-                    game_screen.add_to_log(party_msg)
-                self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
-
-            game_screen.add_to_log(msg)
-            # Refresh the screen
-            self.initialize_screen(self.location_card, self.hex_pos, self.hex_grid)
-        else:
-            self.info_text.set_text(f"<font color='#FF0000'>{msg}</font>")
-
-    def upgrade_location(self):
-        if not self.npc_list:
-            return
-
-        selected_npc_name = self.npc_list.get_single_selection()
-        if not selected_npc_name or selected_npc_name == "No allied NPCs":
-            self.info_text.set_text("<font color='#FF0000'>Select an NPC to assign!</font>")
-            return
-
-        # Find the NPC card in party
-        npc_card = None
-        for card in game.current_party:
-            if card.get_current_data().get("Name") == selected_npc_name:
-                npc_card = card
-                break
-
-        if not npc_card:
-            self.info_text.set_text("<font color='#FF0000'>NPC not found!</font>")
-            return
-
-        success, msg = self.hex_grid.upgrade_location(self.hex_pos[0], self.hex_pos[1], npc_card)
-        if success:
-            # Remove NPC from party (they're now at the location)
-            game.current_party.remove(npc_card)
-            game_screen.add_to_log(msg)
-            self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
-            # Refresh with upgraded location
-            new_card = self.hex_grid.get_location_card(self.hex_pos[0], self.hex_pos[1])
-            self.initialize_screen(new_card, self.hex_pos, self.hex_grid)
-        else:
-            self.info_text.set_text(f"<font color='#FF0000'>{msg}</font>")
-
-    def garrison_npc(self):
-        """Garrison a party or map NPC at this defensive location."""
-        if not self.garrison_npc_list:
-            return
-
-        selection = self.garrison_npc_list.get_single_selection()
-        if not selection or selection in ("No NPCs available", "---"):
-            self.info_text.set_text("<font color='#FF0000'>Select an NPC to garrison!</font>")
-            return
-
-        if selection.startswith("[PARTY] "):
-            npc_name = selection[8:]  # Strip "[PARTY] "
-            npc_card = None
-            for card in self._garrison_party_npcs:
-                if card.get_current_data().get("Name") == npc_name:
-                    npc_card = card
-                    break
-            if not npc_card:
-                self.info_text.set_text("<font color='#FF0000'>NPC not found in party!</font>")
-                return
-            # Create garrison data from party card
-            card_data = npc_card.get_current_data()
-            garrison_entry = {
-                "id": npc_card.card_data.get("id", ""),
-                "name": card_data.get("Name", "Unknown"),
-                "hp": int(card_data.get("Health", 10)),
-                "max_hp": int(card_data.get("Health", 10)),
-                "melee_damage": int(card_data.get("Melee Damage", 0)),
-                "projectile_damage": int(card_data.get("Projectile Damage", 0)),
-                "allegiance": card_data.get("Allegiance (Hostile, Neutral, Allied)", "Allied")
-            }
-            success, msg = self.hex_grid.garrison_npc_to_location(garrison_entry, self.hex_pos)
-            if success:
-                game.current_party.remove(npc_card)
-                game_screen.add_to_log(msg)
-                self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
-                new_card = self.hex_grid.get_location_card(self.hex_pos[0], self.hex_pos[1])
-                self.initialize_screen(new_card, self.hex_pos, self.hex_grid)
-            else:
-                self.info_text.set_text(f"<font color='#FF0000'>{msg}</font>")
-
-        elif selection.startswith("[MAP] "):
-            unit_name = selection[6:]  # Strip "[MAP] "
-            target_unit = None
-            for unit in self._garrison_map_units:
-                if unit.name == unit_name:
-                    target_unit = unit
-                    break
-            if not target_unit:
-                self.info_text.set_text("<font color='#FF0000'>Unit not found on map!</font>")
-                return
-            # Set garrison target so unit pathfinds there on its turn
-            target_unit.garrison_target_location = self.hex_pos
-            self.info_text.set_text(f"<font color='#00FF00'>{unit_name} will move to garrison this location</font>")
-            game_screen.add_to_log(f"{unit_name} ordered to garrison location")
-
-    def recruit_npc(self):
-        """Recruit an NPC from the location to the player's party."""
-        if self.selected_recruit_index is None:
-            self.info_text.set_text("<font color='#FF0000'>Select an NPC to recruit!</font>")
-            return
-
-        # Check party size limit
-        if len(game.current_party) >= 5:
-            self.info_text.set_text("<font color='#FF0000'>Party is full (max 5 members)!</font>")
-            return
-
-        # Get NPC data and remove from location
-        npc_data, msg = self.hex_grid.recruit_npc_from_location(
-            self.hex_pos[0], self.hex_pos[1], self.selected_recruit_index
-        )
-
-        if npc_data:
-            # Try loading full card data to preserve Special Skill, heal fields, state 2, etc.
-            full_card = load_card(npc_data.get("id"), silent=True)
-            if full_card:
-                full_card["data"]["Allegiance (Hostile, Neutral, Allied)"] = "Allied"
-                if full_card.get("states", 1) >= 2 and "2nd_State_Allegiance (Hostile, Neutral, Allied)" in full_card.get("data", {}):
-                    full_card["data"]["2nd_State_Allegiance (Hostile, Neutral, Allied)"] = "Allied"
-                from inventory_card import InventoryCard
-                npc_card = InventoryCard(full_card)
-                # Restore state from stored data
-                stored_state = npc_data.get("current_state", 1)
-                if stored_state == 2:
-                    npc_card.current_state = 2
-            else:
-                # Fallback: bare-bones card if card file can't be loaded
-                card_data = {
-                    "id": npc_data.get("id", "recruited_npc"),
-                    "card_type": npc_data.get("card_type", "NPC Card"),
-                    "states": 1,
-                    "data": {
-                        "Name": npc_data.get("name", "Unknown"),
-                        "Health": str(npc_data.get("max_hp", 10)),
-                        "Movement": str(npc_data.get("movement", 3)),
-                        "Melee Damage": str(npc_data.get("melee_damage", 5)),
-                        "Projectile Damage": str(npc_data.get("projectile_damage", 0)),
-                        "Projectile Range": str(npc_data.get("projectile_range", 0)),
-                        "Allegiance (Hostile, Neutral, Allied)": npc_data.get("allegiance", "Allied")
-                    }
-                }
-                from inventory_card import InventoryCard
-                npc_card = InventoryCard(card_data)
-            game.current_party.append(npc_card)
-
-            game_screen.add_to_log(msg)
-            self.info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
-            self.selected_recruit_index = None
-
-            # Refresh the screen to update available NPCs list
-            self.initialize_screen(self.location_card, self.hex_pos, self.hex_grid)
-        else:
-            self.info_text.set_text(f"<font color='#FF0000'>{msg}</font>")
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-# RecruitmentScreen class for recruiting neutral NPCs
-class RecruitmentScreen:
-    def __init__(self):
-        self.window = None
-        self.target_unit = None
-        self.junk_list = None
-        self.selected_junk = []  # List of selected junk cards
-        self.junk_name_to_card = {}  # Maps list names to cards
-        self.info_text = None
-        self.recruit_button = None
-        self.cancel_button = None
-        self.cost_label = None
-        self.offered_label = None
-
-    def initialize_screen(self, target_unit):
-        """Initialize the recruitment screen for a specific neutral NPC."""
-        self.target_unit = target_unit
-        self.selected_junk = []
-        self.junk_name_to_card = {}
-
-        manager.clear_and_reset()
-
-        window_rect = pygame.Rect((WINDOW_WIDTH - 800) // 2, (WINDOW_HEIGHT - 600) // 2, 800, 600)
-        self.window = pygame_gui.elements.UIWindow(window_rect, manager, "Recruit NPC")
-
-        # NPC info header
-        npc_name = target_unit.name if target_unit else "Unknown"
-        pygame_gui.elements.UILabel(
-            pygame.Rect(10, 5, 780, 30), f"Recruit: {npc_name}", manager, container=self.window
-        )
-
-        # Calculate recruitment cost
-        recruitment_cost = self._calculate_recruitment_cost(target_unit)
-
-        # NPC stats panel (left side)
-        stats_text = self._get_npc_stats_text(target_unit)
-        self.npc_info_text = pygame_gui.elements.UITextBox(
-            f"<font color='#FFFFFF'>{stats_text}</font>",
-            pygame.Rect(10, 40, 300, 200), manager, container=self.window
-        )
-
-        # Cost label
-        self.cost_label = pygame_gui.elements.UILabel(
-            pygame.Rect(10, 250, 300, 30), f"Recruitment Cost: {recruitment_cost} material value",
-            manager, container=self.window
-        )
-
-        # Junk selection (right side)
-        pygame_gui.elements.UILabel(
-            pygame.Rect(320, 40, 460, 25), "Select junk to offer (multi-select):",
-            manager, container=self.window
-        )
-
-        # Build junk list with material values
-        junk_items = []
-        for card in game.current_player.inventory:
-            if card.card_data.get("card_type") == "Junk Card":
-                card_data = card.get_current_data()
-                name = card_data.get("Name", "Unnamed")
-                value = self._get_material_value(card)
-                display_name = f"{name} (Value: {value})"
-                junk_items.append(display_name)
-                self.junk_name_to_card[display_name] = card
-
-        self.junk_list = pygame_gui.elements.UISelectionList(
-            pygame.Rect(320, 70, 460, 300),
-            junk_items if junk_items else ["No junk items available"],
-            manager, container=self.window,
-            allow_multi_select=True
-        )
-
-        # Offered value label
-        self.offered_label = pygame_gui.elements.UILabel(
-            pygame.Rect(320, 380, 460, 30), "Total offered: 0 / " + str(recruitment_cost),
-            manager, container=self.window
-        )
-
-        # Info text at bottom
-        self.info_text = pygame_gui.elements.UITextBox(
-            "<font color='#FFFFFF'>Select junk items with enough total value to meet the recruitment cost.</font>",
-            pygame.Rect(10, 420, 780, 80), manager, container=self.window
-        )
-
-        # Buttons
-        self.recruit_button = pygame_gui.elements.UIButton(
-            pygame.Rect(200, 510, 180, 40), "Recruit", manager, container=self.window
-        )
-        self.cancel_button = pygame_gui.elements.UIButton(
-            pygame.Rect(420, 510, 180, 40), "Cancel", manager, container=self.window
-        )
-
-    def _calculate_recruitment_cost(self, unit):
-        """Calculate recruitment cost based on NPC stats: HP/10 + melee + ranged + movement + 5"""
-        if not unit:
-            return 10
-        hp_component = unit.max_hp // 10
-        melee = unit.melee_damage if hasattr(unit, 'melee_damage') else 0
-        ranged = unit.projectile_damage if hasattr(unit, 'projectile_damage') else 0
-        movement = unit.movement if hasattr(unit, 'movement') else 3
-        return hp_component + melee + ranged + movement + 5
-
-    def _get_material_value(self, card):
-        """Get total material value of a junk card."""
-        card_data = card.get_current_data()
-        total = 0
-        value_fields = ["Raw Material Value", "Refined Material Value", "Metal Value", "Wood Value"]
-        for field in value_fields:
-            try:
-                total += int(card_data.get(field, 0) or 0)
-            except (ValueError, TypeError):
-                pass
-        return max(1, total)  # Minimum value of 1
-
-    def _get_npc_stats_text(self, unit):
-        """Get formatted stats text for the NPC."""
-        if not unit:
-            return "No NPC selected"
-        lines = [
-            f"<b>{unit.name}</b>",
-            f"HP: {unit.hp}/{unit.max_hp}",
-            f"Movement: {unit.movement}",
-            f"Melee Damage: {unit.melee_damage}",
-        ]
-        if unit.projectile_damage > 0:
-            lines.append(f"Projectile Damage: {unit.projectile_damage}")
-            lines.append(f"Projectile Range: {unit.projectile_range}")
-        lines.append(f"Allegiance: {unit.allegiance}")
-        return "<br>".join(lines)
-
-    def _get_total_offered_value(self):
-        """Calculate total material value of selected junk."""
-        total = 0
-        for card in self.selected_junk:
-            total += self._get_material_value(card)
-        return total
-
-    def _update_offered_label(self):
-        """Update the offered value label."""
-        total = self._get_total_offered_value()
-        cost = self._calculate_recruitment_cost(self.target_unit)
-        color = "#00FF00" if total >= cost else "#FFFFFF"
-        self.offered_label.set_text(f"Total offered: {total} / {cost}")
-
-    def handle_event(self, event):
-        # Handle window X button close
-        if event.type == pygame_gui.UI_WINDOW_CLOSE:
-            if event.ui_element == self.window:
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-                return
-
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.cancel_button:
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-            elif event.ui_element == self.recruit_button:
-                self._attempt_recruitment()
-
-        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            if event.ui_element == self.junk_list:
-                # Add to selected
-                selected_name = event.text
-                if selected_name in self.junk_name_to_card:
-                    card = self.junk_name_to_card[selected_name]
-                    if card not in self.selected_junk:
-                        self.selected_junk.append(card)
-                        self._update_offered_label()
-
-        elif event.type == pygame_gui.UI_SELECTION_LIST_DROPPED_SELECTION:
-            if event.ui_element == self.junk_list:
-                # Remove from selected
-                selected_name = event.text
-                if selected_name in self.junk_name_to_card:
-                    card = self.junk_name_to_card[selected_name]
-                    if card in self.selected_junk:
-                        self.selected_junk.remove(card)
-                        self._update_offered_label()
-
-    def _attempt_recruitment(self):
-        """Attempt to recruit the NPC with selected junk."""
-        if not self.target_unit:
-            self.info_text.set_text("<font color='#FF0000'>No NPC to recruit!</font>")
-            return
-
-        cost = self._calculate_recruitment_cost(self.target_unit)
-        offered = self._get_total_offered_value()
-
-        if offered < cost:
-            self.info_text.set_text(f"<font color='#FF0000'>Not enough value! Need {cost}, offered {offered}</font>")
-            return
-
-        # Check party limit (max 5)
-        if len(game.current_party) >= 5:
-            self.info_text.set_text("<font color='#FF0000'>Party is full! (Max 5 members)</font>")
-            return
-
-        # Success! Remove junk from inventory
-        for card in self.selected_junk:
-            if card in game.current_player.inventory:
-                game.current_player.inventory.remove(card)
-
-        # Change NPC allegiance to Allied and set follow/carry behavior
-        self.target_unit.set_allegiance("Allied")
-        self.target_unit.carry_to_next_level = True
-        self.target_unit.behavior_follow_target = f"player_{game.current_player_index}"
-
-        # Create party card for the NPC — use full card data to preserve Special Skill, heal fields, state 2, etc.
-        full_card = load_card(self.target_unit.card_id, silent=True)
-        if full_card:
-            full_card["data"]["Allegiance (Hostile, Neutral, Allied)"] = "Allied"
-            if full_card.get("states", 1) >= 2 and "2nd_State_Allegiance (Hostile, Neutral, Allied)" in full_card.get("data", {}):
-                full_card["data"]["2nd_State_Allegiance (Hostile, Neutral, Allied)"] = "Allied"
-            npc_card = InventoryCard(full_card)
-            # Match the unit's current state (e.g., Elder flipped to state 2 = Healer)
-            if hasattr(self.target_unit, 'current_state') and self.target_unit.current_state == 2:
-                npc_card.current_state = 2
-        else:
-            # Fallback: bare-bones card if card file can't be loaded
-            npc_card_data = {
-                "id": self.target_unit.card_id,
-                "card_type": "NPC Card",
-                "data": {
-                    "Name": self.target_unit.name,
-                    "Health": str(self.target_unit.max_hp),
-                    "Movement": str(self.target_unit.movement),
-                    "Melee Damage": str(self.target_unit.melee_damage),
-                    "Projectile Damage": str(self.target_unit.projectile_damage),
-                    "Projectile Range": str(self.target_unit.projectile_range),
-                    "Allegiance (Hostile, Neutral, Allied)": "Allied"
-                }
-            }
-            npc_card = InventoryCard(npc_card_data)
-        game.current_party.append(npc_card)
-
-        # Log the recruitment
-        game_screen.add_to_log(f"{self.target_unit.name} joined your party!")
-
-        # Return to game
-        game.current_screen = "game"
-        game_screen.initialize_screen()
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-class CardGivingScreen:
-    """Screen for giving a card from current player to another player in multiplayer."""
-    def __init__(self):
-        self.window = None
-        self.target_player = None
-        self.card_list = None
-        self.card_name_to_card = {}
-        self.info_text = None
-        self.give_button = None
-        self.cancel_button = None
-
-    def initialize_screen(self, target_player):
-        """Initialize the card giving screen for a target player."""
-        self.target_player = target_player
-        self.card_name_to_card = {}
-
-        manager.clear_and_reset()
-
-        window_rect = pygame.Rect((WINDOW_WIDTH - 700) // 2, (WINDOW_HEIGHT - 500) // 2, 700, 500)
-        self.window = pygame_gui.elements.UIWindow(window_rect, manager, "Give Card to Player")
-
-        target_name = target_player.name or target_player.class_name
-        pygame_gui.elements.UILabel(
-            pygame.Rect(10, 5, 680, 30), f"Give a card to {target_name}", manager, container=self.window
-        )
-
-        # Build list of all cards in current player's inventory
-        card_items = []
-        for card in game.current_player.inventory:
-            card_data = card.get_current_data()
-            name = card_data.get("Name", "Unnamed")
-            card_type = card.card_data.get("card_type", "")
-            state_info = f" [State {card.current_state}]" if card.states == 2 else ""
-            display = f"{name} ({card_type}){state_info}"
-            card_items.append(display)
-            self.card_name_to_card[display] = card
-
-        self.card_list = pygame_gui.elements.UISelectionList(
-            pygame.Rect(10, 40, 680, 320),
-            card_items if card_items else ["No cards in inventory"],
-            manager, container=self.window,
-            allow_multi_select=False
-        )
-
-        self.info_text = pygame_gui.elements.UITextBox(
-            "<font color='#FFFFFF'>Select a card to give.</font>",
-            pygame.Rect(10, 370, 680, 50), manager, container=self.window
-        )
-
-        self.give_button = pygame_gui.elements.UIButton(
-            pygame.Rect(180, 430, 150, 40), "Give", manager, container=self.window
-        )
-        self.cancel_button = pygame_gui.elements.UIButton(
-            pygame.Rect(370, 430, 150, 40), "Cancel", manager, container=self.window
-        )
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_WINDOW_CLOSE:
-            if event.ui_element == self.window:
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-                return
-
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.cancel_button:
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-            elif event.ui_element == self.give_button:
-                selected = self.card_list.get_single_selection()
-                if selected and selected in self.card_name_to_card:
-                    card = self.card_name_to_card[selected]
-                    # Transfer card: remove from giver, add to receiver
-                    game.current_player.inventory.remove(card)
-                    self.target_player.inventory.append(card)
-                    # Log the transfer
-                    giver_name = game.current_player.name or game.current_player.class_name
-                    receiver_name = self.target_player.name or self.target_player.class_name
-                    card_name = card.get_current_data().get("Name", "Unnamed")
-                    game_screen.add_to_log(f"{giver_name} gave {card_name} to {receiver_name}")
-                    game.current_screen = "game"
-                    game_screen.initialize_screen()
-                else:
-                    self.info_text.set_text("<font color='#FF0000'>Select a card first.</font>")
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-# PartyScreen class for viewing and managing party members (allied NPCs)
-class PartyScreen:
-    def __init__(self):
-        self.window = None
-        self.party_list = None
-        self.info_text = None
-        self.close_button = None
-        self.selected_member = None
-        self.dismiss_button = None
-        self.deploy_button = None
-        self.recall_button = None
-
-    def initialize_screen(self):
-        manager.clear_and_reset()
-        self.selected_member = None
-
-        window_rect = pygame.Rect((WINDOW_WIDTH - 900) // 2, (WINDOW_HEIGHT - 600) // 2, 900, 600)
-        self.window = pygame_gui.elements.UIWindow(window_rect, manager, "Party")
-
-        # Header
-        pygame_gui.elements.UILabel(
-            pygame.Rect(10, 5, 880, 30), "Your Party Members", manager, container=self.window
-        )
-
-        # Party members list (left side)
-        pygame_gui.elements.UILabel(
-            pygame.Rect(10, 40, 300, 25), "Party Members:", manager, container=self.window
-        )
-
-        party_names = []
-        for card in game.current_party:
-            card_data = card.get_current_data()
-            name = card_data.get("Name", "Unknown")
-            # Check if deployed on map
-            deployed = any(u.card_id == card.card_data.get("id") for u in game_screen.hex_grid.units if u.allegiance == "Allied")
-            status = " [Deployed]" if deployed else ""
-            party_names.append(f"{name}{status}")
-
-        self.party_list = pygame_gui.elements.UISelectionList(
-            pygame.Rect(10, 70, 300, 400),
-            party_names if party_names else ["No party members"],
-            manager, container=self.window
-        )
-        self.party_member_names = party_names if party_names else []
-
-        # Info panel (right side)
-        pygame_gui.elements.UILabel(
-            pygame.Rect(320, 40, 560, 25), "Member Details:", manager, container=self.window
-        )
-
-        self.info_text = pygame_gui.elements.UITextBox(
-            "<font color='#FFFFFF'>Select a party member to view details</font>",
-            pygame.Rect(320, 70, 560, 350), manager, container=self.window
-        )
-
-        # Action buttons
-        self.deploy_button = pygame_gui.elements.UIButton(
-            pygame.Rect(320, 430, 170, 35), "Deploy to Map", manager, container=self.window
-        )
-
-        self.recall_button = pygame_gui.elements.UIButton(
-            pygame.Rect(500, 430, 170, 35), "Recall to Party", manager, container=self.window
-        )
-
-        self.dismiss_button = pygame_gui.elements.UIButton(
-            pygame.Rect(320, 475, 350, 35), "Dismiss from Party", manager, container=self.window
-        )
-
-        # Close button
-        self.close_button = pygame_gui.elements.UIButton(
-            pygame.Rect(780, 5, 100, 30), "Close", manager, container=self.window
-        )
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.close_button:
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-                return
-
-            if event.ui_element == self.deploy_button:
-                self.deploy_member()
-                return
-
-            if event.ui_element == self.recall_button:
-                self.recall_member()
-                return
-
-            if event.ui_element == self.dismiss_button:
-                self.dismiss_member()
-                return
-
-        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            if event.ui_element == self.party_list:
-                selection = self.party_list.get_single_selection()
-                if selection and selection != "No party members" and selection in self.party_member_names:
-                    idx = self.party_member_names.index(selection)
-                    if idx < len(game.current_party):
-                        self.selected_member = idx
-                        card = game.current_party[idx]
-                        card_data = card.get_current_data()
-
-                        # Build info display
-                        info_lines = []
-                        info_lines.append(f"<b>{card_data.get('Name', 'Unknown')}</b>")
-                        info_lines.append(f"")
-                        info_lines.append(f"Health: {card_data.get('Health', '?')}")
-                        info_lines.append(f"Movement: {card_data.get('Movement', '?')}")
-                        info_lines.append(f"Melee Damage: {card_data.get('Melee Damage', '0')}")
-                        if card_data.get('Projectile Damage'):
-                            info_lines.append(f"Projectile Damage: {card_data.get('Projectile Damage')}")
-                            info_lines.append(f"Projectile Range: {card_data.get('Projectile Range', '0')}")
-                        if card_data.get('Special Skill'):
-                            info_lines.append(f"Special Skill: {card_data.get('Special Skill')}")
-                        if card_data.get('Description'):
-                            info_lines.append(f"")
-                            info_lines.append(f"{card_data.get('Description')}")
-
-                        self.info_text.set_text(f"<font color='#FFFFFF'>{'<br>'.join(info_lines)}</font>")
-
-    def deploy_member(self):
-        if self.selected_member is None:
-            self.info_text.set_text("<font color='#FF0000'>Select a party member first!</font>")
-            return
-
-        card = game.current_party[self.selected_member]
-        card_data = card.get_current_data()
-        name = card_data.get("Name", "Unknown")
-
-        # Check if already deployed
-        already_deployed = any(u.card_id == card.card_data.get("id") for u in game_screen.hex_grid.units if u.allegiance == "Allied")
-        if already_deployed:
-            self.info_text.set_text(f"<font color='#FF0000'>{name} is already deployed!</font>")
-            return
-
-        # Find a spot near the player to deploy
-        player_pos = game.current_player.position
-        neighbors = game_screen.hex_grid.get_neighbors(*player_pos)
-        deploy_pos = None
-        for n in neighbors:
-            row, col = n
-            if 0 <= row < game_screen.hex_grid.rows and 0 <= col < game_screen.hex_grid.cols:
-                cell = game_screen.hex_grid.grid[row][col]
-                if cell["unit"] is None and cell.get("accessible", True):
-                    deploy_pos = n
-                    break
-
-        if not deploy_pos:
-            self.info_text.set_text(f"<font color='#FF0000'>No space near player to deploy {name}!</font>")
-            return
-
-        # Create unit from card and place on map
-        from unit import Unit
-        unit_data = {
-            "id": card.card_data.get("id"),
-            "card_type": "NPC Card",
-            "states": card.states,
-            "data": card_data
-        }
-        unit = Unit(unit_data)
-        unit.set_allegiance("Allied")  # Ensure allied
-        game_screen.hex_grid.place_unit(unit, deploy_pos[0], deploy_pos[1])
-
-        game_screen.add_to_log(f"{name} deployed to the battlefield!")
-        self.info_text.set_text(f"<font color='#00FF00'>{name} deployed!</font>")
-        self.initialize_screen()  # Refresh to show [Deployed] status
-
-    def recall_member(self):
-        """Recall a deployed NPC from the map back to the party (stays in party). Must be adjacent to player."""
-        if self.selected_member is None:
-            self.info_text.set_text("<font color='#FF0000'>Select a party member first!</font>")
-            return
-
-        card = game.current_party[self.selected_member]
-        card_data = card.get_current_data()
-        name = card_data.get("Name", "Unknown")
-
-        # Check if deployed on map
-        deployed_unit = None
-        for unit in game_screen.hex_grid.units:
-            if unit.card_id == card.card_data.get("id") and unit.allegiance == "Allied":
-                deployed_unit = unit
-                break
-
-        if not deployed_unit:
-            self.info_text.set_text(f"<font color='#FF0000'>{name} is not deployed!</font>")
-            return
-
-        # Check if adjacent to player
-        player_pos = game.current_player.position
-        unit_pos = deployed_unit.position
-        distance = game_screen.hex_grid.hex_distance(player_pos, unit_pos)
-        if distance > 1:
-            self.info_text.set_text(f"<font color='#FF0000'>{name} must be adjacent to recall!</font>")
-            return
-
-        # Remove from map but keep in party
-        game_screen.hex_grid.grid[deployed_unit.position[0]][deployed_unit.position[1]]["unit"] = None
-        game_screen.hex_grid.units.remove(deployed_unit)
-
-        game_screen.add_to_log(f"{name} recalled to party.")
-        self.info_text.set_text(f"<font color='#00FF00'>{name} recalled!</font>")
-        self.initialize_screen()  # Refresh to update [Deployed] status
-
-    def dismiss_member(self):
-        if self.selected_member is None:
-            self.info_text.set_text("<font color='#FF0000'>Select a party member first!</font>")
-            return
-
-        card = game.current_party[self.selected_member]
-        card_data = card.get_current_data()
-        name = card_data.get("Name", "Unknown")
-
-        # Remove from map if deployed
-        for unit in game_screen.hex_grid.units[:]:
-            if unit.card_id == card.card_data.get("id") and unit.allegiance == "Allied":
-                game_screen.hex_grid.grid[unit.position[0]][unit.position[1]]["unit"] = None
-                game_screen.hex_grid.units.remove(unit)
-                break
-
-        # Remove from party
-        game.current_party.remove(card)
-        game_screen.add_to_log(f"{name} dismissed from party.")
-        self.selected_member = None
-        self.initialize_screen()  # Refresh
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-# QuestScreen class for viewing and managing quests
-class QuestScreen:
-    def __init__(self):
-        self.window = None
-        self.tab_buttons = []
-        self.quest_list = None
-        self.quest_details = None
-        self.abandon_button = None
-        self.close_button = None
-        self.current_tab = "active"  # "active", "completed", "failed"
-        self.selected_quest = None
-        self.quest_names = []
-
-    def initialize_screen(self):
-        manager.clear_and_reset()
-        self.selected_quest = None
-
-        window_rect = pygame.Rect((WINDOW_WIDTH - 1000) // 2, (WINDOW_HEIGHT - 700) // 2, 1000, 700)
-        self.window = pygame_gui.elements.UIWindow(window_rect, manager, "Quest Journal")
-
-        # Tab buttons
-        tab_y = 5
-        tab_width = 150
-        self.tab_buttons = []
-
-        active_count = len(game.current_quest_manager.active_quests)
-        completed_count = len(game.current_quest_manager.completed_quests)
-        failed_count = len(game.current_quest_manager.failed_quests)
-
-        active_btn = pygame_gui.elements.UIButton(
-            pygame.Rect(10, tab_y, tab_width, 30),
-            f"Active ({active_count})",
-            manager, container=self.window
-        )
-        self.tab_buttons.append(("active", active_btn))
-
-        completed_btn = pygame_gui.elements.UIButton(
-            pygame.Rect(170, tab_y, tab_width, 30),
-            f"Completed ({completed_count})",
-            manager, container=self.window
-        )
-        self.tab_buttons.append(("completed", completed_btn))
-
-        failed_btn = pygame_gui.elements.UIButton(
-            pygame.Rect(330, tab_y, tab_width, 30),
-            f"Failed ({failed_count})",
-            manager, container=self.window
-        )
-        self.tab_buttons.append(("failed", failed_btn))
-
-        # Quest list (left panel)
-        pygame_gui.elements.UILabel(
-            pygame.Rect(10, 45, 350, 25), "Quests:", manager, container=self.window
-        )
-
-        quest_names = self._get_quest_names_for_tab()
-        self.quest_names = quest_names
-        self.quest_list = pygame_gui.elements.UISelectionList(
-            pygame.Rect(10, 75, 350, 500),
-            quest_names if quest_names else ["No quests"],
-            manager, container=self.window
-        )
-
-        # Quest details (right panel)
-        pygame_gui.elements.UILabel(
-            pygame.Rect(370, 45, 600, 25), "Quest Details:", manager, container=self.window
-        )
-
-        self.quest_details = pygame_gui.elements.UITextBox(
-            "<font color='#FFFFFF'>Select a quest to view details</font>",
-            pygame.Rect(370, 75, 600, 500), manager, container=self.window
-        )
-
-        # Abandon button (only for active tab)
-        if self.current_tab == "active":
-            self.abandon_button = pygame_gui.elements.UIButton(
-                pygame.Rect(370, 585, 150, 35), "Abandon Quest", manager, container=self.window
-            )
-        else:
-            self.abandon_button = None
-
-        # Close button
-        self.close_button = pygame_gui.elements.UIButton(
-            pygame.Rect(870, 5, 100, 30), "Close", manager, container=self.window
-        )
-
-    def _get_quest_names_for_tab(self):
-        """Get quest names for the current tab."""
-        if self.current_tab == "active":
-            return [q.get_display_name() for q in game.current_quest_manager.active_quests]
-        elif self.current_tab == "completed":
-            return [q.get_display_name() for q in game.current_quest_manager.completed_quests]
-        elif self.current_tab == "failed":
-            return [q.get_display_name() for q in game.current_quest_manager.failed_quests]
-        return []
-
-    def _get_quests_for_tab(self):
-        """Get quest list for the current tab."""
-        if self.current_tab == "active":
-            return game.current_quest_manager.active_quests
-        elif self.current_tab == "completed":
-            return game.current_quest_manager.completed_quests
-        elif self.current_tab == "failed":
-            return game.current_quest_manager.failed_quests
-        return []
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.close_button:
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-                return
-
-            # Tab buttons
-            for tab_name, btn in self.tab_buttons:
-                if event.ui_element == btn:
-                    self.current_tab = tab_name
-                    self.selected_quest = None
-                    self.initialize_screen()
-                    return
-
-            # Abandon button
-            if self.abandon_button and event.ui_element == self.abandon_button:
-                if self.selected_quest:
-                    success, msg = game.current_quest_manager.abandon_quest(self.selected_quest)
-                    game_screen.add_to_log(msg)
-                    self.selected_quest = None
-                    self.initialize_screen()
-                return
-
-        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            if event.ui_element == self.quest_list:
-                selection = self.quest_list.get_single_selection()
-                if selection and selection != "No quests" and selection in self.quest_names:
-                    idx = self.quest_names.index(selection)
-                    quests = self._get_quests_for_tab()
-                    if idx < len(quests):
-                        self.selected_quest = quests[idx]
-                        self._update_quest_details()
-
-    def _update_quest_details(self):
-        """Update the quest details panel."""
-        if not self.selected_quest:
-            self.quest_details.set_text("<font color='#FFFFFF'>Select a quest to view details</font>")
-            return
-
-        quest = self.selected_quest
-        lines = []
-
-        # Quest name
-        lines.append(f"<b>{quest.get_display_name()}</b>")
-        lines.append("")
-
-        # Status
-        if quest.is_complete:
-            lines.append("<font color='#00FF00'>Status: COMPLETED</font>")
-        elif quest.is_failed:
-            lines.append("<font color='#FF0000'>Status: FAILED</font>")
-        else:
-            lines.append("<font color='#FFFF00'>Status: IN PROGRESS</font>")
-        lines.append("")
-
-        # Description
-        lines.append("<b>Description:</b>")
-        lines.append(quest.get_filled_description())
-        lines.append("")
-
-        # Tracked units
-        if quest.tracked_units:
-            lines.append("<b>Tracked Characters:</b>")
-            for pid, unit in quest.tracked_units.items():
-                status = "Active" if unit.hp > 0 else "Defeated"
-                lines.append(f"- {pid}: {unit.name} ({status})")
-            lines.append("")
-
-        # Tracked locations
-        if quest.tracked_locations:
-            lines.append("<b>Tracked Locations:</b>")
-            for pid, pos in quest.tracked_locations.items():
-                lines.append(f"- {pid}: Position {pos}")
-            lines.append("")
-
-        # Turn count
-        lines.append(f"Turns elapsed: {quest.turn_count}")
-
-        self.quest_details.set_text(f"<font color='#FFFFFF'>{'<br>'.join(lines)}</font>")
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-# SkillsScreen class for managing learned and equipped skills
-class SkillsScreen:
-    def __init__(self):
-        self.ui_elements = []
-        self.learned_skills_list = None
-        self.equipped_skills_list = None
-        self.learnable_cards_list = None
-        self.learn_button = None
-        self.equip_button = None
-        self.unequip_button = None
-        self.back_button = None
-        self.selected_learnable = None
-        self.selected_learned = None
-        self.selected_equipped = None
-        # Flip animation tracking
-        self.animating_card = None
-
-    def initialize_screen(self):
-        manager.clear_and_reset()
-        self.ui_elements = []
-        self.selected_learnable = None
-        self.selected_learned = None
-        self.selected_equipped = None
-
-        # Title
-        title = UILabel(
-            pygame.Rect(0, 20, WINDOW_WIDTH, 40),
-            "Skills Management",
-            manager,
-            anchors={'centerx': 'centerx'}
-        )
-        self.ui_elements.append(title)
-
-        # Back button
-        self.back_button = UIButton(
-            pygame.Rect(20, 20, 100, 40),
-            "Back",
-            manager
-        )
-        self.ui_elements.append(self.back_button)
-
-        # Three columns layout
-        column_width = (WINDOW_WIDTH - 80) // 3
-        list_height = WINDOW_HEIGHT - 250
-        y_start = 80
-
-        # Column 1: Learnable Cards (Document cards that can become skills)
-        col1_x = 20
-        learnable_label = UILabel(
-            pygame.Rect(col1_x, y_start, column_width, 30),
-            "Learnable Documents",
-            manager
-        )
-        self.ui_elements.append(learnable_label)
-
-        learnable_items = self._get_learnable_cards()
-        self.learnable_cards_list = UISelectionList(
-            pygame.Rect(col1_x, y_start + 35, column_width, list_height),
-            learnable_items,
-            manager,
-            allow_multi_select=False
-        )
-        self.ui_elements.append(self.learnable_cards_list)
-
-        self.learn_button = UIButton(
-            pygame.Rect(col1_x, y_start + list_height + 45, column_width, 40),
-            "Learn Skill",
-            manager
-        )
-        self.ui_elements.append(self.learn_button)
-
-        # Column 2: Learned Skills
-        col2_x = col1_x + column_width + 20
-        learned_label = UILabel(
-            pygame.Rect(col2_x, y_start, column_width, 30),
-            "Learned Skills",
-            manager
-        )
-        self.ui_elements.append(learned_label)
-
-        learned_items = self._get_learned_skills()
-        self.learned_skills_list = UISelectionList(
-            pygame.Rect(col2_x, y_start + 35, column_width, list_height),
-            learned_items,
-            manager,
-            allow_multi_select=False
-        )
-        self.ui_elements.append(self.learned_skills_list)
-
-        self.equip_button = UIButton(
-            pygame.Rect(col2_x, y_start + list_height + 45, column_width, 40),
-            "Equip Skill",
-            manager
-        )
-        self.ui_elements.append(self.equip_button)
-
-        # Column 3: Equipped Skills
-        col3_x = col2_x + column_width + 20
-        equipped_label = UILabel(
-            pygame.Rect(col3_x, y_start, column_width, 30),
-            f"Equipped Skills ({len(game.current_player.equipped_skills)}/{game.current_player.active_skill_slots})",
-            manager
-        )
-        self.ui_elements.append(equipped_label)
-
-        equipped_items = self._get_equipped_skills()
-        self.equipped_skills_list = UISelectionList(
-            pygame.Rect(col3_x, y_start + 35, column_width, list_height),
-            equipped_items,
-            manager,
-            allow_multi_select=False
-        )
-        self.ui_elements.append(self.equipped_skills_list)
-
-        self.unequip_button = UIButton(
-            pygame.Rect(col3_x, y_start + list_height + 45, column_width, 40),
-            "Unequip Skill",
-            manager
-        )
-        self.ui_elements.append(self.unequip_button)
-
-    def _get_learnable_cards(self):
-        """Get Document cards from inventory that can be transformed into skills."""
-        learnable = []
-        for card in game.current_player.inventory:
-            card_type = card.card_data.get("card_type", "")
-            # Check for Document/Skill compound type or Skill_Tome subclass
-            if "Document/Skill" in card_type or card.card_data.get("subclass") == "Skill_Tome":
-                if card.current_state == 1:  # Still in Document state
-                    name = card.get_current_data().get("Name", "Unknown")
-                    learnable.append(name)
-        return learnable
-
-    def _get_learned_skills(self):
-        """Get all learned skills."""
-        skills = []
-        for card in game.current_player.skills:
-            skill_data = card.get_current_data()
-            name = skill_data.get("Name", "Unknown")
-            skill_type = skill_data.get("Skill_Type", "Unknown")
-            skills.append(f"{name} ({skill_type})")
-        return skills
-
-    def _get_equipped_skills(self):
-        """Get equipped active skills."""
-        equipped = []
-        for card in game.current_player.equipped_skills:
-            skill_data = card.get_current_data()
-            name = skill_data.get("Name", "Unknown")
-            cooldown = game.current_player.skill_cooldowns.get(name, 0)
-            if cooldown > 0:
-                equipped.append(f"{name} (CD:{cooldown})")
-            else:
-                equipped.append(name)
-        return equipped
-
-    def _find_card_by_name(self, name, card_list):
-        """Find a card in a list by its name."""
-        for card in card_list:
-            card_name = card.get_current_data().get("Name", "")
-            if card_name == name:
-                return card
-        return None
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.back_button:
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-
-            elif event.ui_element == self.learn_button:
-                selections = self.learnable_cards_list.get_single_selection()
-                if selections:
-                    # Find the card in inventory
-                    for card in game.current_player.inventory:
-                        card_type = card.card_data.get("card_type", "")
-                        if ("Document/Skill" in card_type or card.card_data.get("subclass") == "Skill_Tome"):
-                            if card.current_state == 1:
-                                name = card.get_current_data().get("Name", "")
-                                if name == selections:
-                                    msg = game.current_player.learn_skill(card)
-                                    print(msg)
-                                    self.initialize_screen()  # Refresh lists
-                                    break
-
-            elif event.ui_element == self.equip_button:
-                selections = self.learned_skills_list.get_single_selection()
-                if selections:
-                    # Parse skill name from "Name (Type)" format
-                    skill_name = selections.split(" (")[0]
-                    for card in game.current_player.skills:
-                        if card.get_current_data().get("Name") == skill_name:
-                            msg = game.current_player.equip_skill(card)
-                            print(msg)
-                            self.initialize_screen()
-                            break
-
-            elif event.ui_element == self.unequip_button:
-                selections = self.equipped_skills_list.get_single_selection()
-                if selections:
-                    # Parse skill name (may have cooldown suffix)
-                    skill_name = selections.split(" (")[0]
-                    for card in game.current_player.equipped_skills:
-                        if card.get_current_data().get("Name") == skill_name:
-                            msg = game.current_player.unequip_skill(card)
-                            print(msg)
-                            self.initialize_screen()
-                            break
-
-    def update(self):
-        # Update flip animations
-        if self.animating_card:
-            if self.animating_card.update_flip_animation():
-                self.animating_card = None
-                self.initialize_screen()  # Refresh after animation complete
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-# CraftingScreen class
-class CraftingScreen:
-    def __init__(self):
-        self.window = None
-        self.junk_list = None
-        self.blueprint_list = None
-        self.materials_list = None
-        self.to_craft_info = None
-        self.selected_material_info = None
-        self.state2_info = None
-        self.requirements_info = None
-        self.craft_button = None
-        self.success_label = None
-        self.close_button = None
-        self.selected_to_craft = None
-        self.selected_materials = set()
-        self.REQUIREMENT_TO_VALUE = {
-            "Requirements: Raw Materials": "Raw Material Value",
-            "Requirements: Refined Materials": "Refined Material Value",
-            "Requirements: Wood": "Wood Value",
-            "Requirements: Metal": "Metal Value"
-        }
-
-    def initialize_screen(self):
-        manager.clear_and_reset()
-        self.window = UIWindow(pygame.Rect((WINDOW_WIDTH - 1380) // 2, (WINDOW_HEIGHT - 900) // 2, 1380, 900), manager, "Crafting")
-        junk_cards = [card for card in game.current_player.inventory if card.card_data["card_type"] == "Junk Card" and card.is_two_state() and card.current_state == 1]
-        self.junk_list = UISelectionList(pygame.Rect(15, 75, 330, 300), 
-                                         [card.get_current_data().get("Name", "Unnamed") for card in junk_cards], 
-                                         manager, container=self.window)
-        blueprint_cards = [card for card in game.current_player.inventory if card.card_data["card_type"] == "Document Card" and card.card_data.get("subclass", "") == "Blueprint" and card.is_two_state() and card.current_state == 1]
-        self.blueprint_list = UISelectionList(pygame.Rect(15, 390, 330, 300), 
-                                              [card.get_current_data().get("Name", "Unnamed") for card in blueprint_cards], 
-                                              manager, container=self.window)
-        self.materials_list = UISelectionList(pygame.Rect(360, 75, 330, 750), 
-                                              [], manager, container=self.window, allow_multi_select=True)
-        self.update_materials_list()
-        self.to_craft_info = UITextBox("<font color='#FFFFFF' size=4>To Craft</font>", pygame.Rect(705, 75, 330, 250), manager, container=self.window)
-        self.selected_material_info = UITextBox("<font color='#FFFFFF' size=4>Selected Material</font>", pygame.Rect(705, 335, 330, 250), manager, container=self.window)
-        self.state2_info = UITextBox("<font color='#FFFFFF' size=4>State 2 Info</font>", pygame.Rect(705, 595, 330, 250), manager, container=self.window)
-        self.requirements_info = UITextBox("<font color='#FFFFFF' size=4>Requirements</font>", pygame.Rect(1050, 75, 330, 300), manager, container=self.window)
-        self.craft_button = UIButton(pygame.Rect(1060, 390, 100, 30), "Craft", manager, container=self.window)
-        self.close_button = UIButton(pygame.Rect(1170, 390, 100, 30), "Close", manager, container=self.window)
-        self.success_label = UILabel(pygame.Rect(1060, 430, 310, 30), "", manager, container=self.window)
-        self.update_requirements_display()
-
-    def update_materials_list(self):
-        materials_cards = [card for card in game.current_player.inventory if card.card_data["card_type"] == "Junk Card" and card.current_state == 1]
-        if self.selected_to_craft and self.selected_to_craft.card_data["card_type"] == "Junk Card":
-            materials_cards = [card for card in materials_cards if card != self.selected_to_craft]
-        self.materials_list.set_item_list([card.get_current_data().get("Name", "Unnamed") for card in materials_cards])
-
-    def update_requirements_display(self):
-        if not self.selected_to_craft:
-            self.requirements_info.set_text("<font color='#FFFFFF' size=4>Requirements</font>")
-            return
-        state1_data = self.selected_to_craft.get_state_data(1)
-        builder_wood_perk = _check_builder_wood_perk()
-
-        # Calculate provided totals from selected materials
-        provided_totals = {val_key: 0 for val_key in self.REQUIREMENT_TO_VALUE.values()}
-        for material in self.selected_materials:
-            material_data = material.get_current_data()
-            for val_key in provided_totals:
-                provided_totals[val_key] += int(material_data.get(val_key, 0) or 0)
-
-        # Build table header
-        requirements_text = "<font color='#FFFFFF' size=4>"
-        requirements_text += "<b>Requirements:</b><br><br>"
-        requirements_text += "<font color='#AAAAAA'>Material</font>           "
-        requirements_text += "<font color='#00FF00'>Have</font>  "
-        requirements_text += "<font color='#FFAA00'>Need</font><br>"
-        requirements_text += "─────────────────────<br>"
-
-        all_met = True
-        for req_key, val_key in self.REQUIREMENT_TO_VALUE.items():
-            required = int(state1_data.get(req_key, 0) or 0)
-            provided = provided_totals[val_key]
-            material_type = req_key.split(": ")[1]
-
-            # Builder wood perk: show Wood as auto-fulfilled on forest terrain
-            if builder_wood_perk and req_key == "Requirements: Wood" and required > 0:
-                padded_type = material_type.ljust(18)
-                requirements_text += f"{padded_type}<font color='#00CCFF'>AUTO</font>   <font color='#FFAA00'>{required:>3}</font><br>"
-                continue
-
-            # Color code: green if met, red if not
-            if provided >= required:
-                have_color = "#00FF00"  # Green - requirement met
-            else:
-                have_color = "#FF4444"  # Red - requirement not met
-                all_met = False
-
-            # Pad material type for alignment (max ~15 chars)
-            padded_type = material_type.ljust(18)
-            requirements_text += f"{padded_type}<font color='{have_color}'>{provided:>3}</font>   <font color='#FFAA00'>{required:>3}</font><br>"
-
-        # Handle specific card requirements
-        specific_cards = state1_data.get("Requirements: Specific Cards", "")
-        if specific_cards:
-            required_cards = [card.strip() for card in specific_cards.split(",") if card.strip()]
-            provided_cards = [material.get_current_data().get("Name", "Unnamed") for material in self.selected_materials]
-            cards_have = len([card for card in required_cards if card in provided_cards])
-            cards_need = len(required_cards)
-
-            if cards_have >= cards_need:
-                have_color = "#00FF00"
-            else:
-                have_color = "#FF4444"
-                all_met = False
-
-            requirements_text += f"{'Specific Cards'.ljust(18)}<font color='{have_color}'>{cards_have:>3}</font>   <font color='#FFAA00'>{cards_need:>3}</font><br>"
-
-        requirements_text += "─────────────────────<br>"
-
-        if all_met:
-            requirements_text += "<font color='#00FF00'><b>✓ Ready to Craft!</b></font>"
-        else:
-            requirements_text += "<font color='#FF4444'>✗ Missing materials</font>"
-
-        requirements_text += "</font>"
-        self.requirements_info.set_text(requirements_text)
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.close_button:
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-            elif event.ui_element == self.craft_button:
-                if self.selected_to_craft and self.check_requirements():
-                    for material in self.selected_materials:
-                        game.current_player.inventory.remove(material)
-                    self.selected_to_craft.toggle_state()
-                    crafted_name = self.selected_to_craft.get_state_data(2).get("Name", "Unnamed Item")
-                    self.success_label.set_text(f"Crafted {crafted_name}")
-                    self.selected_to_craft = None
-                    self.selected_materials.clear()
-                    self.initialize_screen()
-                else:
-                    self.success_label.set_text("Requirements not met or no item selected")
-        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            if event.ui_element in [self.junk_list, self.blueprint_list]:
-                selected_name = event.text
-                cards = (
-                    [card for card in game.current_player.inventory if card.card_data["card_type"] == "Junk Card" and card.is_two_state() and card.current_state == 1]
-                    if event.ui_element == self.junk_list else
-                    [card for card in game.current_player.inventory if card.card_data["card_type"] == "Document Card" and card.card_data.get("subclass", "") == "Blueprint" and card.is_two_state() and card.current_state == 1]
-                )
-                self.selected_to_craft = next((card for card in cards if card.get_state_data(1).get("Name") == selected_name), None)
-                self.update_materials_list()
-                if self.selected_to_craft:
-                    state1_data = self.selected_to_craft.get_state_data(1)
-                    info_text = f"<font color='#FFFFFF' size=4>To Craft: {state1_data.get('Name', 'Unnamed')}<br>" + "<br>".join(f"{k}: {v}" for k, v in state1_data.items() if k != "Name" and v) + "</font>"
-                    self.to_craft_info.set_text(info_text)
-                    state2_data = self.selected_to_craft.get_state_data(2)
-                    state2_text = f"<font color='#FFFFFF' size=4>State 2: {state2_data.get('Name', 'Unnamed')}<br>" + "<br>".join(f"{k}: {v}" for k, v in state2_data.items() if k != 'Name' and v) + "</font>"
-                    self.state2_info.set_text(state2_text)
-                    self.update_requirements_display()
-            elif event.ui_element == self.materials_list:
-                selected_names = self.materials_list.get_multi_selection()
-                materials_cards = [card for card in game.current_player.inventory if card.card_data["card_type"] == "Junk Card" and card.current_state == 1]
-                if self.selected_to_craft and self.selected_to_craft.card_data["card_type"] == "Junk Card":
-                    materials_cards = [card for card in materials_cards if card != self.selected_to_craft]
-                self.selected_materials = {card for card in materials_cards if card.get_current_data().get("Name") in selected_names}
-                if selected_names:
-                    last_material = next((card for card in materials_cards if card.get_current_data().get("Name") == selected_names[-1]), None)
-                    if last_material:
-                        data = last_material.get_current_data()
-                        info_text = f"<font color='#FFFFFF' size=4>Selected Material: {data.get('Name', 'Unnamed')}<br>" + "<br>".join(f"{k}: {v}" for k, v in data.items() if k != "Name" and v) + "</font>"
-                        self.selected_material_info.set_text(info_text)
-                self.update_requirements_display()
-
-    def check_requirements(self):
-        if not self.selected_to_craft:
-            return False
-        builder_wood_perk = _check_builder_wood_perk()
-        state1_data = self.selected_to_craft.get_state_data(1)
-        for req_key, val_key in self.REQUIREMENT_TO_VALUE.items():
-            # Builder wood perk: skip Wood requirement on forest terrain
-            if builder_wood_perk and req_key == "Requirements: Wood":
-                continue
-            required_amount = int(state1_data.get(req_key, 0) or 0)  # Handle empty or None values
-            provided_amount = sum(int(material.get_current_data().get(val_key, 0) or 0) for material in self.selected_materials)
-            if provided_amount < required_amount:
-                return False
-        specific_cards = state1_data.get("Requirements: Specific Cards", "")
-        if specific_cards:
-            required_cards = [card.strip() for card in specific_cards.split(",") if card.strip()]
-            provided_cards = [material.get_current_data().get("Name", "Unnamed") for material in self.selected_materials]
-            if not all(req_card in provided_cards for req_card in required_cards):
-                return False
-        return True
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-class TabbedMenuScreen:
-    """Single tabbed screen combining Inventory, Crafting, Skills, Party, and Quests."""
-    TAB_NAMES = ["Inventory", "Crafting", "Skills", "Party", "Quests"]
-    TAB_WIDTH = 200
-    TAB_HEIGHT = 40
-    CONTENT_Y = 60  # Where content starts below the tab bar
-
-    def __init__(self):
-        self.active_tab = "Inventory"
-        self.tab_buttons = {}  # {name: UIButton}
-        self.close_button = None
-        self.content_elements = []  # All UI elements in content area (killed on tab switch)
-
-        # Inventory tab state
-        self.inv_junk_list = None
-        self.inv_documents_list = None
-        self.inv_weapons_list = None
-        self.inv_consumables_list = None
-        self.inv_equip_button = None
-        self.inv_use_button = None
-        self.inv_use_junk_button = None
-        self.inv_equip_tool_button = None
-        self.inv_equip_accessory_button = None
-        self.inv_browse_cards_button = None
-        self.inv_read_guide_button = None
-        self.inv_info_text = None
-        self.inv_selected_card = None
-        self.inv_selected_from_list = None
-
-        # Crafting tab state
-        self.craft_junk_list = None
-        self.craft_blueprint_list = None
-        self.craft_materials_list = None
-        self.craft_to_craft_info = None
-        self.craft_selected_material_info = None
-        self.craft_state2_info = None
-        self.craft_requirements_info = None
-        self.craft_button = None
-        self.craft_success_label = None
-        self.craft_selected_to_craft = None
-        self.craft_selected_materials = set()
-        self.REQUIREMENT_TO_VALUE = {
-            "Requirements: Raw Materials": "Raw Material Value",
-            "Requirements: Refined Materials": "Refined Material Value",
-            "Requirements: Wood": "Wood Value",
-            "Requirements: Metal": "Metal Value"
-        }
-
-        # Skills tab state
-        self.skill_learnable_list = None
-        self.skill_learned_list = None
-        self.skill_equipped_list = None
-        self.skill_learn_button = None
-        self.skill_equip_button = None
-        self.skill_unequip_button = None
-
-        # Party tab state
-        self.party_list = None
-        self.party_info_text = None
-        self.party_deploy_button = None
-        self.party_recall_button = None
-        self.party_dismiss_button = None
-        self.party_browse_npcs_button = None
-        self.party_selected_member = None
-        self.party_member_names = []
-
-        # Quest tab state
-        self.quest_tab_buttons = []
-        self.quest_current_tab = "active"
-        self.quest_list = None
-        self.quest_details = None
-        self.quest_abandon_button = None
-        self.quest_selected_quest = None
-        self.quest_names = []
-
-    def initialize_screen(self):
-        manager.clear_and_reset()
-        self.content_elements = []
-        self._build_tab_bar()
-        self._build_active_content()
-
-    def _build_tab_bar(self):
-        """Build the persistent tab bar at the top."""
-        total_width = len(self.TAB_NAMES) * self.TAB_WIDTH + (len(self.TAB_NAMES) - 1) * 10
-        start_x = (WINDOW_WIDTH - total_width) // 2
-        self.tab_buttons = {}
-        for i, name in enumerate(self.TAB_NAMES):
-            x = start_x + i * (self.TAB_WIDTH + 10)
-            btn = UIButton(pygame.Rect(x, 10, self.TAB_WIDTH, self.TAB_HEIGHT), name, manager)
-            self.tab_buttons[name] = btn
-        # Close button at far right
-        self.close_button = UIButton(pygame.Rect(WINDOW_WIDTH - 120, 10, 100, self.TAB_HEIGHT), "Close", manager)
-
-    def switch_tab(self, name):
-        """Switch to a different tab, killing content and rebuilding."""
-        self.active_tab = name
-        self._kill_content()
-        self._build_active_content()
-
-    def _kill_content(self):
-        """Kill all content elements (preserving tab bar)."""
-        for elem in self.content_elements:
-            elem.kill()
-        self.content_elements = []
-
-    def _build_active_content(self):
-        """Build content for the currently active tab."""
-        if self.active_tab == "Inventory":
-            self._build_inventory_content()
-        elif self.active_tab == "Crafting":
-            self._build_crafting_content()
-        elif self.active_tab == "Skills":
-            self._build_skills_content()
-        elif self.active_tab == "Party":
-            self._build_party_content()
-        elif self.active_tab == "Quests":
-            self._build_quests_content()
-
-    def _refresh_current_tab(self):
-        """Refresh the current tab content (after equip, craft, etc.)."""
-        self._kill_content()
-        self._build_active_content()
-
-    def _add(self, element):
-        """Helper to track content elements."""
-        self.content_elements.append(element)
-        return element
-
-    # ========================
-    # INVENTORY TAB
-    # ========================
-    def _build_inventory_content(self):
-        self.inv_selected_card = None
-        self.inv_selected_from_list = None
-        y = self.CONTENT_Y
-        column_width = 280
-        column_height = 500
-
-        # Column labels
-        self._add(UILabel(pygame.Rect(10, y, column_width, 25), "Junk / Materials", manager))
-        self._add(UILabel(pygame.Rect(column_width + 20, y, column_width, 25), "Documents", manager))
-        self._add(UILabel(pygame.Rect(2 * column_width + 30, y, column_width, 25), "Weapons", manager))
-        self._add(UILabel(pygame.Rect(3 * column_width + 40, y, column_width, 25), "Consumables / Tools", manager))
-
-        list_y = y + 30
-
-        # Junk cards (column 1)
-        junk_cards = [card for card in game.current_player.inventory if card.current_state == 1 and card.card_data["card_type"] == "Junk Card"]
-        junk_names = []
-        for card in junk_cards:
-            name = card.get_current_data().get("Name", "Unnamed")
-            if card.get_current_data().get("Use_HP") or card.card_data.get("subclass") == "Consumable":
-                name += " [Usable]"
-            junk_names.append(name)
-        self.inv_junk_list = self._add(UISelectionList(pygame.Rect(10, list_y, column_width, column_height),
-                                         junk_names if junk_names else ["No junk items"], manager))
-        self.inv_use_junk_button = self._add(UIButton(pygame.Rect(10, list_y + column_height + 10, column_width, 35), "Use Item", manager))
-
-        # Documents (column 2)
-        documents_cards = [card for card in game.current_player.inventory
-                          if card.card_data["card_type"] == "Document Card"
-                          and (card.current_state == 1 or card.card_data.get("subclass") == "Guide")]
-        self.inv_documents_list = self._add(UISelectionList(pygame.Rect(column_width + 20, list_y, column_width, column_height - 45),
-                                              [card.get_current_data().get("Name", "Unnamed") for card in documents_cards] or ["No documents"], manager))
-        self.inv_read_guide_button = self._add(UIButton(pygame.Rect(column_width + 20, list_y + column_height - 40, column_width, 35),
-                                          "Read Guide", manager))
-
-        # Weapons (column 3)
-        weapons_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") in ["Melee", "Projectile", "Both"]]
-        self.inv_weapons_list = self._add(UISelectionList(pygame.Rect(2 * column_width + 30, list_y, column_width, column_height - 100),
-                                            [card.get_current_data().get("Name", "Unnamed") for card in weapons_cards] or ["No weapons"], manager))
-        self.inv_equip_button = self._add(UIButton(pygame.Rect(2 * column_width + 30, list_y + column_height - 90, column_width, 35), "Equip Weapon", manager))
-
-        # Consumables, Tools, Ammunition (column 4)
-        consumables_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Consumable"]
-        tools_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Tool"]
-        ammo_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") == "Ammunition"]
-        accessory_cards = [card for card in game.current_player.inventory if card.current_state == 2 and card.get_current_data().get("Type") in ["Tool_Belt", "Accessory", "Belt", "Pouch"]]
-        combined_items = consumables_cards + tools_cards + ammo_cards + accessory_cards
-
-        item_names = []
-        for card in combined_items:
-            name = card.get_current_data().get("Name", "Unnamed")
-            card_type = card.get_current_data().get("Type", "")
-            if card_type == "Ammunition":
-                name += " [Ammo]"
-            elif card_type in ["Tool_Belt", "Accessory", "Belt", "Pouch"]:
-                name += " [Accessory]"
-            item_names.append(name)
-
-        self.inv_consumables_list = self._add(UISelectionList(pygame.Rect(3 * column_width + 40, list_y, column_width, column_height - 190),
-                                                item_names if item_names else ["No consumables/tools"], manager))
-        self.inv_use_button = self._add(UIButton(pygame.Rect(3 * column_width + 40, list_y + column_height - 180, column_width, 35), "Use Consumable", manager))
-        self.inv_equip_tool_button = self._add(UIButton(pygame.Rect(3 * column_width + 40, list_y + column_height - 140, column_width, 35), "Equip as Tool/Ammo", manager))
-        self.inv_equip_accessory_button = self._add(UIButton(pygame.Rect(3 * column_width + 40, list_y + column_height - 100, column_width, 35), "Equip Accessory", manager))
-
-        # Item details panel (bottom)
-        detail_y = list_y + column_height + 55
-        self._add(UILabel(pygame.Rect(10, detail_y, 200, 25), "Item Details:", manager))
-        self.inv_info_text = self._add(UITextBox("<font color='#FFFFFF'>Select an item to view its stats and details</font>",
-                                   pygame.Rect(10, detail_y + 25, 870, 120), manager))
-
-        # Creative mode button
-        if game.game_mode == "creative":
-            self.inv_browse_cards_button = self._add(UIButton(pygame.Rect(900, detail_y + 25, 150, 35), "Browse Cards", manager))
-            self._add(UILabel(pygame.Rect(900, detail_y + 70, 150, 25), "[Creative Mode]", manager))
-        else:
-            self.inv_browse_cards_button = None
-
-    def _handle_inventory_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if self.inv_browse_cards_button and event.ui_element == self.inv_browse_cards_button:
-                game.current_screen = "card_browser"
-                card_browser_screen.initialize_screen()
-                return
-            elif event.ui_element == self.inv_equip_button and self.inv_selected_card and self.inv_selected_from_list == "weapons":
-                game.current_player.equip_weapon(self.inv_selected_card)
-                game_screen.player_info_label.set_text(game_screen.get_player_info())
-                self.inv_info_text.set_text("<font color='#00FF00'>Weapon equipped!</font>")
-            elif event.ui_element == self.inv_use_junk_button and self.inv_selected_card and self.inv_selected_from_list == "junk":
-                self._inv_use_consumable_item()
-            elif event.ui_element == self.inv_use_button and self.inv_selected_card and self.inv_selected_from_list == "consumables":
-                self._inv_use_consumable_item()
-            elif event.ui_element == self.inv_equip_tool_button and self.inv_selected_card:
-                if self.inv_selected_from_list in ["junk", "consumables"]:
-                    card_type = self.inv_selected_card.get_current_data().get("Type", "")
-                    if card_type in ["Tool_Belt", "Accessory", "Belt", "Pouch"]:
-                        self.inv_info_text.set_text("<font color='#FF0000'>Use 'Equip Accessory' for tool belts</font>")
-                    else:
-                        msg = game.current_player.equip_tool(self.inv_selected_card)
-                        self.inv_info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
-                        self._refresh_current_tab()
-                else:
-                    self.inv_info_text.set_text("<font color='#FF0000'>Select a consumable, tool, or ammo to equip</font>")
-            elif event.ui_element == self.inv_equip_accessory_button and self.inv_selected_card:
-                if self.inv_selected_from_list == "consumables":
-                    card_type = self.inv_selected_card.get_current_data().get("Type", "")
-                    if card_type in ["Tool_Belt", "Accessory", "Belt", "Pouch"]:
-                        msg = game.current_player.equip_accessory(self.inv_selected_card)
-                        self.inv_info_text.set_text(f"<font color='#00FF00'>{msg}</font>")
-                        self._refresh_current_tab()
-                    else:
-                        self.inv_info_text.set_text("<font color='#FF0000'>Select a tool belt or accessory to equip</font>")
-                else:
-                    self.inv_info_text.set_text("<font color='#FF0000'>Select a tool belt or accessory to equip</font>")
-            elif self.inv_read_guide_button and event.ui_element == self.inv_read_guide_button:
-                if self.inv_selected_card and self.inv_selected_from_list == "documents" and self.inv_selected_card.card_data.get("subclass") == "Guide":
-                    message = game.current_player.read_guide(self.inv_selected_card, game.card_manager)
-                    self.inv_info_text.set_text(f"<font color='#00FFFF'>{message}</font>")
-                    game_screen.add_to_log(message)
-                    self._refresh_current_tab()
-                else:
-                    self.inv_info_text.set_text("<font color='#FF0000'>Select a Guide document to read</font>")
-
-        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            selected_name = event.text
-            clean_name = selected_name.replace(" [Usable]", "")
-
-            if event.ui_element == self.inv_junk_list:
-                self.inv_selected_from_list = "junk"
-                self.inv_selected_card = next((card for card in game.current_player.inventory
-                                          if card.current_state == 1
-                                          and card.card_data["card_type"] == "Junk Card"
-                                          and card.get_current_data().get("Name") == clean_name), None)
-            elif event.ui_element == self.inv_documents_list:
-                self.inv_selected_from_list = "documents"
-                self.inv_selected_card = next((card for card in game.current_player.inventory
-                                          if card.card_data["card_type"] == "Document Card"
-                                          and (card.current_state == 1 or card.card_data.get("subclass") == "Guide")
-                                          and card.get_current_data().get("Name") == clean_name), None)
-            elif event.ui_element == self.inv_weapons_list:
-                self.inv_selected_from_list = "weapons"
-                self.inv_selected_card = next((card for card in game.current_player.inventory
-                                          if card.current_state == 2
-                                          and card.get_current_data().get("Type") in ["Melee", "Projectile", "Both"]
-                                          and card.get_current_data().get("Name") == clean_name), None)
-            elif event.ui_element == self.inv_consumables_list:
-                self.inv_selected_from_list = "consumables"
-                match_name = clean_name.replace(" [Ammo]", "").replace(" [Accessory]", "")
-                self.inv_selected_card = next((card for card in game.current_player.inventory
-                                          if card.current_state == 2
-                                          and card.get_current_data().get("Type") in ["Consumable", "Tool", "Ammunition", "Tool_Belt", "Accessory", "Belt", "Pouch"]
-                                          and card.get_current_data().get("Name") == match_name), None)
-
-            if self.inv_selected_card:
-                card_data = self.inv_selected_card.get_current_data()
-                info_lines = []
-                info_lines.append(f"<b>{card_data.get('Name', 'Unknown')}</b>")
-                if card_data.get('Description'):
-                    info_lines.append(f"<i>{card_data.get('Description')}</i>")
-                info_lines.append("")
-                for k, v in card_data.items():
-                    if v and k not in ['Name', 'Description', 'id']:
-                        info_lines.append(f"{k}: {v}")
-                self.inv_info_text.set_text(f"<font color='#FFFFFF'>{'<br>'.join(info_lines)}</font>")
-            else:
-                self.inv_info_text.set_text("<font color='#FFFFFF'>Select an item to view its stats and details</font>")
-
-    def _inv_use_consumable_item(self):
-        """Use a consumable item (junk or crafted) from inventory tab."""
-        if not self.inv_selected_card:
-            self.inv_info_text.set_text("<font color='#FF0000'>No item selected!</font>")
-            return
-
-        current_data = self.inv_selected_card.get_current_data()
-        hp_effect = current_data.get("Use_HP", "")
-
-        if not hp_effect:
-            self.inv_info_text.set_text(f"<font color='#FF0000'>{current_data.get('Name', 'Item')} cannot be used!</font>")
-            return
-
-        try:
-            if isinstance(hp_effect, list):
-                hp_effect = next((effect for effect in hp_effect if effect and "HP" in effect), "+0HP")
-            hp_str = hp_effect.replace("HP", "").replace("+", "")
-            hp_change = int(hp_str)
-
-            if hp_change > 0:
-                old_hp = game.current_player.hp
-                game.current_player.hp = min(game.current_player.max_hp, game.current_player.hp + hp_change)
-                actual_heal = game.current_player.hp - old_hp
-                game_screen.add_to_log(f"Used {current_data.get('Name', 'Item')}: +{actual_heal} HP ({old_hp} -> {game.current_player.hp})")
-                game.current_player.inventory.remove(self.inv_selected_card)
-                self.inv_selected_card = None
-                self._refresh_current_tab()
-                game_screen.player_info_label.set_text(game_screen.get_player_info())
-            elif hp_change < 0:
-                game.current_player.hp = max(0, game.current_player.hp + hp_change)
-                game_screen.add_to_log(f"Used {current_data.get('Name', 'Item')}: {hp_change} HP")
-                game.current_player.inventory.remove(self.inv_selected_card)
-                self.inv_selected_card = None
-                self._refresh_current_tab()
-                game_screen.player_info_label.set_text(game_screen.get_player_info())
-            else:
-                self.inv_info_text.set_text(f"<font color='#FF0000'>{current_data.get('Name', 'Item')} has no effect!</font>")
-        except (ValueError, AttributeError):
-            self.inv_info_text.set_text(f"<font color='#FF0000'>Cannot use {current_data.get('Name', 'Item')}: invalid effect</font>")
-
-    # ========================
-    # CRAFTING TAB
-    # ========================
-    def _build_crafting_content(self):
-        self.craft_selected_to_craft = None
-        self.craft_selected_materials = set()
-        y = self.CONTENT_Y
-
-        # Layout: 4 columns spread across full screen
-        col_w = 330
-        gap = 15
-        col1_x = 10
-        col2_x = col1_x + col_w + gap
-        col3_x = col2_x + col_w + gap
-        col4_x = col3_x + col_w + gap
-        list_h = 300
-
-        # Column 1: Junk cards to craft
-        self._add(UILabel(pygame.Rect(col1_x, y, col_w, 25), "Junk Items (Craftable)", manager))
-        junk_cards = [card for card in game.current_player.inventory if card.card_data["card_type"] == "Junk Card" and card.is_two_state() and card.current_state == 1]
-        self.craft_junk_list = self._add(UISelectionList(pygame.Rect(col1_x, y + 30, col_w, list_h),
-                                         [card.get_current_data().get("Name", "Unnamed") for card in junk_cards], manager))
-
-        # Blueprints below junk
-        self._add(UILabel(pygame.Rect(col1_x, y + list_h + 40, col_w, 25), "Blueprints", manager))
-        blueprint_cards = [card for card in game.current_player.inventory if card.card_data["card_type"] == "Document Card" and card.card_data.get("subclass", "") == "Blueprint" and card.is_two_state() and card.current_state == 1]
-        self.craft_blueprint_list = self._add(UISelectionList(pygame.Rect(col1_x, y + list_h + 70, col_w, list_h),
-                                              [card.get_current_data().get("Name", "Unnamed") for card in blueprint_cards], manager))
-
-        # Column 2: Materials (multi-select)
-        self._add(UILabel(pygame.Rect(col2_x, y, col_w, 25), "Materials", manager))
-        self.craft_materials_list = self._add(UISelectionList(pygame.Rect(col2_x, y + 30, col_w, list_h * 2 + 40),
-                                              [], manager, allow_multi_select=True))
-        self._craft_update_materials_list()
-
-        # Column 3: Info panels
-        self.craft_to_craft_info = self._add(UITextBox("<font color='#FFFFFF' size=4>To Craft</font>",
-                                              pygame.Rect(col3_x, y + 30, col_w, 220), manager))
-        self.craft_selected_material_info = self._add(UITextBox("<font color='#FFFFFF' size=4>Selected Material</font>",
-                                              pygame.Rect(col3_x, y + 260, col_w, 220), manager))
-        self.craft_state2_info = self._add(UITextBox("<font color='#FFFFFF' size=4>State 2 Info</font>",
-                                              pygame.Rect(col3_x, y + 490, col_w, 220), manager))
-
-        # Column 4: Requirements + craft button
-        self.craft_requirements_info = self._add(UITextBox("<font color='#FFFFFF' size=4>Requirements</font>",
-                                              pygame.Rect(col4_x, y + 30, col_w, 300), manager))
-        self.craft_button = self._add(UIButton(pygame.Rect(col4_x, y + 340, 150, 30), "Craft", manager))
-        self.craft_success_label = self._add(UILabel(pygame.Rect(col4_x, y + 380, col_w, 30), "", manager))
-        self._craft_update_requirements_display()
-
-    def _craft_update_materials_list(self):
-        materials_cards = [card for card in game.current_player.inventory if card.card_data["card_type"] == "Junk Card" and card.current_state == 1]
-        if self.craft_selected_to_craft and self.craft_selected_to_craft.card_data["card_type"] == "Junk Card":
-            materials_cards = [card for card in materials_cards if card != self.craft_selected_to_craft]
-        self.craft_materials_list.set_item_list([card.get_current_data().get("Name", "Unnamed") for card in materials_cards])
-
-    def _craft_update_requirements_display(self):
-        if not self.craft_selected_to_craft:
-            self.craft_requirements_info.set_text("<font color='#FFFFFF' size=4>Requirements</font>")
-            return
-        state1_data = self.craft_selected_to_craft.get_state_data(1)
-        builder_wood_perk = _check_builder_wood_perk()
-
-        provided_totals = {val_key: 0 for val_key in self.REQUIREMENT_TO_VALUE.values()}
-        for material in self.craft_selected_materials:
-            material_data = material.get_current_data()
-            for val_key in provided_totals:
-                provided_totals[val_key] += int(material_data.get(val_key, 0) or 0)
-
-        requirements_text = "<font color='#FFFFFF' size=4>"
-        requirements_text += "<b>Requirements:</b><br><br>"
-        requirements_text += "<font color='#AAAAAA'>Material</font>           "
-        requirements_text += "<font color='#00FF00'>Have</font>  "
-        requirements_text += "<font color='#FFAA00'>Need</font><br>"
-        requirements_text += "─────────────────────<br>"
-
-        all_met = True
-        for req_key, val_key in self.REQUIREMENT_TO_VALUE.items():
-            required = int(state1_data.get(req_key, 0) or 0)
-            provided = provided_totals[val_key]
-            material_type = req_key.split(": ")[1]
-
-            # Builder wood perk: show Wood as auto-fulfilled on forest terrain
-            if builder_wood_perk and req_key == "Requirements: Wood" and required > 0:
-                padded_type = material_type.ljust(18)
-                requirements_text += f"{padded_type}<font color='#00CCFF'>AUTO</font>   <font color='#FFAA00'>{required:>3}</font><br>"
-                continue
-
-            if provided >= required:
-                have_color = "#00FF00"
-            else:
-                have_color = "#FF4444"
-                all_met = False
-
-            padded_type = material_type.ljust(18)
-            requirements_text += f"{padded_type}<font color='{have_color}'>{provided:>3}</font>   <font color='#FFAA00'>{required:>3}</font><br>"
-
-        specific_cards = state1_data.get("Requirements: Specific Cards", "")
-        if specific_cards:
-            required_cards = [card.strip() for card in specific_cards.split(",") if card.strip()]
-            provided_cards = [material.get_current_data().get("Name", "Unnamed") for material in self.craft_selected_materials]
-            cards_have = len([card for card in required_cards if card in provided_cards])
-            cards_need = len(required_cards)
-
-            if cards_have >= cards_need:
-                have_color = "#00FF00"
-            else:
-                have_color = "#FF4444"
-                all_met = False
-
-            requirements_text += f"{'Specific Cards'.ljust(18)}<font color='{have_color}'>{cards_have:>3}</font>   <font color='#FFAA00'>{cards_need:>3}</font><br>"
-
-        requirements_text += "─────────────────────<br>"
-
-        if all_met:
-            requirements_text += "<font color='#00FF00'><b>✓ Ready to Craft!</b></font>"
-        else:
-            requirements_text += "<font color='#FF4444'>✗ Missing materials</font>"
-
-        requirements_text += "</font>"
-        self.craft_requirements_info.set_text(requirements_text)
-
-    def _craft_check_requirements(self):
-        if not self.craft_selected_to_craft:
-            return False
-        builder_wood_perk = _check_builder_wood_perk()
-        state1_data = self.craft_selected_to_craft.get_state_data(1)
-        for req_key, val_key in self.REQUIREMENT_TO_VALUE.items():
-            # Builder wood perk: skip Wood requirement on forest terrain
-            if builder_wood_perk and req_key == "Requirements: Wood":
-                continue
-            required_amount = int(state1_data.get(req_key, 0) or 0)
-            provided_amount = sum(int(material.get_current_data().get(val_key, 0) or 0) for material in self.craft_selected_materials)
-            if provided_amount < required_amount:
-                return False
-        specific_cards = state1_data.get("Requirements: Specific Cards", "")
-        if specific_cards:
-            required_cards = [card.strip() for card in specific_cards.split(",") if card.strip()]
-            provided_cards = [material.get_current_data().get("Name", "Unnamed") for material in self.craft_selected_materials]
-            if not all(req_card in provided_cards for req_card in required_cards):
-                return False
-        return True
-
-    def _handle_crafting_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.craft_button:
-                if self.craft_selected_to_craft and self._craft_check_requirements():
-                    for material in self.craft_selected_materials:
-                        game.current_player.inventory.remove(material)
-                    self.craft_selected_to_craft.toggle_state()
-                    crafted_name = self.craft_selected_to_craft.get_state_data(2).get("Name", "Unnamed Item")
-                    self.craft_selected_to_craft = None
-                    self.craft_selected_materials.clear()
-                    self._refresh_current_tab()
-                    self.craft_success_label.set_text(f"Crafted {crafted_name}")
-                else:
-                    self.craft_success_label.set_text("Requirements not met or no item selected")
-        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            if event.ui_element in [self.craft_junk_list, self.craft_blueprint_list]:
-                selected_name = event.text
-                cards = (
-                    [card for card in game.current_player.inventory if card.card_data["card_type"] == "Junk Card" and card.is_two_state() and card.current_state == 1]
-                    if event.ui_element == self.craft_junk_list else
-                    [card for card in game.current_player.inventory if card.card_data["card_type"] == "Document Card" and card.card_data.get("subclass", "") == "Blueprint" and card.is_two_state() and card.current_state == 1]
-                )
-                self.craft_selected_to_craft = next((card for card in cards if card.get_state_data(1).get("Name") == selected_name), None)
-                self._craft_update_materials_list()
-                if self.craft_selected_to_craft:
-                    state1_data = self.craft_selected_to_craft.get_state_data(1)
-                    info_text = f"<font color='#FFFFFF' size=4>To Craft: {state1_data.get('Name', 'Unnamed')}<br>" + "<br>".join(f"{k}: {v}" for k, v in state1_data.items() if k != "Name" and v) + "</font>"
-                    self.craft_to_craft_info.set_text(info_text)
-                    state2_data = self.craft_selected_to_craft.get_state_data(2)
-                    state2_text = f"<font color='#FFFFFF' size=4>State 2: {state2_data.get('Name', 'Unnamed')}<br>" + "<br>".join(f"{k}: {v}" for k, v in state2_data.items() if k != 'Name' and v) + "</font>"
-                    self.craft_state2_info.set_text(state2_text)
-                    self._craft_update_requirements_display()
-            elif event.ui_element == self.craft_materials_list:
-                selected_names = self.craft_materials_list.get_multi_selection()
-                materials_cards = [card for card in game.current_player.inventory if card.card_data["card_type"] == "Junk Card" and card.current_state == 1]
-                if self.craft_selected_to_craft and self.craft_selected_to_craft.card_data["card_type"] == "Junk Card":
-                    materials_cards = [card for card in materials_cards if card != self.craft_selected_to_craft]
-                self.craft_selected_materials = {card for card in materials_cards if card.get_current_data().get("Name") in selected_names}
-                if selected_names:
-                    last_material = next((card for card in materials_cards if card.get_current_data().get("Name") == selected_names[-1]), None)
-                    if last_material:
-                        data = last_material.get_current_data()
-                        info_text = f"<font color='#FFFFFF' size=4>Selected Material: {data.get('Name', 'Unnamed')}<br>" + "<br>".join(f"{k}: {v}" for k, v in data.items() if k != "Name" and v) + "</font>"
-                        self.craft_selected_material_info.set_text(info_text)
-                self._craft_update_requirements_display()
-
-    # ========================
-    # SKILLS TAB
-    # ========================
-    def _build_skills_content(self):
-        self.skill_selected_learnable = None
-        self.skill_selected_learned = None
-        self.skill_selected_equipped = None
-        y = self.CONTENT_Y
-
-        column_width = (WINDOW_WIDTH - 80) // 3
-        list_height = WINDOW_HEIGHT - 250
-
-        # Column 1: Learnable Documents
-        col1_x = 20
-        self._add(UILabel(pygame.Rect(col1_x, y, column_width, 30), "Learnable Documents", manager))
-        learnable_items = self._skill_get_learnable_cards()
-        self.skill_learnable_list = self._add(UISelectionList(
-            pygame.Rect(col1_x, y + 35, column_width, list_height),
-            learnable_items, manager, allow_multi_select=False))
-        self.skill_learn_button = self._add(UIButton(
-            pygame.Rect(col1_x, y + list_height + 45, column_width, 40), "Learn Skill", manager))
-
-        # Column 2: Learned Skills
-        col2_x = col1_x + column_width + 20
-        self._add(UILabel(pygame.Rect(col2_x, y, column_width, 30), "Learned Skills", manager))
-        learned_items = self._skill_get_learned_skills()
-        self.skill_learned_list = self._add(UISelectionList(
-            pygame.Rect(col2_x, y + 35, column_width, list_height),
-            learned_items, manager, allow_multi_select=False))
-        self.skill_equip_button = self._add(UIButton(
-            pygame.Rect(col2_x, y + list_height + 45, column_width, 40), "Equip Skill", manager))
-
-        # Column 3: Equipped Skills
-        col3_x = col2_x + column_width + 20
-        self._add(UILabel(pygame.Rect(col3_x, y, column_width, 30),
-            f"Equipped Skills ({len(game.current_player.equipped_skills)}/{game.current_player.active_skill_slots})", manager))
-        equipped_items = self._skill_get_equipped_skills()
-        self.skill_equipped_list = self._add(UISelectionList(
-            pygame.Rect(col3_x, y + 35, column_width, list_height),
-            equipped_items, manager, allow_multi_select=False))
-        self.skill_unequip_button = self._add(UIButton(
-            pygame.Rect(col3_x, y + list_height + 45, column_width, 40), "Unequip Skill", manager))
-
-    def _skill_get_learnable_cards(self):
-        learnable = []
-        for card in game.current_player.inventory:
-            card_type = card.card_data.get("card_type", "")
-            if "Document/Skill" in card_type or card.card_data.get("subclass") == "Skill_Tome":
-                if card.current_state == 1:
-                    name = card.get_current_data().get("Name", "Unknown")
-                    learnable.append(name)
-        return learnable
-
-    def _skill_get_learned_skills(self):
-        skills = []
-        for card in game.current_player.skills:
-            skill_data = card.get_current_data()
-            name = skill_data.get("Name", "Unknown")
-            skill_type = skill_data.get("Skill_Type", "Unknown")
-            skills.append(f"{name} ({skill_type})")
-        return skills
-
-    def _skill_get_equipped_skills(self):
-        equipped = []
-        for card in game.current_player.equipped_skills:
-            skill_data = card.get_current_data()
-            name = skill_data.get("Name", "Unknown")
-            cooldown = game.current_player.skill_cooldowns.get(name, 0)
-            if cooldown > 0:
-                equipped.append(f"{name} (CD:{cooldown})")
-            else:
-                equipped.append(name)
-        return equipped
-
-    def _handle_skills_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.skill_learn_button:
-                selections = self.skill_learnable_list.get_single_selection()
-                if selections:
-                    for card in game.current_player.inventory:
-                        card_type = card.card_data.get("card_type", "")
-                        if ("Document/Skill" in card_type or card.card_data.get("subclass") == "Skill_Tome"):
-                            if card.current_state == 1:
-                                name = card.get_current_data().get("Name", "")
-                                if name == selections:
-                                    game.current_player.learn_skill(card)
-                                    self._refresh_current_tab()
-                                    break
-
-            elif event.ui_element == self.skill_equip_button:
-                selections = self.skill_learned_list.get_single_selection()
-                if selections:
-                    skill_name = selections.split(" (")[0]
-                    for card in game.current_player.skills:
-                        if card.get_current_data().get("Name") == skill_name:
-                            game.current_player.equip_skill(card)
-                            self._refresh_current_tab()
-                            break
-
-            elif event.ui_element == self.skill_unequip_button:
-                selections = self.skill_equipped_list.get_single_selection()
-                if selections:
-                    skill_name = selections.split(" (")[0]
-                    for card in game.current_player.equipped_skills:
-                        if card.get_current_data().get("Name") == skill_name:
-                            game.current_player.unequip_skill(card)
-                            self._refresh_current_tab()
-                            break
-
-    # ========================
-    # PARTY TAB
-    # ========================
-    def _build_party_content(self):
-        self.party_selected_member = None
-        y = self.CONTENT_Y
-
-        # Header
-        self._add(UILabel(pygame.Rect(10, y, 880, 30), "Your Party Members", manager))
-
-        # Party members list (left side)
-        self._add(UILabel(pygame.Rect(10, y + 40, 300, 25), "Party Members:", manager))
-
-        party_names = []
-        for card in game.current_party:
-            card_data = card.get_current_data()
-            name = card_data.get("Name", "Unknown")
-            deployed = any(u.card_id == card.card_data.get("id") for u in game_screen.hex_grid.units if u.allegiance == "Allied")
-            status = " [Deployed]" if deployed else ""
-            party_names.append(f"{name}{status}")
-
-        self.party_list = self._add(pygame_gui.elements.UISelectionList(
-            pygame.Rect(10, y + 70, 300, 400),
-            party_names if party_names else ["No party members"],
-            manager))
-        self.party_member_names = party_names if party_names else []
-
-        # Info panel (middle)
-        self._add(UILabel(pygame.Rect(320, y + 40, 270, 25), "Member Details:", manager))
-        self.party_info_text = self._add(pygame_gui.elements.UITextBox(
-            "<font color='#FFFFFF'>Select a party member to view details</font>",
-            pygame.Rect(320, y + 70, 270, 350), manager))
-
-        # Behavior tree panel (right side)
-        bt_x = 600
-        self._add(UILabel(pygame.Rect(bt_x, y + 40, 280, 25), "Behavior Priority:", manager))
-        self.party_bt_list = None
-        self.party_bt_stubborn_label = None
-        self.party_bt_move_up = None
-        self.party_bt_move_down = None
-        self.party_bt_add_dropdown = None
-        self.party_bt_add_button = None
-        self.party_bt_remove_button = None
-        self.party_bt_set_target = None
-
-        # Placeholder behavior panel (populated when member selected)
-        self.party_bt_list = self._add(pygame_gui.elements.UISelectionList(
-            pygame.Rect(bt_x, y + 70, 280, 200),
-            ["Select a member"],
-            manager))
-
-        # Behavior tree buttons (initially hidden, shown when non-stubborn member selected)
-        self.party_bt_move_up = self._add(UIButton(pygame.Rect(bt_x, y + 275, 135, 30), "Move Up", manager))
-        self.party_bt_move_down = self._add(UIButton(pygame.Rect(bt_x + 145, y + 275, 135, 30), "Move Down", manager))
-        self.party_bt_remove_button = None
-        self.party_bt_add_dropdown = None
-        self.party_bt_add_button = None
-        self.party_bt_set_target = self._add(UIButton(pygame.Rect(bt_x, y + 310, 280, 30), "Set Target on Map", manager))
-        self.party_bt_set_target.hide()
-
-        # Action buttons
-        self.party_deploy_button = self._add(UIButton(pygame.Rect(320, y + 430, 170, 35), "Deploy to Map", manager))
-        self.party_recall_button = self._add(UIButton(pygame.Rect(500, y + 430, 170, 35), "Recall to Party", manager))
-        self.party_dismiss_button = self._add(UIButton(pygame.Rect(320, y + 475, 350, 35), "Dismiss from Party", manager))
-
-        # Creative mode button (browse all NPCs)
-        if game.game_mode == "creative":
-            self.party_browse_npcs_button = self._add(UIButton(pygame.Rect(320, y + 520, 170, 35), "Browse NPCs", manager))
-            self._add(UILabel(pygame.Rect(500, y + 520, 150, 35), "[Creative Mode]", manager))
-        else:
-            self.party_browse_npcs_button = None
-
-    def _get_party_member_behavior_tree(self, card):
-        """Get the current behavior tree for a party member (from deployed unit or overrides)."""
-        from unit import Unit
-        card_id = card.card_data.get("id")
-        # Check if deployed — use live unit's tree
-        for unit in game_screen.hex_grid.units:
-            if unit.card_id == card_id and unit.allegiance == "Allied":
-                return list(unit.behavior_tree), unit.is_stubborn
-        # Check overrides
-        if card_id in game.party_behavior_overrides:
-            override = game.party_behavior_overrides[card_id]
-            return list(override.get("tree", ["attack_closest"])), False
-        # Build default from card data
-        card_data = card.get_current_data()
-        dummy_data = {"id": card_id, "card_type": "NPC Card", "states": 1, "data": card_data}
-        dummy = Unit(dummy_data)
-        return list(dummy.behavior_tree), dummy.is_stubborn
-
-    def _refresh_party_behavior_panel(self, card):
-        """Refresh the behavior tree panel for the selected party member."""
-        from unit import Unit
-        tree, is_stubborn = self._get_party_member_behavior_tree(card)
-
-        # Build display labels from tree
-        labels = []
-        for b in tree:
-            info = Unit.BEHAVIOR_REGISTRY.get(b, {})
-            labels.append(info.get("label", b))
-
-        if not labels:
-            labels = ["(empty)"]
-
-        if self.party_bt_list:
-            self.party_bt_list.set_item_list(labels)
-
-        # Show/hide controls based on stubborn
-        if is_stubborn:
-            if self.party_bt_move_up: self.party_bt_move_up.hide()
-            if self.party_bt_move_down: self.party_bt_move_down.hide()
-            if self.party_bt_set_target: self.party_bt_set_target.hide()
-        else:
-            if self.party_bt_move_up: self.party_bt_move_up.show()
-            if self.party_bt_move_down: self.party_bt_move_down.show()
-            # Show set target button if tree has follow_target or attack_target
-            if "follow_target" in tree or "attack_target" in tree:
-                if self.party_bt_set_target: self.party_bt_set_target.show()
-            else:
-                if self.party_bt_set_target: self.party_bt_set_target.hide()
-
-    def _save_party_behavior_tree(self, card, tree, follow_target=None, attack_target=None):
-        """Save a modified behavior tree to both the deployed unit and overrides."""
-        card_id = card.card_data.get("id")
-        # Update deployed unit if exists
-        for unit in game_screen.hex_grid.units:
-            if unit.card_id == card_id and unit.allegiance == "Allied":
-                unit.behavior_tree = list(tree)
-                if follow_target is not None:
-                    unit.behavior_follow_target = follow_target
-                if attack_target is not None:
-                    unit.behavior_attack_target = attack_target
-                break
-        # Always save to overrides
-        if card_id not in game.party_behavior_overrides:
-            game.party_behavior_overrides[card_id] = {}
-        game.party_behavior_overrides[card_id]["tree"] = list(tree)
-        if follow_target is not None:
-            game.party_behavior_overrides[card_id]["follow_target"] = follow_target
-        if attack_target is not None:
-            game.party_behavior_overrides[card_id]["attack_target"] = attack_target
-
-    def _handle_party_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if self.party_browse_npcs_button and event.ui_element == self.party_browse_npcs_button:
-                game.current_screen = "npc_browser"
-                npc_browser_screen.initialize_screen()
-                return
-            if event.ui_element == self.party_deploy_button:
-                self._party_deploy_member()
-                return
-            if event.ui_element == self.party_recall_button:
-                self._party_recall_member()
-                return
-            if event.ui_element == self.party_dismiss_button:
-                self._party_dismiss_member()
-                return
-
-            # Behavior tree controls
-            if self.party_selected_member is not None and self.party_selected_member < len(game.current_party):
-                card = game.current_party[self.party_selected_member]
-                tree, is_stubborn = self._get_party_member_behavior_tree(card)
-                if not is_stubborn:
-                    if self.party_bt_move_up and event.ui_element == self.party_bt_move_up:
-                        self._party_bt_move(card, tree, -1)
-                        return
-                    if self.party_bt_move_down and event.ui_element == self.party_bt_move_down:
-                        self._party_bt_move(card, tree, 1)
-                        return
-                    if self.party_bt_set_target and event.ui_element == self.party_bt_set_target:
-                        self._party_bt_enter_target_mode(card, tree)
-                        return
-
-        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            if event.ui_element == self.party_list:
-                selection = self.party_list.get_single_selection()
-                if selection and selection != "No party members" and selection in self.party_member_names:
-                    idx = self.party_member_names.index(selection)
-                    if idx < len(game.current_party):
-                        self.party_selected_member = idx
-                        card = game.current_party[idx]
-                        card_data = card.get_current_data()
-
-                        info_lines = []
-                        info_lines.append(f"<b>{card_data.get('Name', 'Unknown')}</b>")
-                        info_lines.append(f"")
-                        info_lines.append(f"Health: {card_data.get('Health', '?')}")
-                        info_lines.append(f"Movement: {card_data.get('Movement', '?')}")
-                        info_lines.append(f"Melee Damage: {card_data.get('Melee Damage', '0')}")
-                        if card_data.get('Projectile Damage'):
-                            info_lines.append(f"Projectile Damage: {card_data.get('Projectile Damage')}")
-                            info_lines.append(f"Projectile Range: {card_data.get('Projectile Range', '0')}")
-                        if card_data.get('Special Skill'):
-                            info_lines.append(f"Special Skill: {card_data.get('Special Skill')}")
-                        if card_data.get('Description'):
-                            info_lines.append(f"")
-                            info_lines.append(f"{card_data.get('Description')}")
-
-                        self.party_info_text.set_text(f"<font color='#FFFFFF'>{'<br>'.join(info_lines)}</font>")
-
-                        # Refresh behavior tree panel
-                        self._refresh_party_behavior_panel(card)
-
-    def _party_bt_move(self, card, tree, direction):
-        """Move the selected behavior up or down in the tree."""
-        from unit import Unit
-        if not self.party_bt_list:
-            return
-        selection = self.party_bt_list.get_single_selection()
-        if not selection:
-            return
-        # Find index by matching label to tree
-        for i, b in enumerate(tree):
-            info = Unit.BEHAVIOR_REGISTRY.get(b, {})
-            if info.get("label", b) == selection:
-                new_idx = i + direction
-                if 0 <= new_idx < len(tree):
-                    tree[i], tree[new_idx] = tree[new_idx], tree[i]
-                    self._save_party_behavior_tree(card, tree)
-                    self._refresh_party_behavior_panel(card)
-                return
-
-    def _party_bt_enter_target_mode(self, card, tree):
-        """Enter target selection mode on the map for follow_target/attack_target behaviors."""
-        card_id = card.card_data.get("id")
-        # Determine which target type is needed
-        target_type = None
-        if "follow_target" in tree:
-            target_type = "follow_target"
-        elif "attack_target" in tree:
-            target_type = "attack_target"
-        if not target_type:
-            return
-        # Close the menu and enter target selection mode on the game screen
-        game_screen.behavior_target_type = target_type
-        game_screen.behavior_target_npc_card_id = card_id
-        game_screen.player_mode = "behavior_target_select"
-        game.current_screen = "game"
-        game_screen.initialize_screen()
-
-    def _party_deploy_member(self):
-        if self.party_selected_member is None:
-            self.party_info_text.set_text("<font color='#FF0000'>Select a party member first!</font>")
-            return
-
-        card = game.current_party[self.party_selected_member]
-        card_data = card.get_current_data()
-        name = card_data.get("Name", "Unknown")
-
-        already_deployed = any(u.card_id == card.card_data.get("id") for u in game_screen.hex_grid.units if u.allegiance == "Allied")
-        if already_deployed:
-            self.party_info_text.set_text(f"<font color='#FF0000'>{name} is already deployed!</font>")
-            return
-
-        player_pos = game.current_player.position
-        neighbors = game_screen.hex_grid.get_neighbors(*player_pos)
-        deploy_pos = None
-        for n in neighbors:
-            row, col = n
-            if 0 <= row < game_screen.hex_grid.rows and 0 <= col < game_screen.hex_grid.cols:
-                cell = game_screen.hex_grid.grid[row][col]
-                if cell["unit"] is None and cell.get("accessible", True):
-                    deploy_pos = n
-                    break
-
-        if not deploy_pos:
-            self.party_info_text.set_text(f"<font color='#FF0000'>No space near player to deploy {name}!</font>")
-            return
-
-        from unit import Unit
-        card_id = card.card_data.get("id")
-        # Check for player-customized behavior tree override
-        override = game.party_behavior_overrides.get(card_id, {})
-        custom_tree = override.get("tree", None)
-        unit_data = {
-            "id": card_id,
-            "card_type": "NPC Card",
-            "states": card.states,
-            "data": card_data
-        }
-        if custom_tree:
-            unit_data["custom_behavior_tree"] = custom_tree
-        unit = Unit(unit_data)
-        unit.set_allegiance("Allied")
-        # Apply behavior target overrides (stubborn NPCs ignore overrides)
-        if not unit.is_stubborn and override:
-            if override.get("follow_target"):
-                unit.behavior_follow_target = override["follow_target"]
-            if override.get("attack_target"):
-                unit.behavior_attack_target = override["attack_target"]
-        game_screen.hex_grid.place_unit(unit, deploy_pos[0], deploy_pos[1])
-
-        game_screen.add_to_log(f"{name} deployed to the battlefield!")
-        self.party_info_text.set_text(f"<font color='#00FF00'>{name} deployed!</font>")
-        self._refresh_current_tab()
-
-    def _party_recall_member(self):
-        if self.party_selected_member is None:
-            self.party_info_text.set_text("<font color='#FF0000'>Select a party member first!</font>")
-            return
-
-        card = game.current_party[self.party_selected_member]
-        card_data = card.get_current_data()
-        name = card_data.get("Name", "Unknown")
-
-        deployed_unit = None
-        for unit in game_screen.hex_grid.units:
-            if unit.card_id == card.card_data.get("id") and unit.allegiance == "Allied":
-                deployed_unit = unit
-                break
-
-        if not deployed_unit:
-            self.party_info_text.set_text(f"<font color='#FF0000'>{name} is not deployed!</font>")
-            return
-
-        player_pos = game.current_player.position
-        unit_pos = deployed_unit.position
-        distance = game_screen.hex_grid.hex_distance(player_pos, unit_pos)
-        if distance > 1:
-            self.party_info_text.set_text(f"<font color='#FF0000'>{name} must be adjacent to recall!</font>")
-            return
-
-        # Save behavior state before removing (unless stubborn)
-        if not getattr(deployed_unit, 'is_stubborn', False):
-            card_id = card.card_data.get("id")
-            game.party_behavior_overrides[card_id] = {
-                "tree": list(deployed_unit.behavior_tree),
-                "follow_target": deployed_unit.behavior_follow_target,
-                "attack_target": deployed_unit.behavior_attack_target,
-            }
-
-        game_screen.hex_grid.grid[deployed_unit.position[0]][deployed_unit.position[1]]["unit"] = None
-        game_screen.hex_grid.units.remove(deployed_unit)
-
-        game_screen.add_to_log(f"{name} recalled to party.")
-        self.party_info_text.set_text(f"<font color='#00FF00'>{name} recalled!</font>")
-        self._refresh_current_tab()
-
-    def _party_dismiss_member(self):
-        if self.party_selected_member is None:
-            self.party_info_text.set_text("<font color='#FF0000'>Select a party member first!</font>")
-            return
-
-        card = game.current_party[self.party_selected_member]
-        card_data = card.get_current_data()
-        name = card_data.get("Name", "Unknown")
-
-        for unit in game_screen.hex_grid.units[:]:
-            if unit.card_id == card.card_data.get("id") and unit.allegiance == "Allied":
-                game_screen.hex_grid.grid[unit.position[0]][unit.position[1]]["unit"] = None
-                game_screen.hex_grid.units.remove(unit)
-                break
-
-        game.current_party.remove(card)
-        game_screen.add_to_log(f"{name} dismissed from party.")
-        self.party_selected_member = None
-        self._refresh_current_tab()
-
-    # ========================
-    # QUESTS TAB
-    # ========================
-    def _build_quests_content(self):
-        self.quest_selected_quest = None
-        y = self.CONTENT_Y
-
-        # Sub-tab buttons for active/completed/failed
-        tab_y = y
-        tab_width = 150
-        self.quest_tab_buttons = []
-
-        active_count = len(game.current_quest_manager.active_quests)
-        completed_count = len(game.current_quest_manager.completed_quests)
-        failed_count = len(game.current_quest_manager.failed_quests)
-
-        active_btn = self._add(UIButton(pygame.Rect(10, tab_y, tab_width, 30), f"Active ({active_count})", manager))
-        self.quest_tab_buttons.append(("active", active_btn))
-
-        completed_btn = self._add(UIButton(pygame.Rect(170, tab_y, tab_width, 30), f"Completed ({completed_count})", manager))
-        self.quest_tab_buttons.append(("completed", completed_btn))
-
-        failed_btn = self._add(UIButton(pygame.Rect(330, tab_y, tab_width, 30), f"Failed ({failed_count})", manager))
-        self.quest_tab_buttons.append(("failed", failed_btn))
-
-        # Quest list (left panel)
-        self._add(UILabel(pygame.Rect(10, tab_y + 40, 350, 25), "Quests:", manager))
-
-        quest_names = self._quest_get_names_for_tab()
-        self.quest_names = quest_names
-        self.quest_list = self._add(pygame_gui.elements.UISelectionList(
-            pygame.Rect(10, tab_y + 70, 350, 500),
-            quest_names if quest_names else ["No quests"],
-            manager))
-
-        # Quest details (right panel)
-        self._add(UILabel(pygame.Rect(370, tab_y + 40, 600, 25), "Quest Details:", manager))
-        self.quest_details = self._add(pygame_gui.elements.UITextBox(
-            "<font color='#FFFFFF'>Select a quest to view details</font>",
-            pygame.Rect(370, tab_y + 70, 600, 500), manager))
-
-        # Abandon button (only for active tab)
-        if self.quest_current_tab == "active":
-            self.quest_abandon_button = self._add(UIButton(
-                pygame.Rect(370, tab_y + 580, 150, 35), "Abandon Quest", manager))
-        else:
-            self.quest_abandon_button = None
-
-    def _quest_get_names_for_tab(self):
-        if self.quest_current_tab == "active":
-            return [q.get_display_name() for q in game.current_quest_manager.active_quests]
-        elif self.quest_current_tab == "completed":
-            return [q.get_display_name() for q in game.current_quest_manager.completed_quests]
-        elif self.quest_current_tab == "failed":
-            return [q.get_display_name() for q in game.current_quest_manager.failed_quests]
-        return []
-
-    def _quest_get_quests_for_tab(self):
-        if self.quest_current_tab == "active":
-            return game.current_quest_manager.active_quests
-        elif self.quest_current_tab == "completed":
-            return game.current_quest_manager.completed_quests
-        elif self.quest_current_tab == "failed":
-            return game.current_quest_manager.failed_quests
-        return []
-
-    def _quest_update_details(self):
-        if not self.quest_selected_quest:
-            self.quest_details.set_text("<font color='#FFFFFF'>Select a quest to view details</font>")
-            return
-
-        quest = self.quest_selected_quest
-        lines = []
-        lines.append(f"<b>{quest.get_display_name()}</b>")
-        lines.append("")
-
-        if quest.is_complete:
-            lines.append("<font color='#00FF00'>Status: COMPLETED</font>")
-        elif quest.is_failed:
-            lines.append("<font color='#FF0000'>Status: FAILED</font>")
-        else:
-            lines.append("<font color='#FFFF00'>Status: IN PROGRESS</font>")
-        lines.append("")
-
-        lines.append("<b>Description:</b>")
-        lines.append(quest.get_filled_description())
-        lines.append("")
-
-        if quest.tracked_units:
-            lines.append("<b>Tracked Characters:</b>")
-            for pid, unit in quest.tracked_units.items():
-                status = "Active" if unit.hp > 0 else "Defeated"
-                lines.append(f"- {pid}: {unit.name} ({status})")
-            lines.append("")
-
-        if quest.tracked_locations:
-            lines.append("<b>Tracked Locations:</b>")
-            for pid, pos in quest.tracked_locations.items():
-                lines.append(f"- {pid}: Position {pos}")
-            lines.append("")
-
-        lines.append(f"Turns elapsed: {quest.turn_count}")
-        self.quest_details.set_text(f"<font color='#FFFFFF'>{'<br>'.join(lines)}</font>")
-
-    def _handle_quests_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            # Quest sub-tab buttons
-            for tab_name, btn in self.quest_tab_buttons:
-                if event.ui_element == btn:
-                    self.quest_current_tab = tab_name
-                    self.quest_selected_quest = None
-                    self._refresh_current_tab()
-                    return
-
-            # Abandon button
-            if self.quest_abandon_button and event.ui_element == self.quest_abandon_button:
-                if self.quest_selected_quest:
-                    success, msg = game.current_quest_manager.abandon_quest(self.quest_selected_quest)
-                    game_screen.add_to_log(msg)
-                    self.quest_selected_quest = None
-                    self._refresh_current_tab()
-                return
-
-        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            if event.ui_element == self.quest_list:
-                selection = self.quest_list.get_single_selection()
-                if selection and selection != "No quests" and selection in self.quest_names:
-                    idx = self.quest_names.index(selection)
-                    quests = self._quest_get_quests_for_tab()
-                    if idx < len(quests):
-                        self.quest_selected_quest = quests[idx]
-                        self._quest_update_details()
-
-    # ========================
-    # MAIN EVENT HANDLER & DRAW
-    # ========================
-    def handle_event(self, event):
-        # ESC to close
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            game.current_screen = "game"
-            game_screen.initialize_screen()
-            return
-
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            # Close button
-            if event.ui_element == self.close_button:
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-                return
-
-            # Tab buttons
-            for name, btn in self.tab_buttons.items():
-                if event.ui_element == btn and name != self.active_tab:
-                    self.switch_tab(name)
-                    return
-
-        # Delegate to active tab handler
-        if self.active_tab == "Inventory":
-            self._handle_inventory_event(event)
-        elif self.active_tab == "Crafting":
-            self._handle_crafting_event(event)
-        elif self.active_tab == "Skills":
-            self._handle_skills_event(event)
-        elif self.active_tab == "Party":
-            self._handle_party_event(event)
-        elif self.active_tab == "Quests":
-            self._handle_quests_event(event)
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        # Draw active tab highlight (underline bar)
-        if self.active_tab in self.tab_buttons:
-            btn = self.tab_buttons[self.active_tab]
-            rect = btn.relative_rect
-            pygame.draw.rect(screen, GOLDEN_YELLOW, (rect.x, rect.y + rect.height, rect.width, 3))
-        manager.draw_ui(screen)
-
-
-# Player Count Selection Screen (shown after selecting a level file)
-class PlayerCountScreen:
-    def __init__(self):
-        self.ui_elements = []
-        self.level_file = None
-        self.campaign_file = None
-        self.mode_buttons = []
-        self.selected_mode = "survival"
-
-    def initialize_screen(self, level_file=None, campaign_file=None):
-        self.level_file = level_file
-        self.campaign_file = campaign_file
-        self.selected_mode = "survival"  # Reset to default
-        manager.clear_and_reset()
-        level_name = os.path.basename(campaign_file or level_file) if (campaign_file or level_file) else "Unknown"
-
-        # Mode selection
-        mode_label = UILabel(pygame.Rect(0, 50, WINDOW_WIDTH, 30), "Select Game Mode", manager, anchors={'centerx': 'centerx'})
-        survival_btn = UIButton(pygame.Rect((WINDOW_WIDTH - 420) // 2, 90, 200, 40), "Survival Mode", manager)
-        creative_btn = UIButton(pygame.Rect((WINDOW_WIDTH - 420) // 2 + 220, 90, 200, 40), "Creative Mode", manager)
-        mode_desc = UILabel(pygame.Rect(0, 140, WINDOW_WIDTH, 25), "Survival: Normal gameplay | Creative: Test with card browser", manager, anchors={'centerx': 'centerx'})
-
-        # Player count selection
-        self.ui_elements = [
-            UILabel(pygame.Rect(0, 190, WINDOW_WIDTH, 50), "Select Number of Players", manager, anchors={'centerx': 'centerx'}),
-            UILabel(pygame.Rect(0, 240, WINDOW_WIDTH, 30), f"Level: {level_name}", manager, anchors={'centerx': 'centerx'}),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 290, 200, 50), "1 Player", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 360, 200, 50), "2 Players", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 430, 200, 50), "3 Players", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 500, 200, 50), "4 Players", manager),
-            UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, 600, 200, 50), "Back", manager)
-        ]
-        self.mode_buttons = [survival_btn, creative_btn]
-        self.mode_label = mode_label
-        self.mode_desc = mode_desc
-        self._update_mode_buttons()
-
-    def _update_mode_buttons(self):
-        """Update button appearance based on selected mode."""
-        # Visual feedback - we'll just update the text to show selection
-        if self.selected_mode == "survival":
-            self.mode_buttons[0].set_text(">> Survival <<")
-            self.mode_buttons[1].set_text("Creative Mode")
-        else:
-            self.mode_buttons[0].set_text("Survival Mode")
-            self.mode_buttons[1].set_text(">> Creative <<")
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.mode_buttons[0]:  # Survival
-                self.selected_mode = "survival"
-                self._update_mode_buttons()
-            elif event.ui_element == self.mode_buttons[1]:  # Creative
-                self.selected_mode = "creative"
-                self._update_mode_buttons()
-            elif event.ui_element == self.ui_elements[2]:  # 1 Player
-                game.game_mode = self.selected_mode
-                game.current_screen = "character_creation"
-                character_creation_screen.initialize_screen(level_file=self.level_file, campaign_file=self.campaign_file)
-            elif event.ui_element == self.ui_elements[3]:  # 2 Players
-                game.game_mode = self.selected_mode
-                game.current_screen = "multiplayer_character_creation"
-                multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file, campaign_file=self.campaign_file, num_players=2)
-            elif event.ui_element == self.ui_elements[4]:  # 3 Players
-                game.game_mode = self.selected_mode
-                game.current_screen = "multiplayer_character_creation"
-                multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file, campaign_file=self.campaign_file, num_players=3)
-            elif event.ui_element == self.ui_elements[5]:  # 4 Players
-                game.game_mode = self.selected_mode
-                game.current_screen = "multiplayer_character_creation"
-                multiplayer_character_creation_screen.initialize_screen(level_file=self.level_file, campaign_file=self.campaign_file, num_players=4)
-            elif event.ui_element == self.ui_elements[6]:  # Back
-                game.current_screen = "main_menu"
-                main_menu.initialize_buttons()
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-# Main Menu screen (updated to include Load Campaign)
-class MainMenu:
-    def __init__(self):
-        self.ui_elements = []
-        self.initialize_buttons()
-
-    def initialize_buttons(self):
-        manager.clear_and_reset()
-        btn_x = (WINDOW_WIDTH - 200) // 2
-        self.ui_elements = [
-            UIButton(pygame.Rect(btn_x, 200, 200, 50), "New Campaign", manager),
-            UIButton(pygame.Rect(btn_x, 270, 200, 50), "Load Campaign", manager),
-            UIButton(pygame.Rect(btn_x, 340, 200, 50), "Load Level", manager),
-            UIButton(pygame.Rect(btn_x, 410, 200, 50), "Load Game", manager),
-            UIButton(pygame.Rect(btn_x, 480, 200, 50), "Multiplayer", manager),
-            UIButton(pygame.Rect(btn_x, 550, 200, 50), "Settings", manager),
-            UIButton(pygame.Rect(btn_x, 620, 200, 50), "Quit", manager)
-        ]
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            text = event.ui_element.text
-            if text == "New Campaign":
-                game.current_screen = "character_creation"
-                character_creation_screen.initialize_screen()
-            elif text == "Load Campaign":
-                root = tk.Tk()
-                root.withdraw()
-                file_path = filedialog.askopenfilename(initialdir="campaigns", filetypes=[("JSON files", "*.json")])
-                root.destroy()
-                if file_path:
-                    game.current_screen = "player_count"
-                    player_count_screen.initialize_screen(campaign_file=file_path)
-                else:
-                    print("No campaign file selected")
-            elif text == "Load Level":
-                root = tk.Tk()
-                root.withdraw()
-                file_path = filedialog.askopenfilename(initialdir="levels", filetypes=[("JSON files", "*.json")])
-                root.destroy()
-                if file_path:
-                    game.current_screen = "player_count"
-                    player_count_screen.initialize_screen(level_file=file_path)
-                else:
-                    print("No level file selected")
-            elif text == "Load Game":
-                game.current_screen = "save_load"
-                save_load_screen.initialize_screen(mode="load")
-            elif text == "Multiplayer":
-                game.current_screen = "multiplayer_character_creation"
-                multiplayer_character_creation_screen.initialize_screen()
-            elif text == "Settings":
-                game.current_screen = "settings"
-                settings_screen.initialize_screen()
-            elif text == "Quit":
-                pygame.quit()
-                sys.exit()
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        # Decorative background hex pattern
-        hex_s = 40
-        pat_color = (30, 30, 70)
-        for pr in range(0, WINDOW_HEIGHT + hex_s * 2, int(hex_s * 1.732)):
-            for pc in range(0, WINDOW_WIDTH + hex_s * 2, int(hex_s * 1.5)):
-                offset = hex_s * 0.866 if (pc // int(hex_s * 1.5)) % 2 else 0
-                pts = [(pc + hex_s * math.cos(math.radians(60 * i)),
-                        pr + offset + hex_s * math.sin(math.radians(60 * i))) for i in range(6)]
-                pygame.draw.polygon(screen, pat_color, pts, 1)
-        # Styled title
-        title_font = pygame.font.Font(None, 80)
-        subtitle_font = pygame.font.Font(None, 28)
-        title_text = "Junk RPG"
-        shadow = title_font.render(title_text, True, (10, 10, 30))
-        title = title_font.render(title_text, True, (200, 180, 120))
-        tr = title.get_rect(centerx=WINDOW_WIDTH // 2, y=50)
-        screen.blit(shadow, tr.move(3, 3))
-        screen.blit(title, tr)
-        # Decorative line under title
-        line_y = tr.bottom + 10
-        pygame.draw.line(screen, (120, 100, 60), (WINDOW_WIDTH // 2 - 140, line_y), (WINDOW_WIDTH // 2 + 140, line_y), 1)
-        # Subtitle
-        sub = subtitle_font.render("A Card-Based Tactical Adventure", True, (120, 120, 160))
-        sr = sub.get_rect(centerx=WINDOW_WIDTH // 2, y=line_y + 8)
-        screen.blit(sub, sr)
-        # Version text
-        ver_font = pygame.font.Font(None, 18)
-        ver = ver_font.render("v0.34", True, (80, 80, 110))
-        screen.blit(ver, (WINDOW_WIDTH - 60, WINDOW_HEIGHT - 30))
-        manager.draw_ui(screen)
-
-# Character Creation screen (updated to accept campaign_file)
-class CharacterCreationScreen:
-    def __init__(self):
-        self.ui_elements = []
-        self.class_buttons = []
-        self.level_file = None
-        self.campaign_file = None
-        self.name_entry = None
-
-    def initialize_screen(self, level_file=None, campaign_file=None):
-        self.level_file = level_file
-        self.campaign_file = campaign_file
-        self.load_custom_button = None
-        manager.clear_and_reset()
-        self.ui_elements = [
-            UILabel(pygame.Rect(0, 30, WINDOW_WIDTH, 40), "Enter Your Name", manager, anchors={'centerx': 'centerx'}),
-            UIButton(pygame.Rect(20, 20, 100, 50), "Back", manager)
-        ]
-        self.name_entry = UITextEntryLine(pygame.Rect((WINDOW_WIDTH - 250) // 2, 70, 250, 40), manager, placeholder_text="Player Name")
-        self.ui_elements.append(self.name_entry)
-        self.ui_elements.append(UILabel(pygame.Rect(0, 120, WINDOW_WIDTH, 40), "Choose Your Class", manager, anchors={'centerx': 'centerx'}))
-        self.class_buttons = []
-        for i, (class_name, stats) in enumerate(CHARACTER_CLASSES.items()):
-            y_pos = 170 + i * 100
-            button = UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, y_pos, 200, 50), class_name, manager)
-            self.class_buttons.append((button, class_name))
-            self.ui_elements.append(button)
-            desc = f"{stats['hp']} HP, {stats['movement']} Movement, {stats['projectile_range']} Range, " \
-                   f"{list(stats['attacks'].keys())[0]} ({list(stats['attacks'].values())[0]} dmg), " \
-                   f"{list(stats['attacks'].keys())[1]} ({list(stats['attacks'].values())[1]} dmg), {stats['special_attack']}"
-            self.ui_elements.append(UILabel(pygame.Rect((WINDOW_WIDTH - 600) // 2, y_pos + 60, 600, 30), desc, manager))
-
-        # "Load Custom Character" button below class buttons
-        custom_y = 170 + len(CHARACTER_CLASSES) * 100 + 10
-        self.load_custom_button = UIButton(pygame.Rect((WINDOW_WIDTH - 250) // 2, custom_y, 250, 50), "Load Custom Character", manager)
-        self.ui_elements.append(self.load_custom_button)
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.ui_elements[1]:
-                game.current_screen = "main_menu"
-                main_menu.initialize_buttons()
-            elif self.load_custom_button and event.ui_element == self.load_custom_button:
-                self._load_custom_character()
-            else:
-                for button, class_name in self.class_buttons:
-                    if event.ui_element == button:
-                        game.player = Player(class_name)
-                        entered_name = self.name_entry.get_text().strip() if self.name_entry else ""
-                        game.player.name = entered_name if entered_name else class_name
-                        game.current_screen = "game"
-                        game_screen.start_new_game(level_file=self.level_file, campaign_file=self.campaign_file)
-                        break
-
-    def _load_custom_character(self):
-        """Open file dialog to load a custom character JSON and start the game."""
-        characters_dir = os.path.join(os.path.dirname(__file__), "characters")
-        if not os.path.isdir(characters_dir):
-            characters_dir = os.path.dirname(__file__)
-        root = tk.Tk()
-        root.withdraw()
-        root.attributes("-topmost", True)
-        file_path = filedialog.askopenfilename(
-            title="Load Custom Character",
-            initialdir=characters_dir,
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-        )
-        root.destroy()
-        if not file_path:
-            return
-        try:
-            with open(file_path, 'r') as f:
-                custom_data = json.load(f)
-        except (json.JSONDecodeError, OSError) as e:
-            print(f"Error loading character file: {e}")
-            return
-        game.player = Player("Custom", custom_data=custom_data)
-        # Override name with entry field if provided, otherwise use character file name
-        entered_name = self.name_entry.get_text().strip() if self.name_entry else ""
-        if entered_name:
-            game.player.name = entered_name
-        elif not game.player.name:
-            game.player.name = custom_data.get("name", "Custom")
-        game.current_screen = "game"
-        game_screen.start_new_game(level_file=self.level_file, campaign_file=self.campaign_file)
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-# Multiplayer Character Creation Screen (2-4 player local)
-class MultiplayerCharacterCreationScreen:
-    def __init__(self):
-        self.ui_elements = []
-        self.class_buttons = []
-        self.current_player_selecting = 1
-        self.num_players = 2
-        self.player_selections = []  # List of {"class": ..., "name": ...}
-        self.level_file = None
-        self.campaign_file = None
-        self.name_entry = None
-
-    def initialize_screen(self, level_file=None, campaign_file=None, num_players=2):
-        self.level_file = level_file
-        self.campaign_file = campaign_file
-        self.num_players = num_players
-        self.current_player_selecting = 1
-        self.player_selections = []
-        manager.clear_and_reset()
-        self._build_selection_ui()
-
-    def _build_selection_ui(self):
-        """Build the class selection UI for the current player."""
-        manager.clear_and_reset()
-        player_label = f"Player {self.current_player_selecting} of {self.num_players}: Enter Name & Choose Class"
-        idx = self.current_player_selecting - 1
-        color_name = PLAYER_COLOR_NAMES[idx] if idx < len(PLAYER_COLOR_NAMES) else "Unknown"
-        color_hint = f"({color_name})"
-        self.ui_elements = [
-            UILabel(pygame.Rect(0, 30, WINDOW_WIDTH, 40), player_label, manager, anchors={'centerx': 'centerx'}),
-            UILabel(pygame.Rect(0, 70, WINDOW_WIDTH, 30), color_hint, manager, anchors={'centerx': 'centerx'}),
-            UIButton(pygame.Rect(20, 20, 100, 50), "Back", manager)
-        ]
-        placeholder = f"Player {self.current_player_selecting} Name"
-        self.name_entry = UITextEntryLine(pygame.Rect((WINDOW_WIDTH - 250) // 2, 105, 250, 40), manager, placeholder_text=placeholder)
-        self.ui_elements.append(self.name_entry)
-        self.class_buttons = []
-        for i, (class_name, stats) in enumerate(CHARACTER_CLASSES.items()):
-            y_pos = 170 + i * 100
-            button = UIButton(pygame.Rect((WINDOW_WIDTH - 200) // 2, y_pos, 200, 50), class_name, manager)
-            self.class_buttons.append((button, class_name))
-            self.ui_elements.append(button)
-            desc = f"{stats['hp']} HP, {stats['movement']} Movement, {stats['projectile_range']} Range, " \
-                   f"{list(stats['attacks'].keys())[0]} ({list(stats['attacks'].values())[0]} dmg), " \
-                   f"{list(stats['attacks'].keys())[1]} ({list(stats['attacks'].values())[1]} dmg), {stats['special_attack']}"
-            self.ui_elements.append(UILabel(pygame.Rect((WINDOW_WIDTH - 600) // 2, y_pos + 60, 600, 30), desc, manager))
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.ui_elements[2]:  # Back button
-                if self.current_player_selecting > 1:
-                    # Go back to previous player selection
-                    self.current_player_selecting -= 1
-                    self.player_selections.pop()
-                    self._build_selection_ui()
-                else:
-                    game.current_screen = "main_menu"
-                    main_menu.initialize_buttons()
-            else:
-                for button, class_name in self.class_buttons:
-                    if event.ui_element == button:
-                        entered_name = self.name_entry.get_text().strip() if self.name_entry else ""
-                        player_name = entered_name if entered_name else f"Player {self.current_player_selecting}"
-                        self.player_selections.append({"class": class_name, "name": player_name})
-
-                        if self.current_player_selecting < self.num_players:
-                            # Move to next player selection
-                            self.current_player_selecting += 1
-                            self._build_selection_ui()
-                        else:
-                            # All players selected - start the game
-                            self._start_multiplayer_game(self.player_selections)
-                        break
-
-    def _start_multiplayer_game(self, player_selections):
-        """Create all players and start the multiplayer game."""
-        players = []
-        for i, sel in enumerate(player_selections):
-            p = Player(sel["class"])
-            p.name = sel["name"]
-            p.player_number = i + 1
-            p.player_color = PLAYER_COLORS[i] if i < len(PLAYER_COLORS) else (200, 200, 200)
-            p.party = []
-            players.append(p)
-
-        # Set up multiplayer mode
-        game.multiplayer_mode = True
-        game.players = players
-        game.current_player_index = 0
-        game.player = players[0]  # For backwards compatibility
-
-        # Create per-player quest managers
-        game.quest_managers = [QuestManager(game.card_manager) for _ in players]
-
-        # Start the game
-        game.current_screen = "game"
-        game_screen.start_new_game_multiplayer(level_file=self.level_file, campaign_file=self.campaign_file)
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-# Settings screen
-class SettingsScreen:
-    def __init__(self):
-        self.ui_elements = []
-
-    def initialize_screen(self):
-        manager.clear_and_reset()
-        self.ui_elements = [
-            UILabel(pygame.Rect(0, 50, WINDOW_WIDTH, 50), "Settings", manager, anchors={'centerx': 'centerx'}),
-            UIButton(pygame.Rect(20, 20, 150, 50), "Back to Main Menu", manager)
-        ]
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element == self.ui_elements[1]:
-            game.current_screen = "main_menu"
-            main_menu.initialize_buttons()
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
 
 # GameScreen class
 class GameScreen:
@@ -4192,6 +167,7 @@ class GameScreen:
         self._loc_defense_queue = []       # [(pos, loc_data), ...]
         self._loc_defense_active = False   # True while processing queue
         self._loc_defense_wait_until = None  # pygame.time.get_ticks() deadline for animation wait
+        self._loc_defense_shot_queue = None   # Per-NPC staggered shot queue
         self.current_location_hex = None  # (row, col) if player is on a location
         # Building/placement mode
         self.placement_mode = False
@@ -4234,6 +210,12 @@ class GameScreen:
         self.action_choice_open = False
         self.action_choice_buttons = []    # List of (button, action_type, data) tuples
         self.action_choice_target = None   # The unit being targeted
+        # Body move/place mode
+        self.body_move_unit = None         # Dead unit being moved/picked up
+        self.body_place_card = None        # InventoryCard of body being placed from inventory
+        # Junk pile move/place mode
+        self.junk_pile_move_unit = None    # Junk pile unit being moved/picked up
+        self.junk_pile_place_card = None   # InventoryCard of junk pile being placed from inventory
         # Right panel layout (computed in initialize_screen)
         self.rp_width = 234
         self.rp_pad = 10
@@ -4243,7 +225,13 @@ class GameScreen:
         self.rp_stats_y = 0
         self.rp_menu_y = 0
         self.rp_height = 0
-        self.rp_header_font = pygame.font.SysFont("Arial", 13, bold=True)
+        self.rp_header_font = pygame.font.SysFont("Candara", 20, bold=True)
+        self.rp_body_font = pygame.font.SysFont("Candara", 15, bold=True)
+        self.rp_body_bold = pygame.font.SysFont("Candara", 16, bold=True)
+        self.rp_icon_font = pygame.font.SysFont("Segoe UI Symbol", 15)
+        self._player_panel_surface = None
+        self._player_panel_height = 175
+        self._player_panel_dirty = True
         self.colors = {
             'BLUE': BLUE,
             'DARK_RED_ALPHA': DARK_RED_ALPHA,
@@ -4291,6 +279,16 @@ class GameScreen:
         self.event_result_font = pygame.font.SysFont("Arial", 30, bold=True)
         self.event_btn_font = pygame.font.SysFont("Arial", 22, bold=True)
         self.event_small_font = pygame.font.SysFont("Arial", 18)
+        # Cached fonts for dialogue, banners, and popups
+        self.dialogue_speaker_font = pygame.font.SysFont("arial", 22, bold=True)
+        self.dialogue_text_font = pygame.font.SysFont("arial", 18)
+        self.dialogue_hint_font = pygame.font.SysFont("arial", 14)
+        self.defeat_font = pygame.font.SysFont("Arial", 36, bold=True)
+        self.turn_banner_font = pygame.font.SysFont("Arial", 46, bold=True)
+        self.ammo_banner_font = pygame.font.SysFont("Arial", 36, bold=True)
+        self.action_popup_header_font = pygame.font.SysFont("freesansbold", 15, bold=True)
+        # In-memory hex attempt tracking (replaces temp/ directory files)
+        self._hex_attempts = {}  # {card_id: set of (row, col) tuples}
 
     # === Dialogue popup ===
 
@@ -4311,18 +309,16 @@ class GameScreen:
         pygame.draw.rect(screen, (180, 150, 100), (box_x, box_y, box_w, box_h), 3, border_radius=12)
 
         # Speaker name
-        speaker_font = pygame.font.SysFont("arial", 22, bold=True)
-        speaker_surf = speaker_font.render(self.dialogue_speaker, True, (255, 220, 150))
+        speaker_surf = self.dialogue_speaker_font.render(self.dialogue_speaker, True, (255, 220, 150))
         screen.blit(speaker_surf, (box_x + 20, box_y + 15))
 
         # Dialogue text (word-wrapped)
-        text_font = pygame.font.SysFont("arial", 18)
         words = self.dialogue_text.split()
         lines = []
         current_line = ""
         for word in words:
             test = current_line + (" " if current_line else "") + word
-            if text_font.size(test)[0] < box_w - 40:
+            if self.dialogue_text_font.size(test)[0] < box_w - 40:
                 current_line = test
             else:
                 lines.append(current_line)
@@ -4332,13 +328,12 @@ class GameScreen:
 
         y = box_y + 50
         for line in lines:
-            surf = text_font.render(line, True, (230, 230, 220))
+            surf = self.dialogue_text_font.render(line, True, (230, 230, 220))
             screen.blit(surf, (box_x + 20, y))
             y += 26
 
         # Dismiss hint
-        hint_font = pygame.font.SysFont("arial", 14)
-        hint = hint_font.render("Click or press any key to continue", True, (150, 150, 140))
+        hint = self.dialogue_hint_font.render("Click or press any key to continue", True, (150, 150, 140))
         screen.blit(hint, (box_x + box_w // 2 - hint.get_width() // 2, box_y + box_h - 30))
 
     # === Event banner overlay helpers ===
@@ -4791,8 +786,6 @@ class GameScreen:
         self.defeat_notifications = [(n, t) for n, t in self.defeat_notifications if now - t < 3000]
         if not self.defeat_notifications:
             return
-        font = pygame.font.SysFont("Arial", 36, bold=True)
-        shadow_font = pygame.font.SysFont("Arial", 36, bold=True)
         cx = WINDOW_WIDTH // 2
         start_y = self._get_banner_y()
         for i, (name, timestamp) in enumerate(self.defeat_notifications):
@@ -4801,8 +794,8 @@ class GameScreen:
             # Upward drift: float up 30px over the full duration
             drift_y = int(30 * elapsed / 3000)
             text = f"{name} defeated!"
-            text_surf = font.render(text, True, (255, 215, 0))
-            shadow_surf = shadow_font.render(text, True, (0, 0, 0))
+            text_surf = self.defeat_font.render(text, True, (255, 215, 0))
+            shadow_surf = self.defeat_font.render(text, True, (0, 0, 0))
             tw, th = text_surf.get_size()
             bw, bh = tw + 40, th + 20
             by = start_y + i * (bh + 10) - drift_y
@@ -4837,9 +830,8 @@ class GameScreen:
             alpha = 255
         else:
             alpha = max(0, 255 - int(255 * (elapsed - opaque_time) / (duration - opaque_time)))
-        font = pygame.font.SysFont("Arial", 46, bold=True)
-        text_surf = font.render(label, True, color)
-        shadow_surf = font.render(label, True, (10, 10, 30))
+        text_surf = self.turn_banner_font.render(label, True, color)
+        shadow_surf = self.turn_banner_font.render(label, True, (10, 10, 30))
         tw, th = text_surf.get_size()
         bw, bh = tw + 60, th + 30
         cx = WINDOW_WIDTH // 2
@@ -4880,9 +872,8 @@ class GameScreen:
             alpha = 255
         else:
             alpha = max(0, 255 - int(255 * (elapsed - opaque_time) / (duration - opaque_time)))
-        font = pygame.font.SysFont("Arial", 36, bold=True)
-        text_surf = font.render(label, True, color)
-        shadow_surf = font.render(label, True, (10, 10, 30))
+        text_surf = self.ammo_banner_font.render(label, True, color)
+        shadow_surf = self.ammo_banner_font.render(label, True, (10, 10, 30))
         tw, th = text_surf.get_size()
         bw, bh = tw + 40, th + 20
         cx = WINDOW_WIDTH // 2
@@ -4953,7 +944,7 @@ class GameScreen:
                 self.load_campaign_level()
                 self.log.append(f"Loaded campaign: {campaign_file}")
             except Exception as e:
-                print(f"Error loading campaign file '{campaign_file}': {e}")
+                logger.error(f"Error loading campaign file '{campaign_file}': {e}")
                 self.hex_grid.place_unit(game.player, self.hex_grid.rows // 2, self.hex_grid.cols // 2)
                 self.log.append("Failed to load campaign. Starting default level.")
         elif level_file:
@@ -4974,9 +965,9 @@ class GameScreen:
                     if ut_chance is not None:
                         game.transition_manager.set_unit_transition_trigger_chance(ut_chance)
                 except Exception as e:
-                    print(f"Error reading transition fields from level: {e}")
+                    logger.error(f"Error reading transition fields from level: {e}")
             except Exception as e:
-                print(f"Error loading level '{level_file}': {e}")
+                logger.error(f"Error loading level '{level_file}': {e}")
                 self.hex_grid.place_unit(game.player, self.hex_grid.rows // 2, self.hex_grid.cols // 2)
                 self.log.append("Failed to load level. Starting default level.")
         else:
@@ -4993,9 +984,9 @@ class GameScreen:
                 if item.get("state", 1) == 2:
                     inv_card.current_state = 2
                 game.player.inventory.append(inv_card)
-                print(f"Added starter kit item: {inv_card.get_current_data().get('Name', card_id)}")
+                logger.debug(f"Added starter kit item: {inv_card.get_current_data().get('Name', card_id)}")
             else:
-                print(f"Warning: Starter kit card '{card_id}' not found")
+                logger.warning(f"Starter kit card '{card_id}' not found")
 
         # Store initial state after loading
         self.initial_inventory = game.player.inventory.copy()
@@ -5015,6 +1006,7 @@ class GameScreen:
         
         # Reset movement and action flags
         game.player.movement_used = False
+        game.player.moves_per_turn = game.player.base_moves_per_turn  # Reset Scout sprint
         game.player.action_used = False
         game.player.reset_double_attack()
 
@@ -5078,7 +1070,7 @@ class GameScreen:
                 self.load_campaign_level()
                 self.log.append(f"Loaded campaign: {campaign_file}")
             except Exception as e:
-                print(f"Error loading campaign file '{campaign_file}': {e}")
+                logger.error(f"Error loading campaign file '{campaign_file}': {e}")
                 for i, player in enumerate(game.players):
                     self.hex_grid.place_unit(player, self.hex_grid.rows // 2 + i, self.hex_grid.cols // 2)
                 self.log.append("Failed to load campaign. Starting default level.")
@@ -5110,7 +1102,7 @@ class GameScreen:
                         self.hex_grid.place_unit(player, fallback_row, fallback_col)
                         placed_positions.add((fallback_row, fallback_col))
             except Exception as e:
-                print(f"Error loading level '{level_file}': {e}")
+                logger.error(f"Error loading level '{level_file}': {e}")
                 # Place all players in default positions near center
                 for i, player in enumerate(game.players):
                     self.hex_grid.place_unit(player, self.hex_grid.rows // 2 + i, self.hex_grid.cols // 2)
@@ -5132,9 +1124,9 @@ class GameScreen:
                     if item.get("state", 1) == 2:
                         inv_card.current_state = 2
                     player.inventory.append(inv_card)
-                    print(f"Added starter kit item for {player.name}: {inv_card.get_current_data().get('Name', card_id)}")
+                    logger.debug(f"Added starter kit item for {player.name}: {inv_card.get_current_data().get('Name', card_id)}")
                 else:
-                    print(f"Warning: Starter kit card '{card_id}' not found")
+                    logger.warning(f"Starter kit card '{card_id}' not found")
 
         # Reset both players
         for player in game.players:
@@ -5142,6 +1134,7 @@ class GameScreen:
             player.melee_weapon = None
             player.projectile_weapon = None
             player.movement_used = False
+            player.moves_per_turn = player.base_moves_per_turn  # Reset Scout sprint
             player.action_used = False
             player.reset_double_attack()
             player.party = []  # Clear each player's party
@@ -5277,7 +1270,7 @@ class GameScreen:
                             if placed:
                                 break
         except Exception as e:
-            print(f"Error loading level '{level_file}': {e}")
+            logger.error(f"Error loading level '{level_file}': {e}")
             import traceback
             traceback.print_exc()
             if game.multiplayer_mode and game.players:
@@ -5310,7 +1303,7 @@ class GameScreen:
                         if game.transition_manager.load_transition_card(card_id):
                             self.log.append(f"Loaded transition card: {game.transition_manager.active_transition.name}")
             except Exception as e:
-                print(f"Error loading transition deck: {e}")
+                logger.error(f"Error loading transition deck: {e}")
 
         # Load instance deck
         instance_deck = deck_config.get("instance_deck", "")
@@ -5350,7 +1343,7 @@ class GameScreen:
                         if game.transition_manager.load_player_transition_card(card_id):
                             self.log.append(f"Loaded player transition card: {game.transition_manager.player_transition.name}")
             except Exception as e:
-                print(f"Error loading player transition deck: {e}")
+                logger.error(f"Error loading player transition deck: {e}")
 
         # Load unit transition deck
         unit_transition_deck = deck_config.get("unit_transition_deck", "")
@@ -5366,7 +1359,7 @@ class GameScreen:
                         if game.transition_manager.load_unit_transition_card(card_id):
                             self.log.append(f"Loaded unit transition card: {game.transition_manager.unit_transition.name}")
             except Exception as e:
-                print(f"Error loading unit transition deck: {e}")
+                logger.error(f"Error loading unit transition deck: {e}")
 
     def _handle_delete_prev_saves(self, choice):
         """Callback for the level transition save deletion confirmation."""
@@ -5433,10 +1426,6 @@ class GameScreen:
 
     def load_from_save(self, save_data):
         """Rebuild the entire game state from a save data dict. Parallel to start_new_game()."""
-        from quest_system import QuestManager
-        from instance_system import InstanceManager
-        from transition_system import TransitionManager
-
         # Rebuild player(s)
         multiplayer = save_data.get("multiplayer_mode", False)
         game.multiplayer_mode = multiplayer
@@ -5487,12 +1476,12 @@ class GameScreen:
             try:
                 self.hex_grid.load_level(self.current_level_file, self.card_manager, game.player)
             except Exception as e:
-                print(f"Error loading level for save restore: {e}")
+                logger.error(f"Error loading level for save restore: {e}")
         elif self.campaign_file and self.campaign:
             try:
                 self.load_campaign_level()
             except Exception as e:
-                print(f"Error loading campaign level for save restore: {e}")
+                logger.error(f"Error loading campaign level for save restore: {e}")
 
         # Clear auto-loaded units and player placement from level load
         for unit in list(self.hex_grid.units):
@@ -6015,6 +2004,7 @@ class GameScreen:
         # Reset player turn state
         for player in all_players:
             player.movement_used = False
+            player.moves_per_turn = player.base_moves_per_turn  # Reset Scout sprint
             player.action_used = False
             if hasattr(player, 'reset_double_attack'):
                 player.reset_double_attack()
@@ -6281,6 +2271,17 @@ class GameScreen:
                 else:
                     self._show_campaign_complete()
             else:
+                # Spy disguise super charging: +1 per turn cycle while disguised
+                if game.multiplayer_mode:
+                    for p in game.players:
+                        if getattr(p, 'is_disguised', False):
+                            p.add_super_charge()
+                            self.add_to_log(f"{p.name or p.class_name}'s disguise charges super (+1)")
+                else:
+                    if getattr(game.player, 'is_disguised', False):
+                        game.player.add_super_charge()
+                        self.add_to_log(f"{game.player.name or game.player.class_name}'s disguise charges super (+1)")
+
                 # Start new turn cycle
                 if game.multiplayer_mode:
                     self._setup_multiplayer_player_phase()
@@ -6300,8 +2301,9 @@ class GameScreen:
                 # Process player transition card at turn start
                 self._process_player_transition(current_player)
 
-                # Periodic autosave every 5 turn cycles
-                if self.turn_cycle_count > 0 and self.turn_cycle_count % 5 == 0:
+                # Periodic autosave
+                autosave_freq = getattr(game, '_autosave_frequency', 5)
+                if autosave_freq > 0 and self.turn_cycle_count > 0 and self.turn_cycle_count % autosave_freq == 0:
                     self.save_manager.save_game(game, self, save_type="autosave", save_label=f"Turn {self.turn_cycle_count}")
         self.update_turn_label()
         self.animating = self.check_animations()
@@ -6451,16 +2453,16 @@ class GameScreen:
         for dead_unit in dead_units:
             if dead_unit.position:
                 row, col = dead_unit.position
-                if self.hex_grid.grid[row][col]["unit"] is dead_unit:
-                    self.hex_grid.grid[row][col]["unit"] = None
-                # Displace body off location hex
+                # Displace body off location hex (body stays in grid)
                 if dead_unit.position in self.hex_grid.location_data:
-                    neighbors = self.hex_grid.get_neighbors(row, col)
-                    for nr, nc in neighbors:
+                    for nr, nc in self.hex_grid.get_adjacent_hexes(row, col):
                         if ((nr, nc) not in self.hex_grid.location_data
+                                and 0 <= nr < self.hex_grid.rows and 0 <= nc < self.hex_grid.cols
                                 and self.hex_grid.grid[nr][nc]["accessible"]
                                 and self.hex_grid.grid[nr][nc]["unit"] is None):
+                            self.hex_grid.grid[row][col]["unit"] = None
                             dead_unit.position = (nr, nc)
+                            self.hex_grid.grid[nr][nc]["unit"] = dead_unit
                             break
             dead_unit._death_processed = True
             self.add_to_log(f"{dead_unit.name} defeated")
@@ -6721,10 +2723,13 @@ class GameScreen:
         rp_inner_w = rp_w - 2 * rp_pad  # 214
         toolbar_clearance = 60
         section_header_h = 20
-        player_info_h = 175
         stats_h = 175
 
         pi_y = section_header_h + 4  # Below "Player" label
+        # Render panel once to get actual height
+        self._player_panel_dirty = True
+        self._render_player_panel()
+        player_info_h = self._player_panel_height
         stats_y = pi_y + player_info_h + rp_pad + section_header_h + 4
         menu_y = stats_y + stats_h + rp_pad
 
@@ -6764,12 +2769,7 @@ class GameScreen:
 
         left_panel_width = WINDOW_WIDTH // 4
         button_width = (left_panel_width - 20) // 2
-        self.player_info_label = UITextBox(
-            self.get_player_info(),
-            pygame.Rect(rp_x + rp_pad, pi_y, rp_inner_w, player_info_h),
-            manager, object_id="#right_panel_info"
-        )
-        self.ui_elements.append(self.player_info_label)
+        self.player_info_label = PlayerInfoPanelProxy(self)
 
         y_pos = 200
         self.left_panel_buttons = []
@@ -6841,8 +2841,21 @@ class GameScreen:
             lines.append(f"<font color='#AAAAFF'>Player {p.player_number}</font>")
         lines.append(f"<font color='#FFD700'>{p.class_name}</font>")
         lines.append(f"<font color='#999999'>HP:</font> <font color='{hp_color}'>{p.hp}/{p.max_hp}</font>")
-        mv_color = "#888888" if p.movement_used else "#CCCCDD"
-        lines.append(f"<font color='#999999'>Move:</font> <font color='{mv_color}'>{p.movement}</font>")
+        if hasattr(p, 'moves_per_turn') and p.moves_per_turn > 1:
+            # Calculate effective max moves (include sprint 3rd move if available)
+            effective_max = p.moves_per_turn
+            if (p.special_attack == "Double Move" and p.super_attack_ready
+                and p._movement_count >= p.moves_per_turn):
+                effective_max = 3
+            remaining = effective_max - p._movement_count
+            if remaining < 0:
+                remaining = 0
+            mv_color = "#888888" if remaining <= 0 else "#CCCCDD"
+            sprint_tag = " SPRINT!" if p._movement_count >= p.moves_per_turn and remaining > 0 else ""
+            lines.append(f"<font color='#999999'>Move:</font> <font color='{mv_color}'>{remaining}/{effective_max}{sprint_tag} ({p.movement} hexes)</font>")
+        else:
+            mv_color = "#888888" if p.movement_used else "#CCCCDD"
+            lines.append(f"<font color='#999999'>Move:</font> <font color='{mv_color}'>{p.movement}</font>")
         lines.append(f"<font color='#999999'>Range:</font> <font color='#CCCCDD'>{p.projectile_range}</font>")
         act_color = "#888888" if p.action_used else "#CCCCDD"
         lines.append(f"<font color='#999999'>Action:</font> <font color='{act_color}'>{'Used' if p.action_used else 'Ready'}</font>")
@@ -6854,11 +2867,21 @@ class GameScreen:
                 lines.append(f"<font color='#00CC00'>Heal Mode (20 HP)</font>")
             else:
                 lines.append(f"<font color='#999999'>Melee weapon equipped</font>")
+        # Disguise status indicator
+        if getattr(p, 'is_disguised', False):
+            if getattr(p, 'is_boss_disguised', False):
+                lines.append(f"<font color='#FF4444'>BOSS DISGUISE ACTIVE</font>")
+            else:
+                lines.append(f"<font color='#FFAA00'>DISGUISED</font>")
         # Super charge meter
         charge_pips = ">" * p.super_charge + "." * (p.super_charge_max - p.super_charge)
         charge_color = "#FFD700" if p.super_attack_ready else "#888888"
         if p.is_healer:
             lines.append(f"<font color='#999999'>Revive:</font> <font color='{charge_color}'>[{charge_pips}]</font>")
+        elif getattr(p, 'is_spy', False):
+            lines.append(f"<font color='#999999'>Order:</font> <font color='{charge_color}'>[{charge_pips}]</font>")
+        elif p.special_attack == "Double Move":
+            lines.append(f"<font color='#999999'>Sprint:</font> <font color='{charge_color}'>[{charge_pips}]</font>")
         else:
             lines.append(f"<font color='#999999'>Super:</font> <font color='{charge_color}'>[{charge_pips}]</font>")
         # Manning tower info
@@ -6876,8 +2899,276 @@ class GameScreen:
                     lines.append(f"<font color='#AAD4FF'>Using: Personal Weapon</font>")
         return "<br>".join(lines)
 
+    # --- Custom player info panel rendering ---
+
+    def _render_icon(self, icon_char, font, fallback_font, color):
+        """Render a unicode icon, falling back to symbol font if needed."""
+        surf = font.render(icon_char, True, color)
+        # Check if it rendered as a tofu box (very narrow or blank)
+        if surf.get_width() < 5:
+            surf = fallback_font.render(icon_char, True, color)
+        return surf
+
+    def _draw_stat_line(self, surf, y, icon, label, value, value_color, label_color=(190, 190, 200)):
+        """Draw an icon + label + value line on the panel surface."""
+        x = 6
+        icon_surf = self._render_icon(icon, self.rp_body_font, self.rp_icon_font, label_color)
+        surf.blit(icon_surf, (x, y))
+        x += icon_surf.get_width() + 3
+        lbl_surf = self.rp_body_font.render(f"{label}: ", True, label_color)
+        surf.blit(lbl_surf, (x, y))
+        x += lbl_surf.get_width()
+        val_surf = self.rp_body_bold.render(str(value), True, value_color)
+        surf.blit(val_surf, (x, y))
+        return self.rp_body_font.get_linesize()
+
+    def _draw_hp_bar(self, surf, y, p):
+        """Draw a graphical HP bar with colored fill and text overlay."""
+        bar_x = 6
+        bar_w = surf.get_width() - 12
+        bar_h = 16
+        hp_ratio = p.hp / p.max_hp if p.max_hp > 0 else 0
+        # Background
+        pygame.draw.rect(surf, (40, 40, 50), (bar_x, y, bar_w, bar_h), border_radius=3)
+        # Fill color by HP ratio
+        if hp_ratio > 0.6:
+            fill_color = (80, 200, 80)
+        elif hp_ratio > 0.3:
+            fill_color = (200, 200, 60)
+        else:
+            fill_color = (200, 60, 60)
+        fill_w = max(0, int(bar_w * hp_ratio))
+        if fill_w > 0:
+            pygame.draw.rect(surf, fill_color, (bar_x, y, fill_w, bar_h), border_radius=3)
+        # Border
+        pygame.draw.rect(surf, (80, 80, 100), (bar_x, y, bar_w, bar_h), 1, border_radius=3)
+        # HP text centered with shadow
+        hp_text = f"{p.hp}/{p.max_hp}"
+        hp_txt_surf = self.rp_body_bold.render(hp_text, True, (0, 0, 0))
+        tx = bar_x + (bar_w - hp_txt_surf.get_width()) // 2
+        ty = y + (bar_h - hp_txt_surf.get_height()) // 2
+        surf.blit(hp_txt_surf, (tx + 1, ty + 1))  # shadow
+        hp_txt_surf = self.rp_body_bold.render(hp_text, True, (255, 255, 255))
+        surf.blit(hp_txt_surf, (tx, ty))
+        # Icon at left
+        icon_surf = self._render_icon("\u2665", self.rp_body_font, self.rp_icon_font, fill_color)
+        surf.blit(icon_surf, (bar_x + 3, y + (bar_h - icon_surf.get_height()) // 2))
+        return bar_h + 2
+
+    def _draw_charge_bar(self, surf, y, p, label):
+        """Draw a segmented super charge bar with pulse animation when full."""
+        x = 6
+        # Label
+        lbl_color = (190, 190, 200)
+        icon_surf = self._render_icon("\u26A1", self.rp_body_font, self.rp_icon_font, lbl_color)
+        surf.blit(icon_surf, (x, y))
+        lbl_surf = self.rp_body_font.render(f"{label}: ", True, lbl_color)
+        surf.blit(lbl_surf, (x + icon_surf.get_width() + 3, y))
+        bar_x = x + icon_surf.get_width() + 3 + lbl_surf.get_width() + 4
+        bar_w = surf.get_width() - bar_x - 6
+        bar_h = 12
+        pip_count = p.super_charge_max if p.super_charge_max > 0 else 1
+        pip_w = max(4, (bar_w - (pip_count - 1) * 2) // pip_count)
+        bar_y = y + (self.rp_body_font.get_linesize() - bar_h) // 2
+        # Animation pulse when fully charged
+        ticks = pygame.time.get_ticks()
+        pulse = 0.0
+        if p.super_attack_ready:
+            pulse = (math.sin(ticks / 400.0) + 1.0) / 2.0  # 0..1
+        for i in range(pip_count):
+            px = bar_x + i * (pip_w + 2)
+            if i < p.super_charge:
+                if p.super_attack_ready:
+                    r = int(200 + 55 * pulse)
+                    g = int(160 + 95 * pulse)
+                    b = int(40 + 215 * pulse)
+                    pip_color = (min(r, 255), min(g, 255), min(b, 255))
+                else:
+                    pip_color = (200, 160, 40)
+            else:
+                pip_color = (50, 50, 60)
+            pygame.draw.rect(surf, pip_color, (px, bar_y, pip_w, bar_h), border_radius=2)
+        # Glow overlay when fully charged
+        if p.super_attack_ready:
+            glow_alpha = int(30 * pulse)
+            glow_surf = pygame.Surface((bar_w + 4, bar_h + 4), pygame.SRCALPHA)
+            glow_surf.fill((255, 220, 100, glow_alpha))
+            surf.blit(glow_surf, (bar_x - 2, bar_y - 2))
+        return self.rp_body_font.get_linesize()
+
+    def _render_player_panel(self):
+        """Build the custom player info panel surface."""
+        p = game.current_player
+        if p is None:
+            self._player_panel_surface = pygame.Surface((self.rp_inner_w, 20), pygame.SRCALPHA)
+            self._player_panel_height = 20
+            return
+        w = self.rp_inner_w if self.rp_inner_w > 0 else 214
+        line_h = self.rp_body_font.get_linesize()
+        pad = 4  # vertical padding within sections
+
+        # --- Pre-calculate total height ---
+        h = 0
+        # Section: Class header
+        h += self.rp_header_font.get_linesize() + pad
+        # Section: HP bar
+        h += 18 + pad  # bar_h(16) + 2 gap + pad
+        # Section: Stats (move, range, action)
+        stat_lines = 3
+        if p.class_name == "Warrior":
+            stat_lines += 1
+        if p.is_healer:
+            stat_lines += 1
+        if getattr(p, 'is_disguised', False):
+            stat_lines += 1
+        h += stat_lines * line_h + pad
+        # Section: Charge bar
+        h += line_h + pad
+        # Section: Manning
+        if p.is_manning():
+            manning_lines = 2
+            h += manning_lines * line_h + pad
+        # Multiplayer indicator
+        if game.multiplayer_mode:
+            h += line_h
+
+        h += pad  # bottom padding
+
+        # --- Create surface ---
+        surf = pygame.Surface((w, h), pygame.SRCALPHA)
+        surf.fill((0, 0, 0, 0))
+        y = 0
+
+        # --- Class header with warm tint background ---
+        header_h = self.rp_header_font.get_linesize() + pad
+        tint = pygame.Surface((w, header_h), pygame.SRCALPHA)
+        tint.fill((50, 40, 10, 30))
+        surf.blit(tint, (0, y))
+        # Multiplayer indicator
+        if game.multiplayer_mode:
+            mp_surf = self.rp_body_font.render(f"Player {p.player_number}", True, (170, 170, 255))
+            surf.blit(mp_surf, (6, y))
+            y += line_h
+        class_surf = self.rp_header_font.render(p.class_name, True, (255, 215, 0))
+        surf.blit(class_surf, (6, y))
+        y += self.rp_header_font.get_linesize() + pad
+
+        # --- HP section with subtle green tint ---
+        hp_section_h = 18 + pad
+        tint = pygame.Surface((w, hp_section_h), pygame.SRCALPHA)
+        tint.fill((20, 50, 20, 25))
+        surf.blit(tint, (0, y))
+        y += self._draw_hp_bar(surf, y, p)
+        y += pad
+
+        # --- Stats section with subtle blue tint ---
+        stats_section_h = stat_lines * line_h + pad
+        tint = pygame.Surface((w, stats_section_h), pygame.SRCALPHA)
+        tint.fill((20, 20, 50, 20))
+        surf.blit(tint, (0, y))
+
+        # Movement
+        if hasattr(p, 'moves_per_turn') and p.moves_per_turn > 1:
+            effective_max = p.moves_per_turn
+            if (p.special_attack == "Double Move" and p.super_attack_ready
+                    and p._movement_count >= p.moves_per_turn):
+                effective_max = 3
+            remaining = max(0, effective_max - p._movement_count)
+            mv_color = (160, 160, 170) if remaining <= 0 else (240, 240, 255)
+            sprint_tag = " SPRINT!" if p._movement_count >= p.moves_per_turn and remaining > 0 else ""
+            mv_val = f"{remaining}/{effective_max}{sprint_tag} ({p.movement} hexes)"
+        else:
+            mv_color = (160, 160, 170) if p.movement_used else (240, 240, 255)
+            mv_val = str(p.movement)
+        y += self._draw_stat_line(surf, y, "\u25B6", "Move", mv_val, mv_color)
+
+        # Range
+        y += self._draw_stat_line(surf, y, "\u25CE", "Range", str(p.projectile_range), (240, 240, 255))
+
+        # Action
+        act_color = (160, 160, 170) if p.action_used else (240, 240, 255)
+        act_val = "Used" if p.action_used else "Ready"
+        y += self._draw_stat_line(surf, y, "\u2694", "Action", act_val, act_color)
+
+        # Warrior attacks
+        if p.class_name == "Warrior":
+            y += self._draw_stat_line(surf, y, "\u2694", "Attacks", f"{p.warrior_attacks_remaining}/2", (240, 240, 255))
+
+        # Healer mode
+        if p.is_healer:
+            if p.melee_weapon is None:
+                heal_surf = self.rp_body_bold.render("Heal Mode (20 HP)", True, (50, 230, 50))
+            else:
+                heal_surf = self.rp_body_font.render("Melee weapon equipped", True, (190, 190, 200))
+            surf.blit(heal_surf, (6, y))
+            y += line_h
+
+        # Disguise status
+        if getattr(p, 'is_disguised', False):
+            if getattr(p, 'is_boss_disguised', False):
+                dis_surf = self.rp_body_bold.render("BOSS DISGUISE ACTIVE", True, (255, 68, 68))
+            else:
+                dis_surf = self.rp_body_bold.render("DISGUISED", True, (255, 170, 0))
+            surf.blit(dis_surf, (6, y))
+            y += line_h
+
+        y += pad
+
+        # --- Charge bar section with warm gold tint ---
+        charge_section_h = line_h + pad
+        tint = pygame.Surface((w, charge_section_h), pygame.SRCALPHA)
+        tint.fill((50, 40, 10, 25))
+        surf.blit(tint, (0, y))
+        # Pick label by class
+        if p.is_healer:
+            charge_label = "Revive"
+        elif getattr(p, 'is_spy', False):
+            charge_label = "Order"
+        elif p.special_attack == "Double Move":
+            charge_label = "Sprint"
+        else:
+            charge_label = "Super"
+        y += self._draw_charge_bar(surf, y, p, charge_label)
+        y += pad
+
+        # --- Manning section ---
+        if p.is_manning():
+            manning_section_h = 2 * line_h + pad
+            tint = pygame.Surface((w, manning_section_h), pygame.SRCALPHA)
+            tint.fill((50, 35, 10, 30))
+            surf.blit(tint, (0, y))
+            loc_data = self.hex_grid.location_data.get(p.manning_location)
+            if loc_data:
+                loc_name = loc_data["card"].get_current_data().get("Name", "Tower") if loc_data.get("card") else "Tower"
+                y += self._draw_stat_line(surf, y, "\u2656", "Manning", loc_name, (255, 215, 0))
+                if p.manning_weapon_mode == "tower":
+                    defenses = loc_data.get("defenses", [])
+                    if defenses:
+                        best = max(defenses, key=lambda d: d.get("damage", 0))
+                        tw_val = f"{best['damage']} dmg / {best.get('range_distance', 0)} range"
+                        y += self._draw_stat_line(surf, y, " ", "Tower", tw_val, (255, 215, 0))
+                    else:
+                        y += line_h
+                else:
+                    wpn_surf = self.rp_body_font.render("Using: Personal Weapon", True, (170, 212, 255))
+                    surf.blit(wpn_surf, (6, y))
+                    y += line_h
+            y += pad
+
+        self._player_panel_surface = surf
+        self._player_panel_height = y
+        self._player_panel_dirty = False
+
     def _handle_quest_chain(self):
         """Check for pending quest chain and handle by mode (auto_activate or offer)."""
+        # Check for transition card swap from quest chain
+        transition_swap = game.current_quest_manager.get_pending_transition_swap()
+        if transition_swap:
+            if game.transition_manager.load_transition_card(transition_swap):
+                self.add_to_log(f"The world shifts... ({game.transition_manager.active_transition.name})")
+            else:
+                logger.warning(f"Could not load transition card '{transition_swap}' from quest chain")
+
         chain = game.current_quest_manager.get_pending_chain()
         if not chain:
             return
@@ -6948,6 +3239,23 @@ class GameScreen:
             self.add_to_log(f"Declined quest from {speaker}.")
         if hasattr(self, '_pending_quest_offer'):
             del self._pending_quest_offer
+
+    def _handle_instance_quest_offer_response(self, choice):
+        """Callback for instance card offer_quest outcome (Accept/Decline)."""
+        self.active_screen = "game"
+        if choice == "Accept" and hasattr(self, '_pending_instance_quest_offer'):
+            offer = self._pending_instance_quest_offer
+            quest_card = offer["quest_card"]
+            success, msg = game.current_quest_manager.activate_quest(
+                quest_card, self.hex_grid, game.current_player
+            )
+            self.add_to_log(msg)
+        else:
+            self.add_to_log("Quest opportunity declined.")
+        if hasattr(self, '_pending_instance_quest_offer'):
+            del self._pending_instance_quest_offer
+        # Continue normal post-instance flow
+        self.resume_after_instance()
 
     def _get_log_color(self, message):
         """Return an HTML color based on message content."""
@@ -7407,38 +3715,21 @@ class GameScreen:
         return card.card_data.get("card_id", card.card_data.get("data", {}).get("Name", "unknown"))
 
     def _load_hex_attempts(self, card):
-        """Load set of attempted hex positions for a card from temp file."""
+        """Get set of attempted hex positions for a card from in-memory tracking."""
         card_id = self._get_card_id(card)
-        safe_id = "".join(c if c.isalnum() or c in "_-" else "_" for c in card_id)
-        filepath = os.path.join("temp", f"hex_attempts_{safe_id}.json")
-        if not os.path.exists(filepath):
-            return set()
-        try:
-            with open(filepath, 'r') as f:
-                data = json.load(f)
-            return {tuple(h) for h in data.get("attempted_hexes", [])}
-        except Exception:
-            return set()
+        return self._hex_attempts.get(card_id, set())
 
     def _save_hex_attempt(self, card, hex_pos):
-        """Record a hex as attempted for a card."""
+        """Record a hex as attempted for a card in memory."""
         card_id = self._get_card_id(card)
-        safe_id = "".join(c if c.isalnum() or c in "_-" else "_" for c in card_id)
-        os.makedirs("temp", exist_ok=True)
-        filepath = os.path.join("temp", f"hex_attempts_{safe_id}.json")
-        attempted = self._load_hex_attempts(card)
-        attempted.add(tuple(hex_pos))
-        data = {"card_id": card_id, "attempted_hexes": [list(h) for h in attempted]}
-        with open(filepath, 'w') as f:
-            json.dump(data, f)
+        if card_id not in self._hex_attempts:
+            self._hex_attempts[card_id] = set()
+        self._hex_attempts[card_id].add(tuple(hex_pos))
 
     def _clear_hex_attempts(self, card):
-        """Delete the temp hex tracking file for a card."""
+        """Clear hex attempt tracking for a card."""
         card_id = self._get_card_id(card)
-        safe_id = "".join(c if c.isalnum() or c in "_-" else "_" for c in card_id)
-        filepath = os.path.join("temp", f"hex_attempts_{safe_id}.json")
-        if os.path.exists(filepath):
-            os.remove(filepath)
+        self._hex_attempts.pop(card_id, None)
 
     # ===== ITEMS BUTTON SYSTEM =====
 
@@ -7501,6 +3792,13 @@ class GameScreen:
                 label = f"{name} ({hp_effect})" if hp_effect else name
                 items.append((label, card))
 
+        # Add body cards with [Body] suffix and "place_body" action type
+        for card in p.inventory:
+            cdata = card.get_current_data()
+            if cdata.get("_is_dead_body") == "true":
+                name = cdata.get("Name", "???")
+                items.append((f"Place {name} [Body]", card))
+
         if not items:
             items.append(("(No consumables)", None))
 
@@ -7545,6 +3843,10 @@ class GameScreen:
                 if card.current_state == 2 and card is not p.melee_weapon:
                     cdata = card.get_current_data()
                     ctype = cdata.get("Type", "")
+                    # Infer weapon type from damage fields when Type is missing
+                    if not ctype and card.card_data.get("subclass") in ("Junk_to_Weapon", "Blueprint_to_Weapon"):
+                        if int(cdata.get("Melee Damage", 0) or 0) > 0:
+                            ctype = "Melee"
                     if ctype in ("Melee", "Both"):
                         items.append((cdata.get("Name", "???"), card))
             if p.melee_weapon:
@@ -7555,6 +3857,10 @@ class GameScreen:
                 if card.current_state == 2 and card is not p.projectile_weapon:
                     cdata = card.get_current_data()
                     ctype = cdata.get("Type", "")
+                    # Infer weapon type from damage fields when Type is missing
+                    if not ctype and card.card_data.get("subclass") in ("Junk_to_Weapon", "Blueprint_to_Weapon"):
+                        if int(cdata.get("Projectile Damage", 0) or 0) > 0:
+                            ctype = "Projectile"
                     if ctype in ("Projectile", "Both"):
                         items.append((cdata.get("Name", "???"), card))
             if p.projectile_weapon:
@@ -7673,6 +3979,7 @@ class GameScreen:
         if not target:
             return
         current_player = game.current_player
+        was_disguised = getattr(current_player, 'is_disguised', False)
         if action_type == "melee":
             self.selected_attack = current_player.attacks["melee"]["name"]
             self.player_mode = "attack"
@@ -7712,6 +4019,9 @@ class GameScreen:
                             self.update_quest_button()
                             self.show_stats(None)
                 self._check_ammo_runout_banner(current_player)
+                # Check if disguise broke during attack
+                if was_disguised and not current_player.is_disguised:
+                    self.add_to_log("Disguise broken! Enemies are now aware of your presence!")
                 self.player_info_label.set_text(self.get_player_info())
                 self.selected_attack = None
                 if current_player.action_used and not current_player.movement_used:
@@ -7754,6 +4064,9 @@ class GameScreen:
                             self.update_quest_button()
                             self.show_stats(None)
                 self._check_ammo_runout_banner(current_player)
+                # Check if disguise broke during attack
+                if was_disguised and not current_player.is_disguised:
+                    self.add_to_log("Disguise broken! Enemies are now aware of your presence!")
                 self.player_info_label.set_text(self.get_player_info())
                 self.selected_attack = None
                 if current_player.action_used and not current_player.movement_used:
@@ -7807,9 +4120,80 @@ class GameScreen:
             self.add_to_log(message)
             self.player_info_label.set_text(self.get_player_info())
             self._create_equipment_toolbar()
+        elif action_type == "order_enemy":
+            # Boss Disguise: reorder enemy's behavior tree
+            self._open_enemy_order_editor(target, current_player)
         elif action_type == "give_to_player":
             game.current_screen = "card_giving"
             card_giving_screen.initialize_screen(data)
+        elif action_type == "search_junk_pile":
+            pile = data
+            remaining = getattr(pile, '_junk_searches_remaining', 0)
+            chance = getattr(pile, '_junk_search_chance', 50)
+            if remaining > 0:
+                roll = random.randint(1, 100)
+                if roll <= chance:
+                    # Draw a card from the campaign junk deck
+                    junk_deck_path = getattr(self, 'current_junk_deck', None)
+                    drawn_card = None
+                    if junk_deck_path:
+                        drawn_card = self.card_manager.draw_from_deck(junk_deck_path)
+                    if drawn_card:
+                        party_msg = add_card_to_player(drawn_card)
+                        if party_msg:
+                            self.add_to_log(party_msg)
+                        card_name = drawn_card.get_current_data().get("Name", "something")
+                        self.add_to_log(f"Found {card_name} in the junk pile!")
+                    else:
+                        self.add_to_log("Searched the junk pile but the deck is empty.")
+                else:
+                    self.add_to_log("Searched the junk pile but found nothing useful.")
+                pile._junk_searches_remaining = remaining - 1
+                pile._junk_search_chance = max(10, chance - 15)
+                current_player.action_used = True
+                self.player_info_label.set_text(self.get_player_info())
+            else:
+                self.add_to_log("This junk pile has been thoroughly searched.")
+        elif action_type == "move_junk_pile":
+            self.junk_pile_move_unit = data
+            self.player_mode = "junk_pile_move"
+            self.add_to_log("Select destination for junk pile (or click yourself to pick up)")
+        elif action_type == "move_body":
+            self.body_move_unit = data
+            self.player_mode = "body_move"
+            self.add_to_log(f"Select destination for {data.name}'s body (or click yourself to pick up)")
+        elif action_type == "revive_body":
+            # Use healer super attack to revive the dead unit
+            message, defeated_units = current_player.use_super_attack(data, self.hex_grid)
+            self.add_to_log(message)
+            self.player_info_label.set_text(self.get_player_info())
+            self._create_equipment_toolbar()
+            self.rebuild_left_panel()
+
+    def _open_enemy_order_editor(self, unit, player):
+        """Open behavior tree editor for an enemy unit (Spy Boss Disguise ability).
+        Uses the existing behavior tree reorder pattern: cycles the top behavior to the bottom."""
+        from unit import Unit
+        # Store original before first modification
+        if unit not in player.ordered_enemy_originals:
+            player.ordered_enemy_originals[unit] = list(unit.behavior_tree)
+        if unit not in player.ordered_enemies:
+            player.ordered_enemies.append(unit)
+
+        # Cycle the behavior tree: move first entry to the end
+        if len(unit.behavior_tree) > 1:
+            unit.behavior_tree.append(unit.behavior_tree.pop(0))
+
+        # Show what the new priority is
+        top_behavior = unit.behavior_tree[0] if unit.behavior_tree else "none"
+        info = Unit.BEHAVIOR_REGISTRY.get(top_behavior, {})
+        label = info.get("label", top_behavior)
+        self.add_to_log(f"Ordered {unit.name} - new priority: {label}")
+
+        # Consume super charge
+        player.super_charge = 0
+        player.super_attack_ready = False
+        self.player_info_label.set_text(self.get_player_info())
 
     def _handle_equip_popup_selection(self, slot_type, data):
         """Handle equip/unequip from the popup menu."""
@@ -7873,6 +4257,21 @@ class GameScreen:
                 self.add_to_log(f"Equipped {name}")
 
         elif slot_type == "items":
+            # Check if it's a junk pile card — enter junk-pile-place mode
+            if data and data.get_current_data().get("_is_junk_pile") == "true":
+                self.junk_pile_place_card = data
+                self.player_mode = "junk_pile_place"
+                self.add_to_log("Click adjacent empty hex to place junk pile")
+                self._close_equip_popup()
+                return
+            # Check if it's a dead body card — enter body-place mode
+            if data and data.get_current_data().get("_is_dead_body") == "true":
+                body_name = data.get_current_data().get("Name", "???")
+                self.body_place_card = data
+                self.player_mode = "body_place"
+                self.add_to_log(f"Click adjacent empty hex to place {body_name}'s body")
+                self._close_equip_popup()
+                return
             # Selected a consumable item from the Items popup
             item_name = data.get_current_data().get("Name", "???")
             self.selected_item = data
@@ -7994,7 +4393,7 @@ class GameScreen:
     def _is_recruitable(self, unit):
         """Check if a unit can be recruited. Neutral NPCs are always recruitable.
         Allied NPCs are recruitable if not already in the current party."""
-        if not unit or not hasattr(unit, 'allegiance'):
+        if not unit or not hasattr(unit, 'allegiance') or isinstance(unit, Player):
             return False
         if unit.allegiance == "Neutral":
             return True
@@ -8019,6 +4418,19 @@ class GameScreen:
                     recruitable_npcs.append(unit)
 
         return recruitable_npcs
+
+    def _get_adjacent_dead_bodies(self):
+        """Get list of dead units adjacent to the current player."""
+        player = game.current_player
+        if not player or not player.position:
+            return []
+        result = []
+        for r, c in self.hex_grid.get_adjacent_hexes(*player.position):
+            if 0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols:
+                unit = self.hex_grid.grid[r][c].get("unit")
+                if unit and getattr(unit, 'hp', 1) <= 0 and getattr(unit, '_death_processed', False):
+                    result.append(unit)
+        return result
 
     def _calculate_recruitment_cost(self, unit):
         """Calculate recruitment cost based on NPC stats: HP/10 + melee + ranged + movement + 5"""
@@ -8104,6 +4516,43 @@ class GameScreen:
         for name in game.instance_manager.defeated_units:
             self.add_defeat_notification(name)
         game.instance_manager.defeated_units.clear()
+
+        # Check for pending quest offer from offer_quest instance outcome
+        instance_quest_offer = game.instance_manager.get_pending_quest_offer()
+        if instance_quest_offer:
+            quest_card_id = instance_quest_offer.get("quest_card_id")
+            quest_deck = instance_quest_offer.get("quest_deck")
+            # Load the quest card
+            quest_card = None
+            if quest_card_id:
+                card_data = load_card(quest_card_id)
+                if card_data:
+                    quest_card = InventoryCard(card_data)
+            elif quest_deck:
+                # Draw random quest from deck
+                deck_path = resolve_deck_path(quest_deck)
+                try:
+                    with open(deck_path, 'r') as f:
+                        deck_data = json.load(f)
+                    card_ids = deck_data.get("cards", [])
+                    if card_ids:
+                        selected_id = random.choice(card_ids)
+                        card_data = load_card(selected_id)
+                        if card_data:
+                            quest_card = InventoryCard(card_data)
+                except Exception as e:
+                    logger.error(f"Error loading quest from deck for instance offer: {e}")
+
+            if quest_card:
+                self._pending_instance_quest_offer = {"quest_card": quest_card}
+                confirmation_screen.initialize_screen(
+                    "A quest opportunity presents itself! Accept?",
+                    ["Accept", "Decline"],
+                    self._handle_instance_quest_offer_response
+                )
+                self.active_screen = "confirmation"
+                return
+
         # If we're still in transition phase (instance was triggered by transition card),
         # complete the transition and move to player phase
         if self.turn_phase == "transition":
@@ -8250,22 +4699,21 @@ class GameScreen:
         self._start_autopan(pos[0], pos[1], callback=lambda: self._fire_loc_defense(pos, loc_data))
 
     def _fire_loc_defense(self, pos, loc_data):
-        """Fire one location's defensive attacks with projectile animations."""
+        """Build shot queue for this location and fire the first shot."""
         garrison = loc_data.get("garrison_npcs", [])
-        num_garrison = len(garrison)
+        if not garrison:
+            self._loc_defense_wait_until = pygame.time.get_ticks() + 100
+            return
 
+        # Collect hostiles in range for each defense
+        defense_data = []  # (defense_dict, hostiles_in_range_list)
         for defense in loc_data.get("defenses", []):
-            if not defense.get("requires_npc"):
+            if not defense.get("requires_npc") or defense.get("damage", 0) <= 0:
                 continue
-            damage = defense.get("damage", 0)
-            if damage <= 0:
-                continue
-
             d_range = self.hex_grid.calculate_range(
                 pos, defense["range_distance"], defense["range_type"],
                 defense.get("include_position", False), defense.get("exclude_adjacent", False)
             )
-
             hostiles_in_range = []
             for hex_pos in d_range:
                 r, c = hex_pos
@@ -8273,27 +4721,53 @@ class GameScreen:
                     unit = self.hex_grid.grid[r][c].get("unit")
                     if unit and hasattr(unit, 'allegiance') and unit.allegiance == "Hostile" and unit.hp > 0:
                         hostiles_in_range.append(unit)
+            if hostiles_in_range:
+                defense_data.append((defense, hostiles_in_range))
 
-            if not hostiles_in_range:
-                continue
+        if not defense_data:
+            self._loc_defense_wait_until = pygame.time.get_ticks() + 100
+            return
 
-            loc_name = loc_data.get("card").get_current_data().get("Name", "Defense") if loc_data.get("card") else "Defense"
-            src = self.hex_grid.get_hex_center(*pos)
-            for _ in range(num_garrison):
-                alive = [u for u in hostiles_in_range if u.hp > 0]
-                if not alive:
-                    break
-                target = random.choice(alive)
-                target.hp -= damage
-                target.set_damage_text(damage)
-                if hasattr(self.hex_grid, 'attack_anims') and target.position:
-                    tgt = self.hex_grid.get_hex_center(*target.position)
-                    self.hex_grid.attack_anims.create_projectile(src, tgt)
-                self.add_to_log(f"{loc_name} defense hits {target.name} for {damage} damage")
+        # Build shot queue: each garrison NPC fires each defense once
+        loc_name = loc_data.get("card").get_current_data().get("Name", "Defense") if loc_data.get("card") else "Defense"
+        self._loc_defense_shot_queue = []
+        for npc in garrison:
+            for defense, hostiles in defense_data:
+                self._loc_defense_shot_queue.append({
+                    "npc_name": npc.get("name", "Garrison NPC"),
+                    "damage": defense.get("damage", 0),
+                    "hostiles": hostiles,
+                    "pos": pos,
+                    "loc_name": loc_name,
+                })
 
-        # Wait for projectile animations to finish, then process deaths
-        delay = self.hex_grid.attack_anims.get_max_remaining_ms() if hasattr(self.hex_grid, 'attack_anims') else 0
-        self._loc_defense_wait_until = pygame.time.get_ticks() + delay + 200
+        # Fire first shot
+        self._fire_next_defense_shot()
+
+    def _fire_next_defense_shot(self):
+        """Fire the next individual shot from the defense queue."""
+        while self._loc_defense_shot_queue:
+            shot = self._loc_defense_shot_queue.pop(0)
+            alive = [u for u in shot["hostiles"] if u.hp > 0]
+            if not alive:
+                continue  # All targets from this defense are dead, skip
+
+            target = random.choice(alive)
+            target.hp -= shot["damage"]
+            target.set_damage_text(shot["damage"])
+            src = self.hex_grid.get_hex_center(*shot["pos"])
+            if hasattr(self.hex_grid, 'attack_anims') and target.position:
+                tgt = self.hex_grid.get_hex_center(*target.position)
+                self.hex_grid.attack_anims.create_projectile(src, tgt)
+            self.add_to_log(f"{shot['npc_name']} ({shot['loc_name']}) hits {target.name} for {shot['damage']} damage")
+
+            # Set timer for next shot (stagger by 400ms)
+            self._loc_defense_wait_until = pygame.time.get_ticks() + 400
+            return
+
+        # Queue exhausted — short wait then process deaths
+        self._loc_defense_wait_until = pygame.time.get_ticks() + 200
+        self._loc_defense_shot_queue = None  # Signal queue done
 
     def _process_loc_defense_deaths(self):
         """Process deaths from the most recent location defense volley, then continue queue."""
@@ -8301,16 +4775,16 @@ class GameScreen:
         for dead_unit in dead_units:
             if dead_unit.position:
                 row, col = dead_unit.position
-                if self.hex_grid.grid[row][col]["unit"] is dead_unit:
-                    self.hex_grid.grid[row][col]["unit"] = None
-                # Displace body off location hex
+                # Displace body off location hex (body stays in grid)
                 if dead_unit.position in self.hex_grid.location_data:
-                    neighbors = self.hex_grid.get_neighbors(row, col)
-                    for nr, nc in neighbors:
+                    for nr, nc in self.hex_grid.get_adjacent_hexes(row, col):
                         if ((nr, nc) not in self.hex_grid.location_data
+                                and 0 <= nr < self.hex_grid.rows and 0 <= nc < self.hex_grid.cols
                                 and self.hex_grid.grid[nr][nc]["accessible"]
                                 and self.hex_grid.grid[nr][nc]["unit"] is None):
+                            self.hex_grid.grid[row][col]["unit"] = None
                             dead_unit.position = (nr, nc)
+                            self.hex_grid.grid[nr][nc]["unit"] = dead_unit
                             break
             dead_unit._death_processed = True
             self.add_to_log(f"{dead_unit.name} defeated")
@@ -8391,8 +4865,8 @@ class GameScreen:
         except Exception as e:
             import traceback
             tb_str = traceback.format_exc()
-            print(f"Error in transition turn: {e}")
-            print(f"Full traceback:\n{tb_str}")
+            logger.error(f"Error in transition turn: {e}")
+            logger.error(f"Full traceback:\n{tb_str}")
             self.add_to_log(f"[Transition Error]")
             # Skip to player phase on error (don't call advance_turn which would re-process transition)
             if game.multiplayer_mode:
@@ -8457,16 +4931,16 @@ class GameScreen:
                     continue
                 if unit.position:
                     row, col = unit.position
-                    if self.hex_grid.grid[row][col]["unit"] is unit:
-                        self.hex_grid.grid[row][col]["unit"] = None
-                    # Displace body off location hex
+                    # Displace body off location hex (body stays in grid)
                     if unit.position in self.hex_grid.location_data:
-                        neighbors = self.hex_grid.get_neighbors(row, col)
-                        for nr, nc in neighbors:
+                        for nr, nc in self.hex_grid.get_adjacent_hexes(row, col):
                             if ((nr, nc) not in self.hex_grid.location_data
+                                    and 0 <= nr < self.hex_grid.rows and 0 <= nc < self.hex_grid.cols
                                     and self.hex_grid.grid[nr][nc]["accessible"]
                                     and self.hex_grid.grid[nr][nc]["unit"] is None):
+                                self.hex_grid.grid[row][col]["unit"] = None
                                 unit.position = (nr, nc)
+                                self.hex_grid.grid[nr][nc]["unit"] = unit
                                 break
                 unit._death_processed = True
             self.pending_defeats.clear()
@@ -8585,6 +5059,134 @@ class GameScreen:
                     self.player_mode = "movement"
                     self.defensive_hex_options = []
                     self.add_to_log("Cancelled defensive posture selection")
+                    return
+
+                # Handle body-move mode destination
+                if self.player_mode == "body_move" and self.body_move_unit and hex_pos:
+                    body = self.body_move_unit
+                    adj = set(self.hex_grid.get_adjacent_hexes(*current_player.position))
+                    if hex_pos == current_player.position:
+                        # Pick up body into inventory
+                        old_r, old_c = body.position
+                        self.hex_grid.grid[old_r][old_c]["unit"] = None
+                        if body in self.hex_grid.units:
+                            self.hex_grid.units.remove(body)
+                        body.position = None
+                        full_card = load_card(body.card_id, silent=True)
+                        if full_card:
+                            body_card = InventoryCard(full_card)
+                            body_card.card_data["data"]["_is_dead_body"] = "true"
+                            body_card.card_data["data"]["_body_hp"] = str(body.hp)
+                            body_card.card_data["data"]["_body_max_hp"] = str(body.max_hp)
+                            current_player.inventory.append(body_card)
+                        self.add_to_log(f"Picked up {body.name}'s body")
+                        self.body_move_unit = None
+                        self.player_mode = "movement"
+                    elif (hex_pos in adj
+                          and self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] is None
+                          and self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["accessible"]):
+                        # Move body to target hex
+                        old_r, old_c = body.position
+                        self.hex_grid.grid[old_r][old_c]["unit"] = None
+                        body.position = hex_pos
+                        self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = body
+                        self.add_to_log(f"Moved {body.name}'s body")
+                        self.body_move_unit = None
+                        self.player_mode = "movement"
+                    else:
+                        # Invalid click — cancel
+                        self.body_move_unit = None
+                        self.player_mode = "movement"
+                    return
+
+                # Handle body-place mode destination
+                if self.player_mode == "body_place" and self.body_place_card and hex_pos:
+                    adj = set(self.hex_grid.get_adjacent_hexes(*current_player.position))
+                    if (hex_pos in adj
+                            and self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] is None
+                            and self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["accessible"]):
+                        card_data = self.body_place_card.card_data
+                        placed_unit = Unit(card_data)
+                        placed_unit.hp = int(card_data["data"].get("_body_hp", 0))
+                        placed_unit.max_hp = int(card_data["data"].get("_body_max_hp", placed_unit.max_hp))
+                        placed_unit._death_processed = True
+                        placed_unit.position = hex_pos
+                        self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = placed_unit
+                        self.hex_grid.units.append(placed_unit)
+                        if self.body_place_card in current_player.inventory:
+                            current_player.inventory.remove(self.body_place_card)
+                        self.add_to_log(f"Placed {placed_unit.name}'s body")
+                        self.body_place_card = None
+                        self.player_mode = "movement"
+                    else:
+                        # Invalid click — cancel
+                        self.body_place_card = None
+                        self.player_mode = "movement"
+                    return
+
+                # Handle junk-pile-move mode destination
+                if self.player_mode == "junk_pile_move" and self.junk_pile_move_unit and hex_pos:
+                    pile = self.junk_pile_move_unit
+                    adj = set(self.hex_grid.get_adjacent_hexes(*current_player.position))
+                    if hex_pos == current_player.position:
+                        # Pick up junk pile into inventory
+                        old_r, old_c = pile.position
+                        self.hex_grid.grid[old_r][old_c]["unit"] = None
+                        if pile in self.hex_grid.units:
+                            self.hex_grid.units.remove(pile)
+                        pile.position = None
+                        full_card = load_card(pile.card_id, silent=True)
+                        if full_card:
+                            pile_card = InventoryCard(full_card)
+                            pile_card.card_data["data"]["_is_junk_pile"] = "true"
+                            pile_card.card_data["data"]["_junk_search_chance"] = str(getattr(pile, '_junk_search_chance', 0))
+                            pile_card.card_data["data"]["_junk_searches_remaining"] = str(getattr(pile, '_junk_searches_remaining', 0))
+                            current_player.inventory.append(pile_card)
+                        self.add_to_log("Picked up junk pile")
+                        self.junk_pile_move_unit = None
+                        self.player_mode = "movement"
+                    elif (hex_pos in adj
+                          and self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] is None
+                          and self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["accessible"]):
+                        # Move junk pile to target hex
+                        old_r, old_c = pile.position
+                        self.hex_grid.grid[old_r][old_c]["unit"] = None
+                        pile.position = hex_pos
+                        self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = pile
+                        self.add_to_log("Moved junk pile")
+                        self.junk_pile_move_unit = None
+                        self.player_mode = "movement"
+                    else:
+                        # Invalid click — cancel
+                        self.junk_pile_move_unit = None
+                        self.player_mode = "movement"
+                    return
+
+                # Handle junk-pile-place mode destination
+                if self.player_mode == "junk_pile_place" and self.junk_pile_place_card and hex_pos:
+                    adj = set(self.hex_grid.get_adjacent_hexes(*current_player.position))
+                    if (hex_pos in adj
+                            and self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] is None
+                            and self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["accessible"]):
+                        card_data = self.junk_pile_place_card.card_data
+                        placed_pile = Unit(card_data)
+                        placed_pile.hp = 0
+                        placed_pile._death_processed = True
+                        placed_pile._is_junk_pile = True
+                        placed_pile._junk_search_chance = int(card_data["data"].get("_junk_search_chance", 0))
+                        placed_pile._junk_searches_remaining = int(card_data["data"].get("_junk_searches_remaining", 0))
+                        placed_pile.position = hex_pos
+                        self.hex_grid.grid[hex_pos[0]][hex_pos[1]]["unit"] = placed_pile
+                        self.hex_grid.units.append(placed_pile)
+                        if self.junk_pile_place_card in current_player.inventory:
+                            current_player.inventory.remove(self.junk_pile_place_card)
+                        self.add_to_log("Placed junk pile")
+                        self.junk_pile_place_card = None
+                        self.player_mode = "movement"
+                    else:
+                        # Invalid click — cancel
+                        self.junk_pile_place_card = None
+                        self.player_mode = "movement"
                     return
 
                 # Handle behavior target selection (from party screen)
@@ -8747,8 +5349,39 @@ class GameScreen:
                         self.add_to_log("Target not in tower range")
                     return
 
+                # Junk pile interaction (before dead body check)
+                if (not self.selected_attack and unit and isinstance(unit, Unit)
+                        and getattr(unit, '_is_junk_pile', False)
+                        and self.hex_grid.hex_distance(current_player.position, hex_pos) == 1
+                        and self.player_mode not in ("body_move", "body_place", "junk_pile_move", "junk_pile_place", "recruit", "skill", "item", "super_attack")):
+                    actions = []
+                    remaining = getattr(unit, '_junk_searches_remaining', 0)
+                    if remaining > 0 and not current_player.action_used:
+                        chance = getattr(unit, '_junk_search_chance', 50)
+                        actions.append((f"Search Junk Pile ({remaining} left, {chance}%)", "search_junk_pile", unit))
+                    actions.append(("Move Junk Pile", "move_junk_pile", unit))
+                    self._open_action_choice_popup(unit, hex_pos, actions)
+                    return
+
+                # Dead body interaction
+                if (not self.selected_attack and unit and isinstance(unit, Unit) and unit.hp <= 0
+                        and getattr(unit, '_death_processed', False)
+                        and not getattr(unit, '_is_junk_pile', False)
+                        and self.hex_grid.hex_distance(current_player.position, hex_pos) == 1
+                        and self.player_mode not in ("body_move", "body_place", "junk_pile_move", "junk_pile_place", "recruit", "skill", "item", "super_attack")):
+                    actions = [("Move Body", "move_body", unit)]
+                    # Healer with super ready can revive
+                    if (current_player.is_healer and current_player.super_attack_ready
+                            and not current_player.action_used):
+                        actions.insert(0, (f"Revive {unit.name}", "revive_body", unit))
+                    if len(actions) == 1:
+                        self._open_action_choice_popup(unit, hex_pos, actions)
+                    else:
+                        self._open_action_choice_popup(unit, hex_pos, actions)
+                    return
+
                 # Auto-detect available actions when clicking on a unit (skip in recruit/skill modes)
-                if not self.selected_attack and unit and isinstance(unit, Unit) and self.player_mode not in ("recruit", "skill", "item"):
+                if not self.selected_attack and unit and isinstance(unit, Unit) and unit.hp > 0 and self.player_mode not in ("recruit", "skill", "item"):
                     available_actions = []
                     # Attack options only available if action not yet used
                     if not current_player.action_used:
@@ -8780,6 +5413,11 @@ class GameScreen:
                         if taming_food:
                             best_chance = taming_food[0][1]
                             available_actions.append((f"Feed {unit.name} ({best_chance}% tame)", "feed", unit))
+                    # Boss Disguise: Order enemy
+                    if (getattr(current_player, 'is_boss_disguised', False)
+                        and current_player.super_attack_ready
+                        and unit.allegiance == "Hostile" and unit.hp > 0):
+                        available_actions.append((f"Order {unit.name}", "order_enemy", unit))
                     if len(available_actions) == 1:
                         action_type = available_actions[0][1]
                         if action_type == "melee":
@@ -8794,6 +5432,9 @@ class GameScreen:
                             return
                         elif action_type == "feed":
                             self._handle_action_choice("feed", available_actions[0][2])
+                            return
+                        elif action_type == "order_enemy":
+                            self._handle_action_choice("order_enemy", available_actions[0][2])
                             return
                     elif len(available_actions) >= 2:
                         self._open_action_choice_popup(unit, hex_pos, available_actions)
@@ -8818,7 +5459,7 @@ class GameScreen:
                             return
                     self._open_action_choice_popup(unit, hex_pos, actions)
                     return
-                if self.player_mode == "attack" and self.selected_attack and unit and isinstance(unit, Unit):
+                if self.player_mode == "attack" and self.selected_attack and unit and isinstance(unit, Unit) and unit.hp > 0:
                     message, result = current_player.attack(unit, self.selected_attack, self.hex_grid, game.current_party)
                     self.add_to_log(message)
                     if message:
@@ -9011,7 +5652,7 @@ class GameScreen:
                             self.player_mode = "movement"
                             self.initialize_screen()  # Refresh UI
                 elif not current_player.movement_used and not unit and not current_player.is_manning():
-                    path = self.hex_grid.find_path(current_player.position, hex_pos)
+                    path = self.hex_grid.find_path(current_player.position, hex_pos, moving_unit=current_player)
                     effective_movement = current_player.get_effective_movement(game.current_party)
                     if path and len(path) - 1 <= effective_movement:
                         pre_move_pos = current_player.position  # Save before moving
@@ -9019,6 +5660,16 @@ class GameScreen:
                         if success:
                             self.add_to_log(msg)
                             current_player.movement_used = True
+                            # Scout: +1 super charge when using 2nd move
+                            if (current_player.special_attack == "Double Move"
+                                and current_player._movement_count == 2):
+                                current_player.add_super_charge()
+                            # Scout sprint: consume super charge on 3rd move
+                            if (current_player.special_attack == "Double Move"
+                                and current_player._movement_count == 3):
+                                current_player.super_charge = 0
+                                current_player.super_attack_ready = False
+                                self.add_to_log(f"{current_player.name or current_player.class_name} used SPRINT!")
                             # Notify quest system of player movement
                             quest_results = game.current_quest_manager.update(
                                 "unit_moved", {"unit": current_player, "position": hex_pos},
@@ -9057,6 +5708,7 @@ class GameScreen:
                                                     ally.teleport(self.hex_grid, *neighbors[i])
                                             self.initialize_screen()
                                             current_player.movement_used = False
+                                            current_player.moves_per_turn = current_player.base_moves_per_turn
                                             current_player.action_used = False
                                             current_player.reset_double_attack()
                                             break
@@ -9136,6 +5788,15 @@ class GameScreen:
                 dy = abs(event.pos[1] - self.drag_start_y)
                 was_drag = dx > 5 or dy > 5
                 self.dragging = False
+            # Right-click cancels body-move/body-place/junk-pile modes
+            if event.button == 3 and not was_drag and self._is_player_phase():
+                if self.player_mode in ("body_move", "body_place", "junk_pile_move", "junk_pile_place"):
+                    self.body_move_unit = None
+                    self.body_place_card = None
+                    self.junk_pile_move_unit = None
+                    self.junk_pile_place_card = None
+                    self.player_mode = "movement"
+                    self.add_to_log("Cancelled")
             # Right-click on player's own hex without dragging = enter defend mode
             if event.button == 3 and not was_drag and self._is_player_phase():
                 hex_pos = self.hex_grid.get_hex_at_pixel(event.pos[0], event.pos[1])
@@ -9492,15 +6153,13 @@ class GameScreen:
         self.animating = self.check_animations()
         player_alive = current_player.hp > 0
         effective_movement = current_player.get_effective_movement(game.current_party)
-        movement_range = self.hex_grid.get_valid_moves(current_player.position, effective_movement) if is_player_turn and player_alive and not current_player.movement_used and not self.animating else None
+        movement_range = self.hex_grid.get_valid_moves(current_player.position, effective_movement, moving_unit=current_player) if is_player_turn and player_alive and not current_player.movement_used and not self.animating else None
 
         # Build list of all available attack ranges to display simultaneously
         attack_ranges = []
 
-        # Always-visible defense range rings for defensive locations
-        for def_pos, def_loc in self.hex_grid.get_all_defensive_locations():
-            garrison = def_loc.get("garrison_npcs", [])
-            is_manned = len(garrison) > 0 and def_loc.get("state", 1) == 2
+        # Defense range rings only for manned/garrisoned locations
+        for def_pos, def_loc in self.hex_grid.get_active_defensive_locations():
             for defense in def_loc.get("defenses", []):
                 if not defense.get("requires_npc"):
                     continue
@@ -9510,7 +6169,7 @@ class GameScreen:
                 )
                 if d_range:
                     r, g, b = defense.get("color", (255, 165, 0))
-                    alpha = 140 if is_manned else 60
+                    alpha = 90
                     attack_ranges.append({
                         "range": d_range,
                         "color": (r, g, b, alpha),
@@ -9530,7 +6189,7 @@ class GameScreen:
                 range_color = (80, 140, 220, 100)  # Blue default (movement)
 
                 if action in ("move", "move_melee", "move_projectile", "move_repair"):
-                    range_hexes = self.hex_grid.get_movement_range(pos, preview_unit.movement)
+                    range_hexes = self.hex_grid.get_movement_range(pos, preview_unit.movement, moving_unit=preview_unit)
                     range_color = (80, 140, 220, 100)
                 elif action == "melee":
                     range_hexes = set(self.hex_grid.get_adjacent_hexes(*pos))
@@ -9621,6 +6280,68 @@ class GameScreen:
             if recruit_hexes:
                 attack_ranges.append({"range": recruit_hexes, "color": (255, 255, 255, 220), "outline": (180, 180, 180, 220), "inset": 0.75})
 
+        # Amber rings around adjacent junk piles (interactable)
+        if is_player_turn and self.player_mode not in ("junk_pile_move", "junk_pile_place", "body_move", "body_place"):
+            junk_pile_hexes = set()
+            for r, c in self.hex_grid.get_adjacent_hexes(*current_player.position):
+                if 0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols:
+                    u = self.hex_grid.grid[r][c].get("unit")
+                    if u and getattr(u, '_is_junk_pile', False):
+                        junk_pile_hexes.add((r, c))
+            if junk_pile_hexes:
+                attack_ranges.append({"range": junk_pile_hexes, "color": (210, 170, 60, 220), "outline": (180, 140, 40, 220), "inset": 0.75})
+
+        # White rings around adjacent dead bodies (interactable, exclude junk piles)
+        if is_player_turn and self.player_mode not in ("body_move", "body_place", "junk_pile_move", "junk_pile_place"):
+            adjacent_dead = [u for u in self._get_adjacent_dead_bodies() if not getattr(u, '_is_junk_pile', False)]
+            dead_hexes = {u.position for u in adjacent_dead if u.position}
+            if dead_hexes:
+                attack_ranges.append({"range": dead_hexes, "color": (255, 255, 255, 220), "outline": (180, 180, 180, 220), "inset": 0.75})
+
+        # Body-move mode: show valid destinations
+        if is_player_turn and self.player_mode == "body_move" and self.body_move_unit:
+            dest_hexes = set()
+            for r, c in self.hex_grid.get_adjacent_hexes(*current_player.position):
+                if (0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols
+                        and self.hex_grid.grid[r][c]["unit"] is None
+                        and self.hex_grid.grid[r][c]["accessible"]):
+                    dest_hexes.add((r, c))
+            dest_hexes.add(current_player.position)  # Player hex = pickup
+            attack_ranges.append({"range": dest_hexes, "color": (255, 255, 255, 220), "outline": (180, 180, 180, 220), "inset": 0.70})
+
+        # Body-place mode: show valid placement hexes
+        if is_player_turn and self.player_mode == "body_place" and self.body_place_card:
+            place_hexes = set()
+            for r, c in self.hex_grid.get_adjacent_hexes(*current_player.position):
+                if (0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols
+                        and self.hex_grid.grid[r][c]["unit"] is None
+                        and self.hex_grid.grid[r][c]["accessible"]):
+                    place_hexes.add((r, c))
+            if place_hexes:
+                attack_ranges.append({"range": place_hexes, "color": (255, 255, 255, 220), "outline": (180, 180, 180, 220), "inset": 0.70})
+
+        # Junk-pile-move mode: show valid destinations
+        if is_player_turn and self.player_mode == "junk_pile_move" and self.junk_pile_move_unit:
+            dest_hexes = set()
+            for r, c in self.hex_grid.get_adjacent_hexes(*current_player.position):
+                if (0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols
+                        and self.hex_grid.grid[r][c]["unit"] is None
+                        and self.hex_grid.grid[r][c]["accessible"]):
+                    dest_hexes.add((r, c))
+            dest_hexes.add(current_player.position)  # Player hex = pickup
+            attack_ranges.append({"range": dest_hexes, "color": (210, 170, 60, 220), "outline": (180, 140, 40, 220), "inset": 0.70})
+
+        # Junk-pile-place mode: show valid placement hexes
+        if is_player_turn and self.player_mode == "junk_pile_place" and self.junk_pile_place_card:
+            place_hexes = set()
+            for r, c in self.hex_grid.get_adjacent_hexes(*current_player.position):
+                if (0 <= r < self.hex_grid.rows and 0 <= c < self.hex_grid.cols
+                        and self.hex_grid.grid[r][c]["unit"] is None
+                        and self.hex_grid.grid[r][c]["accessible"]):
+                    place_hexes.add((r, c))
+            if place_hexes:
+                attack_ranges.append({"range": place_hexes, "color": (210, 170, 60, 220), "outline": (180, 140, 40, 220), "inset": 0.70})
+
         # In item targeting mode, show green rings on adjacent hexes + self
         if is_player_turn and self.player_mode == "item" and self.selected_item:
             item_hexes = set(self.hex_grid.get_adjacent_hexes(*current_player.position))
@@ -9657,6 +6378,19 @@ class GameScreen:
         # "Player" header
         player_hdr = header_font.render("Player", True, header_color)
         screen.blit(player_hdr, (self.rp_x + self.rp_pad, 4))
+
+        # --- Custom player info panel ---
+        if self._player_panel_dirty or (game.current_player and game.current_player.super_attack_ready):
+            self._render_player_panel()
+        if self._player_panel_surface is not None:
+            screen.blit(self._player_panel_surface, (self.rp_x + self.rp_pad, self.rp_pi_y))
+        # Dynamically shift "Selected" panel if height changed
+        new_stats_y = self.rp_pi_y + self._player_panel_height + self.rp_pad + 24
+        if new_stats_y != self.rp_stats_y:
+            self.rp_stats_y = new_stats_y
+            # Update stats panel position (ui_elements[1] is the stats panel)
+            self.ui_elements[1].set_position((self.rp_x + self.rp_pad, new_stats_y))
+
         # "Selected" header
         selected_hdr = header_font.render("Selected", True, header_color)
         screen.blit(selected_hdr, (self.rp_x + self.rp_pad, self.rp_stats_y - 20))
@@ -9719,8 +6453,7 @@ class GameScreen:
             screen.blit(bg_surf, popup_rect.topleft)
             pygame.draw.rect(screen, (200, 150, 44), popup_rect, 2, border_radius=6)
             # Header text
-            header_font = pygame.font.SysFont("freesansbold", 15, bold=True)
-            header_text = header_font.render("Choose Action", True, (255, 215, 100))
+            header_text = self.action_popup_header_font.render("Choose Action", True, (255, 215, 100))
             screen.blit(header_text, (popup_rect.x + pad, popup_rect.y + 5))
         manager.draw_ui(screen)
         # Draw colored borders on equipment toolbar buttons
@@ -9752,11 +6485,14 @@ class GameScreen:
         self.draw_defeat_notifications()
         self.draw_turn_banner()
         self.draw_ammo_banner()
-        # Location defense animation timer — process deaths when projectiles finish
+        # Location defense animation timer — fire next queued shot or process deaths
         if self._loc_defense_active and self._loc_defense_wait_until is not None:
             if pygame.time.get_ticks() >= self._loc_defense_wait_until:
                 self._loc_defense_wait_until = None
-                self._process_loc_defense_deaths()
+                if self._loc_defense_shot_queue:
+                    self._fire_next_defense_shot()
+                else:
+                    self._process_loc_defense_deaths()
         # Advance turn once the Location Defense banner has finished displaying
         if self._pending_advance_after_banner and self.turn_banner is None:
             self._pending_advance_after_banner = False
@@ -9794,929 +6530,6 @@ class GameScreen:
         if not self._is_player_phase():
             self.update_turn_queue()
 
-# Game Settings screen
-class GameSettingsScreen:
-    def __init__(self):
-        self.ui_elements = []
-
-    def initialize_screen(self):
-        manager.clear_and_reset()
-        self.ui_elements = [
-            UILabel(pygame.Rect(0, 50, WINDOW_WIDTH, 50), "Settings", manager, anchors={'centerx': 'centerx'}),
-            UIButton(pygame.Rect(20, 20, 150, 50), "Return to Game", manager)
-        ]
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED and event.ui_element == self.ui_elements[1]:
-            game.current_screen = "game"
-            game_screen.initialize_screen()
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-# ConfirmationScreen class
-class PauseMenuScreen:
-    """In-game pause menu with Continue, Save, Load, Restart, Settings, Main Menu, Quit."""
-
-    def __init__(self):
-        self.ui_elements = []
-        self.buttons = {}
-        self.game_snapshot = None  # Screenshot of the game behind the overlay
-
-    def initialize_screen(self):
-        # Capture current screen as background snapshot
-        self.game_snapshot = screen.copy()
-        manager.clear_and_reset()
-        self.ui_elements = []
-        self.buttons = {}
-
-        # Title
-        self.ui_elements.append(
-            UILabel(pygame.Rect(0, 80, WINDOW_WIDTH, 60), "Paused", manager,
-                    anchors={'centerx': 'centerx'})
-        )
-
-        # Centered column of buttons
-        btn_width = 220
-        btn_height = 46
-        btn_spacing = 58
-        button_labels = [
-            "Continue", "Save Game", "Load Game",
-            "Restart Level", "Settings", "Main Menu", "Quit Game"
-        ]
-        total_height = len(button_labels) * btn_spacing
-        start_y = (WINDOW_HEIGHT - total_height) // 2 + 40
-        btn_x = (WINDOW_WIDTH - btn_width) // 2
-
-        for i, label in enumerate(button_labels):
-            btn = UIButton(
-                pygame.Rect(btn_x, start_y + i * btn_spacing, btn_width, btn_height),
-                label, manager
-            )
-            self.buttons[label] = btn
-            self.ui_elements.append(btn)
-
-    def handle_event(self, event):
-        # ESC returns to game (same as Continue)
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            game.current_screen = "game"
-            game_screen.initialize_screen()
-            return
-
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            text = event.ui_element.text
-            if text == "Continue":
-                game.current_screen = "game"
-                game_screen.initialize_screen()
-            elif text == "Save Game":
-                is_player_turn = game_screen._is_player_phase()
-                if is_player_turn:
-                    success, result = game_screen.save_manager.save_game(
-                        game, game_screen, save_type="manual", save_label="Manual Save"
-                    )
-                    msg = "Game saved successfully." if success else f"Save failed: {result}"
-                    game.current_screen = "confirmation"
-                    confirmation_screen.initialize_screen(msg, options=["OK"],
-                        callback=lambda _: self._return_to_pause())
-                else:
-                    game.current_screen = "confirmation"
-                    confirmation_screen.initialize_screen(
-                        "Can only save during your turn.", options=["OK"],
-                        callback=lambda _: self._return_to_pause())
-            elif text == "Load Game":
-                game.current_screen = "confirmation"
-                confirmation_screen.initialize_screen(
-                    "Unsaved progress will be lost. Continue?",
-                    options=["Yes", "No"],
-                    callback=self._handle_load_confirm)
-            elif text == "Restart Level":
-                game.current_screen = "confirmation"
-                confirmation_screen.initialize_screen(
-                    "Are you sure you want to restart?",
-                    options=["Yes", "No"],
-                    callback=game_screen._handle_restart_confirm)
-            elif text == "Settings":
-                game.current_screen = "game_settings"
-                game_settings_screen.initialize_screen()
-            elif text == "Main Menu":
-                game.current_screen = "confirmation"
-                confirmation_screen.initialize_screen(
-                    "Return to main menu? Unsaved progress will be lost.",
-                    options=["Yes", "No"],
-                    callback=self._handle_main_menu_confirm)
-            elif text == "Quit Game":
-                game.current_screen = "confirmation"
-                confirmation_screen.initialize_screen(
-                    "Are you sure you want to quit?",
-                    options=["Yes", "No"],
-                    callback=self._handle_quit_confirm)
-
-    def _return_to_pause(self):
-        game.current_screen = "pause_menu"
-        self.initialize_screen()
-
-    def _handle_load_confirm(self, choice):
-        if choice == "Yes":
-            game.current_screen = "save_load"
-            save_load_screen.initialize_screen(mode="load")
-        else:
-            self._return_to_pause()
-
-    def _handle_main_menu_confirm(self, choice):
-        if choice == "Yes":
-            game.current_screen = "main_menu"
-            main_menu.initialize_buttons()
-        else:
-            self._return_to_pause()
-
-    def _handle_quit_confirm(self, choice):
-        if choice == "Yes":
-            pygame.quit()
-            sys.exit()
-        else:
-            self._return_to_pause()
-
-    def draw(self):
-        # Draw game snapshot behind a dark overlay
-        if self.game_snapshot:
-            screen.blit(self.game_snapshot, (0, 0))
-            overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)
-            overlay.fill((10, 10, 30, 180))
-            screen.blit(overlay, (0, 0))
-        else:
-            screen.fill(DARK_CHARCOAL)
-        # Draw title text manually with style
-        title_font = pygame.font.Font(None, 64)
-        title_shadow = title_font.render("Paused", True, (10, 10, 30))
-        title_surf = title_font.render("Paused", True, (200, 180, 120))
-        title_rect = title_surf.get_rect(centerx=WINDOW_WIDTH // 2, y=80)
-        screen.blit(title_shadow, title_rect.move(2, 2))
-        screen.blit(title_surf, title_rect)
-        # Decorative line under title
-        line_y = title_rect.bottom + 8
-        pygame.draw.line(screen, (200, 180, 120, 100), (WINDOW_WIDTH // 2 - 100, line_y), (WINDOW_WIDTH // 2 + 100, line_y), 1)
-        manager.draw_ui(screen)
-
-
-class TeleportPartyScreen:
-    """Screen for selecting which party NPCs to bring through a teleport pad."""
-
-    def __init__(self):
-        self.ui_elements = []
-        self.npc_buttons = []
-        self.npc_selected = []
-        self.npcs = []
-        self.confirm_btn = None
-        self.cancel_btn = None
-        self.callback = None
-        self.cancel_callback = None
-
-    def initialize_screen(self, allied_npcs, callback, cancel_callback):
-        self.callback = callback
-        self.cancel_callback = cancel_callback
-        self.npcs = allied_npcs
-        self.npc_selected = [True] * len(allied_npcs)
-        manager.clear_and_reset()
-        self.ui_elements = []
-        self.npc_buttons = []
-
-        msg_width = min(600, WINDOW_WIDTH - 100)
-        msg_x = (WINDOW_WIDTH - msg_width) // 2
-        msg_y = WINDOW_HEIGHT // 5
-
-        self.ui_elements.append(
-            UITextBox(f"<font color='#FFFFFF' size=4>Select party members to bring:</font>",
-                      pygame.Rect(msg_x, msg_y, msg_width, 50), manager))
-
-        y_offset = msg_y + 60
-        for i, npc in enumerate(allied_npcs):
-            btn = UIButton(
-                pygame.Rect(msg_x + 20, y_offset + i * 40, msg_width - 40, 35),
-                f"[X] {npc.name} (HP: {npc.hp}/{npc.max_hp})", manager)
-            self.npc_buttons.append(btn)
-            self.ui_elements.append(btn)
-
-        btn_y = y_offset + len(allied_npcs) * 40 + 20
-        self.confirm_btn = UIButton(
-            pygame.Rect(msg_x + 50, btn_y, 200, 50), "Teleport", manager)
-        self.cancel_btn = UIButton(
-            pygame.Rect(msg_x + msg_width - 250, btn_y, 200, 50), "Cancel", manager)
-        self.ui_elements.extend([self.confirm_btn, self.cancel_btn])
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            for i, btn in enumerate(self.npc_buttons):
-                if event.ui_element == btn:
-                    self.npc_selected[i] = not self.npc_selected[i]
-                    npc = self.npcs[i]
-                    marker = "[X]" if self.npc_selected[i] else "[ ]"
-                    btn.set_text(f"{marker} {npc.name} (HP: {npc.hp}/{npc.max_hp})")
-                    return
-            if event.ui_element == self.confirm_btn:
-                selected = [npc for npc, sel in zip(self.npcs, self.npc_selected) if sel]
-                if self.callback:
-                    self.callback(selected)
-            elif event.ui_element == self.cancel_btn:
-                if self.cancel_callback:
-                    self.cancel_callback()
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-class ConfirmationScreen:
-    """A simple centered screen with a message and option buttons. Accepts a callback."""
-
-    def __init__(self):
-        self.ui_elements = []
-        self.option_buttons = []
-        self.callback = None
-
-    def initialize_screen(self, message, options=None, callback=None):
-        """
-        Args:
-            message: Text to display
-            options: List of button labels (e.g. ["Yes", "No"])
-            callback: Function called with the chosen option text
-        """
-        if options is None:
-            options = ["OK"]
-        self.callback = callback
-        manager.clear_and_reset()
-        self.ui_elements = []
-        self.option_buttons = []
-
-        # Message
-        msg_width = min(600, WINDOW_WIDTH - 100)
-        msg_height = 80
-        msg_x = (WINDOW_WIDTH - msg_width) // 2
-        msg_y = WINDOW_HEIGHT // 3
-        self.ui_elements.append(
-            UITextBox(f"<font color='#FFFFFF' size=4>{message}</font>",
-                      pygame.Rect(msg_x, msg_y, msg_width, msg_height), manager)
-        )
-
-        # Option buttons
-        btn_width = 180
-        total_width = len(options) * btn_width + (len(options) - 1) * 20
-        start_x = (WINDOW_WIDTH - total_width) // 2
-        btn_y = msg_y + msg_height + 30
-
-        for i, option_text in enumerate(options):
-            btn = UIButton(
-                pygame.Rect(start_x + i * (btn_width + 20), btn_y, btn_width, 50),
-                option_text, manager
-            )
-            self.option_buttons.append(btn)
-            self.ui_elements.append(btn)
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            for btn in self.option_buttons:
-                if event.ui_element == btn:
-                    if self.callback:
-                        self.callback(btn.text)
-                    return
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-# SaveLoadScreen class
-class SaveLoadScreen:
-    """Full screen for browsing, loading, and deleting saves."""
-
-    def __init__(self):
-        self.ui_elements = []
-        self.save_list = None
-        self.detail_box = None
-        self.load_button = None
-        self.delete_button = None
-        self.back_button = None
-        self.mode = "load"  # "load" or "save"
-        self.saves = []
-        self.selected_index = -1
-        self.save_manager = SaveManager()
-
-    def initialize_screen(self, mode="load"):
-        self.mode = mode
-        self.selected_index = -1
-        manager.clear_and_reset()
-        self.ui_elements = []
-
-        title_text = "Load Game" if mode == "load" else "Save Game"
-        self.ui_elements.append(
-            UILabel(pygame.Rect(0, 30, WINDOW_WIDTH, 50), title_text,
-                    manager, anchors={'centerx': 'centerx'})
-        )
-
-        # Refresh saves list
-        self.saves = self.save_manager.get_all_saves()
-        display_items = [self.save_manager.format_save_display(s) for s in self.saves]
-
-        # Save list
-        list_width = WINDOW_WIDTH // 2
-        list_height = WINDOW_HEIGHT - 250
-        list_x = (WINDOW_WIDTH - list_width - 320) // 2
-        list_y = 90
-
-        self.save_list = UISelectionList(
-            pygame.Rect(list_x, list_y, list_width, list_height),
-            display_items, manager,
-            allow_multi_select=False
-        )
-        self.ui_elements.append(self.save_list)
-
-        # Detail box
-        detail_x = list_x + list_width + 20
-        detail_width = 300
-        self.detail_box = UITextBox(
-            "<font color='#AAAAAA'>Select a save to view details.</font>",
-            pygame.Rect(detail_x, list_y, detail_width, list_height - 60),
-            manager
-        )
-        self.ui_elements.append(self.detail_box)
-
-        # Buttons at bottom
-        btn_y = list_y + list_height + 15
-        btn_width = 150
-
-        self.load_button = UIButton(
-            pygame.Rect(list_x, btn_y, btn_width, 45),
-            "Load", manager
-        )
-        self.ui_elements.append(self.load_button)
-
-        self.delete_button = UIButton(
-            pygame.Rect(list_x + btn_width + 20, btn_y, btn_width, 45),
-            "Delete", manager
-        )
-        self.ui_elements.append(self.delete_button)
-
-        self.back_button = UIButton(
-            pygame.Rect(list_x + (btn_width + 20) * 2, btn_y, btn_width, 45),
-            "Back", manager
-        )
-        self.ui_elements.append(self.back_button)
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            if event.ui_element == self.save_list:
-                selected_text = event.text
-                # Find the index
-                display_items = [self.save_manager.format_save_display(s) for s in self.saves]
-                if selected_text in display_items:
-                    self.selected_index = display_items.index(selected_text)
-                    # Show details
-                    details = self.save_manager.format_save_details(self.saves[self.selected_index])
-                    self.detail_box.set_text(f"<font color='#FFFFFF'>{details}</font>")
-                else:
-                    self.selected_index = -1
-
-        elif event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.back_button:
-                # Return to wherever we came from
-                if game_screen.game_started:
-                    game.current_screen = "game"
-                    game_screen.initialize_screen()
-                else:
-                    game.current_screen = "main_menu"
-                    main_menu.initialize_buttons()
-
-            elif event.ui_element == self.load_button:
-                if self.selected_index >= 0 and self.selected_index < len(self.saves):
-                    save_info = self.saves[self.selected_index]
-                    save_data = self.save_manager.load_save_file(save_info["filepath"])
-                    if save_data:
-                        game.current_screen = "game"
-                        game_screen.load_from_save(save_data)
-
-            elif event.ui_element == self.delete_button:
-                if self.selected_index >= 0 and self.selected_index < len(self.saves):
-                    save_info = self.saves[self.selected_index]
-                    self.save_manager.delete_save(save_info["filepath"])
-                    # Refresh
-                    self.initialize_screen(mode=self.mode)
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-# DefeatScreen class
-class DefeatScreen:
-    def __init__(self):
-        self.ui_elements = []
-        self.load_save_button = None
-        self.humorous_messages = [
-            "You got smoked like a cheap cigar!",
-            "Looks like you're the weakest link—goodbye!",
-            "Defeated? Even the tutorial boss is laughing!",
-            "You've been sent to the respawn realm!"
-        ]
-
-    def initialize_screen(self):
-        manager.clear_and_reset()
-        message = random.choice(self.humorous_messages)
-        btn_x = (WINDOW_WIDTH - 200) // 2
-        btn_y = WINDOW_HEIGHT // 2
-
-        self.ui_elements = [
-            UILabel(pygame.Rect(0, WINDOW_HEIGHT // 4, WINDOW_WIDTH, 50), message, manager, anchors={'centerx': 'centerx'}),
-        ]
-
-        # "Load Last Save" button (above Restart Level)
-        save_mgr = SaveManager()
-        latest_save = save_mgr.get_most_recent_save()
-        if latest_save:
-            self.load_save_button = UIButton(
-                pygame.Rect(btn_x, btn_y, 200, 50), "Load Last Save", manager
-            )
-            self.ui_elements.append(self.load_save_button)
-            btn_y += 70
-        else:
-            self.load_save_button = None
-
-        restart_btn = UIButton(pygame.Rect(btn_x, btn_y, 200, 50), "Restart Level", manager)
-        self.ui_elements.append(restart_btn)
-        btn_y += 70
-        menu_btn = UIButton(pygame.Rect(btn_x, btn_y, 200, 50), "Main Menu", manager)
-        self.ui_elements.append(menu_btn)
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            text = event.ui_element.text
-            if text == "Load Last Save":
-                save_mgr = SaveManager()
-                latest_save = save_mgr.get_most_recent_save()
-                if latest_save:
-                    save_data = save_mgr.load_save_file(latest_save["filepath"])
-                    if save_data:
-                        game.current_screen = "game"
-                        game_screen.load_from_save(save_data)
-            elif text == "Restart Level":
-                game.current_screen = "game"
-                game_screen.start_new_game(level_file=game_screen.current_level_file,
-                                           campaign_file=game_screen.campaign_file if game_screen.campaign else None)
-                game_screen.initialize_screen()
-            elif text == "Main Menu":
-                game.current_screen = "main_menu"
-                main_menu.initialize_buttons()
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-# Card Browser Screen (Creative Mode - browse and add any card to inventory)
-class CardBrowserScreen:
-    def __init__(self):
-        self.window = None
-        self.card_list = None
-        self.filter_dropdown = None
-        self.search_entry = None
-        self.info_text = None
-        self.add_button = None
-        self.add_all_button = None
-        self.close_button = None
-        self.state_dropdown = None
-        self.selected_cards = []  # List of selected card IDs
-        self.all_cards = []  # List of all card data from index
-        self.filtered_cards = []  # Currently displayed cards after filtering
-
-    def initialize_screen(self):
-        manager.clear_and_reset()
-        window_rect = pygame.Rect((WINDOW_WIDTH - 1000) // 2, (WINDOW_HEIGHT - 700) // 2, 1000, 700)
-        self.window = UIWindow(window_rect, manager, "Card Browser (Creative Mode)")
-
-        # Header
-        UILabel(pygame.Rect(10, 5, 980, 30), "Browse and add cards to your inventory", manager, container=self.window)
-
-        # Filter controls row
-        UILabel(pygame.Rect(10, 40, 80, 25), "Filter:", manager, container=self.window)
-        filter_options = ["All Cards", "Junk Cards", "Document Cards"]
-        self.filter_dropdown = UIDropDownMenu(filter_options, "All Cards",
-                                              pygame.Rect(90, 40, 180, 30), manager, container=self.window)
-
-        UILabel(pygame.Rect(290, 40, 60, 25), "Search:", manager, container=self.window)
-        self.search_entry = UITextEntryLine(pygame.Rect(350, 40, 200, 30), manager, container=self.window)
-
-        UILabel(pygame.Rect(570, 40, 80, 25), "Add as:", manager, container=self.window)
-        self.state_dropdown = UIDropDownMenu(["State 1 (Raw)", "State 2 (Crafted)"], "State 2 (Crafted)",
-                                             pygame.Rect(650, 40, 150, 30), manager, container=self.window)
-
-        # Load all cards first
-        self._load_all_cards()
-
-        # Build initial display list
-        self.filtered_cards = self.all_cards.copy()
-        display_items = [f"[{card['type'][:4]}] {card['name']}" for card in self.filtered_cards]
-        if not display_items:
-            display_items = ["No cards available"]
-
-        # Card list (left side)
-        UILabel(pygame.Rect(10, 80, 200, 25), f"Available Cards ({len(self.all_cards)}):", manager, container=self.window)
-        self.card_list = UISelectionList(pygame.Rect(10, 105, 550, 400),
-                                         display_items, manager, container=self.window,
-                                         allow_multi_select=True)
-
-        # Selected cards info (right side)
-        UILabel(pygame.Rect(580, 80, 200, 25), "Card Details:", manager, container=self.window)
-        self.info_text = UITextBox("<font color='#FFFFFF'>Select a card to view details</font>",
-                                   pygame.Rect(580, 105, 390, 400), manager, container=self.window)
-
-        # Buttons at bottom
-        self.add_button = UIButton(pygame.Rect(10, 520, 180, 40), "Add Selected", manager, container=self.window)
-        self.add_all_button = UIButton(pygame.Rect(200, 520, 180, 40), "Add All Filtered", manager, container=self.window)
-        self.clear_selection_button = UIButton(pygame.Rect(390, 520, 180, 40), "Clear Selection", manager, container=self.window)
-        self.close_button = UIButton(pygame.Rect(850, 620, 120, 35), "Close", manager, container=self.window)
-
-        # Status label
-        self.status_label = UILabel(pygame.Rect(10, 570, 600, 25), "0 cards selected", manager, container=self.window)
-
-    # Card types that can be added to player inventory
-    INVENTORY_CARD_TYPES = {"Junk Card", "Document Card"}
-
-    def _load_all_cards(self):
-        """Load all cards from card_index.json. Only includes inventory-compatible types (Junk, Document)."""
-        self.all_cards = []
-        try:
-            # Use the existing load_card_index function from card_utils
-            card_index = load_card_index()
-
-            for card_id, card_info in card_index.items():
-                # card_index uses "type" not "card_type"
-                card_type = card_info.get("type", "Unknown")
-                # Only include card types that can be added to inventory
-                # Also allow compound types like "Document/Skill"
-                if not any(t in card_type for t in self.INVENTORY_CARD_TYPES):
-                    continue
-                card_name = card_info.get("name", card_id)
-                self.all_cards.append({
-                    "id": card_id,
-                    "name": card_name,
-                    "type": card_type
-                })
-
-            # Sort by type then name
-            self.all_cards.sort(key=lambda x: (x["type"], x["name"]))
-            print(f"Card browser loaded {len(self.all_cards)} cards")
-        except Exception as e:
-            print(f"Error loading card index: {e}")
-            import traceback
-            traceback.print_exc()
-
-    def _apply_filter(self):
-        """Apply filter and search to card list."""
-        # Handle pygame_gui dropdown which may return tuple (text, id)
-        filter_option = self.filter_dropdown.selected_option
-        if isinstance(filter_option, tuple):
-            filter_type = filter_option[0]
-        else:
-            filter_type = filter_option
-
-        search_text = self.search_entry.get_text().lower().strip()
-
-        print(f"[CardBrowser] Applying filter: type='{filter_type}', search='{search_text}', all_cards={len(self.all_cards)}")
-
-        self.filtered_cards = []
-        for card in self.all_cards:
-            # Filter by type
-            if filter_type != "All Cards":
-                # Convert filter option to card type
-                type_map = {
-                    "Junk Cards": "Junk Card",
-                    "Document Cards": "Document Card",
-                }
-                expected_type = type_map.get(filter_type, "")
-                if expected_type not in card["type"]:
-                    continue
-
-            # Filter by search text
-            if search_text and search_text not in card["name"].lower() and search_text not in card["id"].lower():
-                continue
-
-            self.filtered_cards.append(card)
-
-        # Update list display
-        display_items = [f"[{card['type'][:4]}] {card['name']}" for card in self.filtered_cards]
-        print(f"[CardBrowser] Filtered to {len(self.filtered_cards)} cards, display_items={len(display_items)}")
-        self.card_list.set_item_list(display_items if display_items else ["No cards match filter"])
-
-    def _get_card_details(self, card_info):
-        """Get detailed info about a card."""
-        try:
-            card_data = load_card(card_info["id"])
-            if not card_data:
-                return f"<b>{card_info['name']}</b><br>Card file not found"
-
-            lines = [f"<b>{card_info['name']}</b>"]
-            lines.append(f"<i>Type: {card_info['type']}</i>")
-            lines.append(f"ID: {card_info['id']}")
-            lines.append("")
-
-            # Show state 1 data
-            data = card_data.get("data", {})
-            lines.append("<b>State 1:</b>")
-            for key, value in data.items():
-                if value and not key.startswith("2nd_state_") and not key.startswith("2nd_State_") and key not in ["id"]:
-                    # Truncate long values
-                    str_val = str(value)
-                    if len(str_val) > 50:
-                        str_val = str_val[:50] + "..."
-                    lines.append(f"  {key}: {str_val}")
-
-            # Show state 2 data if exists
-            state2_fields = {k: v for k, v in data.items() if (k.startswith("2nd_state_") or k.startswith("2nd_State_")) and v}
-            if state2_fields:
-                lines.append("")
-                lines.append("<b>State 2:</b>")
-                for key, value in state2_fields.items():
-                    display_key = key.replace("2nd_State_", "").replace("2nd_state_", "")
-                    str_val = str(value)
-                    if len(str_val) > 50:
-                        str_val = str_val[:50] + "..."
-                    lines.append(f"  {display_key}: {str_val}")
-
-            return "<br>".join(lines)
-        except Exception as e:
-            return f"Error loading card: {e}"
-
-    def _add_cards_to_inventory(self, card_infos):
-        """Add selected cards to player inventory."""
-        if not game.current_player:
-            return "No active player!"
-
-        state = 2 if "State 2" in self.state_dropdown.selected_option else 1
-        added_count = 0
-
-        for card_info in card_infos:
-            try:
-                card_data = load_card(card_info["id"])
-                if card_data:
-                    inv_card = InventoryCard(card_data)
-                    inv_card.current_state = state
-                    game.current_player.inventory.append(inv_card)
-                    added_count += 1
-            except Exception as e:
-                print(f"Error adding card {card_info['id']}: {e}")
-
-        return f"Added {added_count} card(s) to inventory"
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_WINDOW_CLOSE:
-            if event.ui_element == self.window:
-                game.current_screen = "tabbed_menu"
-                tabbed_menu_screen.active_tab = "Inventory"
-                tabbed_menu_screen.initialize_screen()
-                return
-
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.close_button:
-                game.current_screen = "tabbed_menu"
-                tabbed_menu_screen.active_tab = "Inventory"
-                tabbed_menu_screen.initialize_screen()
-            elif event.ui_element == self.add_button:
-                # Add selected cards
-                if self.selected_cards:
-                    msg = self._add_cards_to_inventory(self.selected_cards)
-                    self.status_label.set_text(msg)
-                    self.selected_cards = []
-                else:
-                    self.status_label.set_text("No cards selected!")
-            elif event.ui_element == self.add_all_button:
-                # Add all filtered cards
-                if self.filtered_cards:
-                    msg = self._add_cards_to_inventory(self.filtered_cards)
-                    self.status_label.set_text(msg)
-                else:
-                    self.status_label.set_text("No cards to add!")
-            elif event.ui_element == self.clear_selection_button:
-                self.selected_cards = []
-                self.status_label.set_text("Selection cleared")
-
-        elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
-            if event.ui_element == self.filter_dropdown:
-                self._apply_filter()
-                self.selected_cards = []
-                self.status_label.set_text("0 cards selected")
-
-        elif event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED:
-            if event.ui_element == self.search_entry:
-                self._apply_filter()
-                self.selected_cards = []
-                self.status_label.set_text("0 cards selected")
-
-        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            if event.ui_element == self.card_list:
-                # Find selected card
-                selected_text = event.text
-                # Parse card name from display format "[Type] Name"
-                if "] " in selected_text:
-                    card_name = selected_text.split("] ", 1)[1]
-                    for card in self.filtered_cards:
-                        if card["name"] == card_name:
-                            # Toggle selection
-                            if card in self.selected_cards:
-                                self.selected_cards.remove(card)
-                            else:
-                                self.selected_cards.append(card)
-                            # Show details
-                            self.info_text.set_text(f"<font color='#FFFFFF'>{self._get_card_details(card)}</font>")
-                            break
-                self.status_label.set_text(f"{len(self.selected_cards)} card(s) selected")
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
-
-# NPC Browser Screen (Creative Mode - browse and add NPCs to party)
-class NpcBrowserScreen:
-    def __init__(self):
-        self.window = None
-        self.npc_list = None
-        self.search_entry = None
-        self.info_text = None
-        self.add_button = None
-        self.add_all_button = None
-        self.close_button = None
-        self.clear_selection_button = None
-        self.status_label = None
-        self.selected_npcs = []
-        self.all_npcs = []
-        self.filtered_npcs = []
-
-    def initialize_screen(self):
-        manager.clear_and_reset()
-        window_rect = pygame.Rect((WINDOW_WIDTH - 1000) // 2, (WINDOW_HEIGHT - 700) // 2, 1000, 700)
-        self.window = UIWindow(window_rect, manager, "NPC Browser (Creative Mode)")
-
-        # Header
-        UILabel(pygame.Rect(10, 5, 980, 30), "Browse and add NPCs to your party", manager, container=self.window)
-
-        # Search controls row
-        UILabel(pygame.Rect(10, 40, 60, 25), "Search:", manager, container=self.window)
-        self.search_entry = UITextEntryLine(pygame.Rect(70, 40, 250, 30), manager, container=self.window)
-
-        # Load NPC cards
-        self._load_all_npcs()
-
-        # Build initial display list
-        self.filtered_npcs = self.all_npcs.copy()
-        display_items = [npc['name'] for npc in self.filtered_npcs]
-        if not display_items:
-            display_items = ["No NPCs available"]
-
-        # NPC list (left side)
-        UILabel(pygame.Rect(10, 80, 300, 25), f"Available NPCs ({len(self.all_npcs)}):", manager, container=self.window)
-        self.npc_list = UISelectionList(pygame.Rect(10, 105, 550, 400),
-                                         display_items, manager, container=self.window,
-                                         allow_multi_select=True)
-
-        # NPC details (right side)
-        UILabel(pygame.Rect(580, 80, 200, 25), "NPC Details:", manager, container=self.window)
-        self.info_text = UITextBox("<font color='#FFFFFF'>Select an NPC to view details</font>",
-                                   pygame.Rect(580, 105, 390, 400), manager, container=self.window)
-
-        # Buttons at bottom
-        self.add_button = UIButton(pygame.Rect(10, 520, 180, 40), "Add Selected", manager, container=self.window)
-        self.add_all_button = UIButton(pygame.Rect(200, 520, 180, 40), "Add All Filtered", manager, container=self.window)
-        self.clear_selection_button = UIButton(pygame.Rect(390, 520, 180, 40), "Clear Selection", manager, container=self.window)
-        self.close_button = UIButton(pygame.Rect(850, 620, 120, 35), "Close", manager, container=self.window)
-
-        # Status label
-        self.status_label = UILabel(pygame.Rect(10, 570, 600, 25), "0 NPCs selected", manager, container=self.window)
-
-    def _load_all_npcs(self):
-        """Load all NPC cards from card_index.json."""
-        self.all_npcs = []
-        try:
-            card_index = load_card_index()
-            for card_id, card_info in card_index.items():
-                card_type = card_info.get("type", "Unknown")
-                if card_type != "NPC Card":
-                    continue
-                card_name = card_info.get("name", card_id)
-                self.all_npcs.append({
-                    "id": card_id,
-                    "name": card_name,
-                    "type": card_type
-                })
-            self.all_npcs.sort(key=lambda x: x["name"])
-            print(f"NPC browser loaded {len(self.all_npcs)} NPCs")
-        except Exception as e:
-            print(f"Error loading NPC index: {e}")
-
-    def _apply_filter(self):
-        """Apply search filter to NPC list."""
-        search_text = self.search_entry.get_text().lower().strip()
-        self.filtered_npcs = []
-        for npc in self.all_npcs:
-            if search_text and search_text not in npc["name"].lower() and search_text not in npc["id"].lower():
-                continue
-            self.filtered_npcs.append(npc)
-        display_items = [npc['name'] for npc in self.filtered_npcs]
-        self.npc_list.set_item_list(display_items if display_items else ["No NPCs match filter"])
-
-    def _get_npc_details(self, npc_info):
-        """Get detailed info about an NPC card."""
-        try:
-            card_data = load_card(npc_info["id"])
-            if not card_data:
-                return f"<b>{npc_info['name']}</b><br>Card file not found"
-
-            lines = [f"<b>{npc_info['name']}</b>"]
-            lines.append(f"ID: {npc_info['id']}")
-            lines.append("")
-
-            data = card_data.get("data", {})
-            for key, value in data.items():
-                if value and not key.startswith("2nd_state_") and not key.startswith("2nd_State_") and key not in ["id"]:
-                    str_val = str(value)
-                    if len(str_val) > 50:
-                        str_val = str_val[:50] + "..."
-                    lines.append(f"{key}: {str_val}")
-
-            return "<br>".join(lines)
-        except Exception as e:
-            return f"Error loading NPC: {e}"
-
-    def _add_npcs_to_party(self, npc_infos):
-        """Add selected NPCs to the player's party."""
-        if not game.current_player:
-            return "No active player!"
-
-        added_count = 0
-        for npc_info in npc_infos:
-            try:
-                card_data = load_card(npc_info["id"])
-                if card_data:
-                    inv_card = InventoryCard(card_data)
-                    game.current_party.append(inv_card)
-                    added_count += 1
-            except Exception as e:
-                print(f"Error adding NPC {npc_info['id']}: {e}")
-
-        return f"Added {added_count} NPC(s) to party"
-
-    def handle_event(self, event):
-        if event.type == pygame_gui.UI_WINDOW_CLOSE:
-            if event.ui_element == self.window:
-                game.current_screen = "tabbed_menu"
-                tabbed_menu_screen.active_tab = "Party"
-                tabbed_menu_screen.initialize_screen()
-                return
-
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.close_button:
-                game.current_screen = "tabbed_menu"
-                tabbed_menu_screen.active_tab = "Party"
-                tabbed_menu_screen.initialize_screen()
-            elif event.ui_element == self.add_button:
-                if self.selected_npcs:
-                    msg = self._add_npcs_to_party(self.selected_npcs)
-                    self.status_label.set_text(msg)
-                    self.selected_npcs = []
-                else:
-                    self.status_label.set_text("No NPCs selected!")
-            elif event.ui_element == self.add_all_button:
-                if self.filtered_npcs:
-                    msg = self._add_npcs_to_party(self.filtered_npcs)
-                    self.status_label.set_text(msg)
-                else:
-                    self.status_label.set_text("No NPCs to add!")
-            elif event.ui_element == self.clear_selection_button:
-                self.selected_npcs = []
-                self.status_label.set_text("Selection cleared")
-
-        elif event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED:
-            if event.ui_element == self.search_entry:
-                self._apply_filter()
-                self.selected_npcs = []
-                self.status_label.set_text("0 NPCs selected")
-
-        elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-            if event.ui_element == self.npc_list:
-                selected_text = event.text
-                if selected_text and selected_text != "No NPCs available" and selected_text != "No NPCs match filter":
-                    for npc in self.filtered_npcs:
-                        if npc["name"] == selected_text:
-                            if npc in self.selected_npcs:
-                                self.selected_npcs.remove(npc)
-                            else:
-                                self.selected_npcs.append(npc)
-                            self.info_text.set_text(f"<font color='#FFFFFF'>{self._get_npc_details(npc)}</font>")
-                            break
-                self.status_label.set_text(f"{len(self.selected_npcs)} NPC(s) selected")
-
-    def draw(self):
-        screen.fill(DARK_CHARCOAL)
-        manager.draw_ui(screen)
-
 
 # Main Game class
 class Game:
@@ -10737,6 +6550,8 @@ class Game:
         self.quest_managers = []  # Per-player quest managers in multiplayer
         # Game mode: "survival" (normal) or "creative" (testing with card browser)
         self.game_mode = "survival"
+        # Settings
+        self._autosave_frequency = 5  # Autosave every N turn cycles (0 = disabled)
         self.screens = {
             "main_menu": main_menu,
             "player_count": player_count_screen,
@@ -10838,6 +6653,32 @@ card_browser_screen = CardBrowserScreen()
 tabbed_menu_screen = TabbedMenuScreen()
 npc_browser_screen = NpcBrowserScreen()
 game = Game()
+
+# Populate game_context slots so screen modules can access via gc.*
+gc.game_screen = game_screen
+gc.main_menu = main_menu
+gc.player_count_screen = player_count_screen
+gc.character_creation_screen = character_creation_screen
+gc.multiplayer_character_creation_screen = multiplayer_character_creation_screen
+gc.settings_screen = settings_screen
+gc.game_settings_screen = game_settings_screen
+gc.crafting_screen = crafting_screen
+gc.inventory_screen = inventory_screen
+gc.location_screen = location_screen
+gc.recruitment_screen = recruitment_screen
+gc.card_giving_screen = card_giving_screen
+gc.party_screen = party_screen
+gc.skills_screen = skills_screen
+gc.quest_screen = quest_screen
+gc.pause_menu_screen = pause_menu_screen
+gc.confirmation_screen = confirmation_screen
+gc.teleport_party_screen = teleport_party_screen
+gc.save_load_screen = save_load_screen
+gc.defeat_screen = defeat_screen
+gc.card_browser_screen = card_browser_screen
+gc.tabbed_menu_screen = tabbed_menu_screen
+gc.npc_browser_screen = npc_browser_screen
+gc.game = game
 
 # Parse command-line arguments for campaign/level launching
 import argparse

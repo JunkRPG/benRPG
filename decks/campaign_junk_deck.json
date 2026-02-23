@@ -1,0 +1,26 @@
+{
+  "deck_name": "Campaign Junk Items",
+  "back_image": null,
+  "cards": [
+    "campaign_junk_rusty_pipe",
+    "campaign_junk_broken_blade",
+    "campaign_junk_bent_rebar",
+    "campaign_junk_chain_links",
+    "campaign_junk_sharp_glass",
+    "campaign_junk_old_wrench",
+    "campaign_junk_cracked_lens",
+    "campaign_junk_bent_pliers",
+    "campaign_junk_rusty_saw",
+    "campaign_junk_mystery_herbs",
+    "campaign_junk_old_bandage",
+    "campaign_junk_dirty_water",
+    "campaign_junk_tin_of_food",
+    "campaign_junk_scrap_metal",
+    "campaign_junk_wood_scraps",
+    "campaign_junk_cloth_rags",
+    "campaign_junk_rubber_strips",
+    "campaign_junk_copper_wire",
+    "campaign_junk_old_nails",
+    "campaign_junk_leather_scraps"
+  ]
+}

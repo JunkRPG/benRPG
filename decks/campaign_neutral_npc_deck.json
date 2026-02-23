@@ -1,0 +1,16 @@
+{
+  "deck_name": "Campaign Neutral NPCs",
+  "back_image": null,
+  "cards": [
+    "campaign_npc_junk_dealer",
+    "campaign_npc_traveling_tinker",
+    "campaign_npc_scrap_merchant",
+    "campaign_npc_fortune_teller",
+    "campaign_npc_wandering_cook",
+    "campaign_npc_caravan_trader",
+    "campaign_npc_field_medic",
+    "campaign_npc_war_refugee",
+    "campaign_npc_lost_scout",
+    "campaign_npc_old_hermit"
+  ]
+}

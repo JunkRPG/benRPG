@@ -1,0 +1,11 @@
+{
+  "deck_name": "Scrapyard Enemies",
+  "back_image": null,
+  "cards": [
+    "campaign_enemy_junk_scavenger",
+    "campaign_enemy_rust_rat",
+    "campaign_enemy_scrap_bandit",
+    "campaign_enemy_wire_trap",
+    "campaign_enemy_grease_goblin"
+  ]
+}

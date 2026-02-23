@@ -1,0 +1,18 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Crossbow Blueprint",
+    "Description": "Technical drawings for a compact crossbow mechanism.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "2nd_state_Name": "Field Crossbow",
+    "2nd_state_Description": "A reliable crossbow built from salvaged parts.",
+    "2nd_state_Melee Damage": "0",
+    "2nd_state_Projectile Damage": "10",
+    "2nd_state_Projectile Range": "3",
+    "2nd_state_Price": "14"
+  }
+}

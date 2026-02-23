@@ -1,0 +1,29 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Artillery Post",
+    "Description": "A position for area bombardment weapons. Devastates groups of enemies.",
+    "Outcomes": "[{\"probability\": 1.0, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "Choices": "[{\"name\": \"Man the Artillery\", \"action\": \"draw_card\", \"costs_action\": true, \"params\": {}}]",
+    "Shop_Deck": "",
+    "Shop_Size": "0",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "5",
+    "Upgrade_NPC_Type": "",
+    "Upgrade_Material_Cost": "{}",
+    "2nd_state_Name": "Heavy Artillery Battery",
+    "2nd_state_Description": "The post has been upgraded with heavier weapons and better ammunition.",
+    "2nd_state_Outcomes": "[{\"probability\": 1.0, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "2nd_state_Choices": "[{\"name\": \"Man the Artillery\", \"action\": \"draw_card\", \"costs_action\": true, \"params\": {}}]",
+    "2nd_state_Shop_Deck": "",
+    "2nd_state_Shop_Size": "0",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "5",
+    "Defense_Enabled": "true",
+    "Defense_Range_Type": "area_effect",
+    "Defense_Range_Distance": "3",
+    "2nd_state_Defense_Range_Distance": "4"
+  }
+}

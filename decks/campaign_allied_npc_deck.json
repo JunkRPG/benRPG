@@ -1,0 +1,11 @@
+{
+  "deck_name": "Campaign Allied NPCs",
+  "back_image": null,
+  "cards": [
+    "campaign_npc_militia_recruit",
+    "campaign_npc_church_healer",
+    "campaign_npc_tower_marksman",
+    "campaign_npc_supply_runner",
+    "campaign_npc_veteran_sergeant"
+  ]
+}

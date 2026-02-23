@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Distress Signal",
+    "Description": "You hear a cry for help echoing across the wasteland!",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.50, \"type\": \"offer_quest\", \"text\": \"A desperate situation unfolds...\", \"params\": {\"quest_deck\": \"decks/chain_quest_deck.json\"}}, {\"probability\": 0.30, \"type\": \"spawn_enemy\", \"text\": \"It was a trap!\", \"params\": {\"deck\": \"beta_enemy_deck.json\"}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"False alarm. Just the wind.\", \"params\": {}}]"
+  }
+}

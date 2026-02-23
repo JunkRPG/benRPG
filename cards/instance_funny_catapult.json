@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "data": {
+    "Name": "Abandoned Catapult",
+    "Description": "An abandoned siege catapult sits in a field, fully loaded with artisanal cheese wheels. A note pinned to it reads: 'Free to good home. Warning: hair trigger. NOT responsible for cheese-related injuries. - Previous Owner (who learned the hard way)'",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"player_choice\", \"text\": \"The catapult creaks ominously in the breeze. The cheese wheels are surprisingly aerodynamic. You can see dents in a distant hillside from previous firings.\", \"params\": {\"choices\": [{\"name\": \"Fire the Catapult\", \"risk\": 0.4, \"success\": {\"type\": \"none\", \"text\": \"LAUNCH! The cheese sails majestically through the air and lands... nowhere important. Direct hit on nothing! But what a shot! The style points alone were worth it.\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 6, \"text\": \"The catapult misfires spectacularly! You hit yourself. WITH CHEESE. A wheel of aged gouda to the face. The shame hurts more than the cheese. Almost.\"}}, {\"name\": \"Take the Cheese\", \"risk\": 0.0, \"effect\": {\"type\": \"draw_card\", \"text\": \"Cheese acquired! It's surprisingly well-preserved siege ammunition. 'Vintage Catapult Cheddar' would make an excellent band name.\", \"params\": {\"card_type\": \"Junk Card\"}}}]}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"The catapult fires on its own! A cheese wheel sails over the horizon. A distant 'OW!' echoes across the land, followed by an even more distant 'WHO THROWS CHEESE?!'\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"A crow lands on the trigger mechanism. Nothing happens. The crow and the catapult stare at each other. The tension is unbearable. The crow flies away. Crisis averted.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"draw_card\", \"text\": \"You notice something useful wedged between the cheese wheels. Someone apparently used the catapult for storage. Questionable, but you're not complaining.\", \"params\": {\"card_type\": \"Junk Card\"}}]"
+  }
+}

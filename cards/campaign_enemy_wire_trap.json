@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Wire Trap",
+    "Health": "8",
+    "Movement": "1",
+    "Melee Damage": "10",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Background Image File Path": "",
+    "Enemy Image File Path": ""
+  }
+}

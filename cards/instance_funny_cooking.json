@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Questionable Cuisine",
+    "Description": "A wild-eyed NPC blocks your path, waving a ladle dripping with something that might once have been food. 'Try my mystery stew!' they insist. 'Secret family recipe! The secret is I found most of it on the ground!'",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"player_choice\", \"text\": \"The NPC thrusts a steaming bowl toward you. The stew is an alarming shade of purple and appears to be moving slightly.\", \"params\": {\"choices\": [{\"name\": \"Eat the Mystery Stew\", \"risk\": 0.5, \"success\": {\"type\": \"heal_player\", \"amount\": 15, \"text\": \"Against all odds, it's delicious! You feel rejuvenated and question everything you know about cuisine.\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 10, \"text\": \"Your stomach stages an immediate and violent protest. Was that a shoe in there?\"}}, {\"name\": \"Politely Decline\", \"risk\": 0.0, \"effect\": {\"type\": \"none\", \"text\": \"Your stomach thanks you. Your taste buds file a formal complaint about missed opportunities.\"}}]}}, {\"probability\": 0.30, \"type\": \"none\", \"text\": \"The cook wanders off muttering about ungrateful adventurers and how nobody appreciates experimental gastronomy anymore.\", \"params\": {}}, {\"probability\": 0.30, \"type\": \"none\", \"text\": \"The stew achieves sentience and walks away on its own. The cook chases after it yelling 'Not again!'\", \"params\": {}}]"
+  }
+}

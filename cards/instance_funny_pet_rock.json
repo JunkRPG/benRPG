@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Lonely Pet Rock",
+    "Description": "An ordinary rock sits on a tiny velvet cushion by the roadside. It has googly eyes glued on and a collar with a tag reading 'REGINALD.' A handwritten note says: 'Please take care of Reginald. He likes long walks and philosophical discussions. He doesn't do much but he's a great listener.'",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"none\", \"text\": \"You stare at Reginald. Reginald stares back with his googly eyes. You feel an inexplicable emotional connection to this rock. You tell it about your day. You feel oddly better but ultimately move on. Goodbye, Reginald.\", \"params\": {}}, {\"probability\": 0.30, \"type\": \"draw_card\", \"text\": \"Reginald comes with accessories! Inside the cushion you find a tiny top hat, a monocle, and something actually useful that was hidden underneath. Reginald is a rock of many surprises.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.30, \"type\": \"spawn_enemy\", \"text\": \"A bandit bursts from the bushes! 'UNHAND REGINALD! That's my emotional support rock!' They look unhinged. Reginald's googly eyes wobble judgmentally.\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"count\": 1}}]"
+  }
+}

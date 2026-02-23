@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Mushroom Foraging Guide",
+    "Description": "A field guide to edible and medicinal mushrooms found in forest regions.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

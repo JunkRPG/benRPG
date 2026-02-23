@@ -1,0 +1,19 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Hunt",
+  "states": 2,
+  "data": {
+    "Name": "The Goose King Cometh",
+    "Description": "The legendary Goose King has emerged from the marshlands to terrorize the countryside. Honk.",
+    "Template_Text": "BREAKING NEWS: [Enemy1], the dreaded Goose King, has waddled forth from the swamps near [Location1] to wreak feathery havoc upon the land! [NPC1] begs for help — the geese have stolen everyone's bread, overturned every cart, and honked at children until they cried. This fowl menace must be stopped!",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":true,\"spawn_near\":\"player\",\"spawn_distance\":2},{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":1},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"enemy_defeated\",\"params\":{\"unit\":\"Enemy1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "Chain_Config": "{\"on_success\":{\"mode\":\"auto_activate\",\"quest_card_id\":\"quest_chain_goose_heir\",\"inherit_placeholders\":[],\"message\":\"The Goose King falls... but a furious honking echoes from the horizon. The heir approaches!\",\"set_transition\":null},\"on_failure\":{\"mode\":\"none\"}}",
+    "2nd_state_Name": "Long Live the King",
+    "2nd_state_Template_Text": "You have vanquished [Enemy1], the Goose King, near [Location1]. [NPC1] weeps with joy. Feathers drift on the breeze like confetti. But wait — a shadow falls across the land. A single, ominous honk pierces the silence. The Goose Prince is coming for revenge.",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

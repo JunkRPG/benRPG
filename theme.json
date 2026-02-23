@@ -15,13 +15,13 @@
     "button": {
         "colours": {
             "normal_bg": "#2a2a44",
-            "hovered_bg": "#3d3d66",
+            "hovered_bg": "#4d4d88",
             "active_bg": "#1e1e36",
             "normal_text": "#dcd8c8",
             "hovered_text": "#fff8e0",
             "selected_text": "#ffd700",
             "normal_border": "#4a4a6e",
-            "hovered_border": "#b8860b"
+            "hovered_border": "#ffd700"
         },
         "misc": {
             "border_width": "1",

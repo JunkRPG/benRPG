@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Siege Archer",
+    "Health": "15",
+    "Movement": "3",
+    "Melee Damage": "0",
+    "Projectile Damage": "12",
+    "Projectile Range": "4",
+    "Background Image File Path": "",
+    "Enemy Image File Path": ""
+  }
+}

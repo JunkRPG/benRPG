@@ -1,0 +1,19 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Mystery",
+  "states": 2,
+  "data": {
+    "Name": "Storm Warning",
+    "Description": "An old mystic warns of unnatural storms — investigate their source",
+    "Template_Text": "[NPC1], a weathered mystic, grabs your arm with surprising strength. \"The storms aren't natural,\" they hiss. \"Something at [Location1] is calling them forth.\" Dark clouds churn overhead as you approach, and [Enemy1] emerges from the tempest to bar your path...",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":true,\"spawn_near\":\"player\",\"spawn_distance\":2},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false},{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":2}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"enemy_defeated\",\"params\":{\"unit\":\"Enemy1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "Chain_Config": "{\"on_success\":{\"mode\":\"auto_activate\",\"quest_card_id\":\"quest_chain_storm_source\",\"inherit_placeholders\":[\"NPC1\"],\"message\":\"The wind howls louder — destroying the sentinel only revealed the true storm caller!\",\"set_transition\":\"transition_cursed_land\"},\"on_failure\":{\"mode\":\"none\"}}",
+    "2nd_state_Name": "Eye of the Storm",
+    "2nd_state_Template_Text": "You cut through [Enemy1] near [Location1], but the storms only intensify. [NPC1] points skyward with trembling hands — a far more powerful figure commands the tempest from deeper within the cursed land.",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

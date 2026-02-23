@@ -1,0 +1,19 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Hunt",
+  "states": 2,
+  "data": {
+    "Name": "Revenge of the Patrol",
+    "Description": "Strike back against the enemy camp that captured your allies",
+    "Template_Text": "[NPC1] leads you toward the enemy camp near [Location1]. The camp commander, [Enemy1], must be eliminated to avenge the fallen patrol. The rescued soldier fights at your side — time to even the score!",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":false},{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":2},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"enemy_defeated\",\"params\":{\"unit\":\"Enemy1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"unit_death\",\"params\":{\"unit\":\"NPC1\"}},{\"type\":\"player_death\",\"params\":{}}]",
+    "Rewards": "{\"cards\":[\"Junk1\",\"Junk2\"]}",
+    "Chain_Config": "",
+    "2nd_state_Name": "Camp Destroyed",
+    "2nd_state_Template_Text": "With [NPC1] at your side, you stormed the camp near [Location1] and brought down [Enemy1]. The fallen patrol has been avenged, and the area is safe once more. The soldier salutes you — a bond forged in battle.",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

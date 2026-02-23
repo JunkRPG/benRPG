@@ -1,0 +1,32 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Forked Branch",
+    "Description": "A Y-shaped branch with good spring. Add a rubber strip and it becomes a serviceable slingshot.",
+    "Raw Material Value": "1",
+    "Refined Material Value": "0",
+    "Metal Value": "0",
+    "Wood Value": "2",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "1",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "1",
+    "Requirements: Metal": "0",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Slingshot",
+    "2nd_state_Type": "Projectile",
+    "2nd_state_Melee Damage": "2",
+    "2nd_state_Projectile Damage": "6",
+    "2nd_state_Range_Type": "line_of_sight",
+    "2nd_state_Range_Distance": "4",
+    "2nd_state_Include_Position": "false",
+    "2nd_state_Exclude_Adjacent": "false",
+    "2nd_state_Requires_Ammo": "false",
+    "2nd_state_Compatible_Ammo": "",
+    "2nd_state_range_id": "None",
+    "2nd_state_Weapon Image": ""
+  }
+}

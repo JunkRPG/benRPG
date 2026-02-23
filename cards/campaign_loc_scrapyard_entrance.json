@@ -1,0 +1,25 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Scrapyard Entrance",
+    "Description": "A gap in the rusted fence marks the entrance to the scrapyard. A makeshift stall sells basic supplies.",
+    "Outcomes": "[{\"probability\": 0.6, \"card_type\": \"Junk Card\", \"deck_file\": \"campaign_junk_deck.json\"}, {\"probability\": 0.4, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "Choices": "[{\"name\": \"Browse Shop\", \"action\": \"shop\", \"costs_action\": false, \"params\": {}}, {\"name\": \"Search Area\", \"action\": \"draw_card\", \"costs_action\": true, \"params\": {}}]",
+    "Shop_Deck": "campaign_junk_deck.json",
+    "Shop_Size": "3",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "5",
+    "Upgrade_NPC_Type": "",
+    "Upgrade_Material_Cost": "{}",
+    "2nd_state_Name": "Scrapyard Gate",
+    "2nd_state_Description": "The entrance has been reinforced with scrap metal walls. Better stock available.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.5, \"card_type\": \"Junk Card\", \"deck_file\": \"campaign_junk_deck.json\"}, {\"probability\": 0.2, \"card_type\": \"Document Card\", \"deck_file\": \"campaign_document_deck.json\"}, {\"probability\": 0.3, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "2nd_state_Choices": "[{\"name\": \"Browse Shop\", \"action\": \"shop\", \"costs_action\": false, \"params\": {}}, {\"name\": \"Search Area\", \"action\": \"draw_card\", \"costs_action\": true, \"params\": {}}]",
+    "2nd_state_Shop_Deck": "campaign_junk_deck.json",
+    "2nd_state_Shop_Size": "5",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "5"
+  }
+}

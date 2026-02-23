@@ -1,0 +1,19 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Mystery",
+  "states": 2,
+  "data": {
+    "Name": "The Cursed Shrine",
+    "Description": "Strange occurrences have been reported near an ancient shrine",
+    "Template_Text": "Travelers whisper of eerie lights and unearthly howls near [Location1], an old shrine long thought abandoned. [NPC1] begs you to investigate before the curse spreads further. But beware — [Enemy1] has been seen lurking in the shadows nearby...",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":true,\"spawn_near\":\"player\",\"spawn_distance\":2},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false},{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":2}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"enemy_defeated\",\"params\":{\"unit\":\"Enemy1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "Chain_Config": "{\"on_success\":{\"mode\":\"auto_activate\",\"quest_card_id\":\"quest_chain_shrine_guardian\",\"inherit_placeholders\":[\"Location1\"],\"message\":\"Defeating the creature revealed something worse — a guardian stirs within the shrine itself!\",\"set_transition\":null},\"on_failure\":{\"mode\":\"none\"}}",
+    "2nd_state_Name": "Darkness Uncovered",
+    "2nd_state_Template_Text": "You defeated [Enemy1] near [Location1], but the shrine's curse runs deeper than anyone feared. The stones themselves seem to pulse with dark energy. [NPC1] warns that the true guardian has awakened...",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

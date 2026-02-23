@@ -1,0 +1,25 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Enemy Fortress Gate",
+    "Description": "The imposing gates of the enemy stronghold. The final objective looms beyond.",
+    "Outcomes": "[{\"probability\": 0.4, \"card_type\": \"Document Card\", \"deck_file\": \"campaign_document_deck.json\"}, {\"probability\": 0.6, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "Choices": "[{\"name\": \"Scout the Gate\", \"action\": \"draw_card\", \"costs_action\": true, \"params\": {}}, {\"name\": \"Prepare for Assault\", \"action\": \"heal\", \"costs_action\": false, \"params\": {\"amount\": 5}}]",
+    "Shop_Deck": "",
+    "Shop_Size": "0",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "5",
+    "Upgrade_NPC_Type": "",
+    "Upgrade_Material_Cost": "{}",
+    "2nd_state_Name": "Breached Fortress",
+    "2nd_state_Description": "The fortress gates lie shattered. Victory is within reach.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.5, \"card_type\": \"Document Card\", \"deck_file\": \"campaign_document_deck.json\"}, {\"probability\": 0.3, \"card_type\": \"Junk Card\", \"deck_file\": \"campaign_junk_deck.json\"}, {\"probability\": 0.2, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "2nd_state_Choices": "[{\"name\": \"Scout the Gate\", \"action\": \"draw_card\", \"costs_action\": true, \"params\": {}}, {\"name\": \"Prepare for Assault\", \"action\": \"heal\", \"costs_action\": false, \"params\": {\"amount\": 10}}]",
+    "2nd_state_Shop_Deck": "",
+    "2nd_state_Shop_Size": "0",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "5"
+  }
+}

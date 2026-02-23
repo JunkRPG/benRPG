@@ -15,11 +15,4 @@ WINDOW_HEIGHT = 1080
 CARD_WIDTH = 750
 CARD_HEIGHT = 1050
 
-TERRAIN_TYPES = ["grass", "water", "mountain"]
-TERRAIN_COLORS = {
-    "grass": (76, 153, 0),
-    "water": (0, 0, 255),
-    "mountain": (100, 100, 100)
-}
-
 SUPPORTED_IMAGE_FORMATS = ('.png', '.jpg', '.jpeg', '.bmp', '.gif')

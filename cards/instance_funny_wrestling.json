@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Impromptu Wrestling Match",
+    "Description": "Two NPCs are locked in an intense wrestling match in the middle of the road. A crowd of woodland creatures watches. One NPC spots you and yells 'PERFECT! We need a referee! Or a third wrestler! YOUR CHOICE!' The other one is currently in a headlock and gives you a thumbs up.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"player_choice\", \"text\": \"Both wrestlers pause mid-grapple to look at you expectantly. One of them is upside down. Neither seems bothered by this.\", \"params\": {\"choices\": [{\"name\": \"Join the Wrestling Match\", \"risk\": 0.5, \"success\": {\"type\": \"spawn_ally\", \"text\": \"You execute a flawless suplex! The crowd goes WILD! The squirrels are doing the wave! Both NPCs are so impressed they want to join your adventure! Winner!\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"count\": 1}}, \"failure\": {\"type\": \"damage_player\", \"damage\": 5, \"text\": \"You get immediately pile-driven into the dirt. You lose. Badly. A squirrel holds up a sign reading '0/10.' The NPCs help you up, still laughing.\"}}, {\"name\": \"Judge Fairly as Referee\", \"risk\": 0.0, \"effect\": {\"type\": \"heal_player\", \"amount\": 5, \"text\": \"You make fair, impartial calls. Both wrestlers respect your integrity. They shake hands, share a meal, and insist you eat too. The wholesome energy literally heals you.\"}}]}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"They suddenly stop wrestling and start doing coordinated choreography. It was a dance-off all along! The woodland creatures provide backup vocals. You witness the greatest flash mob in RPG history.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"Both wrestlers simultaneously realize they forgot why they were fighting. They shrug, hug it out, and walk away arm in arm. The squirrel audience demands a refund.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"heal_player\", \"text\": \"Just watching the absurd spectacle fills you with joy. Laughter is the best medicine, and this is the funniest thing you've seen in three dungeons.\", \"params\": {\"amount\": 3}}]"
+  }
+}

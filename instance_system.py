@@ -9,6 +9,7 @@ import os
 from sound_manager import play_card_acquired_sound
 from deck_utils import resolve_deck_path
 from card_utils import load_card
+from hexgrid import _spawn_log
 
 
 class InstanceCard:
@@ -68,6 +69,7 @@ class InstanceManager:
         self.pending_instance_player = None  # Player affected by pending instance
         self.pending_outcome = None  # Outcome waiting for resolution
         self.pending_choice = None  # Player choice waiting for input
+        self.pending_quest_offer = None  # Quest offer from offer_quest outcome
         self.last_result_text = ""  # Last outcome result for display
         self.defeated_units = []  # Names of units/players killed by instance outcomes
 
@@ -261,6 +263,15 @@ class InstanceManager:
             # TODO: Implement player teleportation
             return f"Teleported {distance} hex(es) {direction}!"
 
+        elif outcome_type == "offer_quest":
+            quest_card_id = params.get("quest_card_id")
+            quest_deck = params.get("quest_deck")
+            self.pending_quest_offer = {
+                "quest_card_id": quest_card_id,
+                "quest_deck": quest_deck
+            }
+            return "A quest opportunity presents itself!"
+
         return ""
 
     def _draw_card(self, card_type, deck_file, player=None):
@@ -336,17 +347,20 @@ class InstanceManager:
     def _spawn_units(self, deck_file, spawn_near, count, allegiance, hex_grid, player, spawn_hp=None):
         """Spawn units near player, on a map edge, or randomly."""
         if not hex_grid or not deck_file:
+            _spawn_log(f"[SPAWN] _spawn_units: no hex_grid or no deck_file ({deck_file})")
             return "Failed to spawn units."
 
         from unit import Unit
         from inventory_card import InventoryCard
 
         deck_path = resolve_deck_path(deck_file)
+        _spawn_log(f"[SPAWN] _spawn_units: deck={deck_path}, near={spawn_near}, count={count}, allegiance={allegiance}")
 
         spawned = []
-        for _ in range(count):
+        for i in range(count):
             card = self.card_manager.draw_from_deck(deck_path)
             if not card:
+                _spawn_log(f"[SPAWN] _spawn_units: no card drawn from deck (attempt {i+1}/{count})")
                 continue
 
             # Find spawn position
@@ -357,7 +371,7 @@ class InstanceManager:
                 for adj in adjacent:
                     if 0 <= adj[0] < hex_grid.rows and 0 <= adj[1] < hex_grid.cols:
                         cell = hex_grid.grid[adj[0]][adj[1]]
-                        if not cell.get("unit") and cell.get("type") != "obstacle":
+                        if not cell.get("unit") and cell.get("accessible", True):
                             spawn_pos = adj
                             break
             elif spawn_near and spawn_near.startswith("edge_"):
@@ -371,9 +385,12 @@ class InstanceManager:
                     col = random.randint(0, hex_grid.cols - 1)
                     if 0 <= row < hex_grid.rows and 0 <= col < hex_grid.cols:
                         cell = hex_grid.grid[row][col]
-                        if not cell.get("unit") and cell.get("type") != "obstacle":
+                        if not cell.get("unit") and cell.get("accessible", True):
                             spawn_pos = (row, col)
                             break
+
+            if not spawn_pos:
+                _spawn_log(f"[SPAWN] _spawn_units: no spawn position found for attempt {i+1}/{count}")
 
             if spawn_pos:
                 # Create unit from card - Unit takes card_data dict
@@ -384,11 +401,14 @@ class InstanceManager:
                     card_data["data"]["Allegiance (Hostile, Neutral, Allied)"] = allegiance
 
                 unit = Unit(card_data)
-                hex_grid.place_unit(unit, *spawn_pos)
-                # Apply reduced spawn HP (fractional: 0.5 = 50% of max HP)
-                if spawn_hp is not None and 0 < spawn_hp < 1:
-                    unit.hp = max(1, int(unit.max_hp * spawn_hp))
-                spawned.append(unit.name)
+                success, msg = hex_grid.place_unit(unit, *spawn_pos)
+                if success:
+                    # Apply reduced spawn HP (fractional: 0.5 = 50% of max HP)
+                    if spawn_hp is not None and 0 < spawn_hp < 1:
+                        unit.hp = max(1, int(unit.max_hp * spawn_hp))
+                    spawned.append(unit.name)
+                else:
+                    _spawn_log(f"[SPAWN] Failed to place {unit.name} at {spawn_pos}: {msg}")
 
         if spawned:
             return f"Spawned: {', '.join(spawned)}"
@@ -400,6 +420,13 @@ class InstanceManager:
         self.pending_instance_player = None
         self.pending_outcome = None
         self.pending_choice = None
+        self.pending_quest_offer = None
+
+    def get_pending_quest_offer(self):
+        """Return and clear the pending quest offer. Called by game loop."""
+        offer = self.pending_quest_offer
+        self.pending_quest_offer = None
+        return offer
 
     def has_pending_event(self):
         """Check if there's a pending event that needs resolution."""

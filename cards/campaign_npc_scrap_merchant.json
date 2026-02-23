@@ -1,0 +1,17 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Scrap Merchant",
+    "Health": "18",
+    "Movement": "3",
+    "Melee Damage": "3",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Neutral",
+    "Special Skill": "Buys and sells raw materials",
+    "Background Image File Path": "",
+    "NPC Image File Path": ""
+  }
+}

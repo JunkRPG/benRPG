@@ -1,0 +1,19 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Escort",
+  "states": 2,
+  "data": {
+    "Name": "The Merchant's Troubles",
+    "Description": "A desperate merchant needs an escort through bandit territory",
+    "Template_Text": "[NPC1] is a traveling merchant whose wagon broke down on the road to [Location1]. Bandits have been spotted in the area, led by [Enemy1]. Guide the merchant safely to the trading post before the thugs close in!",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":true,\"spawn_near\":\"player\",\"spawn_distance\":2},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false},{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":3}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"unit_reaches_location\",\"params\":{\"unit\":\"NPC1\",\"location\":\"Location1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"unit_death\",\"params\":{\"unit\":\"NPC1\"}},{\"type\":\"player_death\",\"params\":{}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "Chain_Config": "{\"on_success\":{\"mode\":\"auto_activate\",\"quest_card_id\":\"quest_chain_merchant_robbery\",\"inherit_placeholders\":[\"NPC1\"],\"message\":\"The merchant is safe, but discovers their goods have been stolen!\",\"set_transition\":null},\"on_failure\":{\"mode\":\"none\"}}",
+    "2nd_state_Name": "Safe Arrival",
+    "2nd_state_Template_Text": "You guided [NPC1] safely to [Location1], dodging [Enemy1] and their gang along the way. But the merchant's relief is short-lived — their pack has been looted!",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Rust Rat",
+    "Health": "10",
+    "Movement": "6",
+    "Melee Damage": "4",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Background Image File Path": "",
+    "Enemy Image File Path": ""
+  }
+}

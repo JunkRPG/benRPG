@@ -1,0 +1,19 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Tin of Food",
+    "Description": "A dented tin can with a faded label. Contents unknown.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "0",
+    "Metal Value": "1",
+    "Wood Value": "0",
+    "Price": "2",
+    "2nd_state_Name": "Rations",
+    "2nd_state_Description": "Prepared field rations that restore health.",
+    "2nd_state_Type": "Consumable",
+    "2nd_state_Use_HP": "+15HP",
+    "2nd_state_Price": "6"
+  }
+}

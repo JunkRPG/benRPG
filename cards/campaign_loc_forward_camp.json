@@ -1,0 +1,25 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Forward Camp",
+    "Description": "A military camp with tents and supply crates. The staging area for operations.",
+    "Outcomes": "[{\"probability\": 0.5, \"card_type\": \"Junk Card\", \"deck_file\": \"campaign_junk_deck.json\"}, {\"probability\": 0.5, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "Choices": "[{\"name\": \"Buy Supplies\", \"action\": \"shop\", \"costs_action\": false, \"params\": {}}, {\"name\": \"Rest in Tent\", \"action\": \"heal\", \"costs_action\": false, \"params\": {\"amount\": 10}}]",
+    "Shop_Deck": "campaign_junk_deck.json",
+    "Shop_Size": "4",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "5",
+    "Upgrade_NPC_Type": "",
+    "Upgrade_Material_Cost": "{}",
+    "2nd_state_Name": "Forward Base",
+    "2nd_state_Description": "The camp has been fortified into a proper forward operating base.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.4, \"card_type\": \"Junk Card\", \"deck_file\": \"campaign_junk_deck.json\"}, {\"probability\": 0.3, \"card_type\": \"Document Card\", \"deck_file\": \"campaign_document_deck.json\"}, {\"probability\": 0.3, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "2nd_state_Choices": "[{\"name\": \"Buy Supplies\", \"action\": \"shop\", \"costs_action\": false, \"params\": {}}, {\"name\": \"Rest in Tent\", \"action\": \"heal\", \"costs_action\": false, \"params\": {\"amount\": 15}}]",
+    "2nd_state_Shop_Deck": "campaign_junk_deck.json",
+    "2nd_state_Shop_Size": "6",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "5"
+  }
+}

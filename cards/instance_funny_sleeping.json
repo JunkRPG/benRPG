@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "data": {
+    "Name": "Napping Dragon",
+    "Description": "A dragon the size of a house cat is curled up on a pile of exactly seven copper coins, snoring tiny puffs of smoke. It's wearing a nightcap. This is simultaneously the cutest and most dangerous thing you've seen today.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"player_choice\", \"text\": \"The tiny dragon mumbles in its sleep about 'market fluctuations' and 'diversifying its hoard.' Those seven coins are clearly its life savings.\", \"params\": {\"choices\": [{\"name\": \"Steal the Coins\", \"risk\": 0.7, \"success\": {\"type\": \"draw_card\", \"text\": \"You got away with it! Seven whole copper coins and... is that a bottle cap? The dragon's entire net worth. You monster.\", \"params\": {\"card_type\": \"Junk Card\"}}, \"failure\": {\"type\": \"damage_player\", \"damage\": 12, \"text\": \"The dragon wakes up and unleashes a fireball wildly disproportionate to its size! So small, yet so fierce! Your eyebrows are gone.\"}}, {\"name\": \"Pet the Dragon\", \"risk\": 0.2, \"success\": {\"type\": \"spawn_ally\", \"text\": \"The dragon wakes up, looks at you with enormous eyes, and immediately imprints on you like a baby duck. It follows you adoringly!\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"count\": 1}}, \"failure\": {\"type\": \"none\", \"text\": \"It purrs like a tiny furnace and goes back to sleep. You feel blessed but also slightly singed.\"}}]}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"Upon closer inspection, it was a painted rock with a candle behind it. Someone went through a LOT of effort for this. You find a note: 'Gotcha! - Dave'\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"The dragon sleep-flies away, coins clutched to its belly, still snoring. You hear tiny smoke alarm sounds fading into the distance.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"draw_card\", \"text\": \"The dragon rolls over in its sleep and kicks a coin in your direction. Legally, that's a gift. You keep it.\", \"params\": {\"card_type\": \"Junk Card\"}}]"
+  }
+}

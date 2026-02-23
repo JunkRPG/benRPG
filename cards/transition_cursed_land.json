@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "states": 2,
+  "data": {
+    "Name": "Eerie Calm",
+    "Description": "An unnatural stillness hangs over the land. Something dark lurks beneath the surface.",
+    "Background Image": "",
+    "Outcomes": "[{\"probability\": 0.25, \"type\": \"draw_instance\", \"text\": \"A strange event unfolds in the eerie silence.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"spawn_npc\", \"text\": \"A wanderer emerges from the mist.\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"allegiance\": \"Neutral\"}}, {\"probability\": 0.15, \"type\": \"draw_junk\", \"text\": \"You find something useful among the ruins.\", \"params\": {\"deck\": \"beta_junk_deck.json\"}}, {\"probability\": 0.15, \"type\": \"flip_state\", \"text\": \"Darkness descends...\", \"params\": {}}, {\"probability\": 0.25, \"type\": \"none\", \"text\": \"The eerie calm persists. Nothing happens.\", \"params\": {}}]",
+    "2nd_state_Name": "Dark Surge",
+    "2nd_state_Description": "Dark energy surges across the land, corrupting everything it touches.",
+    "2nd_state_Background Image": "",
+    "2nd_state_Outcomes": "[{\"probability\": 0.30, \"type\": \"spawn_enemy\", \"text\": \"Corrupted creatures emerge from the shadows!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.20, \"type\": \"weather\", \"text\": \"A thick fog rolls in, obscuring vision.\", \"params\": {\"weather_type\": \"fog\", \"range_modifier\": -2}}, {\"probability\": 0.20, \"type\": \"draw_instance\", \"text\": \"The dark energy triggers a strange event.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"flip_state\", \"text\": \"The curse lifts...\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"none\", \"text\": \"The dark energy pulses but causes no immediate harm.\", \"params\": {}}]"
+  }
+}

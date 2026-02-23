@@ -1,0 +1,19 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Hunt",
+  "states": 2,
+  "data": {
+    "Name": "Robbed on the Road",
+    "Description": "The merchant's goods were stolen — track down the thief",
+    "Template_Text": "[NPC1] is furious! Their most valuable wares were swiped by [Enemy1], a cunning thief who fled toward [Location1]. Track down the scoundrel and recover what was stolen before they vanish into the wilds!",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":false},{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":2},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"enemy_defeated\",\"params\":{\"unit\":\"Enemy1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}},{\"type\":\"turn_limit\",\"params\":{\"turns\":12}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "Chain_Config": "{\"on_success\":{\"mode\":\"auto_activate\",\"quest_card_id\":\"quest_chain_merchant_rebuild\",\"inherit_placeholders\":[\"NPC1\"],\"message\":\"The thief is dealt with, but the merchant's stall is in ruins.\",\"set_transition\":null},\"on_failure\":{\"mode\":\"none\"}}",
+    "2nd_state_Name": "Justice Served",
+    "2nd_state_Template_Text": "You tracked down [Enemy1] near [Location1] and recovered [NPC1]'s stolen goods. The thief won't be troubling anyone again. But the merchant's stall still needs rebuilding...",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

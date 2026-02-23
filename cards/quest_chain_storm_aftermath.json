@@ -1,0 +1,19 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Fetch",
+  "states": 2,
+  "data": {
+    "Name": "After the Storm",
+    "Description": "The storms have passed but the damage remains — gather supplies for the survivors",
+    "Template_Text": "The Storm Caller is defeated, but the devastation is everywhere. [NPC1] rallies the survivors near [Location1] and begs you to scavenge for [Junk1] — building materials, food, anything to help the villagers piece their lives back together.",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":false},{\"id\":\"Junk1\",\"type\":\"Junk Card\",\"spawn\":false},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"unit_reaches_location\",\"params\":{\"unit\":\"NPC1\",\"location\":\"Location1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}}]",
+    "Rewards": "{\"cards\":[\"Junk1\",\"Junk2\"]}",
+    "Chain_Config": "",
+    "2nd_state_Name": "Rebuilt from Ruin",
+    "2nd_state_Template_Text": "With the [Junk1] you gathered, [NPC1] and the villagers near [Location1] begin rebuilding. Shelters go up, fires are lit, and for the first time since the storms began, there's hope. You've earned every scrap of gratitude they can muster.",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

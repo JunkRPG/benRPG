@@ -542,6 +542,8 @@ class QuestManager:
         # Pending chain quest to be handled by game loop
         # {"quest_card": InventoryCard, "mode": str, "message": str, "inherited_context": dict}
         self.pending_chain = None
+        # Pending transition card swap from quest chain set_transition action
+        self.pending_transition_swap = None
 
     def can_accept_quest(self):
         """Check if player can accept another quest."""
@@ -613,9 +615,14 @@ class QuestManager:
         chain_config = quest.get_chain_config()
         if chain_config:
             on_success = chain_config.get("on_success")
-            if on_success and on_success.get("mode", "none") != "none":
-                inherited = quest.get_inherited_context(on_success.get("inherit_placeholders", []))
-                self._process_chain_branch(on_success, inherited)
+            if on_success:
+                # Check for transition card swap
+                set_transition = on_success.get("set_transition")
+                if set_transition:
+                    self.pending_transition_swap = set_transition
+                if on_success.get("mode", "none") != "none":
+                    inherited = quest.get_inherited_context(on_success.get("inherit_placeholders", []))
+                    self._process_chain_branch(on_success, inherited)
 
     def _fail_quest(self, quest):
         """Handle quest failure: cleanup spawned units, process chain."""
@@ -626,6 +633,11 @@ class QuestManager:
         chain_config = quest.get_chain_config()
         if chain_config:
             on_failure = chain_config.get("on_failure")
+            if on_failure:
+                # Check for transition card swap on failure
+                set_transition = on_failure.get("set_transition")
+                if set_transition:
+                    self.pending_transition_swap = set_transition
             if on_failure and on_failure.get("mode", "none") != "none":
                 # For failure chains, inherit names/positions only (units may be dead)
                 inherited_ids = on_failure.get("inherit_placeholders", [])
@@ -707,6 +719,12 @@ class QuestManager:
         chain = self.pending_chain
         self.pending_chain = None
         return chain
+
+    def get_pending_transition_swap(self):
+        """Return and clear the pending transition swap. Called by game loop."""
+        swap = self.pending_transition_swap
+        self.pending_transition_swap = None
+        return swap
 
     def activate_chain_quest(self, quest_card, hex_grid, player, inherited_context=None):
         """Activate a quest with inherited context from a chain.

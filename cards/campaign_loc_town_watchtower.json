@@ -1,0 +1,29 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Town Watchtower",
+    "Description": "A tall stone watchtower overlooking the town approaches.",
+    "Outcomes": "[{\"probability\": 1.0, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "Choices": "[{\"name\": \"Climb the Tower\", \"action\": \"draw_card\", \"costs_action\": true, \"params\": {}}]",
+    "Shop_Deck": "",
+    "Shop_Size": "0",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "5",
+    "Upgrade_NPC_Type": "",
+    "Upgrade_Material_Cost": "{}",
+    "2nd_state_Name": "Fortified Watchtower",
+    "2nd_state_Description": "The tower has been reinforced with battlements and a larger garrison.",
+    "2nd_state_Outcomes": "[{\"probability\": 1.0, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "2nd_state_Choices": "[{\"name\": \"Climb the Tower\", \"action\": \"draw_card\", \"costs_action\": true, \"params\": {}}]",
+    "2nd_state_Shop_Deck": "",
+    "2nd_state_Shop_Size": "0",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "5",
+    "Defense_Enabled": "true",
+    "Defense_Range_Type": "line_of_sight",
+    "Defense_Range_Distance": "4",
+    "2nd_state_Defense_Range_Distance": "5"
+  }
+}

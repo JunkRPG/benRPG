@@ -1,0 +1,88 @@
+{
+  "campaign_id": "beta_showcase",
+  "name": "Beta Showcase Campaign",
+  "description": "A 3-level campaign showcasing all game systems. Fight through the Scrapyard, navigate Trade Town, and conquer the Warzone.",
+  "stages": [
+    {
+      "stage_id": "scrapyard",
+      "name": "The Scrapyard",
+      "level_file": "campaign_scrapyard.json",
+      "deck_config": {
+        "transition_deck": "transition_expanded_deck.json",
+        "quest_deck": "beta_quest_deck.json",
+        "instance_deck": "beta_instance_deck.json",
+        "junk_deck": "campaign_junk_deck.json"
+      },
+      "completion_conditions": {
+        "type": "reach_location",
+        "target": "Scrapyard Exit",
+        "turn_limit": null
+      },
+      "next_stage": "tradetown"
+    },
+    {
+      "stage_id": "tradetown",
+      "name": "Trade Town",
+      "level_file": "campaign_tradetown.json",
+      "deck_config": {
+        "transition_deck": "transition_expanded_deck.json",
+        "quest_deck": "beta_quest_deck.json",
+        "instance_deck": "beta_instance_deck.json",
+        "junk_deck": "campaign_junk_deck.json"
+      },
+      "completion_conditions": {
+        "type": "reach_location",
+        "target": "Town Gate",
+        "turn_limit": null
+      },
+      "next_stage": "warzone"
+    },
+    {
+      "stage_id": "warzone",
+      "name": "The Warzone",
+      "level_file": "campaign_warzone.json",
+      "deck_config": {
+        "transition_deck": "transition_expanded_deck.json",
+        "quest_deck": "beta_quest_deck.json",
+        "instance_deck": "beta_instance_deck.json",
+        "junk_deck": "campaign_junk_deck.json"
+      },
+      "completion_conditions": {
+        "type": "defeat_boss",
+        "target": "Iron Warlord",
+        "turn_limit": null
+      },
+      "next_stage": null
+    }
+  ],
+  "teleport_links": [
+    {
+      "pad_a": {
+        "pad_id": "scrapyard_exit",
+        "level_file": "campaign_scrapyard.json",
+        "stage_id": "scrapyard"
+      },
+      "pad_b": {
+        "pad_id": "tradetown_entrance",
+        "level_file": "campaign_tradetown.json",
+        "stage_id": "tradetown"
+      },
+      "display_name_a": "Travel to Trade Town",
+      "display_name_b": "Return to Scrapyard"
+    },
+    {
+      "pad_a": {
+        "pad_id": "tradetown_exit",
+        "level_file": "campaign_tradetown.json",
+        "stage_id": "tradetown"
+      },
+      "pad_b": {
+        "pad_id": "warzone_entrance",
+        "level_file": "campaign_warzone.json",
+        "stage_id": "warzone"
+      },
+      "display_name_a": "March to the Warzone",
+      "display_name_b": "Retreat to Trade Town"
+    }
+  ]
+}

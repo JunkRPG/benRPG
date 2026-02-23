@@ -1,0 +1,25 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "The Dusty Flagon",
+    "Description": "A lively tavern where travelers share stories and drown their sorrows.",
+    "Outcomes": "[{\"probability\": 0.4, \"card_type\": \"Junk Card\", \"deck_file\": \"campaign_junk_deck.json\"}, {\"probability\": 0.6, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "Choices": "[{\"name\": \"Rest at the Bar\", \"action\": \"heal\", \"costs_action\": false, \"params\": {\"amount\": 8}}, {\"name\": \"Check Quest Board\", \"action\": \"view_quests\", \"costs_action\": false, \"params\": {\"deck\": \"decks/beta_quest_deck.json\"}}, {\"name\": \"Buy a Drink\", \"action\": \"shop\", \"costs_action\": false, \"params\": {}}]",
+    "Shop_Deck": "campaign_junk_deck.json",
+    "Shop_Size": "2",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "5",
+    "Upgrade_NPC_Type": "",
+    "Upgrade_Material_Cost": "{}",
+    "2nd_state_Name": "The Golden Flagon",
+    "2nd_state_Description": "The tavern has been renovated and now attracts wealthier clientele.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.3, \"card_type\": \"Junk Card\", \"deck_file\": \"campaign_junk_deck.json\"}, {\"probability\": 0.3, \"card_type\": \"Document Card\", \"deck_file\": \"campaign_document_deck.json\"}, {\"probability\": 0.4, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "2nd_state_Choices": "[{\"name\": \"Rest at the Bar\", \"action\": \"heal\", \"costs_action\": false, \"params\": {\"amount\": 12}}, {\"name\": \"Check Quest Board\", \"action\": \"view_quests\", \"costs_action\": false, \"params\": {\"deck\": \"decks/beta_quest_deck.json\"}}, {\"name\": \"Buy a Drink\", \"action\": \"shop\", \"costs_action\": false, \"params\": {}}]",
+    "2nd_state_Shop_Deck": "campaign_junk_deck.json",
+    "2nd_state_Shop_Size": "4",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "5"
+  }
+}

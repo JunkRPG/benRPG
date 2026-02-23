@@ -1,0 +1,13 @@
+{
+  "deck_name": "Expanded Transition Cards",
+  "back_image": null,
+  "cards": [
+    "transition_cursed_land",
+    "transition_aftermath",
+    "transition_trade_routes",
+    "transition_wild_lands",
+    "transition_festival",
+    "transition_quest_caravan",
+    "transition_wandering_heroes"
+  ]
+}

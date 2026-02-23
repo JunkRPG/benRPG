@@ -9,6 +9,7 @@ import datetime
 from inventory_card import InventoryCard
 from unit import Unit
 from card_utils import load_card
+from player import CHARACTER_CLASSES
 
 
 SAVE_DIR = "saves"
@@ -181,8 +182,30 @@ class SaveManager:
             "manning_location": list(player.manning_location) if player.manning_location else None,
             # Healer flag
             "is_healer": player.is_healer,
+            # Spy/Scout flags
+            "is_spy": getattr(player, 'is_spy', False),
+            "is_disguised": getattr(player, 'is_disguised', False),
+            "is_boss_disguised": getattr(player, 'is_boss_disguised', False),
+            "moves_per_turn": getattr(player, 'moves_per_turn', 1),
+            "base_moves_per_turn": getattr(player, 'base_moves_per_turn', 1),
+            "_movement_count": getattr(player, '_movement_count', 0),
             # Per-player party (used in multiplayer)
             "party": [self._serialize_inventory_card(c) for c in player.party],
+            # Custom character support
+            "is_custom": player.class_name not in CHARACTER_CLASSES,
+            "custom_rebuild_data": {
+                "class_name": player.class_name,
+                "name": player.name,
+                "stats": {
+                    "hp": player.max_hp,
+                    "max_hp": player.max_hp,
+                    "movement": player.movement,
+                    "projectile_range": player.default_projectile_range,
+                },
+                "attacks": player.default_attacks,
+                "special_ability": player.special_attack,
+                "starting_kit": getattr(player, 'starting_kit', []),
+            } if player.class_name not in CHARACTER_CLASSES else None,
         }
 
     def _serialize_inventory_card(self, card):
@@ -252,6 +275,9 @@ class SaveManager:
                 "dialogue_delivered": getattr(unit, 'dialogue_delivered', False),
                 "_death_processed": getattr(unit, '_death_processed', False),
                 "carry_to_next_level": getattr(unit, 'carry_to_next_level', False),
+                "_is_junk_pile": getattr(unit, '_is_junk_pile', False),
+                "_junk_search_chance": getattr(unit, '_junk_search_chance', 0),
+                "_junk_searches_remaining": getattr(unit, '_junk_searches_remaining', 0),
             })
         return units
 
@@ -447,7 +473,10 @@ class SaveManager:
         """
         from player import Player
 
-        player = Player(player_data["class_name"])
+        if player_data.get("is_custom") and player_data.get("custom_rebuild_data"):
+            player = Player(player_data["class_name"], custom_data=player_data["custom_rebuild_data"])
+        else:
+            player = Player(player_data["class_name"])
         player.name = player_data.get("name", "")
         player.hp = player_data["hp"]
         player.max_hp = player_data["max_hp"]
@@ -481,6 +510,14 @@ class SaveManager:
 
         # Healer flag (backwards compatible: derive from special_attack if not saved)
         player.is_healer = player_data.get("is_healer", player.special_attack == "Heal")
+
+        # Spy/Scout flags (backwards compatible)
+        player.is_spy = player_data.get("is_spy", player.special_attack == "Disguise")
+        player.is_disguised = player_data.get("is_disguised", False)
+        player.is_boss_disguised = player_data.get("is_boss_disguised", False)
+        player.moves_per_turn = player_data.get("moves_per_turn", 2 if player.special_attack == "Double Move" else 1)
+        player.base_moves_per_turn = player_data.get("base_moves_per_turn", 2 if player.special_attack == "Double Move" else 1)
+        player._movement_count = player_data.get("_movement_count", 0)
 
         # Skill cooldowns
         player.skill_cooldowns = player_data.get("skill_cooldowns", {})
@@ -632,10 +669,16 @@ class SaveManager:
                 unit.dialogue_delivered = unit_info.get("dialogue_delivered", False)
                 unit.carry_to_next_level = unit_info.get("carry_to_next_level", False)
                 unit._death_processed = unit_info.get("_death_processed", False)
+                unit._is_junk_pile = unit_info.get("_is_junk_pile", False)
+                unit._junk_search_chance = unit_info.get("_junk_search_chance", 0)
+                unit._junk_searches_remaining = unit_info.get("_junk_searches_remaining", 0)
                 if unit._death_processed:
-                    # Dead unit: set position but don't occupy grid cell
+                    # Dead unit or junk pile: set position but don't occupy grid cell
                     unit.position = (pos[0], pos[1])
                     hex_grid.units.append(unit)
+                    if unit._is_junk_pile:
+                        # Junk piles occupy the grid cell (block movement)
+                        hex_grid.grid[pos[0]][pos[1]]["unit"] = unit
                 else:
                     hex_grid.place_unit(unit, pos[0], pos[1])
 

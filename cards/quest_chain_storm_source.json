@@ -1,0 +1,19 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Hunt",
+  "states": 2,
+  "data": {
+    "Name": "The Storm Caller",
+    "Description": "Find and defeat the entity summoning the devastating storms",
+    "Template_Text": "Lightning splits the sky as you push deeper into the cursed territory. [NPC1] can barely keep up, shouting over the thunder: \"There! [Enemy1] — the Storm Caller!\" The figure stands atop [Location1], arms raised, channeling raw fury from the clouds. End this now!",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":false},{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":1},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"enemy_defeated\",\"params\":{\"unit\":\"Enemy1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}},{\"type\":\"turn_limit\",\"params\":{\"turns\":10}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "Chain_Config": "{\"on_success\":{\"mode\":\"auto_activate\",\"quest_card_id\":\"quest_chain_storm_aftermath\",\"inherit_placeholders\":[\"NPC1\"],\"message\":\"The storms fade at last, but the damage is already done. The people need help.\",\"set_transition\":\"transition_aftermath\"},\"on_failure\":{\"mode\":\"none\"}}",
+    "2nd_state_Name": "Silence at Last",
+    "2nd_state_Template_Text": "With a final crack of thunder, [Enemy1] falls from [Location1]. The clouds part and sunlight breaks through for the first time in days. [NPC1] collapses with relief. But the land lies ravaged — villages need supplies.",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

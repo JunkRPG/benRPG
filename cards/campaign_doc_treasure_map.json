@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Treasure Map",
+    "Description": "A hand-drawn map with cryptic markings pointing to hidden caches of valuable salvage.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

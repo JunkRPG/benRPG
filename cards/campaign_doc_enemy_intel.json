@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Enemy Intelligence",
+    "Description": "Intercepted reports detailing enemy patrol routes, troop strengths, and command structure.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

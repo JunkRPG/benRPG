@@ -1,0 +1,17 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Potion Recipe",
+    "Description": "A stained recipe card for brewing a restorative potion.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "2nd_state_Name": "Healing Potion",
+    "2nd_state_Description": "A potent healing potion that mends wounds quickly.",
+    "2nd_state_Type": "Consumable",
+    "2nd_state_Use_HP": "+20HP",
+    "2nd_state_Price": "8"
+  }
+}

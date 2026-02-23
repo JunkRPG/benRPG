@@ -66,6 +66,34 @@ CHARACTER_CLASSES = {
             {"card_id": "win_guide", "state": 1},
             {"card_id": "beta_junk_tool_scavengers_kit", "state": 2}
         ]
+    },
+    "Spy": {
+        "hp": 50, "movement": 5, "projectile_range": 4,
+        "attacks": {"Throw Rock": 4, "Knife": 6},
+        "special_attack": "Disguise",
+        "starting_kit": [
+            {"card_id": "starter_spy_garment_pattern", "state": 1},
+            {"card_id": "starter_spy_cloth_scraps", "state": 1},
+            {"card_id": "starter_spy_dye_pouch", "state": 1},
+            {"card_id": "starter_spy_knife_blade", "state": 1},
+            {"card_id": "starter_spy_knife_handle", "state": 1},
+            {"card_id": "starter_spy_slingshot", "state": 1},
+            {"card_id": "starter_spy_rubber_strip", "state": 1},
+            {"card_id": "win_guide", "state": 1},
+            {"card_id": "beta_junk_tool_scavengers_kit", "state": 2}
+        ]
+    },
+    "Scout": {
+        "hp": 60, "movement": 5, "projectile_range": 5,
+        "attacks": {"Throw Rock": 6, "Fist": 4},
+        "special_attack": "Double Move",
+        "starting_kit": [
+            {"card_id": "starter_scout_javelin_shaft", "state": 1},
+            {"card_id": "starter_scout_javelin_head", "state": 1},
+            {"card_id": "starter_scout_rope", "state": 1},
+            {"card_id": "win_guide", "state": 1},
+            {"card_id": "beta_junk_tool_scavengers_kit", "state": 2}
+        ]
     }
 }
 
@@ -114,12 +142,16 @@ class Player:
             "melee": dict(self.attacks["melee"])
         }
         self.default_projectile_range = self.projectile_range
-        self.movement_used = False
+        # Movement counter system (supports Scout's multiple moves per turn)
+        self.moves_per_turn = 1       # Default 1; Scout gets 2
+        self.base_moves_per_turn = 1  # For resetting after Scout super
+        self._movement_count = 0      # Current movements used this turn
         self.action_used = False
         # Dual Strike passive: always gets 2 attacks per turn (any combination of melee/projectile)
         self.warrior_attacks_remaining = 2 if self.special_attack == "Dual Strike" else 0
         self.double_attack_active = (self.special_attack == "Dual Strike")
         self.position = (0, 0)
+        self.allegiance = "Allied"
         self.animating = False
         self.render_pos = None
         self.attack_flash = False
@@ -155,6 +187,18 @@ class Player:
         self.piercing_projectile = (self.special_attack == "Piercing Shot")
         # Healer passive: melee becomes heal when no melee weapon equipped
         self.is_healer = (self.special_attack == "Heal")
+        # Spy class flag
+        self.is_spy = (self.special_attack == "Disguise")
+        # Scout: 2 moves per turn
+        if self.special_attack == "Double Move":
+            self.moves_per_turn = 2
+            self.base_moves_per_turn = 2
+
+        # Spy disguise system
+        self.is_disguised = False           # Currently wearing a disguise
+        self.is_boss_disguised = False      # Wearing a Boss Disguise specifically
+        self.ordered_enemies = []           # Enemy units whose behavior trees were modified
+        self.ordered_enemy_originals = {}   # {unit: original_behavior_tree} for reset on break
 
         # Super special attack charge system
         self.super_charge = 0
@@ -180,6 +224,22 @@ class Player:
             print("Player image not found, using default circle")
             self.image = None
         self.image_scale_factor = 1.2
+
+    @property
+    def movement_used(self):
+        if (self._movement_count >= self.moves_per_turn
+            and self.special_attack == "Double Move"
+            and self.super_attack_ready
+            and self._movement_count < 3):
+            return False  # Sprint: allow 3rd move when super is charged
+        return self._movement_count >= self.moves_per_turn
+
+    @movement_used.setter
+    def movement_used(self, value):
+        if value:
+            self._movement_count += 1
+        else:
+            self._movement_count = 0
 
     def get_effective_movement(self, party):
         """Return movement, boosted by Mount_Movement if a Mount is in the party."""
@@ -268,6 +328,12 @@ class Player:
         return f"{self.name or self.class_name} healed {target_name} for {actual_heal} HP ({old_hp} -> {target.hp})", False
 
     def attack(self, enemy, attack_name, grid, party=None):
+        # Spy disguise: attacking an enemy breaks disguise
+        if self.is_disguised:
+            target_allegiance = getattr(enemy, 'allegiance', 'Allied')
+            if target_allegiance != "Allied":
+                self.break_disguise()
+
         # Healer redirect: melee without weapon becomes heal
         if self.is_healer and self.melee_weapon is None:
             is_melee = attack_name == self.attacks["melee"]["name"]
@@ -346,8 +412,8 @@ class Player:
                 if weapon_name not in compatible_list:
                     return f"{ammo_data.get('Name', 'Ammunition')} not compatible with {weapon_name}", False
 
-            # ALL damage comes from ammunition
-            damage = int(ammo_data.get("Ammo_Damage", 0))
+            # Ammo damage is additive with base projectile damage
+            damage = self.default_attacks["projectile"]["damage"] + int(ammo_data.get("Ammo_Damage", 0))
 
         # Calculate effective range with mount bonus
         effective_range = self.projectile_range + self.get_mount_range_bonus(party)
@@ -597,6 +663,36 @@ class Player:
             if self.super_charge >= self.super_charge_max:
                 self.super_attack_ready = True
 
+    def break_disguise(self):
+        """Break the Spy's disguise. Reverts accessory to state 1, unequips, resets enemy orders."""
+        if not self.is_disguised:
+            return []
+        messages = []
+        self.is_disguised = False
+
+        # Revert disguise accessory to state 1 (document)
+        if self.equipped_accessory:
+            acc_data = self.equipped_accessory.get_current_data()
+            special = acc_data.get("Special Skill", "")
+            if special in ("Disguise", "Boss_Disguise"):
+                self.equipped_accessory.current_state = 1  # Revert to document
+                self.inventory.append(self.equipped_accessory)
+                self.equipped_accessory = None
+                self.tool_slots = 1  # Reset tool slots
+                messages.append("Disguise broken!")
+
+        # Reset all ordered enemies to their original behavior trees
+        if self.is_boss_disguised and self.ordered_enemies:
+            for unit in self.ordered_enemies:
+                if unit.hp > 0 and unit in self.ordered_enemy_originals:
+                    unit.behavior_tree = list(self.ordered_enemy_originals[unit])
+            messages.append("All ordered enemies return to natural behavior!")
+
+        self.is_boss_disguised = False
+        self.ordered_enemies = []
+        self.ordered_enemy_originals = {}
+        return messages
+
     def use_super_attack(self, target, grid):
         """Execute super special attack. Healer: Revive a dead adjacent target at 10 HP."""
         if not self.super_attack_ready:
@@ -674,6 +770,10 @@ class Player:
                 return msg, [target]
             return msg, []
 
+        # Scout super: Sprint is passive (3rd move auto-available when charged)
+        if self.special_attack == "Double Move":
+            return "Sprint is passive - move twice to unlock a 3rd move!", []
+
         self.super_charge = 0
         self.super_attack_ready = False
         self.action_used = True
@@ -705,6 +805,10 @@ class Player:
             return "Heal is a passive ability - melee attack heals when no weapon is equipped. Charge 5 heals for Revive!", []
         elif self.special_attack == "Master Builder":
             return "Master Builder is a passive ability - Wood requirements auto-fulfilled when on forest terrain.", []
+        elif self.special_attack == "Disguise":
+            return "Disguise is a passive ability - craft and equip a disguise accessory to become invisible to enemies.", []
+        elif self.special_attack == "Double Move":
+            return "Double Move is a passive ability - you get 2 movements per turn. Charge super for Sprint (3 moves)!", []
         else:
             return f"Unknown special attack: {self.special_attack}", []
 
@@ -751,8 +855,8 @@ class Player:
             if not ammo_card:
                 return "No ammunition equipped - cannot fire!", []
             ammo_data = ammo_card.get_current_data()
-            # ALL damage comes from ammunition
-            damage = int(ammo_data.get("Ammo_Damage", 0))
+            # Ammo damage is additive with base projectile damage
+            damage = self.default_attacks["projectile"]["damage"] + int(ammo_data.get("Ammo_Damage", 0))
 
         messages = []
         defeated = []
@@ -802,25 +906,6 @@ class Player:
 
         result = f"{self.class_name} used Multi-target Projectile! Pierced through: {', '.join(messages)}"
         return result, defeated
-
-    def _activate_double_attack(self):
-        """
-        Warrior special: Activates Double Attack mode, allowing both a melee
-        attack AND a projectile attack this turn.
-        """
-        if self.double_attack_active:
-            return "Double Attack already active", []
-
-        if self.action_used:
-            return "Action already used this turn", []
-
-        self.double_attack_active = True
-
-        return f"{self.class_name} activated Double Attack! Can use both melee and projectile this turn.", []
-
-    def _double_attack(self, target, grid):
-        """Legacy method - use _activate_double_attack instead."""
-        return self._activate_double_attack()
 
     def _spin_punch(self, grid):
         """
@@ -883,17 +968,29 @@ class Player:
         weapon_data = weapon_card.get_current_data()
         weapon_type = weapon_data.get("Type")
 
+        # Infer weapon type from damage fields when Type is missing
+        if not weapon_type:
+            has_melee = int(weapon_data.get("Melee Damage", 0) or 0) > 0
+            has_proj = int(weapon_data.get("Projectile Damage", 0) or 0) > 0
+            if has_melee and has_proj:
+                weapon_type = "Both"
+            elif has_melee:
+                weapon_type = "Melee"
+            elif has_proj:
+                weapon_type = "Projectile"
+
         if weapon_type == "Both":
             # Dual-slot weapon (e.g., Combat Bow) - occupies both melee and projectile slots
             try:
-                # Melee slot
-                melee_damage = int(weapon_data.get("Melee Damage", 0))
+                # Melee slot - additive with base melee damage
+                weapon_melee_damage = int(weapon_data.get("Melee Damage", 0))
+                total_melee = self.default_attacks["melee"]["damage"] + weapon_melee_damage
                 self.melee_weapon = weapon_card
-                self.attacks["melee"] = {"name": weapon_data["Name"], "damage": melee_damage}
+                self.attacks["melee"] = {"name": weapon_data["Name"], "damage": total_melee}
 
-                # Projectile slot
+                # Projectile slot - range is additive with base range
                 self.projectile_weapon = weapon_card
-                self.projectile_range = int(weapon_data.get("Range_Distance", weapon_data.get("Projectile Range", 5)))
+                self.projectile_range = self.default_projectile_range + int(weapon_data.get("Range_Distance", weapon_data.get("Projectile Range", 5)))
                 self.projectile_range_type = weapon_data.get("Range_Type", "line_of_sight")
                 self.projectile_include_pos = str(weapon_data.get("Include_Position", "false")).lower() == "true"
                 self.projectile_exclude_adj = str(weapon_data.get("Exclude_Adjacent", "false")).lower() == "true"
@@ -907,10 +1004,11 @@ class Player:
                         "compatible_ammo": weapon_data.get("Compatible_Ammo", "")
                     }
                 else:
-                    proj_damage = int(weapon_data.get("Projectile Damage", 0))
+                    weapon_proj_damage = int(weapon_data.get("Projectile Damage", 0))
+                    total_proj = self.default_attacks["projectile"]["damage"] + weapon_proj_damage
                     self.attacks["projectile"] = {
                         "name": weapon_data["Name"],
-                        "damage": proj_damage,
+                        "damage": total_proj,
                         "requires_ammo": False
                     }
             except ValueError as e:
@@ -918,9 +1016,10 @@ class Player:
 
         elif weapon_type == "Melee" and "Melee Damage" in weapon_data:
             try:
-                damage = int(weapon_data["Melee Damage"])
+                weapon_damage = int(weapon_data["Melee Damage"])
+                total_damage = self.default_attacks["melee"]["damage"] + weapon_damage
                 self.melee_weapon = weapon_card
-                self.attacks["melee"] = {"name": weapon_data["Name"], "damage": damage}
+                self.attacks["melee"] = {"name": weapon_data["Name"], "damage": total_damage}
             except ValueError:
                 print(f"Error: Invalid 'Melee Damage' for {weapon_data.get('Name', 'Unknown')}")
 
@@ -928,8 +1027,8 @@ class Player:
             try:
                 self.projectile_weapon = weapon_card
 
-                # Load full range properties from weapon
-                self.projectile_range = int(weapon_data.get("Range_Distance", weapon_data.get("Projectile Range", 5)))
+                # Load full range properties from weapon - range is additive with base range
+                self.projectile_range = self.default_projectile_range + int(weapon_data.get("Range_Distance", weapon_data.get("Projectile Range", 5)))
                 self.projectile_range_type = weapon_data.get("Range_Type", "line_of_sight")
                 self.projectile_include_pos = str(weapon_data.get("Include_Position", "false")).lower() == "true"
                 self.projectile_exclude_adj = str(weapon_data.get("Exclude_Adjacent", "false")).lower() == "true"
@@ -946,11 +1045,12 @@ class Player:
                         "compatible_ammo": weapon_data.get("Compatible_Ammo", "")  # e.g., "Arrow,Bolt"
                     }
                 else:
-                    # Standard projectile weapon with built-in damage
-                    damage = int(weapon_data.get("Projectile Damage", 0))
+                    # Standard projectile weapon with built-in damage - additive with base
+                    weapon_damage = int(weapon_data.get("Projectile Damage", 0))
+                    total_damage = self.default_attacks["projectile"]["damage"] + weapon_damage
                     self.attacks["projectile"] = {
                         "name": weapon_data["Name"],
-                        "damage": damage,
+                        "damage": total_damage,
                         "requires_ammo": False
                     }
             except ValueError as e:
@@ -1134,6 +1234,15 @@ class Player:
         while len(self.equipped_tools) < self.tool_slots:
             self.equipped_tools.append(None)
 
+        # Spy disguise detection
+        special_skill = card_data.get("Special Skill", "")
+        if self.is_spy and special_skill == "Disguise":
+            self.is_disguised = True
+            self.is_boss_disguised = False
+        elif self.is_spy and special_skill == "Boss_Disguise":
+            self.is_disguised = True
+            self.is_boss_disguised = True
+
         return f"Equipped {card_data.get('Name', 'Unknown')}. Tool slots: {self.tool_slots}"
 
     def unequip_accessory(self):
@@ -1145,6 +1254,10 @@ class Player:
         """
         if not self.equipped_accessory:
             return "No accessory equipped"
+
+        # Break disguise if active
+        if self.is_disguised:
+            self.break_disguise()
 
         accessory = self.equipped_accessory
         name = accessory.get_current_data().get("Name", "Unknown")

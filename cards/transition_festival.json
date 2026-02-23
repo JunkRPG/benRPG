@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "states": 2,
+  "data": {
+    "Name": "Festival Day",
+    "Description": "A lively festival is underway! Music, food, and merriment fill the air.",
+    "Background Image": "",
+    "Outcomes": "[{\"probability\": 0.20, \"type\": \"draw_junk\", \"text\": \"You win a prize at a festival game!\", \"params\": {\"deck\": \"beta_junk_deck.json\"}}, {\"probability\": 0.25, \"type\": \"spawn_npc\", \"text\": \"A festival performer offers to join your cause.\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"allegiance\": \"Neutral\"}}, {\"probability\": 0.15, \"type\": \"draw_instance\", \"text\": \"A commotion breaks out at the festival.\", \"params\": {}}, {\"probability\": 0.25, \"type\": \"none\", \"text\": \"A peaceful festival day.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"flip_state\", \"text\": \"Night falls on the festival...\", \"params\": {}}]",
+    "2nd_state_Name": "Festival Night",
+    "2nd_state_Description": "The festival continues into the night. Shadows move between the lanterns.",
+    "2nd_state_Background Image": "",
+    "2nd_state_Outcomes": "[{\"probability\": 0.30, \"type\": \"draw_instance\", \"text\": \"Strange things happen under the festival lights.\", \"params\": {}}, {\"probability\": 0.25, \"type\": \"spawn_enemy\", \"text\": \"Troublemakers crash the festival!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.15, \"type\": \"draw_junk\", \"text\": \"You find abandoned festival supplies.\", \"params\": {\"deck\": \"beta_junk_deck.json\"}}, {\"probability\": 0.15, \"type\": \"flip_state\", \"text\": \"Dawn breaks. A new festival day begins.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"none\", \"text\": \"The festival night winds down peacefully.\", \"params\": {}}]"
+  }
+}

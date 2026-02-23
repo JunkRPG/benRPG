@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Fishing Manual",
+    "Description": "Tips and techniques for catching fish in rivers and streams. Includes bait recommendations.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

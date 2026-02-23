@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Junk Scavenger",
+    "Health": "15",
+    "Movement": "4",
+    "Melee Damage": "6",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Background Image File Path": "",
+    "Enemy Image File Path": ""
+  }
+}

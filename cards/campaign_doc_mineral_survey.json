@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Mineral Survey",
+    "Description": "A geological survey of mineral deposits in rocky terrain. Marks ore-rich locations.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

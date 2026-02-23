@@ -1,0 +1,26 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Sharpened Scrap",
+    "Description": "A thin piece of metal filed to a razor edge. With a proper handle, it would make a deadly knife.",
+    "Raw Material Value": "1",
+    "Refined Material Value": "0",
+    "Metal Value": "2",
+    "Wood Value": "0",
+    "Background Image": "",
+    "Junk Image": "",
+    "Requirements: Raw Materials": "1",
+    "Requirements: Refined Materials": "1",
+    "Requirements: Wood": "0",
+    "Requirements: Metal": "1",
+    "Requirements: Specific Cards": "",
+    "2nd_state_Name": "Spy's Knife",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "8",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_range_id": "None",
+    "2nd_state_Weapon Image": ""
+  }
+}

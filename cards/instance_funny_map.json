@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Definitely Real Map",
+    "Description": "A shifty-eyed merchant unfurls a piece of parchment covered in crayon drawings, coffee stains, and what appears to be a child's drawing of a dragon. 'Genuine treasure map!' they whisper. 'Only slightly used!'",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"player_choice\", \"text\": \"The merchant waves the map enticingly. Upon closer inspection, the 'X marks the spot' appears to have been drawn over an older 'X' which was drawn over an even older 'X'.\", \"params\": {\"choices\": [{\"name\": \"Buy the Map\", \"risk\": 0.5, \"success\": {\"type\": \"draw_card\", \"text\": \"The map actually led somewhere! You find something useful buried under a suspiciously specific rock.\", \"params\": {\"card_type\": \"Junk Card\"}}, \"failure\": {\"type\": \"spawn_enemy\", \"text\": \"It was a trap! The 'treasure location' was actually a monster's living room. They are NOT happy about visitors.\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"count\": 1}}}, {\"name\": \"Haggle the Price Down\", \"risk\": 0.6, \"success\": {\"type\": \"draw_card\", \"text\": \"They got flustered and accidentally threw in a real item as a bonus! Worst merchant ever. Best day ever.\", \"params\": {\"card_type\": \"Junk Card\"}}, \"failure\": {\"type\": \"damage_player\", \"damage\": 4, \"text\": \"They got deeply offended by your counter-offer and threw a rock at your head. Fair negotiation tactic, honestly.\"}}]}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"The merchant squints at the map, turns it upside down, and realizes it was their grocery list all along. 'Eggs, milk, world domination... wait, this isn't right.'\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"A gust of wind snatches the map away. The merchant shrugs and pulls out twelve more identical maps from their coat.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"draw_card\", \"text\": \"The merchant accidentally drops something real while fumbling with their fake maps. Finders keepers!\", \"params\": {\"card_type\": \"Junk Card\"}}]"
+  }
+}

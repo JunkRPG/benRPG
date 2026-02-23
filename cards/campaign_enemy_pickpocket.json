@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Pickpocket",
+    "Health": "12",
+    "Movement": "6",
+    "Melee Damage": "3",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Background Image File Path": "",
+    "Enemy Image File Path": ""
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Herb Encyclopedia",
+    "Description": "An illustrated guide to medicinal plants and their healing properties.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

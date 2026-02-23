@@ -1,0 +1,17 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Tower Marksman",
+    "Health": "15",
+    "Movement": "2",
+    "Melee Damage": "3",
+    "Projectile Damage": "10",
+    "Projectile Range": "3",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "Garrison defender with ranged attacks",
+    "Background Image File Path": "",
+    "NPC Image File Path": ""
+  }
+}

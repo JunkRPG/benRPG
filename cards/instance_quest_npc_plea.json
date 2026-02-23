@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Desperate NPC",
+    "Description": "An NPC runs up to you, breathless and begging for help.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.50, \"type\": \"offer_quest\", \"text\": \"Their story is compelling...\", \"params\": {\"quest_deck\": \"decks/chain_quest_deck.json\"}}, {\"probability\": 0.30, \"type\": \"spawn_ally\", \"text\": \"They join you out of gratitude!\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"count\": 1}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"They ran off before explaining.\", \"params\": {}}]"
+  }
+}

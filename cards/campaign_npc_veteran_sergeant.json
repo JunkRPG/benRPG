@@ -1,0 +1,17 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Veteran Sergeant",
+    "Health": "40",
+    "Movement": "3",
+    "Melee Damage": "12",
+    "Projectile Damage": "6",
+    "Projectile Range": "2",
+    "Allegiance (Hostile, Neutral, Allied)": "Allied",
+    "Special Skill": "Experienced warrior with ranged capability",
+    "Background Image File Path": "",
+    "NPC Image File Path": ""
+  }
+}

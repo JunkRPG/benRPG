@@ -11,6 +11,19 @@
     "beta_quest_defense_location",
     "beta_quest_mystery_investigation",
     "beta_quest_rescue_captive",
-    "beta_quest_clear_path"
+    "beta_quest_clear_path",
+    "quest_chain_merchant_escort",
+    "quest_chain_merchant_robbery",
+    "quest_chain_merchant_rebuild",
+    "quest_chain_shrine_investigate",
+    "quest_chain_shrine_guardian",
+    "quest_chain_shrine_restore",
+    "quest_chain_patrol_find",
+    "quest_chain_patrol_revenge",
+    "quest_chain_storm_warning",
+    "quest_chain_storm_source",
+    "quest_chain_storm_aftermath",
+    "quest_chain_goose_king",
+    "quest_chain_goose_heir"
   ]
 }

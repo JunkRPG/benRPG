@@ -1,0 +1,11 @@
+{
+  "deck_name": "Chain Quest Starters",
+  "back_image": null,
+  "cards": [
+    "quest_chain_merchant_escort",
+    "quest_chain_shrine_investigate",
+    "quest_chain_patrol_find",
+    "quest_chain_storm_warning",
+    "quest_chain_goose_king"
+  ]
+}

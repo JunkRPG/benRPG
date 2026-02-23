@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Corrupt Guard",
+    "Health": "30",
+    "Movement": "3",
+    "Melee Damage": "10",
+    "Projectile Damage": "5",
+    "Projectile Range": "2",
+    "Background Image File Path": "",
+    "Enemy Image File Path": ""
+  }
+}

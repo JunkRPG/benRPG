@@ -1,0 +1,17 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Consumable_Item",
+  "states": 2,
+  "data": {
+    "Name": "Antidote Recipe",
+    "Description": "Instructions for preparing an all-purpose antidote.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "2nd_state_Name": "Antidote",
+    "2nd_state_Description": "A medicinal antidote that cures ailments and restores health.",
+    "2nd_state_Type": "Consumable",
+    "2nd_state_Use_HP": "+15HP",
+    "2nd_state_Price": "6"
+  }
+}

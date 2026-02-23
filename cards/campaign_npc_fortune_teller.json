@@ -1,0 +1,17 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Fortune Teller",
+    "Health": "12",
+    "Movement": "3",
+    "Melee Damage": "1",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Neutral",
+    "Special Skill": "Reveals quest hints and warnings",
+    "Background Image File Path": "",
+    "NPC Image File Path": ""
+  }
+}

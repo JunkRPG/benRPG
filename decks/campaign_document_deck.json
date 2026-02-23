@@ -1,0 +1,26 @@
+{
+  "deck_name": "Campaign Documents",
+  "back_image": null,
+  "cards": [
+    "campaign_doc_sword_blueprint",
+    "campaign_doc_crossbow_blueprint",
+    "campaign_doc_shield_blueprint",
+    "campaign_doc_hammer_blueprint",
+    "campaign_doc_lockpick_blueprint",
+    "campaign_doc_potion_recipe",
+    "campaign_doc_antidote_recipe",
+    "campaign_doc_watchtower_plan",
+    "campaign_doc_barricade_plan",
+    "campaign_doc_trading_post_plan",
+    "campaign_doc_enemy_intel",
+    "campaign_doc_treasure_map",
+    "campaign_doc_survival_guide",
+    "campaign_doc_combat_manual",
+    "campaign_doc_herb_encyclopedia",
+    "campaign_doc_mushroom_guide",
+    "campaign_doc_mineral_survey",
+    "campaign_doc_fishing_manual",
+    "campaign_doc_trapping_guide",
+    "campaign_doc_foraging_notes"
+  ]
+}

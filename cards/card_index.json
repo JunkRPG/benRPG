@@ -2554,76 +2554,6 @@
     "states": 1,
     "name": "Village Father"
   },
-  "ab5f561d-c605-45f2-822d-708932e48a5d": {
-    "type": "Junk Card",
-    "subclass": null,
-    "blueprint_subclass": null,
-    "states": 1,
-    "name": " #1"
-  },
-  "60768028-ea43-4a42-b648-41420537fdd8": {
-    "type": "Junk Card",
-    "subclass": null,
-    "blueprint_subclass": null,
-    "states": 1,
-    "name": " #2"
-  },
-  "84c46f18-2524-4452-b098-cadec1e3d926": {
-    "type": "Junk Card",
-    "subclass": null,
-    "blueprint_subclass": null,
-    "states": 1,
-    "name": " #3"
-  },
-  "8d033edc-8e2b-4724-a8d7-04c26464da82": {
-    "type": "Junk Card",
-    "subclass": null,
-    "blueprint_subclass": null,
-    "states": 1,
-    "name": " #4"
-  },
-  "5bc55305-3a74-4936-8e59-637ab3d0a4d5": {
-    "type": "Junk Card",
-    "subclass": null,
-    "blueprint_subclass": null,
-    "states": 1,
-    "name": " #5"
-  },
-  "3ebafb48-1c4e-4c9c-9c5c-67aec24462af": {
-    "type": "Junk Card",
-    "subclass": null,
-    "blueprint_subclass": null,
-    "states": 1,
-    "name": " #6"
-  },
-  "813d35f4-775d-4683-b7b7-48cde84227d0": {
-    "type": "Junk Card",
-    "subclass": null,
-    "blueprint_subclass": null,
-    "states": 1,
-    "name": " #7"
-  },
-  "8a87fc6f-901c-4cd6-977c-fe04fab1000f": {
-    "type": "Junk Card",
-    "subclass": null,
-    "blueprint_subclass": null,
-    "states": 1,
-    "name": " #8"
-  },
-  "1d6dff98-b1d6-4532-a1b3-208e616ef1a0": {
-    "type": "Junk Card",
-    "subclass": null,
-    "blueprint_subclass": null,
-    "states": 1,
-    "name": " #9"
-  },
-  "501e88ce-9bd7-467e-9c9a-be20d3ac166b": {
-    "type": "Junk Card",
-    "subclass": null,
-    "blueprint_subclass": null,
-    "states": 1,
-    "name": " #10"
-  },
   "starter_healer_bow": {
     "type": "Junk Card",
     "subclass": "Junk_to_Weapon",
@@ -3170,5 +3100,1034 @@
     "blueprint_subclass": null,
     "states": 2,
     "name": "Windswept Peaks"
+  },
+  "starter_spy_garment_pattern": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Tool",
+    "states": 2,
+    "name": "Garment Pattern"
+  },
+  "starter_spy_cloth_scraps": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Cloth Scraps"
+  },
+  "starter_spy_dye_pouch": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Dye Pouch"
+  },
+  "starter_spy_knife_blade": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Sharpened Scrap"
+  },
+  "starter_spy_knife_handle": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wrapped Handle"
+  },
+  "starter_spy_slingshot": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Forked Branch"
+  },
+  "starter_spy_rubber_strip": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Rubber Strip"
+  },
+  "starter_scout_javelin_shaft": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Javelin Shaft"
+  },
+  "starter_scout_javelin_head": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Flint Javelin Head"
+  },
+  "starter_scout_rope": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Hemp Rope"
+  },
+  "quest_chain_merchant_escort": {
+    "type": "Quest Card",
+    "subclass": "Escort",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "The Merchant's Troubles"
+  },
+  "quest_chain_merchant_robbery": {
+    "type": "Quest Card",
+    "subclass": "Hunt",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Highway Robbery"
+  },
+  "quest_chain_merchant_rebuild": {
+    "type": "Quest Card",
+    "subclass": "Fetch",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rebuilding the Shop"
+  },
+  "quest_chain_shrine_investigate": {
+    "type": "Quest Card",
+    "subclass": "Mystery",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "The Cursed Shrine"
+  },
+  "quest_chain_shrine_guardian": {
+    "type": "Quest Card",
+    "subclass": "Hunt",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Shrine Guardian"
+  },
+  "quest_chain_shrine_restore": {
+    "type": "Quest Card",
+    "subclass": "Delivery",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Restore the Shrine"
+  },
+  "quest_chain_patrol_find": {
+    "type": "Quest Card",
+    "subclass": "Rescue",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "The Lost Patrol"
+  },
+  "quest_chain_patrol_revenge": {
+    "type": "Quest Card",
+    "subclass": "Hunt",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Patrol's Revenge"
+  },
+  "quest_chain_storm_warning": {
+    "type": "Quest Card",
+    "subclass": "Mystery",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Storm Warning"
+  },
+  "quest_chain_storm_source": {
+    "type": "Quest Card",
+    "subclass": "Hunt",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "The Storm Caller"
+  },
+  "quest_chain_storm_aftermath": {
+    "type": "Quest Card",
+    "subclass": "Fetch",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Storm Aftermath"
+  },
+  "quest_chain_goose_king": {
+    "type": "Quest Card",
+    "subclass": "Hunt",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "The Goose King"
+  },
+  "quest_chain_goose_heir": {
+    "type": "Quest Card",
+    "subclass": "Defense",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "The Goose Prince's Revenge"
+  },
+  "instance_funny_cooking": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Questionable Cuisine"
+  },
+  "instance_funny_mimic": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Suspicious Chest"
+  },
+  "instance_funny_bard": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wandering Bard"
+  },
+  "instance_funny_duel": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Honor Duel"
+  },
+  "instance_funny_map": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Definitely Real Map"
+  },
+  "instance_funny_sleeping": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Napping Dragon"
+  },
+  "instance_funny_tax": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Royal Tax Collector"
+  },
+  "instance_funny_cursed_item": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Glowing Sword in a Rock"
+  },
+  "instance_funny_ghost": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Friendly Ghost"
+  },
+  "instance_funny_mushroom": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Mysterious Mushroom Circle"
+  },
+  "instance_funny_squirrel": {
+    "type": "Instance Card",
+    "subclass": "Combat",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Aggressive Squirrel"
+  },
+  "instance_funny_prophecy": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Ominous Prophecy"
+  },
+  "instance_funny_catapult": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Abandoned Catapult"
+  },
+  "instance_funny_pet_rock": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Lonely Pet Rock"
+  },
+  "instance_funny_wrestling": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Impromptu Wrestling Match"
+  },
+  "instance_quest_distress": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Distress Signal"
+  },
+  "instance_quest_bounty_board": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Bounty Board"
+  },
+  "instance_quest_mysterious_letter": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Mysterious Letter"
+  },
+  "instance_quest_npc_plea": {
+    "type": "Instance Card",
+    "subclass": "Social",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Desperate NPC"
+  },
+  "instance_quest_treasure_map": {
+    "type": "Instance Card",
+    "subclass": "Environmental",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Ancient Map Fragment"
+  },
+  "transition_cursed_land": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Eerie Calm"
+  },
+  "transition_aftermath": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Recovery"
+  },
+  "transition_trade_routes": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Busy Markets"
+  },
+  "transition_wild_lands": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Peaceful Wilderness"
+  },
+  "transition_festival": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Festival Day"
+  },
+  "transition_quest_caravan": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Caravan Arrives"
+  },
+  "transition_wandering_heroes": {
+    "type": "Transition Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Heroes Arrive"
+  },
+  "junk_pile_template": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Junk Pile"
+  },
+  "campaign_boss_scrapyard_golem": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Scrapyard Golem"
+  },
+  "campaign_boss_iron_warlord": {
+    "type": "Boss Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Iron Warlord"
+  },
+  "campaign_enemy_junk_scavenger": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Junk Scavenger"
+  },
+  "campaign_enemy_rust_rat": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Rust Rat"
+  },
+  "campaign_enemy_scrap_bandit": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Scrap Bandit"
+  },
+  "campaign_enemy_wire_trap": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wire Trap"
+  },
+  "campaign_enemy_grease_goblin": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Grease Goblin"
+  },
+  "campaign_enemy_pickpocket": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Pickpocket"
+  },
+  "campaign_enemy_black_market_thug": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Black Market Thug"
+  },
+  "campaign_enemy_corrupt_guard": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Corrupt Guard"
+  },
+  "campaign_enemy_smuggler": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Smuggler"
+  },
+  "campaign_enemy_con_artist": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Con Artist"
+  },
+  "campaign_enemy_war_grunt": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "War Grunt"
+  },
+  "campaign_enemy_siege_archer": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Siege Archer"
+  },
+  "campaign_enemy_shield_bearer": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Shield Bearer"
+  },
+  "campaign_enemy_demolisher": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Demolisher"
+  },
+  "campaign_enemy_war_hound": {
+    "type": "Enemy Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "War Hound"
+  },
+  "campaign_npc_junk_dealer": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Junk Dealer"
+  },
+  "campaign_npc_traveling_tinker": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Traveling Tinker"
+  },
+  "campaign_npc_scrap_merchant": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Scrap Merchant"
+  },
+  "campaign_npc_fortune_teller": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Fortune Teller"
+  },
+  "campaign_npc_wandering_cook": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wandering Cook"
+  },
+  "campaign_npc_caravan_trader": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Caravan Trader"
+  },
+  "campaign_npc_field_medic": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Field Medic"
+  },
+  "campaign_npc_war_refugee": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "War Refugee"
+  },
+  "campaign_npc_lost_scout": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Lost Scout"
+  },
+  "campaign_npc_old_hermit": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Old Hermit"
+  },
+  "campaign_npc_militia_recruit": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Militia Recruit"
+  },
+  "campaign_npc_church_healer": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Church Healer"
+  },
+  "campaign_npc_tower_marksman": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Tower Marksman"
+  },
+  "campaign_npc_supply_runner": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Supply Runner"
+  },
+  "campaign_npc_veteran_sergeant": {
+    "type": "NPC Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Veteran Sergeant"
+  },
+  "campaign_junk_rusty_pipe": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rusty Pipe"
+  },
+  "campaign_junk_broken_blade": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Broken Blade"
+  },
+  "campaign_junk_bent_rebar": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Bent Rebar"
+  },
+  "campaign_junk_chain_links": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Chain Links"
+  },
+  "campaign_junk_sharp_glass": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Weapon",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Sharp Glass"
+  },
+  "campaign_junk_old_wrench": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Old Wrench"
+  },
+  "campaign_junk_cracked_lens": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Cracked Lens"
+  },
+  "campaign_junk_bent_pliers": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Bent Pliers"
+  },
+  "campaign_junk_rusty_saw": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Tool",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rusty Saw"
+  },
+  "campaign_junk_mystery_herbs": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Mystery Herbs"
+  },
+  "campaign_junk_old_bandage": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Old Bandage"
+  },
+  "campaign_junk_dirty_water": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Dirty Water"
+  },
+  "campaign_junk_tin_of_food": {
+    "type": "Junk Card",
+    "subclass": "Junk_to_Consumable_Item",
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Tin of Food"
+  },
+  "campaign_junk_scrap_metal": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Scrap Metal"
+  },
+  "campaign_junk_wood_scraps": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Wood Scraps"
+  },
+  "campaign_junk_cloth_rags": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Cloth Rags"
+  },
+  "campaign_junk_rubber_strips": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Rubber Strips"
+  },
+  "campaign_junk_copper_wire": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Copper Wire"
+  },
+  "campaign_junk_old_nails": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Old Nails"
+  },
+  "campaign_junk_leather_scraps": {
+    "type": "Junk Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Leather Scraps"
+  },
+  "campaign_doc_sword_blueprint": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Sword Blueprint"
+  },
+  "campaign_doc_crossbow_blueprint": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Crossbow Blueprint"
+  },
+  "campaign_doc_shield_blueprint": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Weapon",
+    "states": 2,
+    "name": "Shield Blueprint"
+  },
+  "campaign_doc_hammer_blueprint": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Tool",
+    "states": 2,
+    "name": "Hammer Blueprint"
+  },
+  "campaign_doc_lockpick_blueprint": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Tool",
+    "states": 2,
+    "name": "Lockpick Blueprint"
+  },
+  "campaign_doc_potion_recipe": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Consumable_Item",
+    "states": 2,
+    "name": "Potion Recipe"
+  },
+  "campaign_doc_antidote_recipe": {
+    "type": "Document Card",
+    "subclass": "Blueprint",
+    "blueprint_subclass": "Blueprint_to_Consumable_Item",
+    "states": 2,
+    "name": "Antidote Recipe"
+  },
+  "campaign_doc_watchtower_plan": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Watchtower Plans"
+  },
+  "campaign_doc_barricade_plan": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Barricade Plans"
+  },
+  "campaign_doc_trading_post_plan": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Trading Post Plans"
+  },
+  "campaign_doc_enemy_intel": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Enemy Intelligence"
+  },
+  "campaign_doc_treasure_map": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Treasure Map"
+  },
+  "campaign_doc_survival_guide": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Survival Guide"
+  },
+  "campaign_doc_combat_manual": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Combat Manual"
+  },
+  "campaign_doc_herb_encyclopedia": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Herb Encyclopedia"
+  },
+  "campaign_doc_mushroom_guide": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Mushroom Foraging Guide"
+  },
+  "campaign_doc_mineral_survey": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Mineral Survey"
+  },
+  "campaign_doc_fishing_manual": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Fishing Manual"
+  },
+  "campaign_doc_trapping_guide": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Trapping Guide"
+  },
+  "campaign_doc_foraging_notes": {
+    "type": "Document Card",
+    "subclass": "Information",
+    "blueprint_subclass": null,
+    "states": 1,
+    "name": "Foraging Notes"
+  },
+  "campaign_loc_scrapyard_entrance": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Scrapyard Entrance"
+  },
+  "campaign_loc_junk_traders_shack": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Junk Trader's Shack"
+  },
+  "campaign_loc_rusty_church": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Rusty Church"
+  },
+  "campaign_loc_scrap_hideout": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Scrap Hideout"
+  },
+  "campaign_loc_makeshift_tower": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Makeshift Tower"
+  },
+  "campaign_loc_scrapyard_exit": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Scrapyard Exit"
+  },
+  "campaign_loc_town_market": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Town Market"
+  },
+  "campaign_loc_town_church": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Town Church"
+  },
+  "campaign_loc_smugglers_den": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Smuggler's Den"
+  },
+  "campaign_loc_town_watchtower": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Town Watchtower"
+  },
+  "campaign_loc_tavern": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "The Dusty Flagon"
+  },
+  "campaign_loc_blacksmith": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Blacksmith's Forge"
+  },
+  "campaign_loc_thieves_hideout": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Thieves' Hideout"
+  },
+  "campaign_loc_town_gate": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Town Gate"
+  },
+  "campaign_loc_forward_camp": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Forward Camp"
+  },
+  "campaign_loc_field_hospital": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Field Hospital"
+  },
+  "campaign_loc_enemy_bunker": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Enemy Bunker"
+  },
+  "campaign_loc_enemy_lair": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Enemy Command Post"
+  },
+  "campaign_loc_sniper_tower": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Sniper Tower"
+  },
+  "campaign_loc_artillery_post": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Artillery Post"
+  },
+  "campaign_loc_supply_depot": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Supply Depot"
+  },
+  "campaign_loc_war_shrine": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "War Shrine"
+  },
+  "campaign_loc_command_tent": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Command Tent"
+  },
+  "campaign_loc_enemy_fortress_gate": {
+    "type": "Location Card",
+    "subclass": null,
+    "blueprint_subclass": null,
+    "states": 2,
+    "name": "Enemy Fortress Gate"
   }
 }

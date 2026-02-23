@@ -1,0 +1,16 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Lockpick Blueprint",
+    "Description": "Diagrams showing how to fashion lockpicks from wire.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "2nd_state_Name": "Lockpick Set",
+    "2nd_state_Description": "A set of fine lockpicks for opening locked containers.",
+    "2nd_state_Type": "Tool",
+    "2nd_state_Price": "8"
+  }
+}

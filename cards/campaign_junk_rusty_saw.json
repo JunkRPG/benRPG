@@ -1,0 +1,18 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Rusty Saw",
+    "Description": "A hand saw with a rusty blade. Still has some teeth.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "0",
+    "Metal Value": "3",
+    "Wood Value": "1",
+    "Price": "2",
+    "2nd_state_Name": "Saw",
+    "2nd_state_Description": "A cleaned and sharpened saw for cutting materials.",
+    "2nd_state_Type": "Tool",
+    "2nd_state_Price": "5"
+  }
+}

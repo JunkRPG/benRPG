@@ -1,0 +1,25 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Scrapyard Exit",
+    "Description": "A cleared path leads beyond the scrapyard toward civilization.",
+    "Outcomes": "[{\"probability\": 0.5, \"card_type\": \"Document Card\", \"deck_file\": \"campaign_document_deck.json\"}, {\"probability\": 0.5, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "Choices": "[{\"name\": \"Survey the Path\", \"action\": \"draw_card\", \"costs_action\": true, \"params\": {}}, {\"name\": \"Rest Before Leaving\", \"action\": \"heal\", \"costs_action\": false, \"params\": {\"amount\": 5}}]",
+    "Shop_Deck": "",
+    "Shop_Size": "0",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "5",
+    "Upgrade_NPC_Type": "",
+    "Upgrade_Material_Cost": "{}",
+    "2nd_state_Name": "Scrapyard Gate",
+    "2nd_state_Description": "A proper gate has been installed marking the boundary of the scrapyard.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.4, \"card_type\": \"Document Card\", \"deck_file\": \"campaign_document_deck.json\"}, {\"probability\": 0.3, \"card_type\": \"Junk Card\", \"deck_file\": \"campaign_junk_deck.json\"}, {\"probability\": 0.3, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "2nd_state_Choices": "[{\"name\": \"Survey the Path\", \"action\": \"draw_card\", \"costs_action\": true, \"params\": {}}, {\"name\": \"Rest Before Leaving\", \"action\": \"heal\", \"costs_action\": false, \"params\": {\"amount\": 8}}]",
+    "2nd_state_Shop_Deck": "",
+    "2nd_state_Shop_Size": "0",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "5"
+  }
+}

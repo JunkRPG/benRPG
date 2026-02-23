@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Barricade Plans",
+    "Description": "Instructions for constructing field barricades from available materials. Essential for defensive positions.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

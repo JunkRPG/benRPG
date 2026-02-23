@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Survival Guide",
+    "Description": "A well-thumbed guidebook covering shelter building, water purification, and foraging techniques.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

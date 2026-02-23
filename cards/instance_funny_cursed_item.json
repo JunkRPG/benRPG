@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "data": {
+    "Name": "Glowing Sword in a Rock",
+    "Description": "A magnificent sword juts from a boulder, glowing with ethereal light. Dramatic choir music plays from an unknown source. A queue of failed adventurers sits nearby eating sandwiches and watching. One of them has a betting pool going.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"player_choice\", \"text\": \"The sword pulses invitingly. The choir music intensifies. Someone in the audience eats popcorn loudly.\", \"params\": {\"choices\": [{\"name\": \"Pull the Sword\", \"risk\": 0.5, \"success\": {\"type\": \"draw_card\", \"text\": \"You pull it free with a dramatic flourish! The crowd cheers! You look down. It's... a butter knife. A very shiny, magical butter knife. The choir music stops with a record scratch.\", \"params\": {\"card_type\": \"Junk Card\"}}, \"failure\": {\"type\": \"damage_player\", \"damage\": 8, \"text\": \"The rock EXPLODES! The sword was load-bearing! Chunks of rock fly everywhere! The audience holds up score cards: 3.5, 4.0, 2.0. Harsh crowd.\"}}, {\"name\": \"Leave It Alone\", \"risk\": 0.0, \"effect\": {\"type\": \"none\", \"text\": \"Probably cursed anyway. You walk away with dignity. The sword dims sadly. The choir does a disappointed 'awwww.' The audience boos.\"}}]}}, {\"probability\": 0.30, \"type\": \"none\", \"text\": \"Another adventurer pulls it out while you were deciding. It's a spoon. A legendary, world-renowned, destiny-fulfilling spoon. They seem thrilled.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"none\", \"text\": \"The sword pulls itself out, stretches, says 'finally!' and walks away on tiny legs. Nobody in the audience seems surprised.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"draw_card\", \"text\": \"The rock crumbles from age and the sword clatters to the ground. You pick it up before anyone else can. It's not magical but it IS shiny.\", \"params\": {\"card_type\": \"Junk Card\"}}]"
+  }
+}

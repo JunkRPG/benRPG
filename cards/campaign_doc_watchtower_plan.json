@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Watchtower Plans",
+    "Description": "Architectural plans for building a defensive watchtower. Could be used to establish a new vantage point.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

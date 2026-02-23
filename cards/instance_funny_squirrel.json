@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "states": 1,
+  "data": {
+    "Name": "Aggressive Squirrel",
+    "Description": "A squirrel the size of a small dog sits atop an absurdly large pile of nuts, acorns, berries, coins, keys, someone's left shoe, and what appears to be a crown. It chitters aggressively and flexes tiny muscles at you. This squirrel has clearly been hitting the gym.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.35, \"type\": \"player_choice\", \"text\": \"The squirrel cracks its knuckles. You didn't know squirrels had knuckles. It gestures at its hoard and then draws a tiny line in the dirt with its tail.\", \"params\": {\"choices\": [{\"name\": \"Negotiate for Nuts\", \"risk\": 0.4, \"success\": {\"type\": \"draw_card\", \"text\": \"After an intense negotiation conducted entirely in squeaks and hand gestures, the squirrel agrees to share some nuts. It throws something useful at your head as a sign of respect.\", \"params\": {\"card_type\": \"Junk Card\"}}, \"failure\": {\"type\": \"spawn_enemy\", \"text\": \"The squirrel lets out a war cry! From every tree, dozens of squirrels appear! The squirrel army attacks! You have made a terrible miscalculation!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"count\": 1}}}, {\"name\": \"Walk Away Slowly\", \"risk\": 0.0, \"effect\": {\"type\": \"none\", \"text\": \"You choose peace today. The squirrel nods approvingly. It respects those who know when they're outmatched. You hear it resume counting its hoard as you leave.\"}}]}}, {\"probability\": 0.30, \"type\": \"none\", \"text\": \"On closer inspection, the 'squirrel' is actually a very convincing hat someone left behind on top of a pile of nuts. You feel silly for being intimidated by headwear.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"A hawk swoops down and carries the squirrel away. The squirrel shakes its fist at you from the sky as if this is somehow your fault.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"draw_card\", \"text\": \"The squirrel sneezes and accidentally launches a nut directly into your bag. Possession is nine-tenths of the law. The squirrel is too proud to ask for it back.\", \"params\": {\"card_type\": \"Junk Card\"}}]"
+  }
+}

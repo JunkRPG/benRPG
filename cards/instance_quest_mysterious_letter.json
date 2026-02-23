@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "data": {
+    "Name": "Mysterious Letter",
+    "Description": "You find a sealed letter tucked beneath a loose stone.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.50, \"type\": \"offer_quest\", \"text\": \"The letter reveals a call for help...\", \"params\": {\"quest_deck\": \"decks/chain_quest_deck.json\"}}, {\"probability\": 0.30, \"type\": \"none\", \"text\": \"The letter is too damaged to read.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"damage_player\", \"text\": \"The letter was booby-trapped! A small explosion!\", \"params\": {\"damage\": 3}}]"
+  }
+}

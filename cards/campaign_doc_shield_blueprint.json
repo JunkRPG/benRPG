@@ -1,0 +1,18 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Shield Blueprint",
+    "Description": "Instructions for assembling a sturdy shield from metal plates.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "2nd_state_Name": "Scrap Shield",
+    "2nd_state_Description": "A battered but functional shield made from welded scrap.",
+    "2nd_state_Melee Damage": "4",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "0",
+    "2nd_state_Price": "8"
+  }
+}

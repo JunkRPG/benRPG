@@ -1,0 +1,15 @@
+{
+  "card_type": "Enemy Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Grease Goblin",
+    "Health": "12",
+    "Movement": "5",
+    "Melee Damage": "5",
+    "Projectile Damage": "3",
+    "Projectile Range": "2",
+    "Background Image File Path": "",
+    "Enemy Image File Path": ""
+  }
+}

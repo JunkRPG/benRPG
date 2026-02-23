@@ -1,0 +1,11 @@
+{
+  "deck_name": "Warzone Enemies",
+  "back_image": null,
+  "cards": [
+    "campaign_enemy_war_grunt",
+    "campaign_enemy_siege_archer",
+    "campaign_enemy_shield_bearer",
+    "campaign_enemy_demolisher",
+    "campaign_enemy_war_hound"
+  ]
+}

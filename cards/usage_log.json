@@ -459,6 +459,249 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:46.962155",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:40:07.692678",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:27.196701",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:32.619489",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:13.075574",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:15.276498",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:18:14.300805",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:22:48.062080",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:29.099691",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:50:49.721703",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:56:04.941285",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:38.347823",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:35.987149",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:24:31.834342",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:27.728171",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:58:42.855850",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:42.328121",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:50.562494",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:14:25.113660",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:44.389367",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:24.889565",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:12.368917",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:04.355659",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:33.864120",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:10.169002",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          19
+        ]
+      }
     }
   ],
   "Bone Spearman": [
@@ -2251,6 +2494,228 @@
           19
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:46.749850",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:41:59.189078",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:26.968416",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:32.399461",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:12.854533",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:15.930850",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:21:21.757876",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:29.752560",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:52:23.167600",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:38.994067",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:36.624622",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:33:17.678432",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:28.413239",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:42.966875",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:51.167810",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:12:03.225327",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:45.158814",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:25.505266",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:13.080286",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:04.936203",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:34.536056",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:10.809298",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          19
+        ]
+      }
     }
   ],
   "Diseased Bowman to Plague Sniper": [
@@ -3617,6 +4082,256 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:47.381910",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:40:04.756459",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:27.589993",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:33.095722",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:30:28.137823",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:13.510804",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:09:27.944609",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:15.052851",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:18:14.012558",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:28.881319",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:48:42.046938",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:38.146403",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:10.828455",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:35.778668",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:23:38.601100",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:27.486855",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:52:09.925209",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:42.104466",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:50.333562",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:12:56.063171",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:44.157822",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:24.681144",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:12.138954",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:04.155327",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:33.644430",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:09.935721",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          12
+        ]
+      }
     }
   ],
   "The Ashen Titan": [
@@ -3834,6 +4549,50 @@
     },
     {
       "timestamp": "2026-02-20T20:08:09.973122",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          33
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:50.168958",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          33
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:30.258560",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          33
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:36.319058",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          33
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:16.198854",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -5277,6 +6036,221 @@
     },
     {
       "timestamp": "2026-02-20T20:08:10.696848",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:50.806629",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:30.894487",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:36.983209",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:16.790504",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:11.346720",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:18:22.706446",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:24.863672",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:53:44.442965",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:34.223666",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:32.082587",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:26:12.097921",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:23.667445",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:38.550094",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:46.610529",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:18:21.715219",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:39.894600",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:21.008305",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:08.456434",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:00.483490",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:29.898255",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:06.217673",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -6855,6 +7829,207 @@
           3
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:51.406892",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:31.491211",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:37.634215",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:17.414369",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:11.998702",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:24:50.970158",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:25.624975",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:34.929958",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:32.708802",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:24.303138",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:39.133072",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:47.251198",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:21:32.023382",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:40.574777",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:21.700992",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:09.108064",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:01.095627",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:30.558267",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:06.816185",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          3
+        ]
+      }
     }
   ],
   "Forge Apprentice": [
@@ -8263,6 +9438,207 @@
           0
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:51.821775",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:31.958217",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:38.074538",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:17.891847",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:12.447136",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:20:58.325397",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:26.153239",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:58:07.548720",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:35.365743",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:33.132175",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:24.748331",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:39.578344",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:47.711362",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:41.169351",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:22.159289",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:09.536829",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:01.548200",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:31.016659",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:07.335326",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          0
+        ]
+      }
     }
   ],
   "Herbalist Survivor": [
@@ -8536,6 +9912,193 @@
     },
     {
       "timestamp": "2026-02-20T20:08:12.103969",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:52.026830",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:32.149624",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:38.290906",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:18.120723",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:12.663273",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:26.387010",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:35.643979",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:33.348337",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:25.015795",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:39.829486",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:47.922554",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:41.406366",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:22.359631",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:09.753404",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:01.747445",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:31.219070",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:07.558119",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -9392,6 +10955,240 @@
           5
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T11:33:00.717439",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:41:53.868453",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:51.139029",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:33.923926",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:53.116653",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:33.258532",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:39.329666",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:19.257171",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:13.757901",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:27.519348",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:36.837347",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:34.423386",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:26.202910",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:40.803160",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:49.049279",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:19:40.067092",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:42.753464",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:23.455679",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:10.856815",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:02.846381",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:32.331152",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:08.636210",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          4
+        ]
+      }
     }
   ],
   "Weary Pathfinder to Lady Elara the Far-Seer": [
@@ -9679,6 +11476,235 @@
       "context": {
         "action": "defeated",
         "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:53.733508",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:32:33.971186",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:33.893588",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:39.959114",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:19.898684",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:08:11.260635",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:14.383468",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:15:15.235046",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:28.175890",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:50:18.035429",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:37.488996",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:35.086713",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:26:45.301450",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:26.804352",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:41.457846",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:49.673500",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:14:31.110347",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:43.462849",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:24.020599",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:11.489600",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:03.484380",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:33.005496",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:09.295608",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          2
+        ]
       }
     }
   ],
@@ -11218,6 +13244,256 @@
     },
     {
       "timestamp": "2026-02-20T20:15:45.646698",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:46.537363",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:33:50.738803",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:26.751773",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:55:23.976070",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:32.206359",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:27:02.674800",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:12.640003",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:15.492075",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:19:11.511234",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:29.331173",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:49:37.096479",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:38.565962",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:36.204345",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:23:28.597743",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:27.967322",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:53:57.395491",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:42.542659",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:50.759996",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:10:59.287774",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:44.624514",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:25.086579",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:12.613853",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:04.552149",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:34.100547",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:10.377465",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          13
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:10:51.198899",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -12786,6 +15062,214 @@
           3
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:47.179696",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:27.389064",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:32.832962",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:13.294567",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:14.826415",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:25:54.425686",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:28.645395",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:58:36.243953",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:37.930725",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:35.545354",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:27.263978",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:41.877295",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:50.096225",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:21:52.549638",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:43.909585",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:24.468832",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:11.909292",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:03.915898",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:33.416180",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:09.729149",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          3
+        ]
+      }
     }
   ],
   "Plague Archer": [
@@ -14209,6 +16693,214 @@
     },
     {
       "timestamp": "2026-02-20T20:08:07.487527",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:48.006494",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:28.212368",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:33.882390",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:14.125481",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:16.574035",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:22:12.381591",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:30.375429",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:52:22.942375",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:39.674729",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:37.277690",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:29.165922",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:43.609786",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:51.756903",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:16:44.353828",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:45.950147",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:26.139018",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:13.736944",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:05.554105",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:35.196174",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          4,
+          23
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:11.477192",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -15648,6 +18340,214 @@
           20
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:47.774809",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:28.000565",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:33.624804",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:13.906278",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:16.359521",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:25:19.758858",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:30.158722",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:55:58.583601",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:39.427197",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:37.054418",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:28.936945",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:43.396283",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:51.553225",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:21:13.633075",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:45.672948",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:25.903756",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:13.508010",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:05.361192",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:34.966204",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:11.253248",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          20
+        ]
+      }
     }
   ],
   "Bone King": [
@@ -16911,6 +19811,214 @@
           3
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:49.761175",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:29.834278",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:35.861529",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:15.802752",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:15.723024",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:25:13.851248",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:29.549573",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:56:31.492609",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:38.792496",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:36.420395",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:28.198276",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:42.753329",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:50.961202",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:19:51.381998",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:44.901423",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:25.300425",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:12.838906",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:04.743611",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:34.328111",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:10.574551",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          3
+        ]
+      }
     }
   ],
   "The Forgotten Arbalest": [
@@ -18131,6 +21239,50 @@
     },
     {
       "timestamp": "2026-02-20T20:08:10.235489",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          43
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:50.385148",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          43
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:30.476238",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          43
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:36.545308",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          43
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:16.410258",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -19512,6 +22664,221 @@
           2
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:51.193803",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:36:25.476941",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:31.296912",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:37.412766",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:32:33.541558",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:17.203909",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:11.766713",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:20:56.592025",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:25.373664",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:54:40.231911",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:34.704564",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:32.479296",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:24.068547",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:38.932274",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:47.060644",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:40.347775",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:21.465332",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:08.903588",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:00.888701",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:30.355284",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:06.600974",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          2
+        ]
+      }
     }
   ],
   "Fading Archer to Dame Lysara the Stormshot": [
@@ -20826,6 +24193,296 @@
           15,
           6
         ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:33:00.527319",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:50.916210",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:10:20.086110",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:33.713618",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          6
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:51.605028",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:28:14.141564",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:31.762316",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:52:05.355871",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:37.878307",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:17.621213",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:06:18.141502",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:12.214978",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:14:03.596848",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:25.885758",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:55:45.033930",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:35.166205",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:32.911598",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:24.519461",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:50:58.511632",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:39.357384",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:47.475470",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:10:01.748353",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:40.858183",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:21.949719",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:09.326005",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:30:27.933859",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:01.335257",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:30.779546",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:07.076376",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:08:47.816905",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
       }
     }
   ],
@@ -25008,6 +28665,17 @@
           1
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T18:49:19.850834",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          22,
+          2
+        ]
+      }
     }
   ],
   "Knight\u2019s Lance Schematic": [
@@ -26475,6 +30143,17 @@
           11
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T16:15:41.776506",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          15,
+          46
+        ]
+      }
     }
   ],
   "Rusted Chainmail Scrap": [
@@ -27168,6 +30847,17 @@
         "position": [
           11,
           1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:53:16.642897",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          22,
+          2
         ]
       }
     }
@@ -32079,6 +35769,17 @@
           2
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T18:12:44.424072",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          18,
+          10
+        ]
+      }
     }
   ],
   "Shattered Vanguard to Lord Valric the Unbroken": [
@@ -33130,6 +36831,233 @@
         "position": [
           14,
           5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:33:00.892784",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:41:48.920796",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:51.357757",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:34.139525",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          5
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:52.904724",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:33.064501",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:39.081199",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:19.035694",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:13.534084",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:27.294883",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:36.628751",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:34.196749",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:25.983775",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:40.627256",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:48.832921",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:42.490434",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:23.246496",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:10.634070",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:02.626546",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:32.126302",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:08.430531",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          3
         ]
       }
     }
@@ -35151,6 +39079,17 @@
           11
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T15:57:19.934275",
+      "context": {
+        "action": "drawn",
+        "screen": "game",
+        "position": [
+          18,
+          10
+        ]
+      }
     }
   ],
   "The Iron Warlord": [
@@ -35531,6 +39470,50 @@
           45
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:50.596870",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          45
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:30.681730",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          45
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:36.752697",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          45
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:16.606257",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          45
+        ]
+      }
     }
   ],
   "Feral Smith": [
@@ -35757,6 +39740,50 @@
     },
     {
       "timestamp": "2026-02-20T20:08:06.885184",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:47.576260",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:27.798425",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:33.357126",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          2,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:13.702746",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -36083,6 +40110,57 @@
           27
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:48.194940",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          27
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:28.407285",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          27
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:34.135892",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          27
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:14.343031",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          27
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T16:15:16.560107",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "Rusting Sentinel to Awakened Guardian": [
@@ -36295,6 +40373,50 @@
     },
     {
       "timestamp": "2026-02-20T20:08:07.996284",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          29
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:48.423998",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          29
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:28.618930",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          29
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:34.379163",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          29
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:14.548787",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -37708,6 +41830,249 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:48.650303",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:36:04.689451",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:28.836008",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:55:30.142114",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:34.631776",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:25:30.003172",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:14.741365",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:14.613726",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:15:49.010169",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:28.408059",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:49:37.320740",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:37.708775",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:35.313516",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:19:27.946885",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:27.017281",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:52:21.113093",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:41.647176",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:49.889642",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:11:04.312571",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:43.701456",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:24.235186",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:11.704405",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:03.716054",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:33.205851",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:09.513866",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          8
+        ]
+      }
     }
   ],
   "Starving Wolf to Rabid Beast": [
@@ -37956,6 +42321,50 @@
           37
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:48.859455",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          17,
+          37
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:29.035156",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          17,
+          37
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:34.911406",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          17,
+          37
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:14.941820",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          17,
+          37
+        ]
+      }
     }
   ],
   "Tattered Flagbearer": [
@@ -38168,6 +42577,50 @@
     },
     {
       "timestamp": "2026-02-20T20:08:08.803556",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          31
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:49.067288",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          31
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:29.238147",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          31
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:35.133270",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          3,
+          31
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:15.155803",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -39518,6 +43971,235 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:49.269541",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:29.425357",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:35.359046",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:33:57.191438",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:15.376659",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:16.150383",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:22:07.237292",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:29.953600",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:51:45.444139",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:39.204962",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:36.842956",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:28.726255",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:59:53.972149",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:43.173499",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:51.357711",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:17:22.562973",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:19:21.450445",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:45.409919",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:25.732301",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:13.289862",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:05.140953",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:34.731784",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:11.042576",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          24
+        ]
+      }
     }
   ],
   "Wounded Outlaw to Enraged Outlaw": [
@@ -39759,6 +44441,50 @@
           32
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:49.496687",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:29.626522",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:35.586178",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:15.586017",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          32
+        ]
+      }
     }
   ],
   "Plague Sovereign": [
@@ -39957,6 +44683,50 @@
     },
     {
       "timestamp": "2026-02-20T20:08:09.739033",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          18,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:49.964406",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          18,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:30.045137",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          18,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:36.095115",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          18,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:16.001902",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -40206,6 +44976,214 @@
           2
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:50.995176",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:31.115534",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:37.194048",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:17.008552",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:11.551682",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:17:27.651996",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:25.118635",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:34.466864",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:32.297007",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:26:09.909950",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:23.876941",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:38.744270",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:46.829083",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:17:44.710962",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:40.136578",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:21.237574",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:08.679805",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:00.683263",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:30.130588",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:06.409917",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          2
+        ]
+      }
     }
   ],
   "Relic Hunter": [
@@ -40440,6 +45418,207 @@
           3
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:52.235612",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:32.394259",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:38.489971",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:18.349521",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:12.885359",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:23:40.702186",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:26.600468",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:55:43.341164",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:35.925379",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:33.544425",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:25.230876",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:40.016523",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:48.139485",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:41.674291",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:22.556026",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:09.986896",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:01.956973",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:31.448389",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:07.769616",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          3
+        ]
+      }
     }
   ],
   "Ruined Knight": [
@@ -40624,6 +45803,193 @@
     },
     {
       "timestamp": "2026-02-20T20:08:12.588576",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:52.456224",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:32.607498",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:38.689641",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:18.573669",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:13.116486",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:26.825439",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:36.144962",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:33.758058",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:25.459723",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:40.239810",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:48.358437",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:41.960159",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:22.788585",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:10.196549",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:02.150424",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:31.669514",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:07.994258",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -40873,6 +46239,249 @@
           1
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:52.671833",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:32:29.786897",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:32.841325",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:56:15.211773",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:38.884693",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:18.783784",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:09:48.285228",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:13.320203",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:15:21.671445",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:27.085652",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:50:12.145930",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:36.402070",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:33.990943",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:25.671950",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:54:32.341847",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:40.454525",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:48.581069",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:11:11.049822",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:42.232477",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:23.017824",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:10.409591",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:02.388773",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:31.901850",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:08.225598",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:11:16.291308",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "Wandering Bard": [
@@ -41107,6 +46716,242 @@
           0
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:53.319910",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:33.460375",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:39.548508",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:19.443511",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:13.945843",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:16:16.791733",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:27.738671",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:51:18.439847",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:37.054681",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:34.652807",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:24:55.153109",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:26.409175",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:00:26.118031",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:41.037553",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:49.261914",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:10:11.002925",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:42.992090",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:23.648631",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:11.069810",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:30:39.464884",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:03.057199",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:32.545370",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:08.830527",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          22,
+          0
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:08:57.518620",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "Wasteland Blacksmith": [
@@ -41305,6 +47150,193 @@
     },
     {
       "timestamp": "2026-02-20T20:08:13.752902",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:25:53.520899",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:49:33.685786",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T14:22:39.746023",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:05:19.667688",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:13:14.164283",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T15:31:27.966742",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:09:37.278759",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:14:34.860833",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T18:47:26.600490",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T19:05:41.236795",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T21:07:49.468833",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:11:43.225121",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:24:23.833830",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T22:27:11.281621",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:00:03.255259",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:05:32.770979",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          21,
+          1
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T23:06:09.047346",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -46887,6 +52919,133 @@
           34
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T11:32:58.280408",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          27
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:32:58.473604",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          30
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:32:58.676473",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          13,
+          34
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:40:55.161246",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:44:19.957119",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:48.585476",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          27
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:48.832915",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          30
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:49.031170",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          13,
+          34
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:12:18.930105",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:14:07.531145",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:31.399407",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          7,
+          27
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:31.606623",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          30
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:31.828784",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          13,
+          34
+        ]
+      }
     }
   ],
   "beta_location_overgrown_shrine": [
@@ -47321,6 +53480,86 @@
           36
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T11:32:59.497082",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          35
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:32:59.716649",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          36
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:42:13.826900",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:49.846838",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          35
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:50.072356",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          36
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:12:46.812440",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:32.650814",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          35
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:32.857165",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          19,
+          36
+        ]
+      }
     }
   ],
   "beta_location_crumbling_watchtower": [
@@ -47603,6 +53842,13 @@
     },
     {
       "timestamp": "2026-02-19T19:44:06.636129",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:07:09.865016",
       "context": {
         "action": "defeated",
         "screen": "game"
@@ -48516,6 +54762,173 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-21T11:32:57.445657",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:32:57.652915",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:32:57.860832",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          18,
+          25
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:32:58.078538",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:38:48.682419",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:41:26.714020",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:41:29.512022",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:47.626064",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:47.870331",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:48.108284",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          18,
+          25
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:48.337465",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:12:16.237916",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:13:33.489862",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:30.556441",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:30.771143",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:30.970061",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          18,
+          25
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:31.183708",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          32
+        ]
+      }
     }
   ],
   "beta_enemy_funny_goose": [
@@ -49272,6 +55685,126 @@
       "context": {
         "action": "defeated",
         "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:32:58.873566",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          17,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:32:59.084921",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          30
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:32:59.295846",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          23,
+          26
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:38:48.871934",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:49.235292",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          17,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:49.439219",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          30
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:49.635613",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          23,
+          26
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:16:36.651629",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:17:02.306971",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:32.020686",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          17,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:32.244927",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          20,
+          30
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:32.440382",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          23,
+          26
+        ]
       }
     }
   ],
@@ -50071,6 +56604,17 @@
           8
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T11:02:44.122388",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          9,
+          8
+        ]
+      }
     }
   ],
   "tutorial_npc_village_woman2": [
@@ -50340,6 +56884,17 @@
     },
     {
       "timestamp": "2026-02-20T20:23:09.702650",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          13,
+          7
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:02:44.334824",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -50625,6 +57180,17 @@
           12
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T11:02:44.541007",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          11,
+          12
+        ]
+      }
     }
   ],
   "tutorial_npc_village_child2": [
@@ -50894,6 +57460,17 @@
     },
     {
       "timestamp": "2026-02-20T20:23:10.102828",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          15,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:02:44.704173",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -51179,6 +57756,17 @@
           6
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T11:02:44.905299",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          6
+        ]
+      }
     }
   ],
   "mangy_wolf": [
@@ -51441,6 +58029,17 @@
     },
     {
       "timestamp": "2026-02-20T20:23:10.523117",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          9,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:02:45.109435",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -51835,6 +58434,17 @@
           22
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T11:02:45.296484",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          13,
+          22
+        ]
+      }
     }
   ],
   "arctic_wolf": [
@@ -52040,6 +58650,13 @@
         "action": "defeated",
         "screen": "game"
       }
+    },
+    {
+      "timestamp": "2026-02-21T11:08:39.082064",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
     }
   ],
   "baker_marta": [
@@ -52145,6 +58762,39 @@
           7
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T11:32:59.927833",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          7
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:50.266150",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          7
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:33.065628",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          7
+        ]
+      }
     }
   ],
   "tower_guard_crossbow": [
@@ -52183,6 +58833,39 @@
     },
     {
       "timestamp": "2026-02-21T09:35:39.555121",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          7
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T11:33:00.098353",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          7
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:50.470328",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          16,
+          7
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:33.260040",
       "context": {
         "action": "spawned",
         "screen": "game",
@@ -52237,6 +58920,39 @@
           9
         ]
       }
+    },
+    {
+      "timestamp": "2026-02-21T11:33:00.319010",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          13,
+          9
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T12:06:50.686868",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          13,
+          9
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-21T13:18:33.508743",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          13,
+          9
+        ]
+      }
     }
   ],
   "beta_npc_funny_cat": [
@@ -52245,6 +58961,2090 @@
       "context": {
         "action": "defeated",
         "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:24:03.292778",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    }
+  ],
+  "campaign_enemy_junk_scavenger": [
+    {
+      "timestamp": "2026-02-22T01:05:53.403993",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:06:20.610659",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:08:20.214250",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:12:47.469904",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:02:05.566067",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:16:04.977590",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:26:46.439783",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:32:27.839643",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:34:56.377464",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:43:32.222370",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:18:53.890408",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:20:17.273702",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:21:52.247659",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:35:29.988584",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:36:10.277291",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:38:25.243715",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:45:26.132738",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:46:18.821516",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:51:54.346175",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:52:35.261486",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T17:21:27.970495",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T17:22:41.107562",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:00:04.156268",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:01:57.364610",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:09:56.375954",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:11:19.460693",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:03.376310",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:24.445879",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          5,
+          10
+        ]
+      }
+    }
+  ],
+  "campaign_enemy_rust_rat": [
+    {
+      "timestamp": "2026-02-22T01:05:53.635048",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:06:20.839588",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:08:20.414143",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:14:28.182865",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:02:05.814298",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:16:05.183141",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:26:46.671762",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:32:28.077042",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:36:15.687339",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:43:32.529516",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:18:54.123588",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:20:17.502514",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:22:33.904096",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:35:30.228093",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:36:10.520842",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:38:10.461380",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:45:26.356147",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:46:52.231734",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:51:54.573033",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:54:26.911128",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T17:21:28.221640",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T17:23:55.485882",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:00:04.379887",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:01:57.601659",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:09:56.631889",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:12:23.532447",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:03.624011",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:24.655451",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          8,
+          18
+        ]
+      }
+    }
+  ],
+  "campaign_enemy_scrap_bandit": [
+    {
+      "timestamp": "2026-02-22T01:05:53.881037",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:06:21.062420",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:08:20.620622",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:15:47.960484",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:02:06.029854",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:16:05.413570",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:26:46.918570",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:32:28.340601",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:37:01.497932",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:43:32.821278",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:18:54.357497",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:20:17.763946",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:23:31.713110",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:35:30.475126",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:36:10.743393",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:39:18.799144",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:45:26.574042",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:47:44.642061",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:51:54.837273",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:54:43.982500",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T17:21:28.408325",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T17:25:00.135731",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:00:04.596594",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:01:57.827448",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:09:56.895193",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:03.849449",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:24.882288",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          14,
+          22
+        ]
+      }
+    }
+  ],
+  "campaign_enemy_grease_goblin": [
+    {
+      "timestamp": "2026-02-22T01:05:54.102524",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:06:21.311091",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:08:20.823621",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:15:49.244041",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:02:06.251403",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:16:05.654313",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:26:47.160272",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:32:28.582591",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:37:29.162839",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:43:33.121176",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:18:54.595523",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:20:18.019694",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:24:01.805267",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:35:30.721554",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:36:10.994848",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:39:34.022739",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:45:26.805822",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:48:11.499716",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:51:55.065859",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:55:11.037697",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T17:21:28.640504",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T17:24:24.812443",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:00:04.830305",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:01:58.069747",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:09:57.125604",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:04.107346",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:25.158928",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          12,
+          28
+        ]
+      }
+    }
+  ],
+  "campaign_npc_junk_dealer": [
+    {
+      "timestamp": "2026-02-22T01:05:54.349317",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:06:21.529097",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:08:21.060868",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:15:25.868225",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:02:06.468744",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:16:05.887840",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:26:47.381460",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:32:28.794451",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:43:33.398405",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:18:54.828088",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:20:18.244087",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:35:30.953236",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:36:11.230463",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:45:27.038389",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:51:55.307186",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T17:21:28.879283",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:00:05.033195",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:01:58.306669",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:09:57.369242",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:04.356091",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:25.410463",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          8
+        ]
+      }
+    }
+  ],
+  "campaign_npc_traveling_tinker": [
+    {
+      "timestamp": "2026-02-22T01:05:54.559833",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:06:21.777178",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:08:21.291361",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:02:06.681194",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:16:06.107968",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:26:47.592473",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:32:29.022275",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:43:33.692568",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:18:55.064336",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:20:18.486490",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:24:14.197435",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:35:31.201002",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:36:11.457054",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:45:27.260395",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:51:55.539791",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T17:21:29.101253",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:00:05.248451",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:01:58.560371",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:09:57.615321",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:04.596935",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:25.641682",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          6,
+          14
+        ]
+      }
+    }
+  ],
+  "campaign_npc_militia_recruit": [
+    {
+      "timestamp": "2026-02-22T01:05:54.797394",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:06:22.028183",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:08:21.492034",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:17:25.415424",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:02:06.913281",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:16:06.343947",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:26:47.814073",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:32:29.233384",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:43:33.977246",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:18:55.299605",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:20:18.727773",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:26:59.422339",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:35:31.470029",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:36:11.782583",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:40:30.520354",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:45:27.478802",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:49:15.987556",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:51:55.791403",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T17:21:29.338914",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T17:25:45.017957",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:00:05.462802",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:01:58.794958",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:09:57.851653",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:04.822658",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:25.900322",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          4
+        ]
+      }
+    }
+  ],
+  "campaign_boss_scrapyard_golem": [
+    {
+      "timestamp": "2026-02-22T01:05:55.075526",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:06:22.247177",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:08:21.709675",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T01:25:43.589745",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:02:07.136409",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:16:06.585885",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:26:48.024035",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:32:29.504659",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T15:43:34.274886",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:18:55.549538",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:20:18.980057",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:28:11.494918",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:35:31.699655",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:36:12.059139",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:41:44.280997",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:45:27.711853",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:49:54.749739",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:51:56.047077",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T16:56:28.828515",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T17:21:29.596449",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T17:26:30.011791",
+      "context": {
+        "action": "defeated",
+        "screen": "game"
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:00:05.685297",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:01:59.052568",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:09:58.104987",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:05.077951",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-02-22T18:29:26.166223",
+      "context": {
+        "action": "spawned",
+        "screen": "game",
+        "position": [
+          10,
+          32
+        ]
       }
     }
   ]

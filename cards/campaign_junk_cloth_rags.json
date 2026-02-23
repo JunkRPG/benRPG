@@ -1,0 +1,14 @@
+{
+  "card_type": "Junk Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Cloth Rags",
+    "Description": "Torn fabric scraps. Useful for bandages and bindings.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "0",
+    "Metal Value": "0",
+    "Wood Value": "0",
+    "Price": "1"
+  }
+}

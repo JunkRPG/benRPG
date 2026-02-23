@@ -1,0 +1,28 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Enemy Bunker",
+    "Description": "A reinforced enemy position dug into the hillside.",
+    "Outcomes": "[{\"probability\": 0.4, \"card_type\": \"Junk Card\", \"deck_file\": \"campaign_junk_deck.json\"}, {\"probability\": 0.3, \"card_type\": \"Document Card\", \"deck_file\": \"campaign_document_deck.json\"}, {\"probability\": 0.3, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "Choices": "[{\"name\": \"Assault Bunker\", \"action\": \"draw_card\", \"costs_action\": true, \"params\": {}}]",
+    "Shop_Deck": "",
+    "Shop_Size": "0",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "5",
+    "Upgrade_NPC_Type": "",
+    "Upgrade_Material_Cost": "{}",
+    "2nd_state_Name": "Captured Bunker",
+    "2nd_state_Description": "The bunker has been captured and repurposed as a defensive position.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.5, \"card_type\": \"Junk Card\", \"deck_file\": \"campaign_junk_deck.json\"}, {\"probability\": 0.3, \"card_type\": \"Document Card\", \"deck_file\": \"campaign_document_deck.json\"}, {\"probability\": 0.2, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "2nd_state_Choices": "[{\"name\": \"Search Bunker\", \"action\": \"draw_card\", \"costs_action\": true, \"params\": {}}]",
+    "2nd_state_Shop_Deck": "",
+    "2nd_state_Shop_Size": "0",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "5",
+    "Spawn_Enemy_Deck": "campaign_warzone_enemy_deck.json",
+    "Spawn_Health": "50",
+    "Spawn_Max_Health": "50"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Royal Tax Collector",
+    "Description": "A figure in an oversized crown and a sash reading 'OFFICIAL TAX PERSON' blocks your path. They're holding a clipboard and a turnip. 'By the authority of King... uh... Reginald the Somewhat Legitimate, I demand your turnips!'",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.35, \"type\": \"player_choice\", \"text\": \"The tax collector taps their clipboard impatiently. The clipboard appears to be a cutting board with paper glued to it.\", \"params\": {\"choices\": [{\"name\": \"Pay the Turnip Tax\", \"risk\": 0.0, \"effect\": {\"type\": \"damage_player\", \"damage\": 3, \"text\": \"You hand over your finest imaginary turnips. They inspect each one carefully, nod approvingly, and file them in a sack labeled 'REAL TAXES.' You feel strangely poorer.\"}}, {\"name\": \"Argue About Jurisdiction\", \"risk\": 0.5, \"success\": {\"type\": \"none\", \"text\": \"They pull out a map, squint at it for five minutes, then realize they're in the wrong kingdom entirely. They apologize profusely and offer you a turnip for your trouble.\"}, \"failure\": {\"type\": \"spawn_enemy\", \"text\": \"They reveal their true form! They were actually three goblins in a trenchcoat and they are SERIOUS about turnip collection!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"count\": 1}}}]}}, {\"probability\": 0.30, \"type\": \"none\", \"text\": \"The 'tax collector' suddenly looks confused, checks their notes, and says 'Wait, I'm supposed to be at the other adventure. Wrong story!' and walks through a plot hole.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"They were just lost and asking for directions. After you point them north, they thank you and leave. The crown falls off revealing a very confused accountant.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"draw_card\", \"text\": \"The tax collector trips and their bag of 'collected taxes' spills everywhere. It's all turnips. You grab one. It's actually something useful in disguise.\", \"params\": {\"card_type\": \"Junk Card\"}}]"
+  }
+}

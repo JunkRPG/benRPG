@@ -1,0 +1,21 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Weapon",
+  "states": 2,
+  "data": {
+    "Name": "Broken Blade",
+    "Description": "The broken half of what was once a fine sword.",
+    "Raw Material Value": "3",
+    "Refined Material Value": "0",
+    "Metal Value": "4",
+    "Wood Value": "0",
+    "Price": "3",
+    "2nd_state_Name": "Mended Sword",
+    "2nd_state_Description": "A reforged sword, not pretty but deadly effective.",
+    "2nd_state_Type": "Melee",
+    "2nd_state_Melee Damage": "12",
+    "2nd_state_Projectile Damage": "0",
+    "2nd_state_Projectile Range": "0",
+    "2nd_state_Price": "10"
+  }
+}

@@ -9,7 +9,7 @@
     "Raw Material Value": "1",
     "Price": "3",
     "2nd_state_Name": "Repaired Sword",
-    "2nd_state_Type": "Weapon",
+    "2nd_state_Type": "Melee",
     "2nd_state_Melee Damage": "12"
   }
 }

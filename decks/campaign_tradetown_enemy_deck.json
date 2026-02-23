@@ -1,0 +1,11 @@
+{
+  "deck_name": "Trade Town Enemies",
+  "back_image": null,
+  "cards": [
+    "campaign_enemy_pickpocket",
+    "campaign_enemy_black_market_thug",
+    "campaign_enemy_corrupt_guard",
+    "campaign_enemy_smuggler",
+    "campaign_enemy_con_artist"
+  ]
+}

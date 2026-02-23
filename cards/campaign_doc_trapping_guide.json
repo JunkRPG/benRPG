@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Trapping Guide",
+    "Description": "Instructions for setting snares and traps in grassland areas. Covers small game hunting.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

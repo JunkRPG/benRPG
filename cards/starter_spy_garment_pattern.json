@@ -1,0 +1,23 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Garment Pattern",
+    "Description": "Detailed sewing patterns for crafting a convincing disguise outfit. With the right cloth and dye, you could pass for anyone.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "Requirements: Raw Materials": "2",
+    "Requirements: Refined Materials": "2",
+    "Requirements: Wood": "",
+    "Requirements: Metal": "",
+    "2nd_state_Name": "Disguise Outfit",
+    "2nd_state_Type": "Accessory",
+    "2nd_state_Subtype": "",
+    "2nd_state_Extra_Tool_Slots": "0",
+    "2nd_state_Use": "Equip to accessory slot. Enemies will treat you as friendly while disguised.",
+    "2nd_state_Tool Image": "",
+    "2nd_state_Special Skill": "Disguise"
+  }
+}

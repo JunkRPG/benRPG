@@ -20,7 +20,10 @@ class Unit:
         self.melee_damage = int(card_data["data"].get("Melee Damage", 5))
         self.projectile_damage = int(card_data["data"].get("Projectile Damage", 0))
         self.projectile_range = int(card_data["data"].get("Projectile Range", 0))
-        self.allegiance = card_data["data"].get("Allegiance (Hostile, Neutral, Allied)", "Hostile")
+        self.allegiance = card_data["data"].get(
+            "Allegiance (Hostile, Neutral, Allied)",
+            card_data["data"].get("Allegiance", "Hostile")
+        )
         self.special_skill = card_data["data"].get("Special Skill", None)
         self.spawn_deck = card_data["data"].get("Spawn_Deck", None)
         self.heal_amount = int(card_data["data"].get("Heal_Amount", 0) or 0)
@@ -278,11 +281,11 @@ class Unit:
         """Units hostile to me based on my allegiance."""
         if self.allegiance == "Hostile":
             enemies = [u for u in grid.units if u.allegiance == "Allied" and u.hp > 0 and u.position]
-            # Also include players as enemies
+            # Also include players as enemies (skip disguised players)
             players = grid.players if hasattr(grid, 'players') and grid.players else []
             if not players and hasattr(grid, 'player') and grid.player:
                 players = [grid.player]
-            enemies.extend([p for p in players if p.hp > 0 and p.position])
+            enemies.extend([p for p in players if p.hp > 0 and p.position and not getattr(p, 'is_disguised', False)])
             return enemies
         elif self.allegiance == "Allied":
             return [u for u in grid.units if u.allegiance == "Hostile" and u.hp > 0 and u.position]
@@ -297,6 +300,12 @@ class Unit:
             if not players and hasattr(grid, 'player') and grid.player:
                 players = [grid.player]
             friendlies.extend([p for p in players if p.hp > 0 and p.position])
+        # Hostile units treat disguised players as friendly
+        if self.allegiance == "Hostile":
+            players = grid.players if hasattr(grid, 'players') and grid.players else []
+            if not players and hasattr(grid, 'player') and grid.player:
+                players = [grid.player]
+            friendlies.extend([p for p in players if p.hp > 0 and p.position and getattr(p, 'is_disguised', False)])
         return friendlies
 
     def _get_dead_enemies(self, grid):
@@ -373,6 +382,37 @@ class Unit:
             if second_log:
                 log.extend(second_log)
 
+        # Opportunistic attack: if unit didn't attack, try strongest available
+        already_attacked = any("attacked" in msg for msg in log)
+        if not self.pending_attack and not already_attacked and self.position:
+            enemies = self._get_enemies(grid)
+            # Try projectile first (usually stronger / longer range)
+            if self.projectile_damage > 0:
+                for enemy in enemies:
+                    if enemy.hp > 0 and enemy.position:
+                        d = grid.hex_distance(self.position, enemy.position)
+                        if (1 < d <= self.projectile_range and
+                                grid.is_aligned(self.position, enemy.position, self.projectile_range) and
+                                grid.has_clear_line_of_sight(self.position, enemy.position)):
+                            self.pending_attack = {
+                                "target": enemy,
+                                "damage": self.projectile_damage,
+                                "type": "projectile",
+                                "is_player": False
+                            }
+                            break
+            # Try melee if no projectile attack set
+            if not self.pending_attack and self.melee_damage > 0:
+                for enemy in enemies:
+                    if enemy.hp > 0 and enemy.position and grid.hex_distance(self.position, enemy.position) == 1:
+                        self.pending_attack = {
+                            "target": enemy,
+                            "damage": self.melee_damage,
+                            "type": "melee",
+                            "is_player": False
+                        }
+                        break
+
         return log
 
     def _wild_mount_wander(self, grid):
@@ -442,26 +482,21 @@ class Unit:
         # 3. Move toward quest target destination
         distance_to_target = grid.hex_distance(self.position, self.quest_target_position)
         if distance_to_target > 0:
-            path = grid.find_path(self.position, self.quest_target_position)
-            if path and len(path) > 1:
-                max_steps = min(self.movement, len(path) - 1)
-                for steps in range(max_steps, 0, -1):
-                    new_pos = path[steps]
-                    if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                        success, msg = grid.move_unit(self, *new_pos)
-                        if success:
-                            log.append(f"{self.name} moves toward destination")
-                            # 4. After moving, check if now adjacent to an enemy - defer melee
-                            for enemy in hostile_units:
-                                if enemy.hp > 0 and grid.hex_distance(self.position, enemy.position) == 1:
-                                    self.pending_attack = {
-                                        "target": enemy,
-                                        "damage": self.melee_damage,
-                                        "type": "melee",
-                                        "is_player": False
-                                    }
-                                    break
-                        break
+            dest = self._find_best_move_toward(grid, self.quest_target_position)
+            if dest:
+                success, msg = grid.move_unit(self, *dest)
+                if success:
+                    log.append(f"{self.name} moves toward destination")
+                    # 4. After moving, check if now adjacent to an enemy - defer melee
+                    for enemy in hostile_units:
+                        if enemy.hp > 0 and grid.hex_distance(self.position, enemy.position) == 1:
+                            self.pending_attack = {
+                                "target": enemy,
+                                "damage": self.melee_damage,
+                                "type": "melee",
+                                "is_player": False
+                            }
+                            break
 
         return log
 
@@ -492,34 +527,29 @@ class Unit:
             self.flash_start = pygame.time.get_ticks()
             log.append(f"{self.name} attacked {target.name} for {damage} damage")
             return log
-        path = grid.find_path(self.position, target.position)
-        if path and len(path) > 1:
-            max_steps = min(self.movement, len(path) - 1)
-            for steps in range(max_steps, 0, -1):
-                new_pos = path[steps]
-                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                    success, msg = grid.move_unit(self, *new_pos)
-                    if success:
-                        log.append(msg)
-                        distance_after = grid.hex_distance(self.position, target.position)
-                        if distance_after == 1:
-                            self.pending_attack = {
-                                "target": target,
-                                "damage": self.melee_damage,
-                                "type": "melee",
-                                "is_player": False
-                            }
-                        elif (self.projectile_damage > 0 and
-                              1 < distance_after <= self.projectile_range and
-                              grid.is_aligned(self.position, target.position, self.projectile_range) and
-                              grid.has_clear_line_of_sight(self.position, target.position)):
-                            self.pending_attack = {
-                                "target": target,
-                                "damage": self.projectile_damage,
-                                "type": "projectile",
-                                "is_player": False
-                            }
-                    break
+        dest = self._find_best_move_toward(grid, target.position)
+        if dest:
+            success, msg = grid.move_unit(self, *dest)
+            if success:
+                log.append(msg)
+                distance_after = grid.hex_distance(self.position, target.position)
+                if distance_after == 1:
+                    self.pending_attack = {
+                        "target": target,
+                        "damage": self.melee_damage,
+                        "type": "melee",
+                        "is_player": False
+                    }
+                elif (self.projectile_damage > 0 and
+                      1 < distance_after <= self.projectile_range and
+                      grid.is_aligned(self.position, target.position, self.projectile_range) and
+                      grid.has_clear_line_of_sight(self.position, target.position)):
+                    self.pending_attack = {
+                        "target": target,
+                        "damage": self.projectile_damage,
+                        "type": "projectile",
+                        "is_player": False
+                    }
         return log
 
     def _allied_idle_turn(self, grid):
@@ -528,31 +558,21 @@ class Unit:
         if self.quest_target_position:
             distance_to_target = grid.hex_distance(self.position, self.quest_target_position)
             if distance_to_target > 0:
-                path = grid.find_path(self.position, self.quest_target_position)
-                if path and len(path) > 1:
-                    max_steps = min(self.movement, len(path) - 1)
-                    for steps in range(max_steps, 0, -1):
-                        new_pos = path[steps]
-                        if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                            success, msg = grid.move_unit(self, *new_pos)
-                            if success:
-                                log.append(f"{self.name} moves toward destination")
-                            break
+                dest = self._find_best_move_toward(grid, self.quest_target_position)
+                if dest:
+                    success, msg = grid.move_unit(self, *dest)
+                    if success:
+                        log.append(f"{self.name} moves toward destination")
         elif self.garrison_target_location:
             distance_to_garrison = grid.hex_distance(self.position, self.garrison_target_location)
             if distance_to_garrison <= 1:
                 log.append(f"{self.name} arrived at garrison location")
             elif distance_to_garrison > 0:
-                path = grid.find_path(self.position, self.garrison_target_location)
-                if path and len(path) > 1:
-                    max_steps = min(self.movement, len(path) - 1)
-                    for steps in range(max_steps, 0, -1):
-                        new_pos = path[steps]
-                        if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                            success, msg = grid.move_unit(self, *new_pos)
-                            if success:
-                                log.append(f"{self.name} moves toward garrison")
-                            break
+                dest = self._find_best_move_toward(grid, self.garrison_target_location)
+                if dest:
+                    success, msg = grid.move_unit(self, *dest)
+                    if success:
+                        log.append(f"{self.name} moves toward garrison")
         return log
 
     def _perform_healing(self, grid):
@@ -570,30 +590,30 @@ class Unit:
                     and grid.hex_distance(self.position, u.position) <= self.heal_range):
                 revive_candidates.append(u)
 
-            if revive_candidates:
-                target = revive_candidates[0]
-                revive_hp = max(1, target.max_hp // 4)
-                target.hp = revive_hp
-                target._death_processed = False
-                if hasattr(target, '_death_logged'):
-                    target._death_logged = False
-                target_name = getattr(target, 'class_name', None) or getattr(target, 'name', 'Unknown')
-                # Re-occupy grid cell if empty, else find nearby empty hex
-                if target.position:
-                    tr, tc = target.position
-                    if grid.grid[tr][tc]["unit"] is None:
-                        grid.grid[tr][tc]["unit"] = target
-                    else:
-                        # Find a nearby empty accessible hex
-                        neighbors = grid.get_neighbors(tr, tc)
-                        for nr, nc in neighbors:
-                            if grid.grid[nr][nc]["accessible"] and grid.grid[nr][nc]["unit"] is None:
-                                target.position = (nr, nc)
-                                grid.grid[nr][nc]["unit"] = target
-                                break
-                target.set_damage_text(0, text=f"+{revive_hp}")
-                log.append(f"{self.name} revived {target_name} with {revive_hp} HP!")
-                return log  # Don't also heal on same turn
+        if revive_candidates:
+            target = revive_candidates[0]
+            revive_hp = max(1, target.max_hp // 4)
+            target.hp = revive_hp
+            target._death_processed = False
+            if hasattr(target, '_death_logged'):
+                target._death_logged = False
+            target_name = getattr(target, 'class_name', None) or getattr(target, 'name', 'Unknown')
+            # Re-occupy grid cell if empty, else find nearby empty hex
+            if target.position:
+                tr, tc = target.position
+                if grid.grid[tr][tc]["unit"] is None:
+                    grid.grid[tr][tc]["unit"] = target
+                else:
+                    # Find a nearby empty accessible hex
+                    neighbors = grid.get_neighbors(tr, tc)
+                    for nr, nc in neighbors:
+                        if grid.grid[nr][nc]["accessible"] and grid.grid[nr][nc]["unit"] is None:
+                            target.position = (nr, nc)
+                            grid.grid[nr][nc]["unit"] = target
+                            break
+            target.set_damage_text(0, text=f"+{revive_hp}")
+            log.append(f"{self.name} revived {target_name} with {revive_hp} HP!")
+            return log  # Don't also heal on same turn
 
         # --- Heal phase: heal the most damaged friendly unit in range ---
         candidates = []
@@ -684,34 +704,30 @@ class Unit:
             return log
 
         # Move toward target
-        path = grid.find_path(self.position, target.position)
-        if path and len(path) > 1:
-            max_steps = min(self.movement, len(path) - 1)
-            for steps in range(max_steps, 0, -1):
-                new_pos = path[steps]
-                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                    success, msg = grid.move_unit(self, *new_pos)
-                    if success:
-                        log.append(msg)
-                        distance_after = grid.hex_distance(self.position, target.position)
-                        if distance_after == 1:
-                            self.pending_attack = {
-                                "target": target,
-                                "damage": self.melee_damage,
-                                "type": "melee",
-                                "is_player": False
-                            }
-                        elif (self.projectile_damage > 0 and
-                              1 < distance_after <= self.projectile_range and
-                              grid.is_aligned(self.position, target.position, self.projectile_range) and
-                              grid.has_clear_line_of_sight(self.position, target.position)):
-                            self.pending_attack = {
-                                "target": target,
-                                "damage": self.projectile_damage,
-                                "type": "projectile",
-                                "is_player": False
-                            }
-                    return log
+        dest = self._find_best_move_toward(grid, target.position)
+        if dest:
+            success, msg = grid.move_unit(self, *dest)
+            if success:
+                log.append(msg)
+                distance_after = grid.hex_distance(self.position, target.position)
+                if distance_after == 1:
+                    self.pending_attack = {
+                        "target": target,
+                        "damage": self.melee_damage,
+                        "type": "melee",
+                        "is_player": False
+                    }
+                elif (self.projectile_damage > 0 and
+                      1 < distance_after <= self.projectile_range and
+                      grid.is_aligned(self.position, target.position, self.projectile_range) and
+                      grid.has_clear_line_of_sight(self.position, target.position)):
+                    self.pending_attack = {
+                        "target": target,
+                        "damage": self.projectile_damage,
+                        "type": "projectile",
+                        "is_player": False
+                    }
+            return log
         # Couldn't path — let tree try next behavior
         return None
 
@@ -724,15 +740,18 @@ class Unit:
         if hasattr(target, '_death_logged'):
             target._death_logged = False
         target_name = getattr(target, 'class_name', None) or getattr(target, 'name', 'Unknown')
-        # Re-occupy grid cell if empty, else find nearby empty hex
+        # Body already in grid cell since dead bodies persist — just verify
         if target.position:
             tr, tc = target.position
-            if grid.grid[tr][tc]["unit"] is None:
+            if grid.grid[tr][tc]["unit"] is target:
+                pass  # Body already in place, just restore HP
+            elif grid.grid[tr][tc]["unit"] is None:
                 grid.grid[tr][tc]["unit"] = target
             else:
-                neighbors = grid.get_neighbors(tr, tc)
-                for nr, nc in neighbors:
-                    if grid.grid[nr][nc]["accessible"] and grid.grid[nr][nc]["unit"] is None:
+                # Cell occupied by someone else — find nearby empty hex
+                for nr, nc in grid.get_adjacent_hexes(tr, tc):
+                    if (0 <= nr < grid.rows and 0 <= nc < grid.cols
+                            and grid.grid[nr][nc]["accessible"] and grid.grid[nr][nc]["unit"] is None):
                         target.position = (nr, nc)
                         grid.grid[nr][nc]["unit"] = target
                         break
@@ -766,21 +785,16 @@ class Unit:
             return self._do_revive(grid, nearest)
 
         # Out of range — pathfind toward nearest dead ally
-        path = grid.find_path(self.position, nearest.position)
-        if path and len(path) > 1:
-            max_steps = min(self.movement, len(path) - 1)
-            for steps in range(max_steps, 0, -1):
-                new_pos = path[steps]
-                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                    success, msg = grid.move_unit(self, *new_pos)
-                    if success:
-                        log = [f"{self.name} moves toward fallen ally"]
-                        # Check if now in range after moving
-                        new_dist = grid.hex_distance(self.position, nearest.position)
-                        if new_dist <= self.heal_range:
-                            log.extend(self._do_revive(grid, nearest))
-                        return log
-                    break
+        dest = self._find_best_move_toward(grid, nearest.position)
+        if dest:
+            success, msg = grid.move_unit(self, *dest)
+            if success:
+                log = [f"{self.name} moves toward fallen ally"]
+                # Check if now in range after moving
+                new_dist = grid.hex_distance(self.position, nearest.position)
+                if new_dist <= self.heal_range:
+                    log.extend(self._do_revive(grid, nearest))
+                return log
 
         # Can't pathfind but dead allies exist — consume action, don't fall through
         return []
@@ -811,24 +825,19 @@ class Unit:
             return log
 
         # Out of range — pathfind toward nearest dead enemy
-        path = grid.find_path(self.position, nearest.position)
-        if path and len(path) > 1:
-            max_steps = min(self.movement, len(path) - 1)
-            for steps in range(max_steps, 0, -1):
-                new_pos = path[steps]
-                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                    success, msg = grid.move_unit(self, *new_pos)
-                    if success:
-                        log = [f"{self.name} moves toward fallen enemy to convert"]
-                        new_dist = grid.hex_distance(self.position, nearest.position)
-                        if new_dist <= self.heal_range:
-                            log.extend(self._do_revive(grid, nearest))
-                            old, new_alleg, changed = nearest.advance_allegiance()
-                            if changed:
-                                log.append(f"{nearest.name}'s allegiance changed from {old} to {new_alleg}!")
-                            self.convert_cooldown = 4
-                        return log
-                    break
+        dest = self._find_best_move_toward(grid, nearest.position)
+        if dest:
+            success, msg = grid.move_unit(self, *dest)
+            if success:
+                log = [f"{self.name} moves toward fallen enemy to convert"]
+                new_dist = grid.hex_distance(self.position, nearest.position)
+                if new_dist <= self.heal_range:
+                    log.extend(self._do_revive(grid, nearest))
+                    old, new_alleg, changed = nearest.advance_allegiance()
+                    if changed:
+                        log.append(f"{nearest.name}'s allegiance changed from {old} to {new_alleg}!")
+                    self.convert_cooldown = 4
+                return log
 
         return []  # Dead enemies exist but can't reach — consume action
 
@@ -861,29 +870,24 @@ class Unit:
 
         # Out of range — pathfind toward nearest damaged ally
         nearest = min(candidates, key=lambda u: grid.hex_distance(self.position, u.position))
-        path = grid.find_path(self.position, nearest.position)
-        if path and len(path) > 1:
-            max_steps = min(self.movement, len(path) - 1)
-            for steps in range(max_steps, 0, -1):
-                new_pos = path[steps]
-                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                    success, msg = grid.move_unit(self, *new_pos)
-                    if success:
-                        log = [f"{self.name} moves toward wounded ally"]
-                        # Re-check: heal most damaged ally now in range
-                        in_range_now = [c for c in candidates if
-                                        grid.hex_distance(self.position, c.position) <= self.heal_range]
-                        if in_range_now:
-                            target = min(in_range_now, key=lambda u: u.hp / u.max_hp)
-                            old_hp = target.hp
-                            target.hp = min(target.max_hp, target.hp + self.heal_amount)
-                            healed = target.hp - old_hp
-                            if healed > 0:
-                                target_name = getattr(target, 'class_name', None) or getattr(target, 'name', 'Unknown')
-                                target.set_damage_text(0, text=f"+{healed}")
-                                log.append(f"{self.name} healed {target_name} for {healed} HP")
-                        return log
-                    break
+        dest = self._find_best_move_toward(grid, nearest.position)
+        if dest:
+            success, msg = grid.move_unit(self, *dest)
+            if success:
+                log = [f"{self.name} moves toward wounded ally"]
+                # Re-check: heal most damaged ally now in range
+                in_range_now = [c for c in candidates if
+                                grid.hex_distance(self.position, c.position) <= self.heal_range]
+                if in_range_now:
+                    target = min(in_range_now, key=lambda u: u.hp / u.max_hp)
+                    old_hp = target.hp
+                    target.hp = min(target.max_hp, target.hp + self.heal_amount)
+                    healed = target.hp - old_hp
+                    if healed > 0:
+                        target_name = getattr(target, 'class_name', None) or getattr(target, 'name', 'Unknown')
+                        target.set_damage_text(0, text=f"+{healed}")
+                        log.append(f"{self.name} healed {target_name} for {healed} HP")
+                return log
 
         # Can't pathfind but damaged allies exist — consume action
         return []
@@ -948,34 +952,40 @@ class Unit:
                     return [f"{self.name} steps aside"]
             return []
 
-        # Within 2 hexes — opportunistically attack adjacent enemies
+        # Attack adjacent enemies REGARDLESS of distance to follow target
+        enemies = self._get_enemies(grid)
+        adjacent = [u for u in enemies if grid.hex_distance(self.position, u.position) == 1]
+        if adjacent:
+            enemy = random.choice(adjacent)
+            damage = self.melee_damage
+            enemy.hp -= damage
+            enemy.set_damage_text(damage)
+            self.attack_flash = True
+            self.flash_start = pygame.time.get_ticks()
+            return [f"{self.name} attacked {enemy.name} for {damage} damage"]
+
+        # Within 2 hexes — stay near target
         if distance <= 2:
-            enemies = self._get_enemies(grid)
-            adjacent = [u for u in enemies if grid.hex_distance(self.position, u.position) == 1]
-            if adjacent:
-                enemy = random.choice(adjacent)
-                damage = self.melee_damage
-                enemy.hp -= damage
-                enemy.set_damage_text(damage)
-                self.attack_flash = True
-                self.flash_start = pygame.time.get_ticks()
-                return [f"{self.name} attacked {enemy.name} for {damage} damage"]
-            return []  # Staying near target, nothing to do
+            return []
 
         # Too far — move toward target, avoiding location hexes
-        path = grid.find_path(self.position, target_entity.position)
-        if path and len(path) > 1:
-            max_steps = min(self.movement, len(path) - 1)
-            for steps in range(max_steps, 0, -1):
-                new_pos = path[steps]
-                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                    # Skip location hexes if avoiding them
-                    if self.avoid_location_hexes and new_pos in grid.location_data:
-                        continue
-                    success, msg = grid.move_unit(self, *new_pos)
-                    if success:
-                        return [f"{self.name} follows toward {getattr(target_entity, 'name', getattr(target_entity, 'class_name', 'target'))}"]
-                    break
+        exclude = set(grid.location_data.keys()) if self.avoid_location_hexes else None
+        dest = self._find_best_move_toward(grid, target_entity.position, exclude_positions=exclude)
+        if dest:
+            success, msg = grid.move_unit(self, *dest)
+            if success:
+                log = [f"{self.name} follows toward {getattr(target_entity, 'name', getattr(target_entity, 'class_name', 'target'))}"]
+                # Post-move: check for attack opportunity
+                for enemy in enemies:
+                    if enemy.hp > 0 and enemy.position and grid.hex_distance(self.position, enemy.position) == 1:
+                        self.pending_attack = {
+                            "target": enemy,
+                            "damage": self.melee_damage,
+                            "type": "melee",
+                            "is_player": False
+                        }
+                        break
+                return log
         return []
 
     def _resolve_follow_target(self, grid):
@@ -1095,16 +1105,11 @@ class Unit:
                 return [f"{self.name} failed to recruit {target.name} (rolled {roll} vs {chance}%)"]
 
         # Not adjacent: move toward neutral
-        path = grid.find_path(self.position, target.position)
-        if path and len(path) > 1:
-            max_steps = min(self.movement, len(path) - 1)
-            for steps in range(max_steps, 0, -1):
-                new_pos = path[steps]
-                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                    success, msg = grid.move_unit(self, *new_pos)
-                    if success:
-                        return [f"{self.name} moves toward {target.name} to recruit"]
-                    break
+        dest = self._find_best_move_toward(grid, target.position)
+        if dest:
+            success, msg = grid.move_unit(self, *dest)
+            if success:
+                return [f"{self.name} moves toward {target.name} to recruit"]
         return []
 
     def _behavior_graze(self, grid):
@@ -1139,24 +1144,19 @@ class Unit:
         if not best_grass:
             return None  # No grass reachable
 
-        path = grid.find_path(self.position, best_grass)
-        if path and len(path) > 1:
-            max_steps = min(self.movement, len(path) - 1)
-            for steps in range(max_steps, 0, -1):
-                new_pos = path[steps]
-                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                    success, msg = grid.move_unit(self, *new_pos)
-                    if success:
-                        log = [f"{self.name} moves toward grass to graze"]
-                        # Heal if arrived at grass this turn
-                        nr, nc = self.position
-                        if grid.grid[nr][nc].get("terrain", "") == "grass":
-                            heal = min(10, self.max_hp - self.hp)
-                            self.hp += heal
-                            self.set_damage_text(0, text=f"+{heal}")
-                            log.append(f"{self.name} grazes on grass (+{heal} HP)")
-                        return log
-                    break
+        dest = self._find_best_move_toward(grid, best_grass)
+        if dest:
+            success, msg = grid.move_unit(self, *dest)
+            if success:
+                log = [f"{self.name} moves toward grass to graze"]
+                # Heal if arrived at grass this turn
+                nr, nc = self.position
+                if grid.grid[nr][nc].get("terrain", "") == "grass":
+                    heal = min(10, self.max_hp - self.hp)
+                    self.hp += heal
+                    self.set_damage_text(0, text=f"+{heal}")
+                    log.append(f"{self.name} grazes on grass (+{heal} HP)")
+                return log
         return None
 
     def _behavior_garrison_tower(self, grid):
@@ -1236,26 +1236,21 @@ class Unit:
                 return [msg]
             return []
         # Pathfind toward damaged location
-        path = grid.find_path(self.position, nearest_loc[0])
-        if path and len(path) > 1:
-            max_steps = min(self.movement, len(path) - 1)
-            for steps in range(max_steps, 0, -1):
-                new_pos = path[steps]
-                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                    loc_card = nearest_loc[1].get("card")
-                    loc_name = loc_card.get_current_data().get("Name", "location") if loc_card else "location"
-                    success, move_msg = grid.move_unit(self, *new_pos)
-                    if success:
-                        log = [f"{self.name} moves to repair {loc_name}"]
-                        new_dist = grid.hex_distance(self.position, nearest_loc[0])
-                        if new_dist <= 1:
-                            self.pending_attack = {
-                                "type": "repair",
-                                "target_pos": nearest_loc[0],
-                                "repair_value": self.repair_value
-                            }
-                        return log
-                    break
+        dest = self._find_best_move_toward(grid, nearest_loc[0])
+        if dest:
+            loc_card = nearest_loc[1].get("card")
+            loc_name = loc_card.get_current_data().get("Name", "location") if loc_card else "location"
+            success, move_msg = grid.move_unit(self, *dest)
+            if success:
+                log = [f"{self.name} moves to repair {loc_name}"]
+                new_dist = grid.hex_distance(self.position, nearest_loc[0])
+                if new_dist <= 1:
+                    self.pending_attack = {
+                        "type": "repair",
+                        "target_pos": nearest_loc[0],
+                        "repair_value": self.repair_value
+                    }
+                return log
         return []
 
     def _behavior_aggro_gate(self, grid):
@@ -1331,16 +1326,11 @@ class Unit:
             tower_attacked = True
         # Can't attack tower - pathfind toward it
         if not tower_attacked:
-            path = grid.find_path(self.position, tower_pos)
-            if path and len(path) > 1:
-                max_steps = min(self.movement, len(path) - 1)
-                for steps in range(max_steps, 0, -1):
-                    new_pos = path[steps]
-                    if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                        success, move_msg = grid.move_unit(self, *new_pos)
-                        if success:
-                            log.append(move_msg)
-                        break
+            dest = self._find_best_move_toward(grid, tower_pos)
+            if dest:
+                success, move_msg = grid.move_unit(self, *dest)
+                if success:
+                    log.append(move_msg)
         # Also try attacking adjacent allied units while near tower
         allied_units = [u for u in grid.units if u.allegiance == "Allied" and u.hp > 0]
         allied_melee = [u for u in allied_units if grid.hex_distance(self.position, u.position) == 1]
@@ -1364,6 +1354,9 @@ class Unit:
     def _behavior_attack_player(self, grid):
         """Attack the player with melee/projectile, or pathfind toward them."""
         player = grid.player
+        # Skip if player is disguised (appears friendly)
+        if getattr(player, 'is_disguised', False):
+            return None
         # Skip if player is manning a tower (attack_tower handles that)
         if hasattr(player, 'manning_location') and player.manning_location is not None:
             return None
@@ -1483,35 +1476,30 @@ class Unit:
                 return [f"{self.name} attacked {target.name} with projectile for {damage} damage"]
 
             # Pathfind toward player
-            path = grid.find_path(self.position, player.position)
-            if path and len(path) > 1:
-                max_steps = min(self.movement, len(path) - 1)
-                for steps in range(max_steps, 0, -1):
-                    new_pos = path[steps]
-                    if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                        success, msg = grid.move_unit(self, *new_pos)
-                        if success:
-                            log = [msg]
-                            distance_after = grid.hex_distance(self.position, player.position)
-                            if distance_after == 1:
-                                self.pending_attack = {
-                                    "target": player,
-                                    "damage": self.melee_damage,
-                                    "type": "melee",
-                                    "is_player": True
-                                }
-                            elif (self.projectile_damage > 0 and
-                                  1 < distance_after <= self.projectile_range and
-                                  grid.is_aligned(self.position, player.position, self.projectile_range) and
-                                  grid.has_clear_line_of_sight(self.position, player.position)):
-                                self.pending_attack = {
-                                    "target": player,
-                                    "damage": self.projectile_damage,
-                                    "type": "projectile",
-                                    "is_player": True
-                                }
-                            return log
-                        break
+            dest = self._find_best_move_toward(grid, player.position)
+            if dest:
+                success, msg = grid.move_unit(self, *dest)
+                if success:
+                    log = [msg]
+                    distance_after = grid.hex_distance(self.position, player.position)
+                    if distance_after == 1:
+                        self.pending_attack = {
+                            "target": player,
+                            "damage": self.melee_damage,
+                            "type": "melee",
+                            "is_player": True
+                        }
+                    elif (self.projectile_damage > 0 and
+                          1 < distance_after <= self.projectile_range and
+                          grid.is_aligned(self.position, player.position, self.projectile_range) and
+                          grid.has_clear_line_of_sight(self.position, player.position)):
+                        self.pending_attack = {
+                            "target": player,
+                            "damage": self.projectile_damage,
+                            "type": "projectile",
+                            "is_player": True
+                        }
+                    return log
         return None  # Couldn't do anything — fall through
 
     def _behavior_attack_locations(self, grid):
@@ -1599,28 +1587,23 @@ class Unit:
                 self.set_allegiance("Allied")
             return []
         else:
-            path = grid.find_path(self.position, nearest_player.position)
-            if path and len(path) > 1:
-                max_steps = min(self.movement, len(path) - 1)
-                for steps in range(max_steps, 0, -1):
-                    new_pos = path[steps]
-                    if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                        if new_pos != nearest_player.position:
-                            success, msg = grid.move_unit(self, *new_pos)
-                            if success:
-                                log = [f"{self.name} approaches"]
-                                if grid.hex_distance(self.position, nearest_player.position) <= 1:
-                                    self.pending_dialogue = {
-                                        "text": self.dialogue_text,
-                                        "speaker": self.name,
-                                        "gift_card_ids": list(self.dialogue_gift_cards)
-                                    }
-                                    self.dialogue_delivered = True
-                                    if self.states == 2:
-                                        self.switch_state()
-                                        self.set_allegiance("Allied")
-                                return log
-                        break
+            dest = self._find_best_move_toward(grid, nearest_player.position,
+                                                exclude_positions={nearest_player.position})
+            if dest:
+                success, msg = grid.move_unit(self, *dest)
+                if success:
+                    log = [f"{self.name} approaches"]
+                    if grid.hex_distance(self.position, nearest_player.position) <= 1:
+                        self.pending_dialogue = {
+                            "text": self.dialogue_text,
+                            "speaker": self.name,
+                            "gift_card_ids": list(self.dialogue_gift_cards)
+                        }
+                        self.dialogue_delivered = True
+                        if self.states == 2:
+                            self.switch_state()
+                            self.set_allegiance("Allied")
+                    return log
             return []
 
     def _behavior_quest_offer(self, grid):
@@ -1653,25 +1636,21 @@ class Unit:
             }
             return []
         else:
-            path = grid.find_path(self.position, target_player.position)
-            if path and len(path) > 1:
-                max_steps = min(self.movement, len(path) - 1)
-                for steps in range(max_steps, 0, -1):
-                    new_pos = path[steps]
-                    if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                        if new_pos != target_player.position:
-                            if self.avoid_location_hexes and new_pos in grid.location_data:
-                                continue
-                            success, msg = grid.move_unit(self, *new_pos)
-                            if success:
-                                log = [f"{self.name} approaches"]
-                                if grid.hex_distance(self.position, target_player.position) <= 1:
-                                    self.pending_quest_offer = {
-                                        "quest_card_id": self.quest_offer_card_id,
-                                        "speaker": self.name
-                                    }
-                                return log
-                        break
+            exclude = {target_player.position}
+            if self.avoid_location_hexes:
+                exclude |= set(grid.location_data.keys())
+            dest = self._find_best_move_toward(grid, target_player.position,
+                                                exclude_positions=exclude)
+            if dest:
+                success, msg = grid.move_unit(self, *dest)
+                if success:
+                    log = [f"{self.name} approaches"]
+                    if grid.hex_distance(self.position, target_player.position) <= 1:
+                        self.pending_quest_offer = {
+                            "quest_card_id": self.quest_offer_card_id,
+                            "speaker": self.name
+                        }
+                    return log
             return []
 
     def _behavior_wild_mount_wander(self, grid):
@@ -1721,13 +1700,66 @@ class Unit:
             # Default: use allied plan (behavior tree preview)
             return self._plan_allied(grid)
 
-    def _find_move_dest(self, grid, path):
-        """Find the furthest reachable empty hex along a path (read-only)."""
-        max_steps = min(self.movement, len(path) - 1)
-        for steps in range(max_steps, 0, -1):
-            new_pos = path[steps]
-            if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                return new_pos
+    def _find_best_move_toward(self, grid, target_pos, exclude_positions=None):
+        """Find the best reachable empty hex that moves this unit closer
+        to target_pos. Does NOT perform the move.
+
+        Strategy:
+        1. Try direct A* path first (natural-looking movement).
+           Any empty position on the optimal path is valid — the path IS the
+           shortest route, even if hex_distance temporarily increases (going
+           around an obstacle).
+        2. If blocked, fall back to BFS (get_valid_moves) scored by actual
+           path distance (not crow-flies hex_distance) so units navigate
+           around walls and clusters.
+
+        Args:
+            grid: The HexGrid.
+            target_pos: (row, col) destination to approach.
+            exclude_positions: Optional set of positions to skip (e.g. location hexes).
+
+        Returns: (row, col) or None.
+        """
+        current_dist = grid.hex_distance(self.position, target_pos)
+        if current_dist == 0:
+            return None
+
+        # Attempt 1: Direct A* path
+        path = grid.find_path(self.position, target_pos, moving_unit=self)
+        if path and len(path) > 1:
+            max_steps = min(self.movement, len(path) - 1)
+            for steps in range(max_steps, 0, -1):
+                candidate = path[steps]
+                if grid.grid[candidate[0]][candidate[1]]["unit"] is not None:
+                    continue
+                if exclude_positions and candidate in exclude_positions:
+                    continue
+                # Any empty spot on the A* optimal path is progress
+                return candidate
+
+        # Attempt 2: BFS fallback — all reachable empty hexes
+        valid_moves = grid.get_valid_moves(self.position, self.movement, moving_unit=self)
+        if not valid_moves:
+            return None
+        if exclude_positions:
+            valid_moves = [p for p in valid_moves if p not in exclude_positions]
+        if not valid_moves:
+            return None
+
+        # Score by actual path distance (accounts for walls/terrain)
+        # Fall back to hex_distance if no path exists
+        def _path_score(pos):
+            p = grid.find_path(pos, target_pos, moving_unit=self)
+            if p:
+                return len(p) - 1
+            return float('inf')
+
+        current_score = (len(path) - 1) if path else _path_score(self.position)
+        best = min(valid_moves, key=_path_score)
+        best_score = _path_score(best)
+        # Allow same-distance moves (<=) so units can navigate around clusters
+        if best_score <= current_score and best_score < float('inf'):
+            return best
         return None
 
     def _plan_healing_action(self, grid):
@@ -1766,13 +1798,11 @@ class Unit:
                 dist_to_loc = grid.hex_distance(self.position, nearest_loc[0])
                 if dist_to_loc <= 1:
                     return {"action": "repair", "move_dest": None, "target_pos": nearest_loc[0]}
-                path = grid.find_path(self.position, nearest_loc[0])
-                if path and len(path) > 1:
-                    dest = self._find_move_dest(grid, path)
-                    if dest:
-                        if grid.hex_distance(dest, nearest_loc[0]) <= 1:
-                            return {"action": "move_repair", "move_dest": dest, "target_pos": nearest_loc[0]}
-                        return {"action": "move", "move_dest": dest, "target_pos": None}
+                dest = self._find_best_move_toward(grid, nearest_loc[0])
+                if dest:
+                    if grid.hex_distance(dest, nearest_loc[0]) <= 1:
+                        return {"action": "move_repair", "move_dest": dest, "target_pos": nearest_loc[0]}
+                    return {"action": "move", "move_dest": dest, "target_pos": None}
                 return idle
 
         # Aggro range gate
@@ -1799,11 +1829,9 @@ class Unit:
                     grid.has_clear_line_of_sight(self.position, tower_pos)):
                 return {"action": "projectile", "move_dest": None, "target_pos": tower_pos}
             # Can't attack tower - pathfind toward it
-            path = grid.find_path(self.position, tower_pos)
-            if path and len(path) > 1:
-                dest = self._find_move_dest(grid, path)
-                if dest:
-                    return {"action": "move", "move_dest": dest, "target_pos": tower_pos}
+            dest = self._find_best_move_toward(grid, tower_pos)
+            if dest:
+                return {"action": "move", "move_dest": dest, "target_pos": tower_pos}
             # Fall through to allied unit targeting
             allied_units = [u for u in grid.units if u.allegiance == "Allied" and u.hp > 0]
             allied_melee = [u for u in allied_units if grid.hex_distance(self.position, u.position) == 1]
@@ -1851,19 +1879,17 @@ class Unit:
                 return {"action": "projectile", "move_dest": None, "target_pos": loc_pos}
 
         # Pathfind toward player
-        path = grid.find_path(self.position, player.position)
-        if path and len(path) > 1:
-            dest = self._find_move_dest(grid, path)
-            if dest:
-                dist_after = grid.hex_distance(dest, player.position)
-                if dist_after == 1:
-                    return {"action": "move_melee", "move_dest": dest, "target_pos": player.position}
-                if (self.projectile_damage > 0 and
-                        1 < dist_after <= self.projectile_range and
-                        grid.is_aligned(dest, player.position, self.projectile_range) and
-                        grid.has_clear_line_of_sight(dest, player.position)):
-                    return {"action": "move_projectile", "move_dest": dest, "target_pos": player.position}
-                return {"action": "move", "move_dest": dest, "target_pos": None}
+        dest = self._find_best_move_toward(grid, player.position)
+        if dest:
+            dist_after = grid.hex_distance(dest, player.position)
+            if dist_after == 1:
+                return {"action": "move_melee", "move_dest": dest, "target_pos": player.position}
+            if (self.projectile_damage > 0 and
+                    1 < dist_after <= self.projectile_range and
+                    grid.is_aligned(dest, player.position, self.projectile_range) and
+                    grid.has_clear_line_of_sight(dest, player.position)):
+                return {"action": "move_projectile", "move_dest": dest, "target_pos": player.position}
+            return {"action": "move", "move_dest": dest, "target_pos": None}
 
         # Summon Minion or no action
         return idle
@@ -1920,14 +1946,12 @@ class Unit:
         # Move toward quest target
         dist = grid.hex_distance(self.position, self.quest_target_position)
         if dist > 0:
-            path = grid.find_path(self.position, self.quest_target_position)
-            if path and len(path) > 1:
-                dest = self._find_move_dest(grid, path)
-                if dest:
-                    for enemy in hostile_units:
-                        if enemy.hp > 0 and grid.hex_distance(dest, enemy.position) == 1:
-                            return {"action": "move_melee", "move_dest": dest, "target_pos": enemy.position}
-                    return {"action": "move", "move_dest": dest, "target_pos": None}
+            dest = self._find_best_move_toward(grid, self.quest_target_position)
+            if dest:
+                for enemy in hostile_units:
+                    if enemy.hp > 0 and grid.hex_distance(dest, enemy.position) == 1:
+                        return {"action": "move_melee", "move_dest": dest, "target_pos": enemy.position}
+                return {"action": "move", "move_dest": dest, "target_pos": None}
 
         return idle
 
@@ -1944,11 +1968,9 @@ class Unit:
         if dest_pos:
             dist = grid.hex_distance(self.position, dest_pos)
             if dist > 0:
-                path = grid.find_path(self.position, dest_pos)
-                if path and len(path) > 1:
-                    move_dest = self._find_move_dest(grid, path)
-                    if move_dest:
-                        return {"action": "move", "move_dest": move_dest, "target_pos": None}
+                move_dest = self._find_best_move_toward(grid, dest_pos)
+                if move_dest:
+                    return {"action": "move", "move_dest": move_dest, "target_pos": None}
 
         return idle
 
@@ -1969,19 +1991,17 @@ class Unit:
             return {"action": "melee", "move_dest": None, "target_pos": target.position}
 
         # Pathfind
-        path = grid.find_path(self.position, target.position)
-        if path and len(path) > 1:
-            dest = self._find_move_dest(grid, path)
-            if dest:
-                dist_after = grid.hex_distance(dest, target.position)
-                if dist_after == 1:
-                    return {"action": "move_melee", "move_dest": dest, "target_pos": target.position}
-                if (self.projectile_damage > 0 and
-                        1 < dist_after <= self.projectile_range and
-                        grid.is_aligned(dest, target.position, self.projectile_range) and
-                        grid.has_clear_line_of_sight(dest, target.position)):
-                    return {"action": "move_projectile", "move_dest": dest, "target_pos": target.position}
-                return {"action": "move", "move_dest": dest, "target_pos": None}
+        dest = self._find_best_move_toward(grid, target.position)
+        if dest:
+            dist_after = grid.hex_distance(dest, target.position)
+            if dist_after == 1:
+                return {"action": "move_melee", "move_dest": dest, "target_pos": target.position}
+            if (self.projectile_damage > 0 and
+                    1 < dist_after <= self.projectile_range and
+                    grid.is_aligned(dest, target.position, self.projectile_range) and
+                    grid.has_clear_line_of_sight(dest, target.position)):
+                return {"action": "move_projectile", "move_dest": dest, "target_pos": target.position}
+            return {"action": "move", "move_dest": dest, "target_pos": None}
 
         return idle
 
@@ -2023,11 +2043,9 @@ class Unit:
         dist = grid.hex_distance(self.position, nearest.position)
         if dist <= self.heal_range:
             return {"action": "revive", "move_dest": None, "target_pos": nearest.position}
-        path = grid.find_path(self.position, nearest.position)
-        if path and len(path) > 1:
-            dest = self._find_move_dest(grid, path)
-            if dest:
-                return {"action": "move", "move_dest": dest, "target_pos": None}
+        dest = self._find_best_move_toward(grid, nearest.position)
+        if dest:
+            return {"action": "move", "move_dest": dest, "target_pos": None}
         return {"action": "idle", "move_dest": None, "target_pos": None}
 
     def _plan_behavior_convert_enemy(self, grid):
@@ -2044,11 +2062,9 @@ class Unit:
         dist = grid.hex_distance(self.position, nearest.position)
         if dist <= self.heal_range:
             return {"action": "convert_enemy", "move_dest": None, "target_pos": nearest.position}
-        path = grid.find_path(self.position, nearest.position)
-        if path and len(path) > 1:
-            dest = self._find_move_dest(grid, path)
-            if dest:
-                return {"action": "move", "move_dest": dest, "target_pos": None}
+        dest = self._find_best_move_toward(grid, nearest.position)
+        if dest:
+            return {"action": "move", "move_dest": dest, "target_pos": None}
         return {"action": "idle", "move_dest": None, "target_pos": None}
 
     def _plan_behavior_healing(self, grid):
@@ -2063,11 +2079,9 @@ class Unit:
         if dist <= self.heal_range:
             return {"action": "heal", "move_dest": None, "target_pos": most_damaged.position}
         nearest = min(candidates, key=lambda u: grid.hex_distance(self.position, u.position))
-        path = grid.find_path(self.position, nearest.position)
-        if path and len(path) > 1:
-            dest = self._find_move_dest(grid, path)
-            if dest:
-                return {"action": "move", "move_dest": dest, "target_pos": None}
+        dest = self._find_best_move_toward(grid, nearest.position)
+        if dest:
+            return {"action": "move", "move_dest": dest, "target_pos": None}
         return {"action": "idle", "move_dest": None, "target_pos": None}
 
     def _plan_behavior_attack_closest(self, grid):
@@ -2115,24 +2129,21 @@ class Unit:
                     return {"action": "move", "move_dest": pos, "target_pos": None}
             return {"action": "idle", "move_dest": None, "target_pos": None}
 
-        # Within 2 hexes — attack adjacent enemies
+        # Attack adjacent enemies REGARDLESS of distance to follow target
+        enemies = self._get_enemies(grid)
+        adjacent = [u for u in enemies if grid.hex_distance(self.position, u.position) == 1]
+        if adjacent:
+            return {"action": "melee", "move_dest": None, "target_pos": adjacent[0].position}
+
+        # Within 2 hexes — stay near target
         if distance <= 2:
-            enemies = self._get_enemies(grid)
-            adjacent = [u for u in enemies if grid.hex_distance(self.position, u.position) == 1]
-            if adjacent:
-                return {"action": "melee", "move_dest": None, "target_pos": adjacent[0].position}
             return {"action": "idle", "move_dest": None, "target_pos": None}
 
         # Too far — move toward target
-        path = grid.find_path(self.position, target_entity.position)
-        if path and len(path) > 1:
-            max_steps = min(self.movement, len(path) - 1)
-            for steps in range(max_steps, 0, -1):
-                new_pos = path[steps]
-                if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                    if self.avoid_location_hexes and new_pos in grid.location_data:
-                        continue
-                    return {"action": "move", "move_dest": new_pos, "target_pos": None}
+        exclude = set(grid.location_data.keys()) if self.avoid_location_hexes else None
+        dest = self._find_best_move_toward(grid, target_entity.position, exclude_positions=exclude)
+        if dest:
+            return {"action": "move", "move_dest": dest, "target_pos": None}
         return {"action": "idle", "move_dest": None, "target_pos": None}
 
     def _plan_behavior_guard(self, grid):
@@ -2183,11 +2194,9 @@ class Unit:
         distance = grid.hex_distance(self.position, target.position)
         if distance == 1:
             return {"action": "idle", "move_dest": None, "target_pos": target.position}
-        path = grid.find_path(self.position, target.position)
-        if path and len(path) > 1:
-            dest = self._find_move_dest(grid, path)
-            if dest:
-                return {"action": "move", "move_dest": dest, "target_pos": None}
+        dest = self._find_best_move_toward(grid, target.position)
+        if dest:
+            return {"action": "move", "move_dest": dest, "target_pos": None}
         return {"action": "idle", "move_dest": None, "target_pos": None}
 
     def _plan_behavior_graze(self, grid):
@@ -2212,11 +2221,9 @@ class Unit:
                         best_grass = (r, c)
         if not best_grass:
             return None
-        path = grid.find_path(self.position, best_grass)
-        if path and len(path) > 1:
-            dest = self._find_move_dest(grid, path)
-            if dest:
-                return {"action": "move", "move_dest": dest, "target_pos": None}
+        dest = self._find_best_move_toward(grid, best_grass)
+        if dest:
+            return {"action": "move", "move_dest": dest, "target_pos": None}
         return None
 
     def _plan_behavior_garrison_tower(self, grid):
@@ -2267,15 +2274,10 @@ class Unit:
             dist = grid.hex_distance(self.position, nearest_player.position)
             if dist <= 1:
                 return idle
-            path = grid.find_path(self.position, nearest_player.position)
-            if path and len(path) > 1:
-                max_steps = min(self.movement, len(path) - 1)
-                for steps in range(max_steps, 0, -1):
-                    new_pos = path[steps]
-                    if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                        if new_pos != nearest_player.position:
-                            return {"action": "move", "move_dest": new_pos, "target_pos": None}
-                        break
+            dest = self._find_best_move_toward(grid, nearest_player.position,
+                                                exclude_positions={nearest_player.position})
+            if dest:
+                return {"action": "move", "move_dest": dest, "target_pos": None}
             return idle
 
         # Quest giver NPC
@@ -2300,17 +2302,13 @@ class Unit:
                 dist = grid.hex_distance(self.position, target_player.position)
                 if dist <= 1:
                     return idle
-                path = grid.find_path(self.position, target_player.position)
-                if path and len(path) > 1:
-                    max_steps = min(self.movement, len(path) - 1)
-                    for steps in range(max_steps, 0, -1):
-                        new_pos = path[steps]
-                        if grid.grid[new_pos[0]][new_pos[1]]["unit"] is None:
-                            if new_pos != target_player.position:
-                                if self.avoid_location_hexes and new_pos in grid.location_data:
-                                    continue
-                                return {"action": "move", "move_dest": new_pos, "target_pos": None}
-                            break
+                exclude = {target_player.position}
+                if self.avoid_location_hexes:
+                    exclude |= set(grid.location_data.keys())
+                dest = self._find_best_move_toward(grid, target_player.position,
+                                                    exclude_positions=exclude)
+                if dest:
+                    return {"action": "move", "move_dest": dest, "target_pos": None}
             return idle
 
         # Wild mount — replicate actual wander logic so preview matches execution
@@ -2582,7 +2580,7 @@ class Unit:
         old_pos = self.position
 
         # Find path from old position to new position
-        path = grid.find_path(old_pos, (new_row, new_col))
+        path = grid.find_path(old_pos, (new_row, new_col), moving_unit=self)
 
         if path and len(path) > 1:
             # Store the path (excluding starting position)

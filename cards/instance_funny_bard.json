@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Wandering Bard",
+    "Description": "A bard materializes from behind a bush, lute already in hand, eyes gleaming with the unhinged energy of someone who has been practicing power ballads alone in the woods for weeks. 'YOUR TALE MUST BE TOLD!' they shriek.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"player_choice\", \"text\": \"The bard begins tuning their lute with aggressive enthusiasm. Several strings snap but they don't seem to notice.\", \"params\": {\"choices\": [{\"name\": \"Listen to the Song\", \"risk\": 0.4, \"success\": {\"type\": \"heal_player\", \"amount\": 8, \"text\": \"Against all expectations, the melody is genuinely inspiring! You feel your spirits lift. The bard takes a bow and hits themselves in the face with the lute.\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 5, \"text\": \"Your ears bleed. Dogs howl in the distance. A nearby window shatters. The bard asks for a five-star review.\"}}, {\"name\": \"Tip Them to Leave\", \"risk\": 0.0, \"effect\": {\"type\": \"none\", \"text\": \"They snatch the coins and vanish in a puff of glitter. You find glitter in your inventory for the next three adventures.\"}}]}}, {\"probability\": 0.30, \"type\": \"none\", \"text\": \"The bard opened their mouth to sing, remembered they left the oven on, and sprinted away at incredible speed. Problem solved.\", \"params\": {}}, {\"probability\": 0.30, \"type\": \"none\", \"text\": \"The bard trips over their own lute, knocks themselves unconscious, and begins snoring melodically. It's actually quite pleasant.\", \"params\": {}}]"
+  }
+}

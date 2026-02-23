@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Ominous Prophecy",
+    "Description": "A fortune teller draped in seventeen scarves blocks your path. Their crystal ball is clearly a snow globe from a gift shop. 'I SEE YOUR FUTURE!' they announce dramatically, knocking over their folding table. 'It is... VAGUE AND OMINOUS!'",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"none\", \"text\": \"The fortune teller squints into the snow globe. 'I see... bread. Lots of bread. A sandwich perhaps? No wait, that's my lunch reflection.' Nothing happens. The prophecy was about lunch.\", \"params\": {}}, {\"probability\": 0.30, \"type\": \"spawn_enemy\", \"text\": \"'I see DANGER! Right behind you! Like, RIGHT now!' The prophecy was about NOW! Something hostile emerges from the bushes! The fortune teller packs up and runs.\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.30, \"type\": \"heal_player\", \"text\": \"'The stars say you will feel better very soon!' The fortune teller snaps their fingers and you actually DO feel better. 'See? Told you. That'll be five gold. I accept imaginary currency.'\", \"params\": {\"amount\": 10}}]"
+  }
+}

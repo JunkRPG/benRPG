@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "data": {
+    "Name": "Ancient Map Fragment",
+    "Description": "You find part of a weathered treasure map among the debris.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.50, \"type\": \"offer_quest\", \"text\": \"The map reveals a quest location...\", \"params\": {\"quest_deck\": \"decks/chain_quest_deck.json\"}}, {\"probability\": 0.30, \"type\": \"draw_card\", \"text\": \"The map leads to some old supplies.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.20, \"type\": \"spawn_enemy\", \"text\": \"Following the map leads to an ambush!\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"count\": 1}}]"
+  }
+}

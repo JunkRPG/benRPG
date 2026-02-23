@@ -1,0 +1,16 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Blueprint",
+  "blueprint_subclass": "Blueprint_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Hammer Blueprint",
+    "Description": "Plans for crafting a durable smithing hammer.",
+    "Document Image File Path": "",
+    "Background Image File Path": "",
+    "2nd_state_Name": "Smithing Hammer",
+    "2nd_state_Description": "A heavy hammer for metalworking and construction.",
+    "2nd_state_Type": "Tool",
+    "2nd_state_Price": "7"
+  }
+}

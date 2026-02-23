@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Environmental",
+  "states": 1,
+  "data": {
+    "Name": "Suspicious Chest",
+    "Description": "A treasure chest sits in the middle of an otherwise empty room. It has a suspiciously large tongue hanging out one side and appears to be breathing. A sign reads 'Definitely Not A Mimic.'",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"player_choice\", \"text\": \"The chest sits there, practically daring you to open it. You swear you hear it giggle.\", \"params\": {\"choices\": [{\"name\": \"Open the Chest\", \"risk\": 0.5, \"success\": {\"type\": \"draw_card\", \"text\": \"It was actually just a chest! Inside you find something useful. The mimic union will hear about this.\", \"params\": {\"card_type\": \"Junk Card\"}}, \"failure\": {\"type\": \"spawn_enemy\", \"text\": \"SURPRISE! The chest sprouts teeth and legs! It was a mimic all along! Who could have possibly predicted this?\", \"params\": {\"deck\": \"beta_enemy_deck.json\", \"count\": 1}}}, {\"name\": \"Kick It First\", \"risk\": 0.3, \"success\": {\"type\": \"none\", \"text\": \"It was indeed just a chest. You feel both relieved and foolish as your toe throbs.\"}, \"failure\": {\"type\": \"damage_player\", \"damage\": 5, \"text\": \"It was a rock. A very hard rock. Painted to look like a chest. Your toe is broken.\"}}]}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"The chest sprouts tiny legs and scurries away before you can do anything. You hear a faint 'excuse me, pardon me' as it disappears around a corner.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"You stare at the chest. The chest stares back. Neither of you blinks. Eventually it shuffles away awkwardly.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"draw_card\", \"text\": \"The chest pops open on its own and launches an item at your face. A note inside reads: 'Take it, I'm tired of holding stuff.'\", \"params\": {\"card_type\": \"Junk Card\"}}]"
+  }
+}

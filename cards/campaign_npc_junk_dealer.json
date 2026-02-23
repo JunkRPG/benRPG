@@ -1,0 +1,17 @@
+{
+  "card_type": "NPC Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Junk Dealer",
+    "Health": "20",
+    "Movement": "3",
+    "Melee Damage": "3",
+    "Projectile Damage": "0",
+    "Projectile Range": "0",
+    "Allegiance (Hostile, Neutral, Allied)": "Neutral",
+    "Special Skill": "Trades junk items at fair prices",
+    "Background Image File Path": "",
+    "NPC Image File Path": ""
+  }
+}

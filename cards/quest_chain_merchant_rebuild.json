@@ -1,0 +1,19 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Fetch",
+  "states": 2,
+  "data": {
+    "Name": "Rebuilding the Business",
+    "Description": "Help the merchant gather materials to rebuild their trading stall",
+    "Template_Text": "[NPC1] needs your help one last time. Their trading stall was wrecked during the robbery, and they need [Junk1] to patch it back together. Scavenge the area near [Location1] and bring back what you can find!",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":false},{\"id\":\"Junk1\",\"type\":\"Junk Card\",\"spawn\":false},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"unit_reaches_location\",\"params\":{\"unit\":\"NPC1\",\"location\":\"Location1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}}]",
+    "Rewards": "{\"cards\":[\"Junk1\",\"Junk2\"]}",
+    "Chain_Config": "",
+    "2nd_state_Name": "Back in Business",
+    "2nd_state_Template_Text": "With the [Junk1] you gathered, [NPC1] has rebuilt their stall near [Location1]. The merchant is back in business and eternally grateful. They press some extra supplies into your hands as thanks.",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

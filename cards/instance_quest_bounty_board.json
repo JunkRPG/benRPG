@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Social",
+  "states": 1,
+  "data": {
+    "Name": "Bounty Board",
+    "Description": "A worn bounty board stands at the crossroads, covered in faded postings.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.60, \"type\": \"offer_quest\", \"text\": \"One posting catches your eye...\", \"params\": {\"quest_deck\": \"decks/chain_quest_deck.json\"}}, {\"probability\": 0.20, \"type\": \"draw_card\", \"text\": \"Nothing useful but you find some old supplies.\", \"params\": {\"card_type\": \"Junk Card\"}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"All the bounties have been claimed.\", \"params\": {}}]"
+  }
+}

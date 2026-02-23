@@ -10,7 +10,7 @@ the game engine (hexgrid.py) and the level editor (Level_Maker19.py).
 TERRAIN_CONFIG = {
     "grass": {"color": (62, 130, 20), "accessible": True, "blocks_los": False},
     "dirt": {"color": (139, 90, 43), "accessible": True, "blocks_los": False},
-    "sand": {"color": (238, 214, 175), "accessible": True, "blocks_los": False},
+    "sand": {"color": (194, 170, 130), "accessible": True, "blocks_los": False},
     "stone": {"color": (128, 128, 128), "accessible": True, "blocks_los": False},
     "wood": {"color": (139, 69, 19), "accessible": True, "blocks_los": False},
     "water": {"color": (30, 144, 255), "accessible": False, "blocks_los": False},

@@ -1,0 +1,19 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Rescue",
+  "states": 2,
+  "data": {
+    "Name": "The Lost Patrol",
+    "Description": "A patrol of soldiers has gone missing — find and rescue the survivors",
+    "Template_Text": "A patrol went silent three days ago near [Location1]. [NPC1], the sole survivor, is believed to be held captive by [Enemy1] and their warband. Fight through the guards and free the soldier before it's too late!",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":1},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false},{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"NPC1\",\"spawn_distance\":2}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"enemy_defeated\",\"params\":{\"unit\":\"Enemy1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"unit_death\",\"params\":{\"unit\":\"NPC1\"}},{\"type\":\"player_death\",\"params\":{}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "Chain_Config": "{\"on_success\":{\"mode\":\"auto_activate\",\"quest_card_id\":\"quest_chain_patrol_revenge\",\"inherit_placeholders\":[\"NPC1\"],\"message\":\"The soldier is free! They know the location of the enemy camp and want payback.\",\"set_transition\":null},\"on_failure\":{\"mode\":\"none\"}}",
+    "2nd_state_Name": "Soldier Rescued",
+    "2nd_state_Template_Text": "You defeated [Enemy1] near [Location1] and freed [NPC1] from captivity. The soldier is battered but burns with fury — they know where the enemy camp is and want revenge.",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

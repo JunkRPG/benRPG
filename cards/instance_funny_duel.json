@@ -1,0 +1,11 @@
+{
+  "card_type": "Instance Card",
+  "subclass": "Combat",
+  "states": 1,
+  "data": {
+    "Name": "Honor Duel",
+    "Description": "A creature roughly the size of a potato waddles up to you, slaps you with a tiny glove, and declares an honor duel. It's wearing a monocle and has the most serious expression you've ever seen on something that small.",
+    "Image_File_Path": "",
+    "Outcomes": "[{\"probability\": 0.40, \"type\": \"player_choice\", \"text\": \"The tiny creature assumes a fighting stance. It has clearly been training for this moment its entire life.\", \"params\": {\"choices\": [{\"name\": \"Accept the Duel\", \"risk\": 0.3, \"success\": {\"type\": \"spawn_ally\", \"text\": \"After a surprisingly dramatic battle, it bows and declares you worthy! It pledges its tiny sword to your cause. It respects your courage and joins you!\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"count\": 1}}, \"failure\": {\"type\": \"damage_player\", \"damage\": 3, \"text\": \"It was surprisingly strong for something you could fit in a coffee mug. You lose the duel and your dignity.\"}}, {\"name\": \"Decline the Challenge\", \"risk\": 0.0, \"effect\": {\"type\": \"none\", \"text\": \"It calls you a coward in a squeaky voice, writes your name in its tiny grudge book, and marches away with tremendous dignity.\"}}]}}, {\"probability\": 0.30, \"type\": \"none\", \"text\": \"The creature trips over a pebble and knocks itself out cold. You gently move it to the side of the road. Honor preserved, sort of.\", \"params\": {}}, {\"probability\": 0.30, \"type\": \"none\", \"text\": \"Another even smaller creature arrives and drags the first one away by the ear, scolding it about 'challenging people ten times your size again.'\", \"params\": {}}]"
+  }
+}

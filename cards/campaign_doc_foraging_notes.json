@@ -1,0 +1,11 @@
+{
+  "card_type": "Document Card",
+  "subclass": "Information",
+  "states": 1,
+  "data": {
+    "Name": "Foraging Notes",
+    "Description": "Personal notes on edible plants and roots found in swamp and wetland environments.",
+    "Document Image File Path": "",
+    "Background Image File Path": ""
+  }
+}

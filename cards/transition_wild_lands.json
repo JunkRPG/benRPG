@@ -1,0 +1,14 @@
+{
+  "card_type": "Transition Card",
+  "states": 2,
+  "data": {
+    "Name": "Peaceful Wilderness",
+    "Description": "The wilderness is calm and full of resources for the taking.",
+    "Background Image": "",
+    "Outcomes": "[{\"probability\": 0.20, \"type\": \"draw_junk\", \"text\": \"You forage useful materials from the wild.\", \"params\": {\"deck\": \"beta_junk_deck.json\"}}, {\"probability\": 0.15, \"type\": \"spawn_npc\", \"text\": \"A hermit emerges from the trees.\", \"params\": {\"deck\": \"beta_npc_deck.json\", \"allegiance\": \"Neutral\"}}, {\"probability\": 0.20, \"type\": \"draw_instance\", \"text\": \"Something stirs in the undergrowth.\", \"params\": {}}, {\"probability\": 0.25, \"type\": \"none\", \"text\": \"The wilderness is serene and undisturbed.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"flip_state\", \"text\": \"Predators have been spotted nearby...\", \"params\": {}}]",
+    "2nd_state_Name": "Predator Activity",
+    "2nd_state_Description": "Dangerous creatures roam the wilderness. Stay alert.",
+    "2nd_state_Background Image": "",
+    "2nd_state_Outcomes": "[{\"probability\": 0.30, \"type\": \"spawn_enemy\", \"text\": \"A predator lunges from the brush!\", \"params\": {\"edge\": \"random\", \"deck\": \"beta_enemy_deck.json\", \"count\": 1}}, {\"probability\": 0.15, \"type\": \"weather\", \"text\": \"Heavy rain begins to fall, reducing visibility.\", \"params\": {\"weather_type\": \"rain\", \"range_modifier\": -1}}, {\"probability\": 0.20, \"type\": \"draw_instance\", \"text\": \"You find tracks leading to something unusual.\", \"params\": {}}, {\"probability\": 0.15, \"type\": \"flip_state\", \"text\": \"The predators move on. Peace returns.\", \"params\": {}}, {\"probability\": 0.20, \"type\": \"none\", \"text\": \"You hear growling in the distance but nothing approaches.\", \"params\": {}}]"
+  }
+}

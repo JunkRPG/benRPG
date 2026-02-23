@@ -18,7 +18,10 @@
       "Bash(git push:*)",
       "Bash(cd:*)",
       "Bash(git status:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(wc:*)",
+      "Bash(py:*)",
+      "Bash(awk:*)"
     ]
   }
 }

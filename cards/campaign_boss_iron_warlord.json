@@ -1,0 +1,15 @@
+{
+  "card_type": "Boss Card",
+  "subclass": null,
+  "states": 1,
+  "data": {
+    "Name": "Iron Warlord",
+    "Health": "120",
+    "Movement": "4",
+    "Melee Damage": "25",
+    "Projectile Damage": "15",
+    "Projectile Range": "3",
+    "Background Image File Path": "",
+    "Enemy Image File Path": ""
+  }
+}

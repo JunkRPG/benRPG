@@ -1,0 +1,18 @@
+{
+  "card_type": "Junk Card",
+  "subclass": "Junk_to_Tool",
+  "states": 2,
+  "data": {
+    "Name": "Old Wrench",
+    "Description": "A rusted adjustable wrench. Needs some oil.",
+    "Raw Material Value": "2",
+    "Refined Material Value": "0",
+    "Metal Value": "3",
+    "Wood Value": "0",
+    "Price": "2",
+    "2nd_state_Name": "Wrench",
+    "2nd_state_Description": "A restored wrench useful for repairs and upgrades.",
+    "2nd_state_Type": "Tool",
+    "2nd_state_Price": "5"
+  }
+}

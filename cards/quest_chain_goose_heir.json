@@ -1,0 +1,19 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Defense",
+  "states": 2,
+  "data": {
+    "Name": "Revenge of the Goose Prince",
+    "Description": "The Goose Prince has arrived to avenge his father. Survive the honkening!",
+    "Template_Text": "A terrifying screech — half honk, half war cry — splits the air as [Enemy1], the Goose Prince, descends upon [Location1] with an army of enraged geese. [NPC1] hides behind a barrel, screaming. You don't need to defeat this feathered fury — just survive 5 rounds of relentless pecking, wing-slapping, and psychological honking warfare!",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":true,\"spawn_near\":\"player\",\"spawn_distance\":2},{\"id\":\"Enemy1\",\"type\":\"Enemy Card\",\"spawn\":true,\"spawn_near\":\"Location1\",\"spawn_distance\":1},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"turn_limit\",\"params\":{\"turns\":5}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "Chain_Config": "",
+    "2nd_state_Name": "The Honkening Ends",
+    "2nd_state_Template_Text": "You survived five rounds of [Enemy1]'s furious assault near [Location1]! The Goose Prince, exhausted and out of honks, retreats to the swamps with whatever dignity a goose can muster. [NPC1] emerges from behind the barrel, trembling but alive. Among the scattered feathers, you find a glorious prize — a crown woven from golden plumage. All hail the Goose Slayer!",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "card_type": "Location Card",
+  "subclass": null,
+  "states": 2,
+  "data": {
+    "Name": "Command Tent",
+    "Description": "The tactical headquarters where battle plans are drawn and missions assigned.",
+    "Outcomes": "[{\"probability\": 0.5, \"card_type\": \"Document Card\", \"deck_file\": \"campaign_document_deck.json\"}, {\"probability\": 0.5, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "Choices": "[{\"name\": \"Review Missions\", \"action\": \"view_quests\", \"costs_action\": false, \"params\": {\"deck\": \"decks/beta_quest_deck.json\"}}, {\"name\": \"Field Repairs\", \"action\": \"heal\", \"costs_action\": false, \"params\": {\"amount\": 8}}]",
+    "Shop_Deck": "",
+    "Shop_Size": "0",
+    "Shop_Currency": "metal",
+    "Shop_Cycle_Turns": "5",
+    "Upgrade_NPC_Type": "",
+    "Upgrade_Material_Cost": "{}",
+    "2nd_state_Name": "War Room",
+    "2nd_state_Description": "A fortified command center with detailed maps and intelligence reports.",
+    "2nd_state_Outcomes": "[{\"probability\": 0.6, \"card_type\": \"Document Card\", \"deck_file\": \"campaign_document_deck.json\"}, {\"probability\": 0.2, \"card_type\": \"Junk Card\", \"deck_file\": \"campaign_junk_deck.json\"}, {\"probability\": 0.2, \"card_type\": \"None\", \"deck_file\": \"\"}]",
+    "2nd_state_Choices": "[{\"name\": \"Review Missions\", \"action\": \"view_quests\", \"costs_action\": false, \"params\": {\"deck\": \"decks/beta_quest_deck.json\"}}, {\"name\": \"Field Repairs\", \"action\": \"heal\", \"costs_action\": false, \"params\": {\"amount\": 12}}]",
+    "2nd_state_Shop_Deck": "",
+    "2nd_state_Shop_Size": "0",
+    "2nd_state_Shop_Currency": "metal",
+    "2nd_state_Shop_Cycle_Turns": "5"
+  }
+}

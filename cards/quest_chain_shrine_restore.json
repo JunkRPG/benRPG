@@ -1,0 +1,19 @@
+{
+  "card_type": "Quest Card",
+  "subclass": "Delivery",
+  "states": 2,
+  "data": {
+    "Name": "Restoring the Shrine",
+    "Description": "Deliver the cleansing artifact to the shrine to lift the curse",
+    "Template_Text": "The guardian is defeated, but [Location1] still pulses with dark energy. [NPC1] entrusts you with [Junk1], a sacred relic that can purify the corrupted stones. Bring it to the shrine and place it upon the altar before the curse returns!",
+    "Placeholders": "[{\"id\":\"NPC1\",\"type\":\"NPC Card\",\"spawn\":true,\"spawn_near\":\"player\",\"spawn_distance\":2},{\"id\":\"Location1\",\"type\":\"Location Card\",\"spawn\":false},{\"id\":\"Junk1\",\"type\":\"Junk Card\",\"spawn\":false}]",
+    "Quest Image File Path": "",
+    "Success_Conditions": "[{\"type\":\"unit_reaches_location\",\"params\":{\"unit\":\"NPC1\",\"location\":\"Location1\"}}]",
+    "Failure_Conditions": "[{\"type\":\"player_death\",\"params\":{}},{\"type\":\"turn_limit\",\"params\":{\"turns\":10}}]",
+    "Rewards": "{\"cards\":[\"Junk1\"]}",
+    "Chain_Config": "",
+    "2nd_state_Name": "Shrine Restored",
+    "2nd_state_Template_Text": "You placed [Junk1] upon the altar at [Location1], and a warm light washed over the ancient stones. The curse is broken. [NPC1] kneels in gratitude as the shrine hums with renewed energy.",
+    "2nd_state_Quest Image File Path": ""
+  }
+}

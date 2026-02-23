@@ -23,6 +23,26 @@
     "beta_instance_funny_ticking",
     "beta_instance_funny_trap",
     "beta_instance_funny_list",
-    "beta_instance_funny_weather"
+    "beta_instance_funny_weather",
+    "instance_funny_cooking",
+    "instance_funny_mimic",
+    "instance_funny_bard",
+    "instance_funny_duel",
+    "instance_funny_map",
+    "instance_funny_sleeping",
+    "instance_funny_tax",
+    "instance_funny_cursed_item",
+    "instance_funny_ghost",
+    "instance_funny_mushroom",
+    "instance_funny_squirrel",
+    "instance_funny_prophecy",
+    "instance_funny_catapult",
+    "instance_funny_pet_rock",
+    "instance_funny_wrestling",
+    "instance_quest_distress",
+    "instance_quest_bounty_board",
+    "instance_quest_mysterious_letter",
+    "instance_quest_npc_plea",
+    "instance_quest_treasure_map"
   ]
 }
